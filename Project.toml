@@ -1,0 +1,5 @@
+name = "SoleRules"
+uuid = "fb95e5f7-b6b0-4744-a282-88ebeeae65a3"
+license = "MIT"
+authors = ["Mauro Milella, Giovanni Pagliarini"]
+version = "0.1.0"
