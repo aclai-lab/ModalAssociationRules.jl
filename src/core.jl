@@ -14,6 +14,10 @@ struct AssociationRule
     info::Dict{Tuple{String,String} => Float64}
 end
 
+struct Configuration
+    # Pass this configuration to a AR algorithm
+end
+
 """
 Extracts frequent [`Atom`](@ref)s from a (modal) dataset.
 """
