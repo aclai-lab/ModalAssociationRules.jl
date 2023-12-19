@@ -2,7 +2,7 @@
 
 julia_version = "1.9.0"
 manifest_format = "2.0"
-project_hash = "c5fd671a426cff1ca0f5deb2717a770f19eacf2e"
+project_hash = "5d37428777854476f51b6b3301778d49c7115dd1"
 
 [[deps.AbstractTrees]]
 git-tree-sha1 = "faa260e4cb5aba097a73fab382dd4b5819d8ec8c"
@@ -729,9 +729,9 @@ version = "0.11.1"
 
 [[deps.SoleData]]
 deps = ["CSV", "Catch22", "DataFrames", "DataStructures", "Logging", "MLJModelInterface", "Random", "Reexport", "Revise", "ScientificTypes", "SoleBase", "Statistics", "StatsBase", "Tables"]
-git-tree-sha1 = "8100fd66959bce579250dbee77417d5df486a540"
+git-tree-sha1 = "c781eacb8dc8c4915499101a199746bfe3f3f071"
 uuid = "123f1ae1-6307-4526-ab5b-aab3a92a2b8c"
-version = "0.12.1"
+version = "0.12.2"
 
 [[deps.SoleLogics]]
 deps = ["AbstractTrees", "DataStructures", "Dictionaries", "Graphs", "IterTools", "Lazy", "PrettyTables", "Random", "Reexport", "Revise", "SoleBase", "StatsBase", "ThreadSafeDicts"]

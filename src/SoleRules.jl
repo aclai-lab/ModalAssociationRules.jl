@@ -3,8 +3,9 @@ module SoleRules
 
 using Reexport
 
-@reexport using SoleLogics
-@reexport using SoleModels
+using SoleModels
+using SoleLogics
+using SoleData
 
 using FunctionWrappers: FunctionWrapper
 
