@@ -1,0 +1,16 @@
+Organization:
+  ☐ uniform algorithms interface (fit)
+  ☐ think about which parameters are needed and how they can be customized
+    # maybe a configuration structure with an array of local measures?
+    # also, each measure can be activated locally or globally
+    # localdict{string(local measure) -> counter} # if local measure is given
+    # globldict{string(local measure) -> counter} # if local measure is given with globality on
+  ☐ write an initial apriori implementation
+  ☐ write an initial fpgrowth implementation
+
+Testing:
+  ☐ in test section, invoke SoleLogics kripke models generation
+    ✔ write SoleLogics kripke models generation @done(23-12-20 18:34)
+  ☐ prepare an array of frequent literals (both locally and globally)
+  ☐ test the initial apriori implementation (see organization section)
+  ☐ test the initial fpgrowth implementation (generated rules must be the same as in apriori)
