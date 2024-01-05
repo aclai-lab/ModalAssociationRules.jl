@@ -2,7 +2,7 @@
 
 julia_version = "1.9.0"
 manifest_format = "2.0"
-project_hash = "5d37428777854476f51b6b3301778d49c7115dd1"
+project_hash = "c241a9bdb02f31b81bd9797a814192e7fbb4cfa2"
 
 [[deps.AbstractTrees]]
 git-tree-sha1 = "faa260e4cb5aba097a73fab382dd4b5819d8ec8c"
@@ -720,6 +720,12 @@ version = "0.9.4"
 
 [[deps.Sockets]]
 uuid = "6462fe0b-24de-5631-8697-dd941f90decc"
+
+[[deps.Sole]]
+deps = ["Random", "Reexport", "SoleBase", "SoleData", "SoleLogics", "SoleModels"]
+git-tree-sha1 = "b7fa6e7e881180a59fbebc65b34fa7d62d18933c"
+uuid = "7b3b3b3f-8b15-4a80-a798-b383498bc2cf"
+version = "0.3.1"
 
 [[deps.SoleBase]]
 deps = ["IterTools", "Logging", "Random"]
