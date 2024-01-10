@@ -1,18 +1,51 @@
+# Take a meaningfulness measure function as a string,
+# and where it has been applied (label to indicate the specific dataset/instance).
+# Then, associate the pair above with a real value.
+const INFO_DICTIONARY = Dict{Tuple{String,String}, Float64}
+
 """
-[`Rule`](@ref) object in which the antecedent is a single [`Atom`](@ref)
-or a conjunction of [`Atom`](@ref)s, also said LeftmostConjunctiveForm,
-and the consequent is a single [`Atom`](@ref).
+Antecedent or consequent of an association rule.
+This structure wraps an [`Atom`](@ref) or more,
+representing them as a [`LeftmostLinearForm`](@ref).
+
+See also [`LeftmostLinearForm`](@ref), [`ARule`](@ref), [`Atom`](@ref).
+"""
+struct Item{T<:Union{Atom,LeftmostConjunctiveForm}}
+    content::T
+    info::INFO_DICTIONARY
+
+    function Item{T}(
+        value::T,
+        info::INFO_DICTIONARY
+        ) where {T<:Union{Atom,LeftmostConjunctiveForm}}
+        new{T}(value, info)
+    end
+    function Item(value::T) where {T<:Union{Atom,LeftmostConjunctiveForm}}
+        Item{T}(value, INFO_DICTIONARY())
+    end
+    function Item(
+        value::T,
+        info::INFO_DICTIONARY
+    ) where {T<:Union{Atom,LeftmostConjunctiveForm}}
+        Item{T}(value, info)
+    end
+end
+
+"""
+[`Rule`](@ref) object, specialized to represent association rules.
+An association rule is a rule expressing a statistically meaningful relation between
+antecedent and consequent (e.g., if facts in the antecedent are true together on a model,
+probably the facts in the consequent are true too on the same model).
+
+Both antecedent and consequent are (vector of) [`Item`](@ref)s.
 
 See also [`SoleLogics.Atom`](@ref), [`SoleModels.antecedent`](@ref),
-[`SoleModels.consequent`](@ref), [`SoleModels.Rule`](@ref).
+[`SoleModels.consequent`](@ref), [`Item`](@ref), [`SoleModels.Rule`](@ref).
 """
 struct ARule
-    rule::Rule{Union{Atom,LeftmostConjunctiveForm}, Atom}
-
-    # Take a meaningfulness measure function as a string,
-    # and where it has been applied (dataset/instance string representation).
-    # Then, associate the pair above with a real value.
-    info::Dict{Tuple{String,String}, Float64}
+    # Currently, consequent is composed of just a single Atom.
+    rule::Rule{Vector{Item}, Atom}
+    info::INFO_DICTIONARY
 end
 
 """

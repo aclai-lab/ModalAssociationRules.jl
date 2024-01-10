@@ -3,9 +3,9 @@ module SoleRules
 
 using Reexport
 
-using SoleModels
-using SoleLogics
-using SoleData
+@reexport using SoleModels
+@reexport using SoleLogics
+@reexport using SoleData
 
 using FunctionWrappers: FunctionWrapper
 
@@ -14,7 +14,7 @@ export lsetmeas, lrulemeas
 export gsetmeas, grulemeas
 
 include("core.jl")
-
+export Item, ARule
 export apriori, fpgrowth
 
 end
