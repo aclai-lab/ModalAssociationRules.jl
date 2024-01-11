@@ -72,3 +72,25 @@ countmap(y[check_mask .== 1])
 
 # Show how many classes are NOT covered by the check mask
 countmap(y[(!).(check_mask)])
+
+# allw = allworlds(X, 1)
+#
+# items = p, dp, bp
+# φ = items[1]
+#
+# glob = 0
+# for i_instance in 1:ninstances(X)
+#     acc = 0
+#     for w in allw
+#         acc = acc + check(φ, X, i_instance, w)
+#     end
+#
+#     if acc > local_threshold
+#         glob = glob + 1
+#     end
+# end
+#
+# if glob not abbastanza
+#     remove φ from items
+#
+# items = [[p dp]]
