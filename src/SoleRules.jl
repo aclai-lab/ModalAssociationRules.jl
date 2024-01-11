@@ -9,12 +9,12 @@ using Reexport
 
 using FunctionWrappers: FunctionWrapper
 
-include("measures.jl")
+include("core.jl")
+export Item, ARule
+
 export lsetmeas, lrulemeas
 export gsetmeas, grulemeas
 
-include("core.jl")
-export Item, ARule
 export apriori, fpgrowth
 
 end

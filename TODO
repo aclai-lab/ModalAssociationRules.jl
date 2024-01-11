@@ -1,4 +1,6 @@
 Organization:
+  ☐ find out how to extract interesting literals from which mine association rules.
+    # maybe this has to be done in SoleModels? Providing different strategies
   ☐ uniform algorithms interface (fit)
   ☐ think about which parameters are needed and how they can be customized
     # maybe a configuration structure with an array of local measures?
