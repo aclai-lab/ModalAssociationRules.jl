@@ -7,13 +7,15 @@ using Reexport
 @reexport using SoleLogics
 @reexport using SoleData
 
+using SoleLogics: AbstractInterpretation
 using FunctionWrappers: FunctionWrapper
 
 include("core.jl")
+
 export Item, ARule
 
-export lsetmeas, lrulemeas
-export gsetmeas, grulemeas
+export Configuration
+export ItemLmeas, ItemGmeas, RuleLmeas, RuleGmeas
 
 export apriori, fpgrowth
 

@@ -3,7 +3,7 @@
 ############################################################################################
 
 """
-    const InfoDictionary = Dict{Symbol, Tuple{Float64,String}}
+    const InfoDictionary = Dict{Symbol,Tuple{Float64,String}}
 
 This type is intended to be used to collect meta informations in a [`Itemset`](@ref)
 or an [`ARule`](@ref).
@@ -15,38 +15,38 @@ real value `n` and a the string `description` identifying a specific entity `obj
 
 See also [`Arule`](@ref), [`Itemset`](@ref).
 """
-const InfoDictionary = Dict{Symbol, Tuple{Float64, NamedTuple}}
+const InfoDictionary = Dict{Symbol,Tuple{Float64, NamedTuple}}
 
-const Item = Formule
+const Item = SoleLogics.Formula
 
 """
-    struct Itemset{T<:Union{Atom,LeftmostConjunctiveForm{<:Atom}}} # TODO: actually Atom is a ITEM
+    struct Itemset{T<:Union{Item,LeftmostConjunctiveForm{<:Item}}}
         content::T
-        info::INFO_DICTIONARY
+        info::InfoDictionary
     end
 
 Antecedent or consequent of an association rule.
-This structure wraps one or more [`Atom`](@ref)s,
+This structure wraps one or more [`Item`](@ref)s,
 eventually representing them as a [`LeftmostLinearForm`](@ref).
 
-See also [`LeftmostLinearForm`](@ref), [`ARule`](@ref), [`Atom`](@ref).
+See also [`LeftmostLinearForm`](@ref), [`ARule`](@ref), [`Item`](@ref).
 """
 struct Itemset{T<:Union{Item,LeftmostConjunctiveForm{<:Item}}}
     content::T
-    info::INFO_DICTIONARY
+    info::InfoDictionary
 
     function Itemset{T}(
         value::T,
-        info::INFO_DICTIONARY
+        info::InfoDictionary
         ) where {T<:Union{Atom,LeftmostConjunctiveForm{<:Atom}}}
         new{T}(value, info)
     end
     function Itemset(value::T) where {T<:Union{Atom,LeftmostConjunctiveForm{<:Atom}}}
-        Itemset{T}(value, INFO_DICTIONARY())
+        Itemset{T}(value, InfoDictionary())
     end
     function Itemset(
         value::T,
-        info::INFO_DICTIONARY
+        info::InfoDictionary
     ) where {T<:Union{Atom,LeftmostConjunctiveForm{<:Atom}}}
         Itemset{T}(value, info)
     end
@@ -55,7 +55,7 @@ end
 """
     struct ARule
         rule::Rule{Itemset, Atom}
-        info::INFO_DICTIONARY
+        info::InfoDictionary
     end
 
 [`Rule`](@ref) object, specialized to represent association rules.
@@ -70,19 +70,21 @@ See also [`SoleLogics.Atom`](@ref), [`SoleModels.antecedent`](@ref),
 """
 struct ARule
     # Currently, consequent is composed of just a single Atom.
-    rule::Rule{Itemset, Item}
-    info::INFO_DICTIONARY
+    rule::Rule{Itemset,Item}
+    info::InfoDictionary
 end
 
 ############################################################################################
 #### Meaningfulness measures ###############################################################
 ############################################################################################
 
+# NOTE: SoleLogics.AbstractInterpretation could be SoleLogics.LogicalInstance
+# which for example is obtained by using SoleLogics.getinstance(X,1) on a logiset X.
 const doc_meaningfulness_meas = """
-    const ITEM_LMEAS = FunctionWrapper{Float64, Tuple{Itemset, AbstractInstance}}
-    const ITEM_GMEAS = FunctionWrapper{Float64, Tuple{Itemset, AbstractDataset}}
-    const RULE_LMEAS = FunctionWrapper{Float64, Tuple{ARule, AbstractInstance}}
-    const RULE_GMEAS = FunctionWrapper{Float64, Tuple{ARule, AbstractDataset}}
+    const ItemLmeas = FunctionWrapper{Float64, Tuple{Itemset,AbstractInterpretation}}
+    const ItemGmeas = FunctionWrapper{Float64, Tuple{Itemset,AbstractDataset}}
+    const RuleLmeas = FunctionWrapper{Float64, Tuple{ARule,AbstractInterpretation}}
+    const RuleGmeas = FunctionWrapper{Float64, Tuple{ARule,AbstractDataset}}
 
 Function wrappers to express local and global meaningfulness measures of items and
 association rules.
@@ -93,16 +95,26 @@ See also [`ARule`](@ref), [`FunctionWrapper`](@ref), [`Itemset`](@ref).
 """
 
 """$(doc_meaningfulness_meas)"""
-const ITEM_LMEAS = FunctionWrapper{Float64, Tuple{Itemset, AbstractInstance}}
+const ItemLmeas = FunctionWrapper{Float64,Tuple{Itemset,AbstractInterpretation}}
 
 """$(doc_meaningfulness_meas)"""
-const ITEM_GMEAS = FunctionWrapper{Float64, Tuple{Itemset, AbstractDataset}}
+const ItemGmeas = FunctionWrapper{Float64,Tuple{Itemset,AbstractDataset}}
 
 """$(doc_meaningfulness_meas)"""
-const RULE_LMEAS = FunctionWrapper{Float64, Tuple{ARule, AbstractInstance}}
+const RuleLmeas = FunctionWrapper{Float64,Tuple{ARule,AbstractInterpretation}}
 
 """$(doc_meaningfulness_meas)"""
-const RULE_GMEAS = FunctionWrapper{Float64, Tuple{ARule, ABstractDataset}}
+const RuleGmeas = FunctionWrapper{Float64, Tuple{ARule,AbstractDataset}}
+
+# upgrade measfn function, making a fixed dataset X visible in its scope
+macro build_lmeas(X, measfn)
+    quote
+        function lmeas()
+            X = $X
+            return $measfn
+        end
+    end
+end
 
 ############################################################################################
 #### Learning algorithms ###################################################################
@@ -112,12 +124,14 @@ const RULE_GMEAS = FunctionWrapper{Float64, Tuple{ARule, ABstractDataset}}
 Association rule extraction configuration struct.
 """
 struct Configuration
-    item_lmeas_constraints  = Vector{Tuple{ITEM_LMEAS, Float64}}
-    item_gmeas_constraints  = Vector{Tuple{ITEM_GMEAS, Float64}}
-    arule_lmeas_constraints = Vector{Tuple{RULE_LMEAS, Float64}}
-    arule_gmeas_constraints = Vector{Tuple{RULE_GMEAS, Float64}}
+    # list of available literals
+    alphabet::Vector{Item} # NOTE: cannot instanciate Item inside ExplicitAlphabet
 
-    # TODO: list of available literals <:AbstractAlphabet (ExplicitAlphabet)
+    # meaningfulness measures
+    item_lmeas_constraints ::Vector{Tuple{ItemLmeas,Float64}}
+    item_gmeas_constraints ::Vector{Tuple{ItemGmeas,Float64}}
+    arule_lmeas_constraints::Vector{Tuple{RuleLmeas,Float64}}
+    arule_gmeas_constraints::Vector{Tuple{RuleGmeas,Float64}}
 end
 
 """

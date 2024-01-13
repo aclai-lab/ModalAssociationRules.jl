@@ -1,6 +1,5 @@
 Organization:
-  ☐ find out how to extract interesting literals from which mine association rules.
-    # maybe this has to be done in SoleModels? Providing different strategies
+  ☐ define meaningfulness measures in an extensible way
   ☐ uniform algorithms interface (fit)
   ☐ think about which parameters are needed and how they can be customized
     # maybe a configuration structure with an array of local measures?
@@ -9,6 +8,10 @@ Organization:
     # globldict{string(local measure) -> counter} # if local measure is given with globality on
   ☐ write an initial apriori implementation
   ☐ write an initial fpgrowth implementation
+
+Other packages:
+  ☐ find out how to extract interesting literals from which mine association rules.
+    # maybe this has to be done in SoleModels? Providing different strategies
 
 Testing:
   ☐ in test section, invoke SoleLogics kripke models generation
