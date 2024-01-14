@@ -7,15 +7,17 @@ using Reexport
 @reexport using SoleLogics
 @reexport using SoleData
 
-using SoleLogics: AbstractInterpretation
+using SoleLogics: AbstractInterpretation, getinstance, LogicalInstance
+using SoleModels: SupportedLogiset
 using FunctionWrappers: FunctionWrapper
 
 include("core.jl")
 
-export Item, ARule
+export Item, Itemset, ARule
 
 export Configuration
 export ItemLmeas, ItemGmeas, RuleLmeas, RuleGmeas
+export lsupport
 
 export apriori, fpgrowth
 

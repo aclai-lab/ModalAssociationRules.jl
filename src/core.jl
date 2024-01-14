@@ -1,28 +1,19 @@
 ############################################################################################
 #### Fundamental definitions ###############################################################
 ############################################################################################
-
-"""
-    const InfoDictionary = Dict{Symbol,Tuple{Float64,String}}
-
-This type is intended to be used to collect meta informations in a [`Itemset`](@ref)
-or an [`ARule`](@ref).
-
-Consider an [`Itemset`](@ref) or an [`ARule`](@ref), and call it `φ`.
-This type maps a meaningfulness measure `f` to a pair (`n`, `description`) containing the
-real value `n` and a the string `description` identifying a specific entity `obj` for which
-`f(obj, φ) = n`.
-
-See also [`Arule`](@ref), [`Itemset`](@ref).
-"""
-const InfoDictionary = Dict{Symbol,Tuple{Float64, NamedTuple}}
-
 const Item = SoleLogics.Formula
+
+# Dynamic programming utility structures
+const LmeasMemoKey = Tuple{Symbol,Integer}
+const LmeasMemo = Dict{LmeasMemoKey,Float64}
+
+const GmeasMemoKey = Symbol
+const GmeasMemo = Dict{GmeasMemoKey,Float64}
 
 """
     struct Itemset{T<:Union{Item,LeftmostConjunctiveForm{<:Item}}}
-        content::T
-        info::InfoDictionary
+        value::T
+        info::InfoDictionary # TODO: change this
     end
 
 Antecedent or consequent of an association rule.
@@ -32,30 +23,35 @@ eventually representing them as a [`LeftmostLinearForm`](@ref).
 See also [`LeftmostLinearForm`](@ref), [`ARule`](@ref), [`Item`](@ref).
 """
 struct Itemset{T<:Union{Item,LeftmostConjunctiveForm{<:Item}}}
-    content::T
-    info::InfoDictionary
+    value::T
+
+    lmemo::LmeasMemo
+    gmemo::GmeasMemo
 
     function Itemset{T}(
         value::T,
-        info::InfoDictionary
+        lmemo::LmeasMemo,
+        gmemo::GmeasMemo
         ) where {T<:Union{Atom,LeftmostConjunctiveForm{<:Atom}}}
-        new{T}(value, info)
+        new{T}(value, lmemo, gmemo)
     end
     function Itemset(value::T) where {T<:Union{Atom,LeftmostConjunctiveForm{<:Atom}}}
-        Itemset{T}(value, InfoDictionary())
-    end
-    function Itemset(
-        value::T,
-        info::InfoDictionary
-    ) where {T<:Union{Atom,LeftmostConjunctiveForm{<:Atom}}}
-        Itemset{T}(value, info)
+        Itemset{T}(value, LmeasMemo(), GmeasMemo())
     end
 end
+
+value(items::Itemset) = items.value
+
+setlocalmemo(items::Itemset, key::LmeasMemoKey, val::Float64) = items.lmemo[key] = val
+getlocalmemo(items::Itemset, key::LmeasMemoKey) = get(items.lmemo, key, nothing)
+
+setglobalmemo(items::Itemset, key::GmeasMemoKey, val::Float64) = items.gmemo[key] = val
+getglobalmemo(items::Itemset, key::GmeasMemoKey) = get(items.gmemo, key, nothing)
 
 """
     struct ARule
         rule::Rule{Itemset, Atom}
-        info::InfoDictionary
+        info::InfoDictionary TODO: change this
     end
 
 [`Rule`](@ref) object, specialized to represent association rules.
@@ -71,7 +67,6 @@ See also [`SoleLogics.Atom`](@ref), [`SoleModels.antecedent`](@ref),
 struct ARule
     # Currently, consequent is composed of just a single Atom.
     rule::Rule{Itemset,Item}
-    info::InfoDictionary
 end
 
 ############################################################################################
@@ -82,9 +77,9 @@ end
 # which for example is obtained by using SoleLogics.getinstance(X,1) on a logiset X.
 const doc_meaningfulness_meas = """
     const ItemLmeas = FunctionWrapper{Float64, Tuple{Itemset,AbstractInterpretation}}
-    const ItemGmeas = FunctionWrapper{Float64, Tuple{Itemset,AbstractDataset}}
+    const ItemGmeas = FunctionWrapper{Float64, Tuple{Itemset,AbstractDataset,Threshold}}
     const RuleLmeas = FunctionWrapper{Float64, Tuple{ARule,AbstractInterpretation}}
-    const RuleGmeas = FunctionWrapper{Float64, Tuple{ARule,AbstractDataset}}
+    const RuleGmeas = FunctionWrapper{Float64, Tuple{ARule,AbstractDataset,Threshold}}
 
 Function wrappers to express local and global meaningfulness measures of items and
 association rules.
@@ -94,26 +89,41 @@ TODO: show how to wrap local and global support, confidence, lift and conviction
 See also [`ARule`](@ref), [`FunctionWrapper`](@ref), [`Itemset`](@ref).
 """
 
+const Threshold = Float64
+
 """$(doc_meaningfulness_meas)"""
 const ItemLmeas = FunctionWrapper{Float64,Tuple{Itemset,AbstractInterpretation}}
 
 """$(doc_meaningfulness_meas)"""
-const ItemGmeas = FunctionWrapper{Float64,Tuple{Itemset,AbstractDataset}}
+const ItemGmeas = FunctionWrapper{Float64,Tuple{Itemset,AbstractDataset,Float64}}
 
 """$(doc_meaningfulness_meas)"""
 const RuleLmeas = FunctionWrapper{Float64,Tuple{ARule,AbstractInterpretation}}
 
 """$(doc_meaningfulness_meas)"""
-const RuleGmeas = FunctionWrapper{Float64, Tuple{ARule,AbstractDataset}}
+const RuleGmeas = FunctionWrapper{Float64, Tuple{ARule,AbstractDataset,Float64}}
 
-# upgrade measfn function, making a fixed dataset X visible in its scope
-macro build_lmeas(X, measfn)
-    quote
-        function lmeas()
-            X = $X
-            return $measfn
-        end
+function lsupport(itemset::Itemset, logi_instance::LogicalInstance)::Float64
+    # retrieve logiset, and the specific instance
+    # NOTE: why does X, i_instance = splat(logi_instance) does not work?
+    X, i_instance = logi_instance.s, logi_instance.i_instance
+    fname = Symbol(StackTraces.stacktrace()[1].func) # this function name, as Symbol
+
+    # If possible, retrieve from memoization structure inside itemset structure
+    ans = getlocalmemo(itemset, (fname, i_instance))
+    return !isnothing(ans) ? ans :
+        sum([check(value(itemset), X, i_instance, w) for w in allworlds(X, i_instance)])
     end
+
+function gsupport(itemset::Itemset, X::SupportedLogiset, threshold::Float64)
+    fname = Symbol(StackTraces.stacktrace()[1].func) # this function name, as Symbol
+
+    # If possible, retrieve from memoization structure inside itemset structure
+    ans = getglobalmemo(itemset, fname)
+    return !isnothing(ans) ? ans :
+        sum([
+            lsupport(itemset, getinstance(X, i_instance)) >= threshold
+            for i_instance in 1:ninstances(X)])
 end
 
 ############################################################################################
