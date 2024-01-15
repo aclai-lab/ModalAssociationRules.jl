@@ -1,5 +1,8 @@
 Organization:
-  ☐ define meaningfulness measures in an extensible way
+  ✔ define Item, Itemset and its interface @done(24-01-15 16:16)
+    # getters, setters, merge method
+  ✔ define meaningfulness measures in an extensible way @done(24-01-15 16:16)
+    # local and global support, confidence and write tests
   ☐ uniform algorithms interface (fit)
   ☐ think about which parameters are needed and how they can be customized
     # maybe a configuration structure with an array of local measures?

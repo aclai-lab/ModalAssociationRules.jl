@@ -13,7 +13,8 @@ const GmeasMemo = Dict{GmeasMemoKey,Float64}
 """
     struct Itemset{T<:Union{Item,LeftmostConjunctiveForm{<:Item}}}
         value::T
-        info::InfoDictionary # TODO: change this
+        lmemo::LmeasMemo
+        gmemo::GmeasMemo
     end
 
 Antecedent or consequent of an association rule.
@@ -25,6 +26,7 @@ See also [`LeftmostLinearForm`](@ref), [`ARule`](@ref), [`Item`](@ref).
 struct Itemset{T<:Union{Item,LeftmostConjunctiveForm{<:Item}}}
     value::T
 
+    # memoization structures
     lmemo::LmeasMemo
     gmemo::GmeasMemo
 
@@ -32,15 +34,22 @@ struct Itemset{T<:Union{Item,LeftmostConjunctiveForm{<:Item}}}
         value::T,
         lmemo::LmeasMemo,
         gmemo::GmeasMemo
-        ) where {T<:Union{Atom,LeftmostConjunctiveForm{<:Atom}}}
+        ) where {T<:Union{Item,LeftmostConjunctiveForm{<:Item}}}
         new{T}(value, lmemo, gmemo)
     end
-    function Itemset(value::T) where {T<:Union{Atom,LeftmostConjunctiveForm{<:Atom}}}
+    function Itemset(value::T) where {T<:Union{Item,LeftmostConjunctiveForm{<:Item}}}
         Itemset{T}(value, LmeasMemo(), GmeasMemo())
+    end
+    function Itemset(
+        value::Vector{<:T}
+    ) where {T<:Union{Item,LeftmostConjunctiveForm{<:Item}}}
+        cnf = LeftmostConjunctiveForm(value)
+        Itemset{typeof(cnf)}(cnf, LmeasMemo(), GmeasMemo())
     end
 end
 
-value(items::Itemset) = items.value
+value(items::Itemset) = items.value isa LeftmostConjunctiveForm ?
+    items.value |> children : items.value
 
 setlocalmemo(items::Itemset, key::LmeasMemoKey, val::Float64) = items.lmemo[key] = val
 getlocalmemo(items::Itemset, key::LmeasMemoKey) = get(items.lmemo, key, nothing)
@@ -48,10 +57,17 @@ getlocalmemo(items::Itemset, key::LmeasMemoKey) = get(items.lmemo, key, nothing)
 setglobalmemo(items::Itemset, key::GmeasMemoKey, val::Float64) = items.gmemo[key] = val
 getglobalmemo(items::Itemset, key::GmeasMemoKey) = get(items.gmemo, key, nothing)
 
+function merge(item::Itemset, itemsets::NTuple{N,T where T <: Itemset}) where {N}
+    return reduce(vcat, value.([item, itemsets...])) |> Itemset
+end
+
 """
     struct ARule
         rule::Rule{Itemset, Atom}
-        info::InfoDictionary TODO: change this
+
+        # memoization structures
+        lmemo::LmeasMemo
+        gmemo::GmeasMemo
     end
 
 [`Rule`](@ref) object, specialized to represent association rules.
@@ -65,9 +81,35 @@ See also [`SoleLogics.Atom`](@ref), [`SoleModels.antecedent`](@ref),
 [`SoleModels.consequent`](@ref), [`Itemset`](@ref), [`SoleModels.Rule`](@ref).
 """
 struct ARule
-    # Currently, consequent is composed of just a single Atom.
-    rule::Rule{Itemset,Item}
+    rule::Rule{Itemset,Itemset}
+
+    # memoization structures
+    lmemo::LmeasMemo
+    gmemo::GmeasMemo
+
+    function Itemset(
+        antecedent::T,
+        consequent::T,
+        lmemo::LmeasMemo,
+        gmemo::GmeasMemo
+        ) where {T<:Union{Item,LeftmostConjunctiveForm{<:Item}}}
+        new(antecedent, consequent, lmemo, gmemo)
+    end
+    function Itemset(
+        antecedent::T,
+        consequent::T
+        ) where {T<:Union{Item,LeftmostConjunctiveForm{<:Item}}}
+        Itemset(antecedent, consequent, LmeasMemo(), GmeasMemo())
+    end
 end
+
+value(rule::ARule) = (antecedent(rule), consequent(rule))
+
+setlocalmemo(rule::ARule, key::LmeasMemoKey, val::Float64) = rule.lmemo[key] = val
+getlocalmemo(rule::ARule, key::LmeasMemoKey) = get(rule.lmemo, key, nothing)
+
+setglobalmemo(rule::ARule, key::GmeasMemoKey, val::Float64) = rule.gmemo[key] = val
+getglobalmemo(rule::ARule, key::GmeasMemoKey) = get(rule.gmemo, key, nothing)
 
 ############################################################################################
 #### Meaningfulness measures ###############################################################
@@ -111,19 +153,52 @@ function lsupport(itemset::Itemset, logi_instance::LogicalInstance)::Float64
 
     # If possible, retrieve from memoization structure inside itemset structure
     ans = getlocalmemo(itemset, (fname, i_instance))
-    return !isnothing(ans) ? ans :
-        sum([check(value(itemset), X, i_instance, w) for w in allworlds(X, i_instance)])
+    if !isnothing(ans)
+        return ans
     end
+
+    ans = sum([check(value(itemset), X, i_instance, w) for w in allworlds(X, i_instance)])
+    setlocalmemo(itemset, fname, ans) # Save result for optimization
+    return ans
+end
 
 function gsupport(itemset::Itemset, X::SupportedLogiset, threshold::Float64)
     fname = Symbol(StackTraces.stacktrace()[1].func) # this function name, as Symbol
 
     # If possible, retrieve from memoization structure inside itemset structure
     ans = getglobalmemo(itemset, fname)
-    return !isnothing(ans) ? ans :
-        sum([
-            lsupport(itemset, getinstance(X, i_instance)) >= threshold
-            for i_instance in 1:ninstances(X)])
+    if !isnothing(ans)
+        return ans
+    end
+
+    ans = sum([lsupport(itemset, getinstance(X, i_instance)) >= threshold
+        for i_instance in 1:ninstances(X)])
+    setglobalmemo(itemset, fname, ans) # Save result for optimization
+    return ans
+end
+
+function lconfidence(rule::ARule, logi_instance::LogicalInstance)::Float64
+    fname = Symbol(StackTraces.stacktrace()[1].func) # this function name, as Symbol
+
+    _antecedent = antecedent(rule)
+    _consequent = consequent(rule)
+
+    ans = lsupport(merge(_antecedent, (_consequent)), logi_instance) /
+        lsupport(_antecedent, logi_instance)
+    setlocalmemo(rule, fname, ans) # Save result for optimization
+    return ans
+end
+
+function gconfidence(rule::ARule, X::SupportedLogiset, threshold::Float64)
+    fname = Symbol(StackTraces.stacktrace()[1].func) # this function name, as Symbol
+
+    _antecedent = antecedent(rule)
+    _consequent = consequent(rule)
+
+    ans = gsupport(merge(_antecedent, (_consequent)), X, threshold) /
+        gsupport(_antecedent, X, threshold)
+    setlocalmemo(rule, fname, ans) # Save result for optimization
+    return ans
 end
 
 ############################################################################################
@@ -138,11 +213,15 @@ struct Configuration
     alphabet::Vector{Item} # NOTE: cannot instanciate Item inside ExplicitAlphabet
 
     # meaningfulness measures
+    # TODO: vectors of function wrappers (without tuples) should be enough
     item_lmeas_constraints ::Vector{Tuple{ItemLmeas,Float64}}
     item_gmeas_constraints ::Vector{Tuple{ItemGmeas,Float64}}
     arule_lmeas_constraints::Vector{Tuple{RuleLmeas,Float64}}
     arule_gmeas_constraints::Vector{Tuple{RuleGmeas,Float64}}
 end
+
+
+# TODO: uniform interface to MLJ
 
 """
 Extracts frequent [`Atom`](@ref)s from a (modal) dataset.
