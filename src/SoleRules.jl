@@ -10,7 +10,7 @@ using Reexport
 @reexport using SoleLogics
 @reexport using SoleData
 
-using SoleLogics: AbstractInterpretation, getinstance, LogicalInstance
+using SoleLogics: AbstractInterpretation, getinstance, LogicalInstance, nworlds
 using SoleModels: SupportedLogiset
 
 include("core.jl")

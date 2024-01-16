@@ -143,65 +143,71 @@ const RuleGmeas = FunctionWrapper{Float64, Tuple{ARule,AbstractDataset,Float64}}
 
 function lsupport(itemset::Itemset, logi_instance::LogicalInstance)::Float64
     # retrieve logiset, and the specific instance
-    # NOTE: why does X, i_instance = splat(logi_instance) does not work?
     X, i_instance = logi_instance.s, logi_instance.i_instance
-    fname = Symbol(StackTraces.stacktrace()[1].func) # this function name, as Symbol
 
-    # If possible, retrieve from memoization structure inside itemset structure
+    # If possible, retrieve result from memoization structure inside itemset structure
+    fname = Symbol(StackTraces.stacktrace()[1].func) # this function name, as Symbol
     ans = getlocalmemo(itemset, (fname, i_instance))
     if !isnothing(ans)
         return ans
     end
 
+    # Compute local measure, then divide it by the instance total number of worlds
     ans = sum([check(value(itemset), X, i_instance, w) for w in allworlds(X, i_instance)])
-    setlocalmemo(itemset, fname, ans) # Save result for optimization
+    ans = ans / nworlds(X, i_instance)
+
+    # Save result for optimization, using the name of this function as dict key
+    setlocalmemo(itemset, (fname, i_instance), ans)
     return ans
 end
 
 function gsupport(itemset::Itemset, X::SupportedLogiset, threshold::Float64)::Float64
+    # If possible, retrieve result from memoization structure inside itemset structure
     fname = Symbol(StackTraces.stacktrace()[1].func) # this function name, as Symbol
-
-    # If possible, retrieve from memoization structure inside itemset structure
     ans = getglobalmemo(itemset, fname)
     if !isnothing(ans)
         return ans
     end
 
+    # Compute global measure, then divide it by the dataset total number of instances
     ans = sum([lsupport(itemset, getinstance(X, i_instance)) >= threshold
         for i_instance in 1:ninstances(X)])
-    setglobalmemo(itemset, fname, ans) # Save result for optimization
+    ans = ans / ninstances(X)
+
+    # Save result for optimization, using the name of this function as dict key
+    setglobalmemo(itemset, fname, ans)
     return ans
 end
 
-function lconfidence(rule::ARule, logi_instance::LogicalInstance)::Float64
+function lconfidence(r::ARule, logi_instance::LogicalInstance)::Float64
     fname = Symbol(StackTraces.stacktrace()[1].func) # this function name, as Symbol
 
-    _antecedent = antecedent(rule)
-    _consequent = consequent(rule)
+    _antecedent = antecedent(r)
+    _consequent = consequent(r)
+
+    # TODO: exploit memoization here
 
     ans = lsupport(merge(_antecedent, (_consequent)), logi_instance) /
         lsupport(_antecedent, logi_instance)
-    setlocalmemo(rule, fname, ans) # Save result for optimization
+    setlocalmemo(r, fname, ans) # Save result for optimization
     return ans
 end
 
-function gconfidence(rule::ARule, X::SupportedLogiset, threshold::Float64)::Float64
+function gconfidence(r::ARule, X::SupportedLogiset, threshold::Float64)::Float64
     fname = Symbol(StackTraces.stacktrace()[1].func) # this function name, as Symbol
 
-    _antecedent = antecedent(rule)
-    _consequent = consequent(rule)
+    _antecedent = antecedent(r)
+    _consequent = consequent(r)
 
     ans = gsupport(merge(_antecedent, (_consequent)), X, threshold) /
         gsupport(_antecedent, X, threshold)
-    setlocalmemo(rule, fname, ans) # Save result for optimization
+    setlocalmemo(r, fname, ans) # Save result for optimization
     return ans
 end
 
 ############################################################################################
 #### Learning algorithms ###################################################################
 ############################################################################################
-
-const MiningAlgo = FunctionWrapper{Nothing,Tuple{ARuleMiner,AbstractDataset}}
 
 """
 Generic machine learning model interface to perform association rules extraction.
@@ -210,16 +216,15 @@ Generic machine learning model interface to perform association rules extraction
     # target dataset
     X::AbstractDataset
     # algorithm used to perform extraction
-    algo::MiningAlgo
+    algo::FunctionWrapper{Nothing,Tuple{ARuleMiner,AbstractDataset}}
     alphabet::Vector{Item} # NOTE: cannot instanciate Item inside ExplicitAlphabet
 
-    # local meaningfulness measures
-    item_lmeas_constraints ::Vector{ItemLmeas} = [lsupport]
-    arule_lmeas_constraints::Vector{RuleLmeas} = [lconfidence]
-
-    # global meaningfulness measures, paired with real thresholds
-    item_gmeas_constraints ::Vector{Tuple{ItemGmeas,Float64}} = [(gsupport,0.5)]
-    arule_gmeas_constraints::Vector{Tuple{RuleGmeas,Float64}} = [(gconfidence,0.5)]
+    # meaningfulness measures
+    # (global measure, local threshold, global threshold)
+    item_constrained_measures::Vector{Tuple{ItemGmeas,Float64,Float64}} =
+        [(gsupport, 0.5, 0.5)]
+    rule_constrained_measures::Vector{Tuple{RuleGmeas,Float64,Float64}} =
+        [(gconfidence, 0.5, 0.5)]
 
     freq_itemsets::Vector{Itemset}  # collected frequent itemsets
     arules::Vector{ARule}           # collected association rules
@@ -231,16 +236,25 @@ Generic machine learning model interface to perform association rules extraction
         alphabet::Vector{Item}
     )
         new(X, MiningAlgo(algo), alphabet,
-            [lsupport], [lconfidence], [(gsupport,0.5)], [(gconfidence,0.5)],
+            [(gsupport, 0.5, 0.5)], [(gconfidence, 0.5, 0.5)],
             Vector{Itemset}([]), Vector{ARule}([]), (;))
     end
 end
 
+const MiningAlgo = FunctionWrapper{Nothing,Tuple{ARuleMiner,AbstractDataset}}
+
 dataset(miner::ARuleMiner) = miner.X
 miningalgo(miner::ARuleMiner) = miner.algo
 alphabet(miner::ARuleMiner) = miner.alphabet
+
 freqitems(miner::ARuleMiner) = miner.freq_itemsets
+pushfreq!(miner::ARuleMiner, item::Itemset) = push!(freqitems(miner), item)
+
 arules(miner::ARuleMiner) = miner.arules
+pusharule!(miner::ARuleMiner, r::ARule) = push!(arules(miner), r)
+
+item_meas(miner::ARuleMiner) = miner.item_constrained_measures
+rule_meas(miner::ARuleMiner) = miner.rule_constrained_measures
 
 function mine(miner::ARuleMiner)
     apply(miner, dataset(miner))
@@ -252,13 +266,34 @@ function apply(miner::ARuleMiner, X::AbstractDataset)
 end
 
 """
-    apriori(dataset; inferatoms=frequent)
-    apriori(dataset, atoms)
+    function apriori(miner::ARuleMiner, X::AbstractDataset)::Nothing
 
 Perform Apriori algorithm over a (modal) dataset.
 """
 function apriori(miner::ARuleMiner, X::AbstractDataset)::Nothing
-    print("Apriori algorithm is working properly")
+    # Candidates of length 1 - all the letters in our alphabet
+    candidates = Itemset.(alphabet(miner))
+    frequents = Vector{Itemset}([])
+
+    # For each candidate, establish if it is interesting or not
+    for item in candidates
+        interesting = true
+
+        for meas in item_meas(miner)
+            (gmeas_algo, lthreshold, gthreshold) = meas
+            if gmeas_algo(item, X, lthreshold) < gthreshold
+                interesting = false
+                break
+            end
+        end
+
+        if interesting
+            push!(frequents, item)
+        end
+    end
+
+    # Now, we dump the just computed frequent itemsets inside the miner.
+    # Then, if possible, we compute new, longer candidates and repeat the process.
 end
 
 """
