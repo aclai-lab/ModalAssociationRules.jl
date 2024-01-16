@@ -57,7 +57,7 @@ getlocalmemo(items::Itemset, key::LmeasMemoKey) = get(items.lmemo, key, nothing)
 setglobalmemo(items::Itemset, key::GmeasMemoKey, val::Float64) = items.gmemo[key] = val
 getglobalmemo(items::Itemset, key::GmeasMemoKey) = get(items.gmemo, key, nothing)
 
-function merge(item::Itemset, itemsets::NTuple{N,T where T <: Itemset}) where {N}
+function merge(item::Itemset, itemsets::NTuple{N,Itemset}) where {N}
     return reduce(vcat, value.([item, itemsets...])) |> Itemset
 end
 
@@ -81,42 +81,31 @@ See also [`SoleLogics.Atom`](@ref), [`SoleModels.antecedent`](@ref),
 [`SoleModels.consequent`](@ref), [`Itemset`](@ref), [`SoleModels.Rule`](@ref).
 """
 struct ARule
-    rule::Rule{Itemset,Itemset}
+    rule::Tuple{Itemset,Itemset}
 
     # memoization structures
     lmemo::LmeasMemo
     gmemo::GmeasMemo
 
-    function Itemset(
-        antecedent::T,
-        consequent::T,
-        lmemo::LmeasMemo,
-        gmemo::GmeasMemo
-        ) where {T<:Union{Item,LeftmostConjunctiveForm{<:Item}}}
-        new(antecedent, consequent, lmemo, gmemo)
-    end
-    function Itemset(
-        antecedent::T,
-        consequent::T
-        ) where {T<:Union{Item,LeftmostConjunctiveForm{<:Item}}}
-        Itemset(antecedent, consequent, LmeasMemo(), GmeasMemo())
+    function ARule(ant::Itemset, cons::Itemset)
+        new((ant,cons), LmeasMemo(), GmeasMemo())
     end
 end
 
-value(rule::ARule) = (antecedent(rule), consequent(rule))
+antecedent(r::ARule) = r.rule[1]
+consequent(r::ARule) = r.rule[2]
+value(r::ARule) = (antecedent(r), consequent(r))
 
-setlocalmemo(rule::ARule, key::LmeasMemoKey, val::Float64) = rule.lmemo[key] = val
-getlocalmemo(rule::ARule, key::LmeasMemoKey) = get(rule.lmemo, key, nothing)
+setlocalmemo(r::ARule, key::LmeasMemoKey, val::Float64) = r.lmemo[key] = val
+getlocalmemo(r::ARule, key::LmeasMemoKey) = get(r.lmemo, key, nothing)
 
-setglobalmemo(rule::ARule, key::GmeasMemoKey, val::Float64) = rule.gmemo[key] = val
-getglobalmemo(rule::ARule, key::GmeasMemoKey) = get(rule.gmemo, key, nothing)
+setglobalmemo(r::ARule, key::GmeasMemoKey, val::Float64) = r.gmemo[key] = val
+getglobalmemo(r::ARule, key::GmeasMemoKey) = get(r.gmemo, key, nothing)
 
 ############################################################################################
 #### Meaningfulness measures ###############################################################
 ############################################################################################
 
-# NOTE: SoleLogics.AbstractInterpretation could be SoleLogics.LogicalInstance
-# which for example is obtained by using SoleLogics.getinstance(X,1) on a logiset X.
 const doc_meaningfulness_meas = """
     const ItemLmeas = FunctionWrapper{Float64, Tuple{Itemset,AbstractInterpretation}}
     const ItemGmeas = FunctionWrapper{Float64, Tuple{Itemset,AbstractDataset,Threshold}}
@@ -126,7 +115,14 @@ const doc_meaningfulness_meas = """
 Function wrappers to express local and global meaningfulness measures of items and
 association rules.
 
-TODO: show how to wrap local and global support, confidence, lift and conviction.
+Local meaningfulness measures ([`ItemLmeas`](@ref), [`RuleLmeas`](@ref)) returns
+how frequently a test regarding an [`Itemset`](@ref) or a [`ARule`](@ref) is
+satisfied within a specific [`AbstractInterpretation`](@ref).
+
+Global meaningfulness measures ([`ItemGmeas`](@ref), [`RuleGmeas`](@ref)) are intended to
+repeatedly apply a local meaningfulness measure on all the instances of an
+[`AbstractDataset`](@ref). These returns how many times the real value returned by a
+local measure is higher than a threshold.
 
 See also [`ARule`](@ref), [`FunctionWrapper`](@ref), [`Itemset`](@ref).
 """
@@ -162,7 +158,7 @@ function lsupport(itemset::Itemset, logi_instance::LogicalInstance)::Float64
     return ans
 end
 
-function gsupport(itemset::Itemset, X::SupportedLogiset, threshold::Float64)
+function gsupport(itemset::Itemset, X::SupportedLogiset, threshold::Float64)::Float64
     fname = Symbol(StackTraces.stacktrace()[1].func) # this function name, as Symbol
 
     # If possible, retrieve from memoization structure inside itemset structure
@@ -189,7 +185,7 @@ function lconfidence(rule::ARule, logi_instance::LogicalInstance)::Float64
     return ans
 end
 
-function gconfidence(rule::ARule, X::SupportedLogiset, threshold::Float64)
+function gconfidence(rule::ARule, X::SupportedLogiset, threshold::Float64)::Float64
     fname = Symbol(StackTraces.stacktrace()[1].func) # this function name, as Symbol
 
     _antecedent = antecedent(rule)
@@ -205,29 +201,54 @@ end
 #### Learning algorithms ###################################################################
 ############################################################################################
 
+const MiningAlgo = FunctionWrapper{Nothing,Tuple{ARuleMiner,AbstractDataset}}
+
 """
-Association rule extraction configuration struct.
+Generic machine learning model interface to perform association rules extraction.
 """
-struct Configuration
-    # list of available literals
+@with_kw struct ARuleMiner
+    # target dataset
+    X::AbstractDataset
+    # algorithm used to perform extraction
+    algo::MiningAlgo
     alphabet::Vector{Item} # NOTE: cannot instanciate Item inside ExplicitAlphabet
 
-    # meaningfulness measures
-    # TODO: vectors of function wrappers (without tuples) should be enough
-    item_lmeas_constraints ::Vector{Tuple{ItemLmeas,Float64}}
-    item_gmeas_constraints ::Vector{Tuple{ItemGmeas,Float64}}
-    arule_lmeas_constraints::Vector{Tuple{RuleLmeas,Float64}}
-    arule_gmeas_constraints::Vector{Tuple{RuleGmeas,Float64}}
+    # local meaningfulness measures
+    item_lmeas_constraints ::Vector{ItemLmeas} = [lsupport]
+    arule_lmeas_constraints::Vector{RuleLmeas} = [lconfidence]
+
+    # global meaningfulness measures, paired with real thresholds
+    item_gmeas_constraints ::Vector{Tuple{ItemGmeas,Float64}} = [(gsupport,0.5)]
+    arule_gmeas_constraints::Vector{Tuple{RuleGmeas,Float64}} = [(gconfidence,0.5)]
+
+    freq_itemsets::Vector{Itemset}  # collected frequent itemsets
+    arules::Vector{ARule}           # collected association rules
+    info::NamedTuple                # general informations
+
+    function ARuleMiner(
+        X::AbstractDataset,
+        algo::Function,
+        alphabet::Vector{Item}
+    )
+        new(X, MiningAlgo(algo), alphabet,
+            [lsupport], [lconfidence], [(gsupport,0.5)], [(gconfidence,0.5)],
+            Vector{Itemset}([]), Vector{ARule}([]), (;))
+    end
 end
 
+dataset(miner::ARuleMiner) = miner.X
+miningalgo(miner::ARuleMiner) = miner.algo
+alphabet(miner::ARuleMiner) = miner.alphabet
+freqitems(miner::ARuleMiner) = miner.freq_itemsets
+arules(miner::ARuleMiner) = miner.arules
 
-# TODO: uniform interface to MLJ
+function mine(miner::ARuleMiner)
+    apply(miner, dataset(miner))
+end
 
-"""
-Extracts frequent [`Atom`](@ref)s from a (modal) dataset.
-"""
-function frequent(::AbstractDataset)
-    print("frequent call")
+function apply(miner::ARuleMiner, X::AbstractDataset)
+    # extract frequent itemsets
+    miner.algo(miner, X)
 end
 
 """
@@ -236,20 +257,20 @@ end
 
 Perform Apriori algorithm over a (modal) dataset.
 """
-function apriori()
-    Base.error("Method not implemented yet.")
+function apriori(miner::ARuleMiner, X::AbstractDataset)::Nothing
+    print("Apriori algorithm is working properly")
 end
 
 """
 Perform FP-Growth algorithm over a (modal) dataset.
 """
-function fpgrowth()
+function fpgrowth(miner::ARuleMiner, X::AbstractDataset)
     Base.error("Method not implemented yet.")
 end
 
 """
 Perform Eclat algorithm over a (modal) dataset.
 """
-function eclat()
+function eclat(miner::ARuleMiner, X::AbstractDataset)
     Base.error("Method not implemented yet.")
 end
