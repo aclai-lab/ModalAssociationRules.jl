@@ -3,13 +3,13 @@ Organization:
     # getters, setters, merge method
   ✔ define meaningfulness measures in an extensible way @done(24-01-15 16:16)
     # local and global support, confidence and write tests
-  ☐ uniform algorithms interface (fit)
-  ☐ think about which parameters are needed and how they can be customized
+  ✔ uniform algorithms interface (apply) @done(24-01-16 13:54)
+  ✔ think about which parameters are needed and how they can be customized @done(24-01-16 13:54)
     # maybe a configuration structure with an array of local measures?
     # also, each measure can be activated locally or globally
     # localdict{string(local measure) -> counter} # if local measure is given
     # globldict{string(local measure) -> counter} # if local measure is given with globality on
-  ☐ write an initial apriori implementation
+  ✔ write an initial apriori implementation @done(24-01-16 13:54)
   ☐ write an initial fpgrowth implementation
 
 Other packages:
