@@ -226,9 +226,10 @@ Generic machine learning model interface to perform association rules extraction
     rule_constrained_measures::Vector{Tuple{RuleGmeas,Float64,Float64}} =
         [(gconfidence, 0.5, 0.5)]
 
-    freq_itemsets::Vector{Itemset}  # collected frequent itemsets
-    arules::Vector{ARule}           # collected association rules
-    info::NamedTuple                # general informations
+    infreq_itemsets::Vector{Itemset}    # non-frequent itemsets dump
+    freq_itemsets::Vector{Itemset}      # collected frequent itemsets
+    arules::Vector{ARule}               # collected association rules
+    info::NamedTuple                    # general informations
 
     function ARuleMiner(
         X::AbstractDataset,
@@ -247,6 +248,7 @@ dataset(miner::ARuleMiner) = miner.X
 miningalgo(miner::ARuleMiner) = miner.algo
 alphabet(miner::ARuleMiner) = miner.alphabet
 
+infreqitems(miner::ARuleMiner) = miner.infreq_itemsets
 freqitems(miner::ARuleMiner) = miner.freq_itemsets
 pushfreq!(miner::ARuleMiner, item::Itemset) = push!(freqitems(miner), item)
 
@@ -289,6 +291,8 @@ function apriori(miner::ARuleMiner, X::AbstractDataset)::Nothing
 
         if interesting
             push!(frequents, item)
+        else
+            push!(infreqitems, item)
         end
     end
 
