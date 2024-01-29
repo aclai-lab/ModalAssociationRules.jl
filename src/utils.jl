@@ -1,4 +1,5 @@
-
+# shared logic amongs methods that performs binning;
+# see equicut and quantilecut
 function _cut(X_df::DataFrame, cutpolitic::Function)
     ncols = nvariables(X_df)
 

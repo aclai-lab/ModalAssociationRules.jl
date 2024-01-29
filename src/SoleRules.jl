@@ -31,6 +31,6 @@ export apriori, fpgrowth
 
 include("utils.jl")
 
-export cut
+export equicut, quantilecut
 
 end
