@@ -12,6 +12,8 @@ using Reexport
 using SoleLogics: AbstractInterpretation, getinstance, LogicalInstance, nworlds
 using SoleModels: SupportedLogiset
 
+using StatsBase
+
 include("core.jl")
 
 export Item, Itemset, ARule
