@@ -272,12 +272,11 @@ end
 
 """
     function apriori(
-        miner::ARuleMiner,
-        X::AbstractDataset;
-        fulldump::Bool = false
-    )::Nothing
+        fulldump::Bool = true
+    )::Function
 
-Perform Apriori algorithm over a (modal) dataset.
+Wrapper of Apriori algorithm over a (modal) dataset.
+This returns a void function whose arg
 """
 function apriori(;
     fulldump::Bool = true   # mostly for testing purposes

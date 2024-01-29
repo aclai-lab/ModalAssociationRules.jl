@@ -1,7 +1,6 @@
 module SoleRules
 # Currently, the only topic covered by SoleRules is Association Rules.
 
-
 using FunctionWrappers: FunctionWrapper
 using Parameters
 
@@ -21,7 +20,11 @@ export ItemLmeas, ItemGmeas, RuleLmeas, RuleGmeas
 export lsupport, gsupport
 export lconfidence, gconfidence
 
-export ARuleMiner
+export ARuleMiner,
+    dataset, algorithm, alphabet,
+    item_meas, rule_meas,
+    freqitems, nonfreqitems, arules
+
 export apriori, fpgrowth
 
 end
