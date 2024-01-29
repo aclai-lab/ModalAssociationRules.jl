@@ -34,6 +34,6 @@ export apriori, fpgrowth
 include("utils.jl")
 
 export equicut, quantilecut
-export propose_conditions
+export make_conditions
 
 end
