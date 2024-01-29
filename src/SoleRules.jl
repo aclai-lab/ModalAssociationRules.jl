@@ -27,4 +27,8 @@ export ARuleMiner,
 
 export apriori, fpgrowth
 
+include("utils.jl")
+
+export cut
+
 end
