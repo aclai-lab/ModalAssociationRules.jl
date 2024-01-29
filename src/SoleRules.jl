@@ -2,7 +2,9 @@ module SoleRules
 # Currently, the only topic covered by SoleRules is Association Rules.
 
 using FunctionWrappers: FunctionWrapper
+using IterTools
 using Parameters
+using Random
 
 using Reexport
 @reexport using SoleModels
@@ -32,5 +34,6 @@ export apriori, fpgrowth
 include("utils.jl")
 
 export equicut, quantilecut
+export propose_conditions
 
 end
