@@ -24,4 +24,4 @@ lq = diamondlater(q)
 alphabet = Vector{Item}([p,q,lp,lq])
 
 # Make an association rule miner wrapping Apriori algorithm
-@test_nowarn miner = ARuleMiner(X, apriori, alphabet)
+@test_nowarn miner = ARuleMiner(X, apriori(), alphabet)

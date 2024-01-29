@@ -226,7 +226,7 @@ Generic machine learning model interface to perform association rules extraction
     rule_constrained_measures::Vector{Tuple{RuleGmeas,Float64,Float64}} =
         [(gconfidence, 0.5, 0.5)]
 
-    infreq_itemsets::Vector{Itemset}    # non-frequent itemsets dump
+    nonfreq_itemsets::Vector{Itemset}   # non-frequent itemsets dump
     freq_itemsets::Vector{Itemset}      # collected frequent itemsets
     arules::Vector{ARule}               # collected association rules
     info::NamedTuple                    # general informations
@@ -238,25 +238,27 @@ Generic machine learning model interface to perform association rules extraction
     )
         new(X, MiningAlgo(algo), alphabet,
             [(gsupport, 0.5, 0.5)], [(gconfidence, 0.5, 0.5)],
-            Vector{Itemset}([]), Vector{ARule}([]), (;))
+            Vector{Itemset}([]), Vector{Itemset}([]),
+            Vector{ARule}([]), (;))
     end
 end
 
 const MiningAlgo = FunctionWrapper{Nothing,Tuple{ARuleMiner,AbstractDataset}}
 
 dataset(miner::ARuleMiner) = miner.X
-miningalgo(miner::ARuleMiner) = miner.algo
+algorithm(miner::ARuleMiner) = miner.algo
 alphabet(miner::ARuleMiner) = miner.alphabet
-
-infreqitems(miner::ARuleMiner) = miner.infreq_itemsets
-freqitems(miner::ARuleMiner) = miner.freq_itemsets
-pushfreq!(miner::ARuleMiner, item::Itemset) = push!(freqitems(miner), item)
-
-arules(miner::ARuleMiner) = miner.arules
-pusharule!(miner::ARuleMiner, r::ARule) = push!(arules(miner), r)
 
 item_meas(miner::ARuleMiner) = miner.item_constrained_measures
 rule_meas(miner::ARuleMiner) = miner.rule_constrained_measures
+
+freqitems(miner::ARuleMiner) = miner.freq_itemsets
+nonfreqitems(miner::ARuleMiner) = miner.nonfreq_itemsets
+arules(miner::ARuleMiner) = miner.arules
+
+# push!(v::Vector{Itemset}, item::Itemset) = push!(v, item)
+# push!(v::Vector{Itemset}, items::Vector{Itemset}) = map(x -> push!(v, x), items)
+# push!(v::Vector{ARule}, rule::ARule) = push!(v, rule)
 
 function mine(miner::ARuleMiner)
     apply(miner, dataset(miner))
@@ -265,39 +267,66 @@ end
 function apply(miner::ARuleMiner, X::AbstractDataset)
     # extract frequent itemsets
     miner.algo(miner, X)
+    return true
 end
 
 """
-    function apriori(miner::ARuleMiner, X::AbstractDataset)::Nothing
+    function apriori(
+        miner::ARuleMiner,
+        X::AbstractDataset;
+        fulldump::Bool = false
+    )::Nothing
 
 Perform Apriori algorithm over a (modal) dataset.
 """
-function apriori(miner::ARuleMiner, X::AbstractDataset)::Nothing
-    # Candidates of length 1 - all the letters in our alphabet
-    candidates = Itemset.(alphabet(miner))
-    frequents = Vector{Itemset}([])
+function apriori(;
+    fulldump::Bool = true   # mostly for testing purposes
+)::Function
 
-    # For each candidate, establish if it is interesting or not
-    for item in candidates
-        interesting = true
+    function _apriori(miner::ARuleMiner, X::AbstractDataset)::Nothing
+        # candidates of length 1 - all the letters in our alphabet
+        candidates = Itemset.(alphabet(miner))
 
-        for meas in item_meas(miner)
-            (gmeas_algo, lthreshold, gthreshold) = meas
-            if gmeas_algo(item, X, lthreshold) < gthreshold
-                interesting = false
-                break
+        frequents = Vector{Itemset}([])     # frequent itemsets collection
+        nonfrequents = Vector{Itemset}([])  # non-frequent itemsets collection (testing)
+
+        while !isempty(candidates)
+           # for each candidate, establish if it is interesting or not
+            for item in candidates
+                interesting = true
+
+                for meas in item_meas(miner)
+                    (gmeas_algo, lthreshold, gthreshold) = meas
+                    if gmeas_algo(item, X, lthreshold) < gthreshold
+                        interesting = false
+                        break
+                    end
+                end
+                if interesting
+                    # dump the just computed frequent itemsets inside the miner.
+                    push!(frequents, item)
+                elseif fulldump
+                    # dump the non-frequent itemsets (maybe because of testing purposes)
+                    push!(nonfrequents, item)
+                end
             end
-        end
 
-        if interesting
-            push!(frequents, item)
-        else
-            push!(infreqitems, item)
+            # save frequent and nonfrequent itemsets inside miner structure
+            push!(freqitems(miner), frequents...)
+            push!(nonfreqitems(miner), nonfrequents...)
+
+            # generate new candidates
+            print("Frequent itemsets: $(freqitems)\n")
+            print("Non-frequent itemsets: $(nonfrequents)\b")
+            return 0
+
+            # empty support structures
+            empty!(frequents)
+            empty!(nonfrequents)
         end
     end
 
-    # Now, we dump the just computed frequent itemsets inside the miner.
-    # Then, if possible, we compute new, longer candidates and repeat the process.
+    return _apriori
 end
 
 """
