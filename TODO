@@ -12,6 +12,10 @@ Organization:
   ✔ write an initial apriori implementation @done(24-01-16 13:54)
   ☐ write an initial fpgrowth implementation
 
+Utility:
+  ☐ consider feature when binning
+  ☐ organize the alphabet generation system
+
 Other packages:
   ☐ find out how to extract interesting literals from which mine association rules.
     # maybe this has to be done in SoleModels? Providing different strategies
