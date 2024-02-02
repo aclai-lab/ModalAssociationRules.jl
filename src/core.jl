@@ -212,19 +212,18 @@ end
 """
 Generic machine learning model interface to perform association rules extraction.
 """
-@with_kw struct ARuleMiner
+struct ARuleMiner
     # target dataset
     X::AbstractDataset
     # algorithm used to perform extraction
     algo::FunctionWrapper{Nothing,Tuple{ARuleMiner,AbstractDataset}}
+
     alphabet::Vector{Item} # NOTE: cannot instanciate Item inside ExplicitAlphabet
 
     # meaningfulness measures
     # (global measure, local threshold, global threshold)
-    item_constrained_measures::Vector{Tuple{ItemGmeas,Float64,Float64}} =
-        [(gsupport, 0.5, 0.5)]
-    rule_constrained_measures::Vector{Tuple{RuleGmeas,Float64,Float64}} =
-        [(gconfidence, 0.5, 0.5)]
+    item_constrained_measures::Vector{Tuple{ItemGmeas,Float64,Float64}}
+    rule_constrained_measures::Vector{Tuple{RuleGmeas,Float64,Float64}}
 
     nonfreq_itemsets::Vector{Itemset}   # non-frequent itemsets dump
     freq_itemsets::Vector{Itemset}      # collected frequent itemsets
@@ -315,8 +314,8 @@ function apriori(;
             push!(nonfreqitems(miner), nonfrequents...)
 
             # generate new candidates
-            print("Frequent itemsets: $(freqitems)\n")
-            print("Non-frequent itemsets: $(nonfrequents)\b")
+            # print("Frequent itemsets: $(freqitems)\n")
+            # print("Non-frequent itemsets: $(nonfrequents)\b")
             return 0
 
             # empty support structures

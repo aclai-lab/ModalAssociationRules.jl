@@ -1,24 +1,25 @@
-# shared logic amongs methods that performs binning;
-# see equicut and quantilecut
-function _cut(X_df::DataFrame, cutpolitic::Function)
-    ncols = nvariables(X_df)
-
-    # for each variable, store a sorted list of its separation values
-    ans = Vector{Vector{Float64}}([])
-
-    for col in 1:ncols
-        vals = vcat(X_df[:,col]...)
-        push!(ans, cutpolitic(vals))
-    end
-
-    return ans
+# shared logic amongs methods that performs binning; see equicut and quantilecut.
+# Explanation:
+# consider the variable targetted by feature (feature.i_variable);
+# return a sorted list of its separation values.
+function _cut(X_df::DataFrame, feature::AbstractFeature, cutpolitic::Function)
+    vals = map(x -> feature([x]), X_df[:,feature.i_variable])
+    return cutpolitic(vcat(vals))
 end
 
 """
 Bin [`DataFrame`](@ref) values into discrete, equispaced intervals.
 Return the sorted separation values vector for each variable.
 """
-function equicut(X_df::DataFrame; nbins=3, keepbounds=false)
+function equicut(
+    X_df::DataFrame;
+    # this might be initialized with UnivariateValue
+    features::Vector{AbstractFeature}=Vector{AbstractFeature}(
+        [UnivariateMin(1), UnivariateMax(1)]
+    ),
+    nbins=3,
+    keepbounds=false
+)
 
     function _equicut(vals::Vector{Float64})
         if !issorted(vals)
@@ -39,21 +40,37 @@ function equicut(X_df::DataFrame; nbins=3, keepbounds=false)
         end
     end
 
-    return _cut(X_df, _equicut)
+    # return the thresholds associated with each feature
+    ans = Vector{Vector{Float64}}([])
+    for feature in features
+        push!(ans, _cut(X_df, feature, _equicut))
+    end
+    return ans
 end
 
 """
 Bin [`DataFrame`](@ref) values in equal-sized bins.
 Return the sorted separation values vector for each variable.
 """
-function quantilecut(X_df::DataFrame; nbins=3)
+function quantilecut(
+    X_df::DataFrame;
+    features::Vector{AbstractFeature}=Vector{AbstractFeature}(
+        [UnivariateMin(1), UnivariateMax(1)]
+    ),
+    nbins=3
+)
 
     function _quantilecut(vals::Vector{Float64})
         h = fit(Histogram, vals, nbins=nbins)
         return vals[sort(h.weights)]
     end
 
-    return _cut(X_df, _quantilecut)
+    ans = Vector{Vector{Float64}}([])
+    for feature in features
+        print(_cut(X_df, feature, _quantilecut))
+        push!(ans, _cut(X_df, feature, _quantilecut))
+    end
+    return ans
 end
 
 """

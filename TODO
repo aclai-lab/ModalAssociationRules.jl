@@ -13,12 +13,10 @@ Organization:
   ☐ write an initial fpgrowth implementation
 
 Utility:
-  ☐ consider feature when binning
+  # all the following should be moved out ot SoleModels
+  ✔ consider feature when binning @done(24-02-02 15:52)
   ☐ organize the alphabet generation system
-
-Other packages:
   ☐ find out how to extract interesting literals from which mine association rules.
-    # maybe this has to be done in SoleModels? Providing different strategies
 
 Testing:
   ☐ in test section, invoke SoleLogics kripke models generation
