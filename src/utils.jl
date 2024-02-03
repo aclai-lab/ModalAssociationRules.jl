@@ -2,8 +2,8 @@
 # Explanation:
 # consider the variable targetted by feature (feature.i_variable);
 # return a sorted list of its separation values.
-function _cut(X_df::DataFrame, feature::AbstractFeature, cutpolitic::Function)
-    vals = map(x -> feature([x]), X_df[:,feature.i_variable])
+function _cut(X_df::DataFrame, feature::Function, var::Integer, cutpolitic::Function)
+    vals = map(x -> feature(x), X_df[:,var])
     return cutpolitic(vcat(vals))
 end
 
@@ -12,40 +12,36 @@ Bin [`DataFrame`](@ref) values into discrete, equispaced intervals.
 Return the sorted separation values vector for each variable.
 """
 function equicut(
-    X_df::DataFrame;
-    # this might be initialized with UnivariateValue
-    features::Vector{AbstractFeature}=Vector{AbstractFeature}(
-        [UnivariateMin(1), UnivariateMax(1)]
-    ),
-    nbins=3,
-    keepbounds=false
+    X_df::DataFrame,
+    feature::Function,
+    var::Integer;
+    distance::Integer = 3,
+    keepleftbound = true
 )
 
     function _equicut(vals::Vector{Float64})
+        unique!(vals)
+
         if !issorted(vals)
            sort!(vals)
         end
 
-        # get bin length
         valslen = length(vals)
-        binlen = Integer(floor(valslen / (nbins+1)))
+        @assert distance < valslen "Distance $(distance) is higher than unique values to " *
+        "bin, which is $(valslen). Please lower the distance."
 
-        # if keepbounds is true, also consider 1-index and end-index
-        if keepbounds
-            # note that binlen:binlen:valslen is different from 1:binlen:valslen,
-            # where indexes are [1, binlen+1, (binlen+1)*2, ...]
-            return vcat(vals[1], vals[binlen:binlen:valslen])
-        else
-            return vals[binlen:binlen:valslen-binlen]
+        ranges = collect(Iterators.partition(1:valslen, distance))
+        bounds = [vals[last(r)] for r in ranges]
+
+        if keepleftbound
+            append!(bounds, vals[1])
         end
+
+        return bounds |> unique |> sort
     end
 
     # return the thresholds associated with each feature
-    ans = Vector{Vector{Float64}}([])
-    for feature in features
-        push!(ans, _cut(X_df, feature, _equicut))
-    end
-    return ans
+    return _cut(X_df, feature, var, _equicut)
 end
 
 """
@@ -53,24 +49,18 @@ Bin [`DataFrame`](@ref) values in equal-sized bins.
 Return the sorted separation values vector for each variable.
 """
 function quantilecut(
-    X_df::DataFrame;
-    features::Vector{AbstractFeature}=Vector{AbstractFeature}(
-        [UnivariateMin(1), UnivariateMax(1)]
-    ),
-    nbins=3
+    X_df::DataFrame,
+    feature::Function,
+    var::Integer;
+    nbins::Integer = 3
 )
 
     function _quantilecut(vals::Vector{Float64})
         h = fit(Histogram, vals, nbins=nbins)
-        return vals[sort(h.weights)]
+        return collect(h.edges...)
     end
 
-    ans = Vector{Vector{Float64}}([])
-    for feature in features
-        print(_cut(X_df, feature, _quantilecut))
-        push!(ans, _cut(X_df, feature, _quantilecut))
-    end
-    return ans
+    return _cut(X_df, feature, var, _quantilecut)
 end
 
 """
@@ -87,7 +77,7 @@ See also [`syntaxstring`](@ref), [`SoleModels.TestOperator`](@ref),
 function make_conditions(
     thresholds::Vector{Float64},
     nvariables::Vector{Int64},
-    features::Vector{DataType}, # NOTE: this could be Vector{<:AbstractFeature}
+    features::Vector{DataType}, # NOTE: this should be Vector{<:AbstractFeature}
     testops::Vector{SoleModels.TestOperator};
     condition = ScalarCondition
 )
