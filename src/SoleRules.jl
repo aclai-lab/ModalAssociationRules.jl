@@ -28,8 +28,11 @@ export ARuleMiner,
     dataset, algorithm, alphabet,
     item_meas, rule_meas,
     freqitems, nonfreqitems, arules
+    mine, apply
 
-export apriori, fpgrowth
+include("apriori.jl")
+
+export apriori
 
 include("utils.jl")
 

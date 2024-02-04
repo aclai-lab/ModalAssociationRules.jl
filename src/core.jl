@@ -141,7 +141,7 @@ const RuleLmeas = FunctionWrapper{Float64,Tuple{ARule,AbstractInterpretation}}
 """$(doc_meaningfulness_meas)"""
 const RuleGmeas = FunctionWrapper{Float64, Tuple{ARule,AbstractDataset,Float64}}
 
-function lsupport(itemset::Itemset, logi_instance::LogicalInstance)::Float64
+function _lsupport(itemset::Itemset, logi_instance::LogicalInstance)::Float64
     # retrieve logiset, and the specific instance
     X, i_instance = logi_instance.s, logi_instance.i_instance
 
@@ -161,7 +161,7 @@ function lsupport(itemset::Itemset, logi_instance::LogicalInstance)::Float64
     return ans
 end
 
-function gsupport(itemset::Itemset, X::SupportedLogiset, threshold::Float64)::Float64
+function _gsupport(itemset::Itemset, X::SupportedLogiset, threshold::Float64)::Float64
     # If possible, retrieve result from memoization structure inside itemset structure
     fname = Symbol(StackTraces.stacktrace()[1].func) # this function name, as Symbol
     ans = getglobalmemo(itemset, fname)
@@ -179,7 +179,7 @@ function gsupport(itemset::Itemset, X::SupportedLogiset, threshold::Float64)::Fl
     return ans
 end
 
-function lconfidence(r::ARule, logi_instance::LogicalInstance)::Float64
+function _lconfidence(r::ARule, logi_instance::LogicalInstance)::Float64
     fname = Symbol(StackTraces.stacktrace()[1].func) # this function name, as Symbol
 
     _antecedent = antecedent(r)
@@ -193,7 +193,7 @@ function lconfidence(r::ARule, logi_instance::LogicalInstance)::Float64
     return ans
 end
 
-function gconfidence(r::ARule, X::SupportedLogiset, threshold::Float64)::Float64
+function _gconfidence(r::ARule, X::SupportedLogiset, threshold::Float64)::Float64
     fname = Symbol(StackTraces.stacktrace()[1].func) # this function name, as Symbol
 
     _antecedent = antecedent(r)
@@ -204,6 +204,11 @@ function gconfidence(r::ARule, X::SupportedLogiset, threshold::Float64)::Float64
     setlocalmemo(r, fname, ans) # Save result for optimization
     return ans
 end
+
+lsupport = ItemLmeas(_lsupport)
+gsupport = ItemGmeas(_gsupport)
+lconfidence = RuleLmeas(_lconfidence)
+gconfidence = RuleGmeas(_gconfidence)
 
 ############################################################################################
 #### Learning algorithms ###################################################################
@@ -233,12 +238,25 @@ struct ARuleMiner
     function ARuleMiner(
         X::AbstractDataset,
         algo::Function,
-        alphabet::Vector{Item}
+        alphabet::Vector{Item},
+        item_constrained_measures::Vector{<:Tuple{ItemGmeas,Float64,Float64}},
+        rule_constrained_measures::Vector{<:Tuple{RuleGmeas,Float64,Float64}}
     )
         new(X, MiningAlgo(algo), alphabet,
-            [(gsupport, 0.5, 0.5)], [(gconfidence, 0.5, 0.5)],
+            item_constrained_measures,
+            rule_constrained_measures,
             Vector{Itemset}([]), Vector{Itemset}([]),
             Vector{ARule}([]), (;))
+    end
+
+    function ARuleMiner(
+        X::AbstractDataset,
+        algo::Function,
+        alphabet::Vector{Item}
+    )
+        # ARuleMiner(X, MiningAlgo(algo), alphabet,
+        new(X, MiningAlgo(algo), alphabet, [(gsupport, 0.5, 0.5)], [(gconfidence, 0.5, 0.5)],
+        Vector{Itemset}([]), Vector{Itemset}([]), Vector{ARule}([]), (;));
     end
 end
 
@@ -267,76 +285,4 @@ function apply(miner::ARuleMiner, X::AbstractDataset)
     # extract frequent itemsets
     miner.algo(miner, X)
     return true
-end
-
-"""
-    function apriori(
-        fulldump::Bool = true
-    )::Function
-
-Wrapper of Apriori algorithm over a (modal) dataset.
-This returns a void function whose arg
-"""
-function apriori(;
-    fulldump::Bool = true   # mostly for testing purposes
-)::Function
-
-    function _apriori(miner::ARuleMiner, X::AbstractDataset)::Nothing
-        # candidates of length 1 - all the letters in our alphabet
-        candidates = Itemset.(alphabet(miner))
-
-        frequents = Vector{Itemset}([])     # frequent itemsets collection
-        nonfrequents = Vector{Itemset}([])  # non-frequent itemsets collection (testing)
-
-        while !isempty(candidates)
-           # for each candidate, establish if it is interesting or not
-            for item in candidates
-                interesting = true
-
-                for meas in item_meas(miner)
-                    (gmeas_algo, lthreshold, gthreshold) = meas
-                    if gmeas_algo(item, X, lthreshold) < gthreshold
-                        interesting = false
-                        break
-                    end
-                end
-                if interesting
-                    # dump the just computed frequent itemsets inside the miner.
-                    push!(frequents, item)
-                elseif fulldump
-                    # dump the non-frequent itemsets (maybe because of testing purposes)
-                    push!(nonfrequents, item)
-                end
-            end
-
-            # save frequent and nonfrequent itemsets inside miner structure
-            push!(freqitems(miner), frequents...)
-            push!(nonfreqitems(miner), nonfrequents...)
-
-            # generate new candidates
-            # print("Frequent itemsets: $(freqitems)\n")
-            # print("Non-frequent itemsets: $(nonfrequents)\b")
-            return 0
-
-            # empty support structures
-            empty!(frequents)
-            empty!(nonfrequents)
-        end
-    end
-
-    return _apriori
-end
-
-"""
-Perform FP-Growth algorithm over a (modal) dataset.
-"""
-function fpgrowth(miner::ARuleMiner, X::AbstractDataset)
-    Base.error("Method not implemented yet.")
-end
-
-"""
-Perform Eclat algorithm over a (modal) dataset.
-"""
-function eclat(miner::ARuleMiner, X::AbstractDataset)
-    Base.error("Method not implemented yet.")
 end
