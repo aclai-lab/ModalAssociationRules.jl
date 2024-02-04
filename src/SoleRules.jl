@@ -22,7 +22,7 @@ include("core.jl")
 export Item
 export LmeasMemo, LmeasMemoKey, GmeasMemo, GmeasMemoKey
 
-export Itemset
+export Itemset, ItemsetContent
 export setlocalmemo, getlocalmemo, getglobalmemo, setglobalmemo
 export value, unpack, merge, grow
 

@@ -19,7 +19,11 @@ Utility:
   # all the following should be moved out ot SoleModels
   ✔ consider feature when binning @done(24-02-02 15:52)
   ☐ organize the alphabet generation system
-  ☐ find out how to extract interesting literals from which mine association rules.
+  ☐ find out how to extract interesting literals from which mine association rules
+  ☐ expose a simple-to-understand pool of utility methods to perform combinatorics over itemsets
+    ✔ merge @done(24-02-04 19:55)
+    ✔ combine @done(24-02-04 19:55)
+      
 
 Testing:
   ☐ in test section, invoke SoleLogics kripke models generation

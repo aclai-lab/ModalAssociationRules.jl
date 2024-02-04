@@ -10,21 +10,6 @@ function apriori(;
     fulldump::Bool = true   # mostly for testing purposes
 )::Function
 
-    function _union7(itemsets::Vector{Itemset}, newlength::Integer)
-        newset = Vector{Itemset}([])
-
-        for (idx1, itemset1) in enumerate(itemsets)
-            for itemset2 in itemsets[(idx1+1):end]
-                merged = SoleRules.merge(itemset1, itemset2)
-                if length(merged) == newlength
-                    push!(newset, merged)
-                end
-            end
-        end
-
-        return Itemset.(unique(value.(newset)))
-    end
-
     # look at the (k-1)-subsets of each candidate itemset:
     # if a subset was not frequent, then prune it.
     # function _prune!(

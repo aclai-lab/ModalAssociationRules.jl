@@ -10,8 +10,10 @@ const LmeasMemo = Dict{LmeasMemoKey,Float64}
 const GmeasMemoKey = Symbol
 const GmeasMemo = Dict{GmeasMemoKey,Float64}
 
+const ItemsetContent = Union{Item,LeftmostConjunctiveForm{<:Item}}
+
 """
-    struct Itemset{T<:Union{Item,LeftmostConjunctiveForm{<:Item}}}
+    struct Itemset{T<:ItemsetContent}
         value::T
         lmemo::LmeasMemo
         gmemo::GmeasMemo
@@ -23,7 +25,7 @@ eventually representing them as a [`LeftmostLinearForm`](@ref).
 
 See also [`LeftmostLinearForm`](@ref), [`ARule`](@ref), [`Item`](@ref).
 """
-struct Itemset{T<:Union{Item,LeftmostConjunctiveForm{<:Item}}}
+struct Itemset{T<:ItemsetContent}
     value::T
 
     # memoization structures
@@ -34,15 +36,15 @@ struct Itemset{T<:Union{Item,LeftmostConjunctiveForm{<:Item}}}
         val::T,
         lmemo::LmeasMemo,
         gmemo::GmeasMemo
-        ) where {T<:Union{Item,LeftmostConjunctiveForm{<:Item}}}
+        ) where {T<:ItemsetContent}
         new{T}(val, lmemo, gmemo)
     end
-    function Itemset(val::T) where {T<:Union{Item,LeftmostConjunctiveForm{<:Item}}}
+    function Itemset(val::T) where {T<:ItemsetContent}
         Itemset{T}(val, LmeasMemo(), GmeasMemo())
     end
     function Itemset(
         val::Vector{<:T}
-    ) where {T<:Union{Item,LeftmostConjunctiveForm{<:Item}}}
+    ) where {T<:ItemsetContent}
         cnf = LeftmostConjunctiveForm(val)
         Itemset{typeof(cnf)}(cnf, LmeasMemo(), GmeasMemo())
     end
@@ -53,8 +55,6 @@ end
 
 value(items::Itemset) = items.value isa LeftmostConjunctiveForm ?
     SoleLogics.conjuncts(items.value) : items.value
-
-iterate(a::Atom) = return a
 
 setlocalmemo(items::Itemset, key::LmeasMemoKey, val::Float64) = items.lmemo[key] = val
 getlocalmemo(items::Itemset, key::LmeasMemoKey) = get(items.lmemo, key, nothing)
@@ -72,6 +72,21 @@ function merge(item1::Itemset, item2::Itemset)
     v1 = item1 isa Itemset{<:LeftmostConjunctiveForm} ? value(item1) : [value(item1)]
     v2 = item2 isa Itemset{<:LeftmostConjunctiveForm} ? value(item2) : [value(item2)]
     return Itemset(unique([v1..., v2...]))
+end
+
+function combine(itemsets::Vector{<:Itemset{<:ItemsetContent}}, newlength::Integer)
+    newset = Vector{Itemset{<:ItemsetContent}}([])
+
+    for (idx1, itemset1) in enumerate(itemsets)
+        for itemset2 in itemsets[(idx1+1):end]
+            merged = SoleRules.merge(itemset1, itemset2)
+            if length(merged) == newlength
+                push!(newset, merged)
+            end
+        end
+    end
+
+    return Itemset.(unique(value.(newset)))
 end
 
 function Base.show(io::IO, items::Itemset{<:Item})
