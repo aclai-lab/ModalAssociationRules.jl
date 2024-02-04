@@ -9,8 +9,11 @@ Organization:
     # also, each measure can be activated locally or globally
     # localdict{string(local measure) -> counter} # if local measure is given
     # globldict{string(local measure) -> counter} # if local measure is given with globality on
-  ✔ write an initial apriori implementation @done(24-01-16 13:54)
+  ☐ write an initial apriori implementation
   ☐ write an initial fpgrowth implementation
+
+Generic:
+  ☐ global memoization should check if memoized treshold is larger than requested one
 
 Utility:
   # all the following should be moved out ot SoleModels

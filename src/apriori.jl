@@ -10,6 +10,38 @@ function apriori(;
     fulldump::Bool = true   # mostly for testing purposes
 )::Function
 
+    function _union7(itemsets::Vector{Itemset}, newlength::Integer)
+        newset = Vector{Itemset}([])
+
+        for (idx1, itemset1) in enumerate(itemsets)
+            for itemset2 in itemsets[(idx1+1):end]
+                merged = SoleRules.merge(itemset1, itemset2)
+                if length(merged) == newlength
+                    push!(newset, merged)
+                end
+            end
+        end
+
+        return Itemset.(unique(value.(newset)))
+    end
+
+    # look at the (k-1)-subsets of each candidate itemset:
+    # if a subset was not frequent, then prune it.
+    # function _prune!(
+    #     candidates::Vector{Itemset},
+    #     oldfrequents::Vector{Itemset},
+    #     length::Integer
+    # )
+#
+    #     [
+    #         itemset
+    #         for itemset in candidates
+    #         for combo in combinations(itemset, length)
+    #     ]
+#
+    # end
+
+    # modal apriori main logic, as in https://ceur-ws.org/Vol-3284/492.pdf
     function _apriori(miner::ARuleMiner, X::AbstractDataset)::Nothing
         # candidates of length 1 - all the letters in our alphabet
         candidates = Itemset.(alphabet(miner))
@@ -29,8 +61,9 @@ function apriori(;
                         break
                     end
                 end
+
                 if interesting
-                    # dump the just computed frequent itemsets inside the miner.
+                    # dump the just computed frequent itemsets inside the miner
                     push!(frequents, item)
                 elseif fulldump
                     # dump the non-frequent itemsets (maybe because of testing purposes)
@@ -41,6 +74,11 @@ function apriori(;
             # save frequent and nonfrequent itemsets inside miner structure
             push!(freqitems(miner), frequents...)
             push!(nonfreqitems(miner), nonfrequents...)
+
+            # generate new candidates
+            k = (candidates |> first |> length) + 1
+            candidates = _generate(candidates, k)
+            _prune!(candidates, frequents, k-1)
 
             # generate new candidates
             print("Frequent itemsets: $(freqitems)\n")

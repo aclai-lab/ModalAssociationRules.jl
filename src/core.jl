@@ -31,25 +31,30 @@ struct Itemset{T<:Union{Item,LeftmostConjunctiveForm{<:Item}}}
     gmemo::GmeasMemo
 
     function Itemset{T}(
-        value::T,
+        val::T,
         lmemo::LmeasMemo,
         gmemo::GmeasMemo
         ) where {T<:Union{Item,LeftmostConjunctiveForm{<:Item}}}
-        new{T}(value, lmemo, gmemo)
+        new{T}(val, lmemo, gmemo)
     end
-    function Itemset(value::T) where {T<:Union{Item,LeftmostConjunctiveForm{<:Item}}}
-        Itemset{T}(value, LmeasMemo(), GmeasMemo())
+    function Itemset(val::T) where {T<:Union{Item,LeftmostConjunctiveForm{<:Item}}}
+        Itemset{T}(val, LmeasMemo(), GmeasMemo())
     end
     function Itemset(
-        value::Vector{<:T}
+        val::Vector{<:T}
     ) where {T<:Union{Item,LeftmostConjunctiveForm{<:Item}}}
-        cnf = LeftmostConjunctiveForm(value)
+        cnf = LeftmostConjunctiveForm(val)
         Itemset{typeof(cnf)}(cnf, LmeasMemo(), GmeasMemo())
+    end
+    function Itemset(val::Vector{Itemset})
+        Itemset(value.(val))
     end
 end
 
 value(items::Itemset) = items.value isa LeftmostConjunctiveForm ?
-    items.value |> children : items.value
+    SoleLogics.conjuncts(items.value) : items.value
+
+iterate(a::Atom) = return a
 
 setlocalmemo(items::Itemset, key::LmeasMemoKey, val::Float64) = items.lmemo[key] = val
 getlocalmemo(items::Itemset, key::LmeasMemoKey) = get(items.lmemo, key, nothing)
@@ -57,8 +62,24 @@ getlocalmemo(items::Itemset, key::LmeasMemoKey) = get(items.lmemo, key, nothing)
 setglobalmemo(items::Itemset, key::GmeasMemoKey, val::Float64) = items.gmemo[key] = val
 getglobalmemo(items::Itemset, key::GmeasMemoKey) = get(items.gmemo, key, nothing)
 
-function merge(item::Itemset, itemsets::NTuple{N,Itemset}) where {N}
-    return reduce(vcat, value.([item, itemsets...])) |> Itemset
+Base.length(items::Itemset{<:Atom}) = 1
+Base.length(items::Itemset{<:LeftmostConjunctiveForm}) = length(value(items))
+
+# Merge two items together, keeping unique items
+function merge(item1::Itemset, item2::Itemset)
+    # ternary operator returning a single value between square brackets is needed to
+    # generalize the splat operator inside unique. Otherwise, an error is thrown.
+    v1 = item1 isa Itemset{<:LeftmostConjunctiveForm} ? value(item1) : [value(item1)]
+    v2 = item2 isa Itemset{<:LeftmostConjunctiveForm} ? value(item2) : [value(item2)]
+    return Itemset(unique([v1..., v2...]))
+end
+
+function Base.show(io::IO, items::Itemset{<:Item})
+    print(io, "$(items |> value |> syntaxstring)")
+end
+
+function Base.show(io::IO, items::Itemset{<:LeftmostConjunctiveForm})
+    print(io, "$(syntaxstring.(items |> value))")
 end
 
 """
@@ -170,7 +191,7 @@ function _gsupport(itemset::Itemset, X::SupportedLogiset, threshold::Float64)::F
     end
 
     # Compute global measure, then divide it by the dataset total number of instances
-    ans = sum([lsupport(itemset, getinstance(X, i_instance)) >= threshold
+    ans = sum([_lsupport(itemset, getinstance(X, i_instance)) >= threshold
         for i_instance in 1:ninstances(X)])
     ans = ans / ninstances(X)
 
@@ -187,8 +208,8 @@ function _lconfidence(r::ARule, logi_instance::LogicalInstance)::Float64
 
     # TODO: exploit memoization here
 
-    ans = lsupport(merge(_antecedent, (_consequent)), logi_instance) /
-        lsupport(_antecedent, logi_instance)
+    ans = _lsupport(SoleRules.merge(_antecedent, _consequent), logi_instance) /
+        _lsupport(_antecedent, logi_instance)
     setlocalmemo(r, fname, ans) # Save result for optimization
     return ans
 end
@@ -199,8 +220,8 @@ function _gconfidence(r::ARule, X::SupportedLogiset, threshold::Float64)::Float6
     _antecedent = antecedent(r)
     _consequent = consequent(r)
 
-    ans = gsupport(merge(_antecedent, (_consequent)), X, threshold) /
-        gsupport(_antecedent, X, threshold)
+    ans = _gsupport(SoleRules.merge(_antecedent, _consequent), X, threshold) /
+        _gsupport(_antecedent, X, threshold)
     setlocalmemo(r, fname, ans) # Save result for optimization
     return ans
 end
@@ -272,10 +293,6 @@ rule_meas(miner::ARuleMiner) = miner.rule_constrained_measures
 freqitems(miner::ARuleMiner) = miner.freq_itemsets
 nonfreqitems(miner::ARuleMiner) = miner.nonfreq_itemsets
 arules(miner::ARuleMiner) = miner.arules
-
-# push!(v::Vector{Itemset}, item::Itemset) = push!(v, item)
-# push!(v::Vector{Itemset}, items::Vector{Itemset}) = map(x -> push!(v, x), items)
-# push!(v::Vector{ARule}, rule::ARule) = push!(v, rule)
 
 function mine(miner::ARuleMiner)
     apply(miner, dataset(miner))

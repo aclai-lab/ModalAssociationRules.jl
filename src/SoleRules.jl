@@ -1,6 +1,7 @@
 module SoleRules
 # Currently, the only topic covered by SoleRules is Association Rules.
 
+using Combinatorics
 using FunctionWrappers: FunctionWrapper
 using IterTools
 using Parameters
@@ -18,7 +19,15 @@ using StatsBase
 
 include("core.jl")
 
-export Item, Itemset, ARule
+export Item
+export LmeasMemo, LmeasMemoKey, GmeasMemo, GmeasMemoKey
+
+export Itemset
+export setlocalmemo, getlocalmemo, getglobalmemo, setglobalmemo
+export value, unpack, merge, grow
+
+export ARule
+export antecedent, consequent
 
 export ItemLmeas, ItemGmeas, RuleLmeas, RuleGmeas
 export lsupport, gsupport

@@ -48,4 +48,5 @@ alphabet = Vector{Item}([p,q,lp,lq])
 # Make an association rule miner wrapping Apriori algorithm
 # Testing different ARuleMiner constructors
 @test_nowarn miner = ARuleMiner(X, apriori(), alphabet)
-@test_nowarn miner = ARuleMiner(X, apriori(), alphabet, [(gsupport, 0.5, 0.5)], [(gconfidence, 0.5, 0.5)])
+@test_nowarn miner = ARuleMiner(X, apriori(), alphabet,
+    [(gsupport, 0.14, 0.14)], [(gconfidence, 0.14, 0.14)])
