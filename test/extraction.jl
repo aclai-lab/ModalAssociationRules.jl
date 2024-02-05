@@ -50,3 +50,10 @@ alphabet = Vector{Item}([p,q,lp,lq])
 @test_nowarn miner = ARuleMiner(X, apriori(), alphabet)
 @test_nowarn miner = ARuleMiner(X, apriori(), alphabet,
     [(gsupport, 0.14, 0.14)], [(gconfidence, 0.14, 0.14)])
+
+miner = ARuleMiner(X, apriori(), alphabet,
+    [(gsupport, 0.14, 0.14)], [(gconfidence, 0.14, 0.14)])
+
+SoleRules.mine(miner)
+a = SoleRules.merge(miner.freq_itemsets[1], miner.freq_itemsets[2])
+# gsupport(a,X) throws error

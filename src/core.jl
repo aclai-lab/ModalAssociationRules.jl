@@ -53,8 +53,7 @@ struct Itemset{T<:ItemsetContent}
     end
 end
 
-value(items::Itemset) = items.value isa LeftmostConjunctiveForm ?
-    SoleLogics.conjuncts(items.value) : items.value
+value(items::Itemset) = items.value
 
 setlocalmemo(items::Itemset, key::LmeasMemoKey, val::Float64) = items.lmemo[key] = val
 getlocalmemo(items::Itemset, key::LmeasMemoKey) = get(items.lmemo, key, nothing)
@@ -62,16 +61,18 @@ getlocalmemo(items::Itemset, key::LmeasMemoKey) = get(items.lmemo, key, nothing)
 setglobalmemo(items::Itemset, key::GmeasMemoKey, val::Float64) = items.gmemo[key] = val
 getglobalmemo(items::Itemset, key::GmeasMemoKey) = get(items.gmemo, key, nothing)
 
-Base.length(items::Itemset{<:Atom}) = 1
+Base.length(items::Itemset{<:ItemsetContent}) = 1
 Base.length(items::Itemset{<:LeftmostConjunctiveForm}) = length(value(items))
+
+Base.getindex(items::Itemset, key::Int64) = length(items) == 1 ? value(items) : value(items)[key]
+
+function Base.iterate(items::Itemset, state=1)
+    return state > length(items) ? nothing : (items[state], state+1)
+end
 
 # Merge two items together, keeping unique items
 function merge(item1::Itemset, item2::Itemset)
-    # ternary operator returning a single value between square brackets is needed to
-    # generalize the splat operator inside unique. Otherwise, an error is thrown.
-    v1 = item1 isa Itemset{<:LeftmostConjunctiveForm} ? value(item1) : [value(item1)]
-    v2 = item2 isa Itemset{<:LeftmostConjunctiveForm} ? value(item2) : [value(item2)]
-    return Itemset(unique([v1..., v2...]))
+    return Itemset(unique(reduce(vcat, [item1, item2])))
 end
 
 function combine(itemsets::Vector{<:Itemset{<:ItemsetContent}}, newlength::Integer)
@@ -89,35 +90,12 @@ function combine(itemsets::Vector{<:Itemset{<:ItemsetContent}}, newlength::Integ
     return Itemset.(unique(value.(newset)))
 end
 
-
-function contains(itemsets::Vector{<:Itemset{<:ItemsetContent}}, fragment::Itemset{<:Atom})
-    for itemset in itemsets
-        if value(fragment) in value(itemset)
-            return true
-        end
-    end
-    return false
-end
-
-function contains(
-    itemsets::Vector{<:Itemset{<:ItemsetContent}},
-    fragment::Itemset{<:LeftmostConjunctiveForm}
-)
-    for itemset in itemsets
-        if length(intersect(value(itemset), value(fragment))) == length(fragment)
-            return true
-        end
-    end
-
-    return false
-end
-
 function Base.show(io::IO, items::Itemset{<:Item})
     print(io, "$(items |> value |> syntaxstring)")
 end
 
 function Base.show(io::IO, items::Itemset{<:LeftmostConjunctiveForm})
-    print(io, "$(syntaxstring.(items |> value))")
+    print(io, "$(syntaxstring(value(items)))")
 end
 
 """

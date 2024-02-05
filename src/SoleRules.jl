@@ -24,7 +24,7 @@ export LmeasMemo, LmeasMemoKey, GmeasMemo, GmeasMemoKey
 
 export Itemset, ItemsetContent
 export setlocalmemo, getlocalmemo, getglobalmemo, setglobalmemo
-export value, merge, grow
+export value, merge, contains
 
 export ARule
 export antecedent, consequent
