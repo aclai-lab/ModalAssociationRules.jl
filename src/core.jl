@@ -182,14 +182,14 @@ function _lsupport(itemset::Itemset, logi_instance::LogicalInstance)::Float64
     # retrieve logiset, and the specific instance
     X, i_instance = logi_instance.s, logi_instance.i_instance
 
-    # If possible, retrieve result from memoization structure inside itemset structure
+    # if possible, retrieve result from memoization structure inside itemset structure
     fname = Symbol(StackTraces.stacktrace()[1].func) # this function name, as Symbol
     ans = getlocalmemo(itemset, (fname, i_instance))
     if !isnothing(ans)
         return ans
     end
 
-    # Compute local measure, then divide it by the instance total number of worlds
+    # compute local measure, then divide it by the instance total number of worlds
     ans = sum([check(value(itemset), X, i_instance, w) for w in allworlds(X, i_instance)])
     ans = ans / nworlds(X, i_instance)
 
@@ -199,19 +199,19 @@ function _lsupport(itemset::Itemset, logi_instance::LogicalInstance)::Float64
 end
 
 function _gsupport(itemset::Itemset, X::SupportedLogiset, threshold::Float64)::Float64
-    # If possible, retrieve result from memoization structure inside itemset structure
+    # if possible, retrieve result from memoization structure inside itemset structure
     fname = Symbol(StackTraces.stacktrace()[1].func) # this function name, as Symbol
     ans = getglobalmemo(itemset, fname)
     if !isnothing(ans)
         return ans
     end
 
-    # Compute global measure, then divide it by the dataset total number of instances
+    # compute global measure, then divide it by the dataset total number of instances
     ans = sum([_lsupport(itemset, getinstance(X, i_instance)) >= threshold
         for i_instance in 1:ninstances(X)])
     ans = ans / ninstances(X)
 
-    # Save result for optimization, using the name of this function as dict key
+    # save result for optimization, using the name of this function as dict key
     setglobalmemo(itemset, fname, ans)
     return ans
 end

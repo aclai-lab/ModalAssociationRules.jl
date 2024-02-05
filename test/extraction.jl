@@ -56,4 +56,6 @@ miner = ARuleMiner(X, apriori(), alphabet,
 
 SoleRules.mine(miner)
 a = SoleRules.merge(miner.freq_itemsets[1], miner.freq_itemsets[2])
-# gsupport(a,X) throws error
+# gsupport(a,X) throws error TODO: check
+
+# TODO: test exports
