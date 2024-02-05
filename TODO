@@ -23,7 +23,8 @@ Utility:
   ☐ expose a simple-to-understand pool of utility methods to perform combinatorics over itemsets
     ✔ merge @done(24-02-04 19:55)
     ✔ combine @done(24-02-04 19:55)
-      
+    ✔ contains @done(24-02-05 08:48)
+    ☐ prune
 
 Testing:
   ☐ in test section, invoke SoleLogics kripke models generation
