@@ -12,19 +12,26 @@ function apriori(;
 
     # look at the (k-1)-subsets of each candidate itemset:
     # if a subset was not frequent, then prune it.
-    # function _prune!(
-    #     candidates::Vector{Itemset},
-    #     oldfrequents::Vector{Itemset},
-    #     length::Integer
-    # )
-#
-    #     [
-    #         itemset
-    #         for itemset in candidates
-    #         for combo in combinations(itemset, length)
-    #     ]
-#
-    # end
+    function _prune(
+        candidates::Vector{Itemset},
+        frequents::Vector{Itemset},
+        k::Integer
+    )
+        ans = Vector{Itemset{<:ItemsetContent}}([])
+
+        # if the frequents set does not contain the subset of a certain candidate,
+        # that candidate is pruned out.
+        for itemset in candidates
+            for combo in combinations(itemset, k)
+                if contains(frequents, combo)
+                    push!(ans, itemset)
+                    break
+                end
+            end
+        end
+
+        return ans
+    end
 
     # modal apriori main logic, as in https://ceur-ws.org/Vol-3284/492.pdf
     function _apriori(miner::ARuleMiner, X::AbstractDataset)::Nothing
@@ -62,13 +69,12 @@ function apriori(;
 
             # generate new candidates
             k = (candidates |> first |> length) + 1
-            candidates = _generate(candidates, k)
-            _prune!(candidates, frequents, k-1)
+            candidates = combine(candidates, k)
+            candidates = _prune(candidates, frequents, k-1)
 
-            # generate new candidates
-            print("Frequent itemsets: $(freqitems)\n")
-            print("Non-frequent itemsets: $(nonfrequents)\b")
-            return 0
+            println("_____________\n")
+            println(candidates)
+            println("STARTING NEW RUN \n\n\n")
 
             # empty support structures
             empty!(frequents)

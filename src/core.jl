@@ -89,6 +89,29 @@ function combine(itemsets::Vector{<:Itemset{<:ItemsetContent}}, newlength::Integ
     return Itemset.(unique(value.(newset)))
 end
 
+
+function contains(itemsets::Vector{<:Itemset{<:ItemsetContent}}, fragment::Itemset{<:Atom})
+    for itemset in itemsets
+        if value(fragment) in value(itemset)
+            return true
+        end
+    end
+    return false
+end
+
+function contains(
+    itemsets::Vector{<:Itemset{<:ItemsetContent}},
+    fragment::Itemset{<:LeftmostConjunctiveForm}
+)
+    for itemset in itemsets
+        if length(intersect(value(itemset), value(fragment))) == length(fragment)
+            return true
+        end
+    end
+
+    return false
+end
+
 function Base.show(io::IO, items::Itemset{<:Item})
     print(io, "$(items |> value |> syntaxstring)")
 end
@@ -292,7 +315,7 @@ struct ARuleMiner
     )
         # ARuleMiner(X, MiningAlgo(algo), alphabet,
         new(X, MiningAlgo(algo), alphabet, [(gsupport, 0.5, 0.5)], [(gconfidence, 0.5, 0.5)],
-        Vector{Itemset}([]), Vector{Itemset}([]), Vector{ARule}([]), (;));
+            Vector{Itemset}([]), Vector{Itemset}([]), Vector{ARule}([]), (;));
     end
 end
 
