@@ -70,11 +70,8 @@ function apriori(;
             empty!(frequents)
             empty!(nonfrequents)
 
-            println("Printing candidates")
-            println(candidates)
-            println("Starting new computational loop...")
-            println("Current candidates size: $(length(candidates))")
-            println("________________________---")
+            println("DEBUG: Starting new computational loop...")
+            println("DEBUG: Current candidates size: $(length(candidates))")
         end
     end
 

@@ -34,11 +34,6 @@ function combine(itemsets::Vector{<:Itemset}, newlength::Integer)
     )
 end
 
-# TODO:
-# function powerset(itemset::Itemset)
-#     return Iterators.flatten(combinations(itemset,k) for k in 1:length(itemset))
-# end
-
 """
     struct ARule
         rule::Rule{Itemset, Atom}
@@ -80,8 +75,18 @@ getlocalmemo(r::ARule, key::LmeasMemoKey) = get(r.lmemo, key, nothing)
 setglobalmemo(r::ARule, key::GmeasMemoKey, val::Float64) = r.gmemo[key] = val
 getglobalmemo(r::ARule, key::GmeasMemoKey) = get(r.gmemo, key, nothing)
 
-# TODO:
-# arules generator
+# TODO: make this a generator
+function arules_generator(itemsets::Vector{Itemset})
+    for itemset in itemsets
+        subsets = powerset(itemset)
+        for subset in subsets
+            # TODO: fill the code
+            # ignore empty and full subsets
+            # measure confidence
+            # compare confidence with threshold
+        end
+    end
+end
 
 ############################################################################################
 #### Meaningfulness measures ###############################################################
@@ -187,8 +192,11 @@ struct ARuleMiner
 
     nonfreqitems::Vector{Itemset}   # non-frequent itemsets dump
     freqitems::Vector{Itemset}      # collected frequent itemsets
-    arules::Vector{ARule}               # collected association rules
-    info::NamedTuple                    # general informations
+    arules::Vector{ARule}           # collected association rules
+
+    lmemo::LmeasMemo                # local memoization structure
+    gmemo::GmeasMemo                # global memoization structure
+    info::NamedTuple                # general informations
 
     function ARuleMiner(
         X::AbstractDataset,
@@ -211,7 +219,9 @@ struct ARuleMiner
     )
         # ARuleMiner(X, MiningAlgo(algo), alphabet,
         new(X, MiningAlgo(algo), alphabet, [(gsupport, 0.5, 0.5)], [(gconfidence, 0.5, 0.5)],
-            Vector{Itemset}([]), Vector{Itemset}([]), Vector{ARule}([]), (;));
+            Vector{Itemset}([]), Vector{Itemset}([]), Vector{ARule}([]),
+            LmeasMemo(), GmeasMemo(), (;)
+        );
     end
 end
 
