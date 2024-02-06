@@ -17,20 +17,13 @@ function apriori(;
         frequents::Vector{Itemset},
         k::Integer
     )
-        survivors = Vector{Itemset{<:ItemsetContent}}([])
-
         # if the frequents set does not contain the subset of a certain candidate,
         # that candidate is pruned out.
-        for itemset in candidates
-            for combo in reduce(vcat, combinations([itemset], k) |> collect)
-                if value(combo) in frequents
-                    push!(survivors, itemset)
-                    break
-                end
-            end
-        end
-
-        return survivors
+        return Iterators.filter(
+            # the iterator yields only itemsets for which every combo is in frequents
+            itemset -> all(combo -> combo in frequents, combinations(itemset, k-1)),
+            combine(candidates, k)
+        )
     end
 
     # modal apriori main logic, as in https://ceur-ws.org/Vol-3284/492.pdf
@@ -69,12 +62,19 @@ function apriori(;
 
             # generate new candidates
             k = (candidates |> first |> length) + 1
-            candidates = combine(candidates, k)
-            candidates = _prune(candidates, frequents, k-1)
+
+            # TODO: remove collect and make the code lazy
+            candidates = _prune(candidates, frequents, k) |> collect
 
             # empty support structures
             empty!(frequents)
             empty!(nonfrequents)
+
+            println("Printing candidates")
+            println(candidates)
+            println("Starting new computational loop...")
+            println("Current candidates size: $(length(candidates))")
+            println("________________________---")
         end
     end
 

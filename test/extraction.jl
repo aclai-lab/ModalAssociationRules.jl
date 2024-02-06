@@ -1,28 +1,10 @@
 using Test
 
-# using SoleLogics
-# using SoleModels
 using SoleRules
 using StatsBase
 
 # Association rule extraction algorithms test suite
 # Preamble
-
-# Load NATOPS dataset and convert it to a Logiset
-X_df, y = SoleModels.load_arff_dataset("NATOPS");
-X = scalarlogiset(X_df)
-
-# Make an alphabet manually
-p = Atom(ScalarCondition(UnivariateMin(1), >, -0.5))
-q = Atom(ScalarCondition(UnivariateMin(2), <=, -2.2))
-
-boxlater = box(IA_L)
-diamondlater = diamond(IA_L)
-
-lp = boxlater(p)
-lq = diamondlater(q)
-
-alphabet = Vector{Item}([p,q,lp,lq])
 
 # Testing meaningfulness measures types
 @test lsupport isa ItemLmeas
@@ -45,17 +27,48 @@ alphabet = Vector{Item}([p,q,lp,lq])
 @test !(gconfidence isa ItemGmeas)
 @test !(gconfidence isa RuleLmeas)
 
+# Load NATOPS dataset and convert it to a Logiset
+X_df, y = SoleModels.load_arff_dataset("NATOPS");
+X = scalarlogiset(X_df)
+
+# Make an alphabet manually
+manual_p = Atom(ScalarCondition(UnivariateMin(1), >, -0.5))
+manual_q = Atom(ScalarCondition(UnivariateMin(2), <=, -2.2))
+manual_r = Atom(ScalarCondition(UnivariateMin(3), >, -3.6))
+manual_s = Atom(ScalarCondition(UnivariateMin(4), >, 0.5))
+
+boxlater = box(IA_L)
+diamondlater = diamond(IA_L)
+
+manual_lp = boxlater(manual_p)
+manual_lq = diamondlater(manual_q)
+manual_lr = boxlater(manual_r)
+manual_ls = diamondlater(manual_s)
+
+manual_alphabet = Vector{Item}([manual_p, manual_q, manual_r, manual_s,
+    manual_lp, manual_lq, manual_lr, manual_ls])
+
 # Make an association rule miner wrapping Apriori algorithm
 # Testing different ARuleMiner constructors
-@test_nowarn miner = ARuleMiner(X, apriori(), alphabet)
-@test_nowarn miner = ARuleMiner(X, apriori(), alphabet,
+@test_nowarn miner = ARuleMiner(X, apriori(), manual_alphabet)
+@test_nowarn miner = ARuleMiner(X, apriori(), manual_alphabet,
     [(gsupport, 0.14, 0.14)], [(gconfidence, 0.14, 0.14)])
 
-miner = ARuleMiner(X, apriori(), alphabet,
+@test dataset(miner) == X
+@test algorithm(miner) == miner.algo
+@test alphabet(miner) == manual_alphabet
+@test freqitems(miner) == Itemset[]
+@test nonfreqitems(miner) == Itemset[]
+@test arules(miner) == ARule[]
+
+# Mining using manually defined alphabet
+miner = ARuleMiner(X, apriori(), manual_alphabet,
     [(gsupport, 0.14, 0.14)], [(gconfidence, 0.14, 0.14)])
 
-SoleRules.mine(miner)
 a = SoleRules.merge(miner.freq_itemsets[1], miner.freq_itemsets[2])
-# gsupport(a,X) throws error TODO: check
+# @test combine()
+# @test in between different types
 
-# TODO: test exports
+simple_p, simple_q, simple_r = Itemset.(Atom.(["p", "q", "r"]))
+
+# @test powerset

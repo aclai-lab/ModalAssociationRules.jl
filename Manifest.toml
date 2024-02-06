@@ -740,19 +740,19 @@ version = "0.11.1"
 
 [[deps.SoleData]]
 deps = ["CSV", "Catch22", "DataFrames", "DataStructures", "Logging", "MLJModelInterface", "Random", "Reexport", "Revise", "ScientificTypes", "SoleBase", "Statistics", "StatsBase", "Tables"]
-git-tree-sha1 = "c781eacb8dc8c4915499101a199746bfe3f3f071"
+path = "/home/mauro/.julia/dev/SoleData"
 uuid = "123f1ae1-6307-4526-ab5b-aab3a92a2b8c"
-version = "0.12.2"
+version = "0.12.1"
 
 [[deps.SoleLogics]]
 deps = ["AbstractTrees", "DataStructures", "Dictionaries", "Graphs", "IterTools", "Lazy", "PrettyTables", "Random", "Reexport", "Revise", "SoleBase", "StatsBase", "ThreadSafeDicts"]
-git-tree-sha1 = "9172e0b17f12ee8702acf5542c4fe5282d15e246"
+path = "/home/mauro/.julia/dev/SoleLogics"
 uuid = "b002da8f-3cb3-4d91-bbe3-2953433912b5"
 version = "0.6.14"
 
 [[deps.SoleModels]]
 deps = ["AbstractTrees", "BenchmarkTools", "CSV", "CategoricalArrays", "DataFrames", "DataStructures", "FillArrays", "FunctionWrappers", "Graphs", "HTTP", "Lazy", "LinearAlgebra", "Logging", "MLJBase", "MLJModelInterface", "ProgressMeter", "Random", "Reexport", "Revise", "SoleBase", "SoleData", "SoleLogics", "StatsBase", "Suppressor", "Tables", "ThreadSafeDicts", "UniqueVectors", "ZipFile"]
-git-tree-sha1 = "a8c5b50d3085ecde397ab35261d442622bea7bfc"
+path = "/home/mauro/.julia/dev/SoleModels"
 uuid = "4249d9c7-3290-4ddd-961c-e1d3ec2467f8"
 version = "0.5.6"
 

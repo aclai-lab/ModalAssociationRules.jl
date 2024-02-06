@@ -75,15 +75,16 @@ See also [`syntaxstring`](@ref), [`SoleModels.TestOperator`](@ref),
 [`SoleLogics.UnivariateFeature`](@ref).
 """
 function make_conditions(
-    thresholds::Vector{Float64},
+    thresholds::Vector{<:Real},
     nvariables::Vector{Int64},
     features::Vector{DataType}, # NOTE: this should be Vector{<:AbstractFeature}
     testops::Vector{SoleModels.TestOperator};
-    condition = ScalarCondition
+    conditiontype = ScalarCondition
 )
-    return [
-        Atom(condition(feature(nvariable), testop, threshold))
-        for (threshold, nvariable, feature, testop)
-            in IterTools.product(thresholds, nvariables, features, testops)
-    ]
+    return IterTools.imap(
+        ((threshold, i_variable, feature, testop),) -> begin
+            Atom(conditiontype(feature(i_variable), testop, threshold))
+        end,
+        IterTools.product(thresholds, nvariables, features, testops)
+    )
 end
