@@ -6,27 +6,6 @@ using StatsBase
 # Association rule extraction algorithms test suite
 # Preamble
 
-# Testing meaningfulness measures types
-@test lsupport isa ItemLmeas
-@test !(lsupport isa ItemGmeas)
-@test !(lsupport isa RuleLmeas)
-@test !(lsupport isa RuleGmeas)
-
-@test gsupport isa ItemGmeas
-@test !(gsupport isa ItemLmeas)
-@test !(gsupport isa RuleLmeas)
-@test !(gsupport isa RuleGmeas)
-
-@test lconfidence isa RuleLmeas
-@test !(lconfidence isa ItemLmeas)
-@test !(lconfidence isa ItemGmeas)
-@test !(lconfidence isa RuleGmeas)
-
-@test gconfidence isa RuleGmeas
-@test !(gconfidence isa ItemLmeas)
-@test !(gconfidence isa ItemGmeas)
-@test !(gconfidence isa RuleLmeas)
-
 # Load NATOPS dataset and convert it to a Logiset
 X_df, y = SoleModels.load_arff_dataset("NATOPS");
 X = scalarlogiset(X_df)
@@ -35,7 +14,6 @@ X = scalarlogiset(X_df)
 manual_p = Atom(ScalarCondition(UnivariateMin(1), >, -0.5))
 manual_q = Atom(ScalarCondition(UnivariateMin(2), <=, -2.2))
 manual_r = Atom(ScalarCondition(UnivariateMin(3), >, -3.6))
-manual_s = Atom(ScalarCondition(UnivariateMin(4), >, 0.5))
 
 boxlater = box(IA_L)
 diamondlater = diamond(IA_L)
@@ -43,10 +21,9 @@ diamondlater = diamond(IA_L)
 manual_lp = boxlater(manual_p)
 manual_lq = diamondlater(manual_q)
 manual_lr = boxlater(manual_r)
-manual_ls = diamondlater(manual_s)
 
-manual_alphabet = Vector{Item}([manual_p, manual_q, manual_r, manual_s,
-    manual_lp, manual_lq, manual_lr, manual_ls])
+manual_alphabet = Vector{Item}([manual_p, manual_q, manual_r,
+    manual_lp, manual_lq, manual_lr])
 
 # Make an association rule miner wrapping Apriori algorithm
 # Testing different ARuleMiner constructors

@@ -13,7 +13,8 @@ Organization:
   ☐ write an initial fpgrowth implementation
 
 Generic:
-  ☐ ARuleMiner+Apriori: 1-candidates should not be created if an Itemset already exists
+  ☐ call meaningfulness measures with ARuleMiner as optional argument
+  ☐ move memoization accountability to ARuleMiner
   ☐ global memoization should check if memoized treshold is larger than requested one
 
 Utility:
@@ -21,14 +22,15 @@ Utility:
   ✔ consider feature when binning @done(24-02-02 15:52)
   ✔ organize the alphabet generation system @done(24-02-05 23:52)
   ☐ find out how to extract interesting literals from which mine association rules
-  ☐ expose a simple-to-understand pool of utility methods to perform combinatorics over itemsets
+  ✔ expose a simple-to-understand pool of utility methods to perform combinatorics over itemsets @done(24-02-07 17:00)
+    # (Itemset changed to Vector type from custom)
     ✔ iterable interface @done(24-02-05 19:28)
     ✔ getindex interface @done(24-02-05 23:52)
     ✔ merge @done(24-02-04 19:55)
     ✔ combine @done(24-02-04 19:55)
     ✔ contains @done(24-02-05 08:48)
     ✔ prune @done(24-02-05 16:29)
-    ☐ empty
+    ✔ empty @done(24-02-07 17:00)
 
 Testing:
   ☐ in test section, invoke SoleLogics kripke models generation

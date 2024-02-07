@@ -1,26 +1,35 @@
 ############################################################################################
 #### Fundamental definitions ###############################################################
 ############################################################################################
+const Threshold = Float64
 const Item = SoleLogics.Formula
-
-# Dynamic programming utility structures
-const LmeasMemoKey = Tuple{Symbol,Integer}
-const LmeasMemo = Dict{LmeasMemoKey,Float64}
-
-const GmeasMemoKey = Symbol
-const GmeasMemo = Dict{GmeasMemoKey,Float64}
-
 const Itemset = Vector{Item}
 
 function Itemset(item::Item)
     Itemset([item])
 end
-
 function Itemset(itemsets::Vector{Itemset})
     Itemset(union(itemsets...))
 end
 
 value(itemset::Itemset) = LeftmostConjunctiveForm(itemset)
+
+const ARule = Tuple{Itemset,Itemset} # NOTE: see SoleLogics.Rule
+antecedent(r::ARule) = first(r.rule)
+consequent(r::ARule) = last(r.rule)
+
+# See meaningfulness measures section.
+# A ConstrainedMeasure is a tuple shaped as (global measure, local threshold, global threshold)
+const ConstrainedMeasure = Tuple{Function, Threshold, Threshold}
+
+# Dynamic programming utility structures
+const MemoARM = Union{Itemset,ARule} # memoizable association-rule-mining types
+
+const LmeasMemoKey = Tuple{Symbol,MemoARM,Integer} # (local measure, itemset/arule, the world where is applied)
+const LmeasMemo = Dict{LmeasMemoKey,Float64} # local measure of an itemset on a world => value
+
+const GmeasMemoKey = Tuple{Symbol,MemoARM}
+const GmeasMemo = Dict{GmeasMemoKey,Float64} # global measure of an itemset/arule => value
 
 # Given an itemsets vector, return the pairwise combination of such itemsets such that
 # the combination's length is `newlength`.
@@ -34,141 +43,38 @@ function combine(itemsets::Vector{<:Itemset}, newlength::Integer)
     )
 end
 
-"""
-    struct ARule
-        rule::Rule{Itemset, Atom}
+# TODO: make this a generator with Resumable Function
+# function arules_generator(itemsets::Vector{Itemset}, rule_meas::Vector{RuleGmeasAndThreshold})
+#     rules = ARule([])
+#
+#     for itemset in itemsets
+#         subsets = powerset(itemset)
+#         for subset in subsets
+#             _antecedent = subset
+#             _consequent = symdiff(itemset, subset)
+#
+#             if length(_antecedent) == 0 || length(_consequent) == 0
+#                 continue
+#
+#             interesting = true
+#             currentrule = ARule(_antecedent, _consequent)
+#
+#             for meas in rule_meas
+#                 (gmeas_algo, lthreshold, gthreshold) = meas
+#                 gmeas_result = gmeas_algo(item, X, lthreshold)
+#
+#                 if gmeas_result < gthreshold
+#                     interesting = false
+#                     break
+#                 end
+#
+#                 # setglobalmemo(currentrule, )
+#             end
+#
+#         end
+#     end
+# end
 
-        # memoization structures
-        lmemo::LmeasMemo
-        gmemo::GmeasMemo
-    end
-
-[`Rule`](@ref) object, specialized to represent association rules.
-An association rule is a rule expressing a statistically meaningful relation between
-antecedent and consequent (e.g., if facts in the antecedent are true together on a model,
-probably the facts in the consequent are true too on the same model).
-
-Both antecedent and consequent are (vector of) [`Itemset`](@ref)s.
-
-See also [`SoleLogics.Atom`](@ref), [`SoleModels.antecedent`](@ref),
-[`SoleModels.consequent`](@ref), [`Itemset`](@ref), [`SoleModels.Rule`](@ref).
-"""
-struct ARule
-    rule::Tuple{Itemset,Itemset}
-
-    # memoization structures
-    lmemo::LmeasMemo
-    gmemo::GmeasMemo
-
-    function ARule(ant::Itemset, cons::Itemset)
-        new((ant,cons), LmeasMemo(), GmeasMemo())
-    end
-end
-
-antecedent(r::ARule) = first(r.rule)
-consequent(r::ARule) = last(r.rule)
-value(r::ARule) = r.rule
-
-setlocalmemo(r::ARule, key::LmeasMemoKey, val::Float64) = r.lmemo[key] = val
-getlocalmemo(r::ARule, key::LmeasMemoKey) = get(r.lmemo, key, nothing)
-
-setglobalmemo(r::ARule, key::GmeasMemoKey, val::Float64) = r.gmemo[key] = val
-getglobalmemo(r::ARule, key::GmeasMemoKey) = get(r.gmemo, key, nothing)
-
-# TODO: make this a generator
-function arules_generator(itemsets::Vector{Itemset})
-    for itemset in itemsets
-        subsets = powerset(itemset)
-        for subset in subsets
-            # TODO: fill the code
-            # ignore empty and full subsets
-            # measure confidence
-            # compare confidence with threshold
-        end
-    end
-end
-
-############################################################################################
-#### Meaningfulness measures ###############################################################
-############################################################################################
-
-const doc_meaningfulness_meas = """
-    const ItemLmeas = FunctionWrapper{Float64, Tuple{Itemset,AbstractInterpretation}}
-    const ItemGmeas = FunctionWrapper{Float64, Tuple{Itemset,AbstractDataset,Threshold}}
-    const RuleLmeas = FunctionWrapper{Float64, Tuple{ARule,AbstractInterpretation}}
-    const RuleGmeas = FunctionWrapper{Float64, Tuple{ARule,AbstractDataset,Threshold}}
-
-Function wrappers to express local and global meaningfulness measures of items and
-association rules.
-
-Local meaningfulness measures ([`ItemLmeas`](@ref), [`RuleLmeas`](@ref)) returns
-how frequently a test regarding an [`Itemset`](@ref) or a [`ARule`](@ref) is
-satisfied within a specific [`AbstractInterpretation`](@ref).
-
-Global meaningfulness measures ([`ItemGmeas`](@ref), [`RuleGmeas`](@ref)) are intended to
-repeatedly apply a local meaningfulness measure on all the instances of an
-[`AbstractDataset`](@ref). These returns how many times the real value returned by a
-local measure is higher than a threshold.
-
-See also [`ARule`](@ref), [`FunctionWrapper`](@ref), [`Itemset`](@ref).
-"""
-
-const Threshold = Float64
-
-"""$(doc_meaningfulness_meas)"""
-const ItemLmeas = FunctionWrapper{Float64,Tuple{Itemset,AbstractInterpretation}}
-
-"""$(doc_meaningfulness_meas)"""
-const ItemGmeas = FunctionWrapper{Float64,Tuple{Itemset,AbstractDataset,Float64}}
-
-"""$(doc_meaningfulness_meas)"""
-const RuleLmeas = FunctionWrapper{Float64,Tuple{ARule,AbstractInterpretation}}
-
-"""$(doc_meaningfulness_meas)"""
-const RuleGmeas = FunctionWrapper{Float64, Tuple{ARule,AbstractDataset,Float64}}
-
-function _lsupport(itemset::Itemset, logi_instance::LogicalInstance)::Float64
-    # retrieve logiset, and the specific instance
-    X, i_instance = logi_instance.s, logi_instance.i_instance
-
-    # compute local measure, then divide it by the instance total number of worlds
-    ans = sum([check(value(itemset), X, i_instance, w) for w in allworlds(X, i_instance)])
-    ans = ans / nworlds(X, i_instance)
-
-    return ans
-end
-
-function _gsupport(itemset::Itemset, X::SupportedLogiset, threshold::Float64)::Float64
-    # compute global measure, then divide it by the dataset total number of instances
-    ans = sum([_lsupport(itemset, getinstance(X, i_instance)) >= threshold
-        for i_instance in 1:ninstances(X)])
-    ans = ans / ninstances(X)
-
-    return ans
-end
-
-function _lconfidence(r::ARule, logi_instance::LogicalInstance)::Float64
-    _antecedent = antecedent(r)
-    _consequent = consequent(r)
-
-    ans = _lsupport(SoleRules.merge(_antecedent, _consequent), logi_instance) /
-        _lsupport(_antecedent, logi_instance)
-    return ans
-end
-
-function _gconfidence(r::ARule, X::SupportedLogiset, threshold::Float64)::Float64
-    _antecedent = antecedent(r)
-    _consequent = consequent(r)
-
-    ans = _gsupport(union(_antecedent, _consequent), X, threshold) /
-        _gsupport(_antecedent, X, threshold)
-    return ans
-end
-
-lsupport = ItemLmeas(_lsupport)
-gsupport = ItemGmeas(_gsupport)
-lconfidence = RuleLmeas(_lconfidence)
-gconfidence = RuleGmeas(_gconfidence)
 
 ############################################################################################
 #### Association rule miner machine ########################################################
@@ -186,9 +92,8 @@ struct ARuleMiner
     alphabet::Vector{Item} # NOTE: cannot instanciate Item inside ExplicitAlphabet
 
     # meaningfulness measures
-    # (global measure, local threshold, global threshold)
-    item_constrained_measures::Vector{Tuple{ItemGmeas,Float64,Float64}}
-    rule_constrained_measures::Vector{Tuple{RuleGmeas,Float64,Float64}}
+    item_constrained_measures::Vector{<:ConstrainedMeasure}
+    rule_constrained_measures::Vector{<:ConstrainedMeasure}
 
     nonfreqitems::Vector{Itemset}   # non-frequent itemsets dump
     freqitems::Vector{Itemset}      # collected frequent itemsets
@@ -202,14 +107,14 @@ struct ARuleMiner
         X::AbstractDataset,
         algo::Function,
         alphabet::Vector{Item},
-        item_constrained_measures::Vector{<:Tuple{ItemGmeas,Float64,Float64}},
-        rule_constrained_measures::Vector{<:Tuple{RuleGmeas,Float64,Float64}}
+        item_constrained_measures::Vector{<:ConstrainedMeasure},
+        rule_constrained_measures::Vector{<:ConstrainedMeasure},
     )
         new(X, MiningAlgo(algo), alphabet,
             item_constrained_measures,
             rule_constrained_measures,
-            Vector{Itemset}([]), Vector{Itemset}([]),
-            Vector{ARule}([]), (;))
+            Vector{Itemset}([]), Vector{Itemset}([]), Vector{ARule}([]),
+            LmeasMemo(), GmeasMemo(), (;))
     end
 
     function ARuleMiner(
@@ -238,6 +143,12 @@ freqitems(miner::ARuleMiner) = miner.freqitems
 nonfreqitems(miner::ARuleMiner) = miner.nonfreqitems
 arules(miner::ARuleMiner) = miner.arules
 
+setlocalmemo(miner::ARuleMiner, key::LmeasMemoKey, val::Float64) = miner.lmemo[key] = val
+getlocalmemo(miner::ARuleMiner, key::LmeasMemoKey) = get(miner.lmemo, key, nothing)
+
+setglobalmemo(miner::ARuleMiner, key::GmeasMemoKey, val::Float64) = miner.gmemo[key] = val
+getglobalmemo(miner::ARuleMiner, key::GmeasMemoKey) = get(miner.gmemo, key, nothing)
+
 function mine(miner::ARuleMiner)
     apply(miner, dataset(miner))
 end
@@ -246,4 +157,117 @@ function apply(miner::ARuleMiner, X::AbstractDataset)
     # extract frequent itemsets
     miner.algo(miner, X)
     return true
+end
+
+############################################################################################
+#### Meaningfulness measures ###############################################################
+############################################################################################
+function lsupport(
+    itemset::Itemset,
+    logi_instance::LogicalInstance;
+    miner::Union{Nothing,ARuleMiner} = nothing
+)::Float64
+    # retrieve logiset, and the specific instance
+    X, i_instance = logi_instance.s, logi_instance.i_instance
+
+    # this is needed to access memoization structures
+    memokey = LmeasMemoKey((Symbol(lsupport), itemset, i_instance))
+
+    # leverage memoization if a miner is provided, and it already computed the measure
+    if !isnothing(miner)
+        memoized = getlocalmemo(miner, memokey)
+        if !isnothing(memoized) return memoized end
+    end
+
+    # compute local measure, then divide it by the instance total number of worlds
+    ans = sum([check(value(itemset), X, i_instance, w) for w in allworlds(X, i_instance)])
+    ans = ans / nworlds(X, i_instance)
+
+    if !isnothing(miner)
+        setlocalmemo(miner, memokey, ans)
+    end
+
+    return ans
+end
+
+function gsupport(
+    itemset::Itemset,
+    X::SupportedLogiset,
+    threshold::Threshold;
+    miner::Union{Nothing,ARuleMiner} = nothing
+)::Float64
+    # this is needed to access memoization structures
+    memokey = GmeasMemoKey((Symbol(gsupport), itemset))
+
+    # leverage memoization if a miner is provided, and it already computed the measure
+    if !isnothing(miner)
+        memoized = getglobalmemo(miner, memokey)
+        if !isnothing(memoized) return memoized end
+    end
+
+    # compute global measure, then divide it by the dataset total number of instances
+    ans = sum([lsupport(itemset, getinstance(X, i_instance); miner=miner) >= threshold
+        for i_instance in 1:ninstances(X)])
+    ans = ans / ninstances(X)
+
+    if !isnothing(miner)
+        setglobalmemo(miner, memokey, ans)
+    end
+
+    return ans
+end
+
+function lconfidence(
+    rule::ARule,
+    logi_instance::LogicalInstance;
+    miner::Union{Nothing,ARuleMiner} = nothing
+)::Float64
+    # this is needed to access memoization structures
+    memokey = LmeasMemoKey((Symbol(lconfidence), rule, logi_instance.i_instance))
+
+    # leverage memoization if a miner is provided, and it already computed the measure
+    if !isnothing(miner)
+        memoized = getglobalmemo(miner, memokey)
+        if !isnothing(memoized) return memoized end
+    end
+
+    _antecedent = antecedent(rule)
+    _consequent = consequent(rule)
+
+    ans = lsupport(SoleRules.merge(_antecedent, _consequent), logi_instance; miner=miner) /
+        lsupport(_antecedent, logi_instance; miner=miner)
+
+    if !isnothing(miner)
+        setlocalmemo(miner, memokey, ans)
+    end
+
+    return ans
+end
+
+function gconfidence(
+    rule::ARule,
+    X::SupportedLogiset,
+    threshold::Threshold;
+    miner::Union{Nothing,ARuleMiner} = nothing
+)::Float64
+    # this is needed to access memoization structures
+    memokey = GmeasMemoKey((Symbol(gconfidence), rule))
+
+    # leverage memoization if a miner is provided, and it already computed the measure
+    if !isnothing(miner)
+        memoized = getglobalmemo(miner, memokey)
+        if !isnothing(memoized) return memoized end
+    end
+
+    _antecedent = antecedent(rule)
+    _consequent = consequent(rule)
+
+    ans = gsupport(union(_antecedent, _consequent), X, threshold; miner=miner) /
+        gsupport(_antecedent, X, threshold; miner=miner)
+
+    if !isnothing(miner)
+        setglobalmemo(miner, memokey, ans)
+    end
+
+    return ans
 end
