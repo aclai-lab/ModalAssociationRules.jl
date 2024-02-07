@@ -30,6 +30,9 @@ manual_alphabet = Vector{Item}([manual_p, manual_q, manual_r,
 @test_nowarn miner = ARuleMiner(X, apriori(), manual_alphabet)
 @test_nowarn miner = ARuleMiner(X, apriori(), manual_alphabet,
     [(gsupport, 0.14, 0.14)], [(gconfidence, 0.14, 0.14)])
+# Mining using manually defined alphabet
+miner = ARuleMiner(X, apriori(), manual_alphabet,
+    [(gsupport, 0.14, 0.14)], [(gconfidence, 0.14, 0.14)])
 
 @test dataset(miner) == X
 @test algorithm(miner) == miner.algo
@@ -38,9 +41,7 @@ manual_alphabet = Vector{Item}([manual_p, manual_q, manual_r,
 @test nonfreqitems(miner) == Itemset[]
 @test arules(miner) == ARule[]
 
-# Mining using manually defined alphabet
-miner = ARuleMiner(X, apriori(), manual_alphabet,
-    [(gsupport, 0.14, 0.14)], [(gconfidence, 0.14, 0.14)])
+@test_nowarn SoleRules.mine(miner)
 
 a = SoleRules.merge(miner.freq_itemsets[1], miner.freq_itemsets[2])
 # @test combine()

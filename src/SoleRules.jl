@@ -6,6 +6,7 @@ using FunctionWrappers: FunctionWrapper
 using IterTools
 using Parameters
 using Random
+using ResumableFunctions
 
 using Reexport
 @reexport using SoleModels

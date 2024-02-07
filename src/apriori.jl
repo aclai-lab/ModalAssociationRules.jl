@@ -7,7 +7,8 @@ Wrapper of Apriori algorithm over a (modal) dataset.
 This returns a void function whose arg
 """
 function apriori(;
-    fulldump::Bool = true   # mostly for testing purposes
+    fulldump::Bool = true,   # mostly for testing purposes
+    verbose::Bool = true
 )::Function
 
     # look at the (k-1)-subsets of each candidate itemset:
@@ -41,7 +42,7 @@ function apriori(;
 
                 for meas in item_meas(miner)
                     (gmeas_algo, lthreshold, gthreshold) = meas
-                    if gmeas_algo(item, X, lthreshold) < gthreshold
+                    if gmeas_algo(item, X, lthreshold, miner=miner) < gthreshold
                         interesting = false
                         break
                     end
@@ -70,8 +71,10 @@ function apriori(;
             empty!(frequents)
             empty!(nonfrequents)
 
-            println("DEBUG: Starting new computational loop...")
-            println("DEBUG: Current candidates size: $(length(candidates))")
+            if verbose
+                println("Starting new computational loop with $(length(candidates)) "*
+                    "candidates.")
+            end
         end
     end
 

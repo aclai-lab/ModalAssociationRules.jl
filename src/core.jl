@@ -15,8 +15,8 @@ end
 value(itemset::Itemset) = LeftmostConjunctiveForm(itemset)
 
 const ARule = Tuple{Itemset,Itemset} # NOTE: see SoleLogics.Rule
-antecedent(r::ARule) = first(r.rule)
-consequent(r::ARule) = last(r.rule)
+antecedent(rule::ARule) = first(rule)
+consequent(rule::ARule) = last(rule)
 
 # See meaningfulness measures section.
 # A ConstrainedMeasure is a tuple shaped as (global measure, local threshold, global threshold)
@@ -42,39 +42,6 @@ function combine(itemsets::Vector{<:Itemset}, newlength::Integer)
         )
     )
 end
-
-# TODO: make this a generator with Resumable Function
-# function arules_generator(itemsets::Vector{Itemset}, rule_meas::Vector{RuleGmeasAndThreshold})
-#     rules = ARule([])
-#
-#     for itemset in itemsets
-#         subsets = powerset(itemset)
-#         for subset in subsets
-#             _antecedent = subset
-#             _consequent = symdiff(itemset, subset)
-#
-#             if length(_antecedent) == 0 || length(_consequent) == 0
-#                 continue
-#
-#             interesting = true
-#             currentrule = ARule(_antecedent, _consequent)
-#
-#             for meas in rule_meas
-#                 (gmeas_algo, lthreshold, gthreshold) = meas
-#                 gmeas_result = gmeas_algo(item, X, lthreshold)
-#
-#                 if gmeas_result < gthreshold
-#                     interesting = false
-#                     break
-#                 end
-#
-#                 # setglobalmemo(currentrule, )
-#             end
-#
-#         end
-#     end
-# end
-
 
 ############################################################################################
 #### Association rule miner machine ########################################################
@@ -123,7 +90,8 @@ struct ARuleMiner
         alphabet::Vector{Item}
     )
         # ARuleMiner(X, MiningAlgo(algo), alphabet,
-        new(X, MiningAlgo(algo), alphabet, [(gsupport, 0.5, 0.5)], [(gconfidence, 0.5, 0.5)],
+        new(X, MiningAlgo(algo), alphabet,
+            [(gsupport, 0.5, 0.5)], [(gconfidence, 0.5, 0.5)],
             Vector{Itemset}([]), Vector{Itemset}([]), Vector{ARule}([]),
             LmeasMemo(), GmeasMemo(), (;)
         );
@@ -159,9 +127,43 @@ function apply(miner::ARuleMiner, X::AbstractDataset)
     return true
 end
 
+@resumable function arules_generator(
+    itemsets::Vector{Itemset},
+    miner::ARuleMiner
+)
+    for itemset in itemsets
+        subsets = powerset(itemset)
+        for subset in subsets
+            _antecedent = subset
+            _consequent = symdiff(itemset, subset)
+
+            if length(_antecedent) == 0 || length(_consequent) == 0
+                continue
+            end
+
+            interesting = true
+            currentrule = ARule((_antecedent, _consequent))
+
+            for meas in rule_meas(miner)
+                (gmeas_algo, lthreshold, gthreshold) = meas
+                gmeas_result = gmeas_algo(
+                    currentrule, dataset(miner), lthreshold, miner=miner)
+
+                if gmeas_result < gthreshold
+                    interesting = false
+                    break
+                end
+            end
+
+            @yield currentrule
+        end
+    end
+end
+
 ############################################################################################
 #### Meaningfulness measures ###############################################################
 ############################################################################################
+
 function lsupport(
     itemset::Itemset,
     logi_instance::LogicalInstance;

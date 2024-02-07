@@ -13,8 +13,9 @@ Organization:
   ☐ write an initial fpgrowth implementation
 
 Generic:
-  ☐ call meaningfulness measures with ARuleMiner as optional argument
-  ☐ move memoization accountability to ARuleMiner
+  ✔ move memoization accountability to ARuleMiner @done(24-02-07 23:58)
+  ✔ call meaningfulness measures with ARuleMiner as optional argument @done(24-02-07 23:58)
+  ✔ association rules generator (add and leverage ResumableFunction) @done(24-02-07 23:58)
   ☐ global memoization should check if memoized treshold is larger than requested one
 
 Utility:
