@@ -8,7 +8,7 @@ using StatsBase
 # Preamble
 
 # Load NATOPS dataset and convert it to a Logiset
-X_df, y = load_arff_dataset("NATOPS");
+X_df, y = SoleData.load_arff_dataset("NATOPS");
 X = scalarlogiset(X_df)
 
 # Make an alphabet manually

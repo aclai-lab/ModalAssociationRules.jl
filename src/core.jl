@@ -85,56 +85,56 @@ See also [`gconfidence`](@ref), [`gsupport`](@ref).
 const ConstrainedMeasure = Tuple{Function, Threshold, Threshold}
 
 """
-    MemoARM = Union{Itemset,ARule} # TODO: change to ARMSubject   (MemoSubject)
+    ARMSubject = Union{Itemset,ARule}
 
 [Memoizable](https://en.wikipedia.org/wiki/Memoization) types for association rule mining
 (ARM).
 
-See also [] TODO: add link to ARM memoization section.
+See also [`GmeasMemo`](@ref), [`LmeasMemo`](@ref).
 """
-const MemoARM = Union{Itemset,ARule} # memoizable association-rule-mining types
+const ARMSubject = Union{Itemset,ARule} # memoizable association-rule-mining types
 
 """
-    const LmeasMemoKey = Tuple{Symbol,MemoARM,Int64}
+    const LmeasMemoKey = Tuple{Symbol,ARMSubject,Int64}
 
 Key of a [`LmeasMemo`](@ref) dictionary.
-Represents a local meaningfulness measure name (as a *Symbol*), a [`MemoARM`](@ref),
+Represents a local meaningfulness measure name (as a *Symbol*), a [`ARMSubject`](@ref),
 and the number of a dataset instance where the measure is applied.
 
-See also [`LmeasMemo`](@ref), [`MemoARM`](@ref).
+See also [`LmeasMemo`](@ref), [`ARMSubject`](@ref).
 """
-const LmeasMemoKey = Tuple{Symbol,MemoARM,Int64}
+const LmeasMemoKey = Tuple{Symbol,ARMSubject,Int64}
 
 """
     const LmeasMemo = Dict{LmeasMemoKey,Float64}
 
-Association between a local measure of a [`MemoARM`](@ref) on a specific dataset instance,
+Association between a local measure of a [`ARMSubject`](@ref) on a specific dataset instance,
 and its value.
 
-See also [`LmeasMemoKey`](@ref), [`MemoARM`](@ref).
+See also [`LmeasMemoKey`](@ref), [`ARMSubject`](@ref).
 """
 const LmeasMemo = Dict{LmeasMemoKey,Float64}
 
 """
-    const GmeasMemoKey = Tuple{Symbol,MemoARM}
+    const GmeasMemoKey = Tuple{Symbol,ARMSubject}
 
 Key of a [`GmeasMemo`](@ref) dictionary.
-Represents a global meaningfulness measure name (as a *Symbol*) and a [`MemoARM`](@ref).
+Represents a global meaningfulness measure name (as a *Symbol*) and a [`ARMSubject`](@ref).
 
-See also [`GmeasMemo`](@ref), [`MemoARM`](@ref).
+See also [`GmeasMemo`](@ref), [`ARMSubject`](@ref).
 """
-const GmeasMemoKey = Tuple{Symbol,MemoARM}
+const GmeasMemoKey = Tuple{Symbol,ARMSubject}
 
 """
     const GmeasMemo = Dict{GmeasMemoKey,Float64}
 
-Association between a global measure of a [`MemoARM`](@ref) on a dataset, and its value.
+Association between a global measure of a [`ARMSubject`](@ref) on a dataset, and its value.
 
 The reference to the dataset is not explicited here, since [`GmeasMemo`](@ref) is intended
 to be used as a [memoization](https://en.wikipedia.org/wiki/Memoization) structure inside # TODO: remove repetition
 structures which performs mining, and knows the dataset they are working with.
 
-See also [`GmeasMemoKey`](@ref), [`MemoARM`](@ref).
+See also [`GmeasMemoKey`](@ref), [`ARMSubject`](@ref).
 """
 const GmeasMemo = Dict{GmeasMemoKey,Float64} # global measure of an itemset/arule => value
 
@@ -145,13 +145,11 @@ Combines itemsets from `itemsets` into new itemsets of length `newlength`
 by taking all combinations of two itemsets and unioning them.
 """
 function combine(itemsets::Vector{<:Itemset}, newlength::Integer)
-    return
-        Iterators.filter(
-            combo -> length(combo) == newlength,
-            Iterators.map(
-                combo -> union(combo[1], combo[2]),
-                combinations(itemsets, 2)
-            )
+    return Iterators.filter(
+        combo -> length(combo) == newlength,
+        Iterators.map(
+            combo -> union(combo[1], combo[2]),
+            combinations(itemsets, 2)
         )
     )
 end
@@ -182,10 +180,49 @@ end
 
 Machine learning model interface to perform association rules extraction.
 
-TODO: explain in deep (example of construction, launch and save results)
-TODO: atleast one usage example
+# Examples
+```julia-repl
+julia> using SoleRules
+julia> using SoleData
 
-See also  [`ARule`](@ref), [`ConstrainedMeasure`](@ref), [`Itemset`](@ref),
+# Load NATOPS DataFrame
+julia> X_df, y = load_arff_dataset("NATOPS");
+
+# Convert NATOPS DataFrame to a Logiset
+julia> X = scalarlogiset(X_df)
+
+# Prepare some propositional atoms
+julia> p = Atom(ScalarCondition(UnivariateMin(1), >, -0.5))
+julia> q = Atom(ScalarCondition(UnivariateMin(2), <=, -2.2))
+julia> r = Atom(ScalarCondition(UnivariateMin(3), >, -3.6))
+
+# Prepare some modal atoms using later relationship - see [`SoleLogics.IntervalRelation`](@ref))
+julia> lp = box(IA_L)(p)
+julia> lq = diamond(IA_L)(q)
+julia> lr = boxlater(r)
+
+# Compose a vector of items, regrouping the atoms defined before
+julia> manual_alphabet = Vector{Item}([p, q, r, lp, lq, lr])
+
+# Create an association rule miner wrapping *apriori* algorithm - see [`apriori`](@ref);
+# note that meaningfulness measures are not explicited and, thus, are defaulted as in the
+# call below.
+julia> miner = ARuleMiner(X, apriori(), manual_alphabet)
+
+# Create an association rule miner, expliciting global meaningfulness measures with their
+# local and global thresholds, both for [`Itemset`](@ref)s and [`ARule`](@ref).
+julia> miner = ARuleMiner(X, apriori(), manual_alphabet,
+    [(gsupport, 0.1, 0.1)], [(gconfidence, 0.2, 0.2)])
+
+# Consider the dataset and the learning algorithm wrapped by *miner* (respectively *X* and *apriori*)
+# Mine the frequent itemsets, that is to say the itemsets for which *item_constrained_measures* are large enough.
+# Then iterate the generator returned by [`mine`](@ref) to enumerate the meaningful association rules.
+julia> for arule in SoleRules.mine(miner)
+    println(miner)
+end
+```
+
+See also  [`ARule`](@ref), [`apriori`](@ref), [`ConstrainedMeasure`](@ref), [`Itemset`](@ref),
 [`GmeasMemo`](@ref), [`LmeasMemo`](@ref), [`MiningAlgo`](@ref).
 """
 struct ARuleMiner
@@ -229,7 +266,7 @@ struct ARuleMiner
     )
         # ARuleMiner(X, MiningAlgo(algo), alphabet,
         new(X, MiningAlgo(algo), alphabet,
-            [(gsupport, 0.5, 0.5)], [(gconfidence, 0.5, 0.5)],
+            [(gsupport, 0.1, 0.1)], [(gconfidence, 0.2, 0.2)],
             Vector{Itemset}([]), Vector{Itemset}([]), Vector{ARule}([]),
             LmeasMemo(), GmeasMemo(), (;)
         )
@@ -327,6 +364,17 @@ function apply(miner::ARuleMiner, X::AbstractDataset)
     return arules_generator(freqitems(miner), miner)
 end
 
+"""
+    arules_generator(itemsets::Vector{Itemset}, miner::ARuleMiner)
+
+Generates association rules from the given collection of *itemsets* and *miner*.
+Iterates through the powerset of each itemset to generate meaningful [`ARule`](@ref).
+
+To establish the meaningfulness of each association rule, check if it meets the global
+constraints specified in `rule_meas(miner)`, and yields the rule if so.
+
+See also [`ARule`](@ref), [`ARuleMiner`](@ref), [`Itemset`](@ref), [`rule_meas`](@ref).
+"""
 @resumable function arules_generator(
     itemsets::Vector{Itemset},
     miner::ARuleMiner
@@ -364,10 +412,19 @@ end
 #### Meaningfulness measures ###############################################################
 ############################################################################################
 
+"""
+    lsupport(itemset, logi_instance; miner=nothing)
+
+Compute the local support for the given `itemset` in the given `logi_instance`.
+
+Divides the number of worlds where `itemset` is true by the total number of worlds.
+
+Optionally leverages memoization in `miner` if provided.
+"""
 function lsupport(
     itemset::Itemset,
     logi_instance::LogicalInstance;
-    miner::Union{Nothing,ARuleMiner} = nothing
+    miner::Union{Nothing,ARuleMiner}=nothing
 )::Float64
     # retrieve logiset, and the specific instance
     X, i_instance = logi_instance.s, logi_instance.i_instance
@@ -378,12 +435,14 @@ function lsupport(
     # leverage memoization if a miner is provided, and it already computed the measure
     if !isnothing(miner)
         memoized = getlocalmemo(miner, memokey)
-        if !isnothing(memoized) return memoized end
+        if !isnothing(memoized)
+            return memoized
+        end
     end
 
     # compute local measure, then divide it by the instance total number of worlds
     ans = sum([check(value(itemset), X, i_instance, w)
-        for w in allworlds(X, i_instance)]) / nworlds(X, i_instance)
+               for w in allworlds(X, i_instance)]) / nworlds(X, i_instance)
 
     if !isnothing(miner)
         setlocalmemo(miner, memokey, ans)
@@ -392,6 +451,16 @@ function lsupport(
     return ans
 end
 
+"""
+    gsupport(itemset, X, threshold; miner=nothing)
+
+Compute the global support of the `itemset` in the `X` dataset, with respect to the given `threshold`.
+
+The global support is computed by dividing the number of dataset instances where the local
+support of the itemset is >= `threshold`, by the total number of instances in `X`.
+
+If a `miner` is provided, memoization is used to avoid recomputing the measure.
+"""
 function gsupport(
     itemset::Itemset,
     X::SupportedLogiset,
