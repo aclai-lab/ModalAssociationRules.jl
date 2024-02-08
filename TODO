@@ -21,27 +21,21 @@ Generic:
   ☐ think about alphabet parameter in apriori
 
 Utility:
-  # all the following should be moved out ot SoleModels
+  ☐ build a macro to implement decorator pattern to build local and global measures, optionally exploiting ARuleMiner memoization
+  ✔ expose a simple-to-understand pool of utility methods to perform combinatorics over itemsets @done(24-02-08 20:30)
+    ✔ # (Itemset changed to Vector type from custom) @done(24-02-08 20:28)
+    ✔ combine @done(24-02-08 20:30)
+    ✔ prune @done(24-02-08 20:30)
+    ✔ arules generation with powerset @done(24-02-08 20:30)
+
+To SoleModels or SoleData:
   ✔ consider feature when binning @done(24-02-02 15:52)
   ✔ organize the alphabet generation system @done(24-02-05 23:52)
   ☐ find out how to extract interesting literals from which mine association rules
-  ✔ expose a simple-to-understand pool of utility methods to perform combinatorics over itemsets @done(24-02-07 17:00)
-    # (Itemset changed to Vector type from custom)
-    ✔ iterable interface @done(24-02-05 19:28)
-    ✔ getindex interface @done(24-02-05 23:52)
-    ✔ merge @done(24-02-04 19:55)
-    ✔ combine @done(24-02-04 19:55)
-    ✔ contains @done(24-02-05 08:48)
-    ✔ prune @done(24-02-05 16:29)
-    ✔ empty @done(24-02-07 17:00)
 
 Testing:
-  ☐ measure extraction algorithms execution time
-  ☐ in test section, invoke SoleLogics kripke models generation
-    ✔ write SoleLogics kripke models generation @done(23-12-20 18:34)
-  ☐ prepare an array of frequent literals (both locally and globally)
-  ☐ test the initial apriori implementation (see organization section)
-  ☐ test the initial fpgrowth implementation (generated rules must be the same as in apriori)
+  ☐ measure apriori algorithms execution time, leveraging SupportedLogiset optimization capabilities
+  ☐ write unit tests
 
 Documentation:
   ☐ write a v0.1 documentation

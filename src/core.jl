@@ -98,7 +98,7 @@ const ARMSubject = Union{Itemset,ARule} # memoizable association-rule-mining typ
     const LmeasMemoKey = Tuple{Symbol,ARMSubject,Int64}
 
 Key of a [`LmeasMemo`](@ref) dictionary.
-Represents a local meaningfulness measure name (as a *Symbol*), a [`ARMSubject`](@ref),
+Represents a local meaningfulness measure name (as a `Symbol`), a [`ARMSubject`](@ref),
 and the number of a dataset instance where the measure is applied.
 
 See also [`LmeasMemo`](@ref), [`ARMSubject`](@ref).
@@ -119,7 +119,7 @@ const LmeasMemo = Dict{LmeasMemoKey,Float64}
     const GmeasMemoKey = Tuple{Symbol,ARMSubject}
 
 Key of a [`GmeasMemo`](@ref) dictionary.
-Represents a global meaningfulness measure name (as a *Symbol*) and a [`ARMSubject`](@ref).
+Represents a global meaningfulness measure name (as a `Symbol`) and a [`ARMSubject`](@ref).
 
 See also [`GmeasMemo`](@ref), [`ARMSubject`](@ref).
 """
@@ -204,7 +204,7 @@ julia> lr = boxlater(r)
 # Compose a vector of items, regrouping the atoms defined before
 julia> manual_alphabet = Vector{Item}([p, q, r, lp, lq, lr])
 
-# Create an association rule miner wrapping *apriori* algorithm - see [`apriori`](@ref);
+# Create an association rule miner wrapping `apriori` algorithm - see [`apriori`](@ref);
 # note that meaningfulness measures are not explicited and, thus, are defaulted as in the
 # call below.
 julia> miner = ARuleMiner(X, apriori(), manual_alphabet)
@@ -214,8 +214,8 @@ julia> miner = ARuleMiner(X, apriori(), manual_alphabet)
 julia> miner = ARuleMiner(X, apriori(), manual_alphabet,
     [(gsupport, 0.1, 0.1)], [(gconfidence, 0.2, 0.2)])
 
-# Consider the dataset and the learning algorithm wrapped by *miner* (respectively *X* and *apriori*)
-# Mine the frequent itemsets, that is to say the itemsets for which *item_constrained_measures* are large enough.
+# Consider the dataset and the learning algorithm wrapped by `miner` (respectively `X` and `apriori`)
+# Mine the frequent itemsets, that is to say the itemsets for which `item_constrained_measures` are large enough.
 # Then iterate the generator returned by [`mine`](@ref) to enumerate the meaningful association rules.
 julia> for arule in SoleRules.mine(miner)
     println(miner)
@@ -341,7 +341,7 @@ setglobalmemo(miner::ARuleMiner, key::GmeasMemoKey, val::Float64) = miner.gmemo[
 """
     function mine(miner::ARuleMiner)
 
-Synonym for *SoleRules.apply(miner, dataset(miner))*.
+Synonym for `SoleRules.apply(miner, dataset(miner))`.
 
 See also [`ARule`](@ref), [`Itemset`](@ref), [`SoleRules.apply`](@ref).
 """
@@ -352,8 +352,8 @@ end
 """
     function apply(miner::ARuleMiner, X::AbstractDataset)
 
-Extract association rules in the dataset referenced by *miner*, saving the interesting
-[`Itemset`](@ref)s inside *miner*.
+Extract association rules in the dataset referenced by `miner`, saving the interesting
+[`Itemset`](@ref)s inside `miner`.
 Then, return a generator of [`ARules`](@ref)s.
 
 See also [`ARule`](@ref), [`Itemset`](@ref).
@@ -367,7 +367,7 @@ end
 """
     arules_generator(itemsets::Vector{Itemset}, miner::ARuleMiner)
 
-Generates association rules from the given collection of *itemsets* and *miner*.
+Generates association rules from the given collection of `itemsets` and `miner`.
 Iterates through the powerset of each itemset to generate meaningful [`ARule`](@ref).
 
 To establish the meaningfulness of each association rule, check if it meets the global
@@ -413,13 +413,20 @@ end
 ############################################################################################
 
 """
-    lsupport(itemset, logi_instance; miner=nothing)
+    function lsupport(
+        itemset::Itemset,
+        logi_instance::LogicalInstance;
+        miner::Union{Nothing,ARuleMiner}=nothing
+    )::Float64
 
 Compute the local support for the given `itemset` in the given `logi_instance`.
 
-Divides the number of worlds where `itemset` is true by the total number of worlds.
+Local support is the ratio between the number of worlds in a [`LogicalInstance`](@ref) where
+and [`Itemset`](@ref) is true and the total number of worlds in the same instance.
 
-Optionally leverages memoization in `miner` if provided.
+If a miner is provided, then its internal state is updated and used to leverage memoization.
+
+See also [`ARuleMiner`](@ref), [`LogicalInstance`](@ref), [`Itemset`](@ref).
 """
 function lsupport(
     itemset::Itemset,
@@ -452,14 +459,24 @@ function lsupport(
 end
 
 """
-    gsupport(itemset, X, threshold; miner=nothing)
+    function gsupport(
+        itemset::Itemset,
+        X::SupportedLogiset,
+        threshold::Threshold;
+        miner::Union{Nothing,ARuleMiner} = nothing
+    )::Float64
 
-Compute the global support of the `itemset` in the `X` dataset, with respect to the given `threshold`.
+Compute the global support for the given `itemset` on a logiset `X`, considering `threshold`
+as the threshold for the local support called internally.
 
-The global support is computed by dividing the number of dataset instances where the local
-support of the itemset is >= `threshold`, by the total number of instances in `X`.
+Global support is the ratio between the number of [`LogicalInstance`](@ref)s in a [`SupportedLogiset`](@ref)
+for which the local support, [`lsupport`](@ref), is greater than a [`Threshold`](@ref),
+and the total number of instances in the same logiset.
 
-If a `miner` is provided, memoization is used to avoid recomputing the measure.
+If a miner is provided, then its internal state is updated and used to leverage memoization.
+
+See also [`ARuleMiner`](@ref), [`LogicalInstance`](@ref), [`Itemset`](@ref),
+[`SupportedLogiset`](@ref), [`Threshold`](@ref).
 """
 function gsupport(
     itemset::Itemset,
@@ -487,6 +504,24 @@ function gsupport(
     return ans
 end
 
+"""
+    function lconfidence(
+        rule::ARule,
+        logi_instance::LogicalInstance;
+        miner::Union{Nothing,ARuleMiner} = nothing
+    )::Float64
+
+Compute the local confidence for the given `rule` in the given `logi_instance`.
+
+Local confidence is the ratio between [`lsupport`](@ref) of an [`ARule`](@ref) on
+a [`LogicalInstance`](@ref) and the [`lsupport`](@ref) of the [`antecedent`](@ref) of the
+same rule.
+
+If a miner is provided, then its internal state is updated and used to leverage memoization.
+
+See also [`antecedent`](@ref), [`ARule`](@ref), [`ARuleMiner`](@ref),
+[`LogicalInstance`](@ref), [`lsupport`](@ref).
+"""
 function lconfidence(
     rule::ARule,
     logi_instance::LogicalInstance;
@@ -514,6 +549,26 @@ function lconfidence(
     return ans
 end
 
+"""
+    function gconfidence(
+        rule::ARule,
+        X::SupportedLogiset,
+        threshold::Threshold;
+        miner::Union{Nothing,ARuleMiner} = nothing
+    )::Float64
+
+Compute the global confidence for the given `rule` on a logiset `X`, considering `threshold`
+as the threshold for the global support called internally.
+
+Global confidence is the ratio between [`gsupport`](@ref) of an [`ARule`](@ref) on
+a [`SupportedLogiset`](@ref) and the [`gsupport`](@ref) of the [`antecedent`](@ref) of the
+same rule.
+
+If a miner is provided, then its internal state is updated and used to leverage memoization.
+
+See also [`antecedent`](@ref), [`ARule`](@ref), [`ARuleMiner`](@ref),
+[`gsupport`](@ref), [`SupportedLogiset`](@ref).
+"""
 function gconfidence(
     rule::ARule,
     X::SupportedLogiset,
