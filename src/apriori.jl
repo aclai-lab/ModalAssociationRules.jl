@@ -49,7 +49,7 @@ function apriori(;
             k = (candidates |> first |> length) + 1
 
             # TODO: remove collect and make the code lazy
-            candidates = _prune(candidates, frequents, k) |> collect
+            candidates = prune(candidates, frequents, k) |> collect
 
             # empty support structures
             empty!(frequents)

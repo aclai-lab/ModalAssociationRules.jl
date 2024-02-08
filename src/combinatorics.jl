@@ -79,7 +79,10 @@ See also [`ARule`](@ref), [`ARuleMiner`](@ref), [`Itemset`](@ref), [`rule_meas`]
                 end
             end
 
-            @yield currentrule
+            if interesting
+                push!(arules(miner), currentrule)
+                @yield currentrule
+            end
         end
     end
 end
