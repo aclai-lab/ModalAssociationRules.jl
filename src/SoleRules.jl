@@ -9,12 +9,14 @@ using Random
 using ResumableFunctions
 
 using Reexport
-@reexport using SoleModels
+@reexport using SoleBase
 @reexport using SoleLogics
+@reexport using MultiData
+@reexport using SoleModels
 @reexport using SoleData
 
 using SoleLogics: AbstractInterpretation, getinstance, LogicalInstance, nworlds
-using SoleModels: SupportedLogiset
+using SoleData: SupportedLogiset
 
 using StatsBase
 

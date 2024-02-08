@@ -1,13 +1,14 @@
 using Test
 
 using SoleRules
+using SoleData
 using StatsBase
 
 # Association rule extraction algorithms test suite
 # Preamble
 
 # Load NATOPS dataset and convert it to a Logiset
-X_df, y = SoleModels.load_arff_dataset("NATOPS");
+X_df, y = load_arff_dataset("NATOPS");
 X = scalarlogiset(X_df)
 
 # Make an alphabet manually
@@ -28,6 +29,7 @@ manual_alphabet = Vector{Item}([manual_p, manual_q, manual_r,
 # Make an association rule miner wrapping Apriori algorithm
 # Testing different ARuleMiner constructors
 @test_nowarn miner = ARuleMiner(X, apriori(), manual_alphabet)
+
 @test_nowarn miner = ARuleMiner(X, apriori(), manual_alphabet,
     [(gsupport, 0.14, 0.14)], [(gconfidence, 0.14, 0.14)])
 # Mining using manually defined alphabet
@@ -43,10 +45,10 @@ miner = ARuleMiner(X, apriori(), manual_alphabet,
 
 @test_nowarn SoleRules.mine(miner)
 
-a = SoleRules.merge(miner.freq_itemsets[1], miner.freq_itemsets[2])
+# a = SoleRules.merge(miner.freq_itemsets[1], miner.freq_itemsets[2])
 # @test combine()
 # @test in between different types
 
-simple_p, simple_q, simple_r = Itemset.(Atom.(["p", "q", "r"]))
+# simple_p, simple_q, simple_r = Itemset.(Atom.(["p", "q", "r"]))
 
 # @test powerset

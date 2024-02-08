@@ -1,6 +1,7 @@
 using Test
 
 using SoleLogics
+using SoleData
 using SoleModels
 using StatsBase
 
@@ -9,7 +10,7 @@ using StatsBase
 
 
 # Load an example time-series classification dataset as a tuple (DataFrame, Vector{String})
-X_df, y = SoleModels.load_arff_dataset("NATOPS");
+X_df, y = SoleData.load_arff_dataset("NATOPS");
 fr = SoleLogics.frame(X_df, 1)
 
 # collect(accessibles(fr, Interval(10,30), IA_L)) |> print

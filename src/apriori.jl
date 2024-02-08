@@ -8,7 +8,7 @@ This returns a void function whose arg
 """
 function apriori(;
     fulldump::Bool = true,   # mostly for testing purposes
-    verbose::Bool = true
+    verbose::Bool = true,
 )::Function
 
     # look at the (k-1)-subsets of each candidate itemset:

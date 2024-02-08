@@ -2,7 +2,7 @@
 
 julia_version = "1.9.0"
 manifest_format = "2.0"
-project_hash = "f143cfd7a3f09161817966c0a247bb489b3cfd85"
+project_hash = "cd044141ab6f82c769532eae264b7fe05ff8d7cf"
 
 [[deps.AbstractTrees]]
 git-tree-sha1 = "faa260e4cb5aba097a73fab382dd4b5819d8ec8c"
@@ -124,9 +124,9 @@ version = "1.3.5"
 
 [[deps.CodecZlib]]
 deps = ["TranscodingStreams", "Zlib_jll"]
-git-tree-sha1 = "cd67fc487743b2f0fd4380d4cbd3a24660d0eec8"
+git-tree-sha1 = "59939d8a997469ee05c4b4944560a820f9ba0d73"
 uuid = "944b1d66-785c-5afd-91f1-9de20f533193"
-version = "0.7.3"
+version = "0.7.4"
 
 [[deps.ColorTypes]]
 deps = ["FixedPointNumbers", "Random"]
@@ -215,9 +215,9 @@ version = "1.9.1"
 
 [[deps.Dictionaries]]
 deps = ["Indexing", "Random", "Serialization"]
-git-tree-sha1 = "bd57fc07ff32179367a230b22c539e4776e452e2"
+git-tree-sha1 = "1f3b7b0d321641c1f2e519f7aed77f8e1f6cb133"
 uuid = "85a47980-9c8c-11e8-2b9f-f7ca1fa99fb4"
-version = "0.3.28"
+version = "0.3.29"
 
 [[deps.DimensionalData]]
 deps = ["Adapt", "ArrayInterface", "ConstructionBase", "Dates", "Extents", "IntervalSets", "InvertedIndices", "IteratorInterfaceExtensions", "LinearAlgebra", "PrecompileTools", "Random", "RecipesBase", "SparseArrays", "Statistics", "TableTraits", "Tables"]
@@ -354,13 +354,13 @@ deps = ["Markdown"]
 uuid = "b77e0a4c-d291-57a0-90e8-8db25a27a240"
 
 [[deps.IntervalSets]]
-deps = ["Dates", "Random"]
-git-tree-sha1 = "3d8866c029dd6b16e69e0d4a939c4dfcb98fac47"
+git-tree-sha1 = "581191b15bcb56a2aa257e9c160085d0f128a380"
 uuid = "8197267c-284f-5f27-9208-e0e47529a953"
-version = "0.7.8"
-weakdeps = ["Statistics"]
+version = "0.7.9"
+weakdeps = ["Random", "Statistics"]
 
     [deps.IntervalSets.extensions]
+    IntervalSetsRandomExt = "Random"
     IntervalSetsStatisticsExt = "Statistics"
 
 [[deps.InvertedIndices]]
@@ -525,6 +525,12 @@ uuid = "a63ad114-7e13-5084-954f-fe012c677804"
 uuid = "14a3606d-f60d-562e-9121-12d972cd8159"
 version = "2022.10.11"
 
+[[deps.MultiData]]
+deps = ["CSV", "Catch22", "DataFrames", "DataStructures", "Logging", "MLJModelInterface", "Random", "Reexport", "Revise", "ScientificTypes", "SoleBase", "Statistics", "StatsBase", "Tables"]
+path = "/home/mauro/.julia/dev/MultiData"
+uuid = "8cc5100c-b3d1-4f82-90cb-0ea93d317aba"
+version = "0.0.1"
+
 [[deps.NaNMath]]
 deps = ["OpenLibm_jll"]
 git-tree-sha1 = "0877504529a3e5c3343c6f8b4c0381e57e4387e4"
@@ -553,9 +559,9 @@ version = "1.4.1"
 
 [[deps.OpenSSL_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
-git-tree-sha1 = "cc6e1927ac521b659af340e0ca45828a3ffc748f"
+git-tree-sha1 = "60e3045590bd104a16fefb12836c00c0ef8c7f8c"
 uuid = "458c3c95-2e84-50aa-8efc-19380b2a3a95"
-version = "3.0.12+0"
+version = "3.0.13+0"
 
 [[deps.OpenSpecFun_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "JLLWrappers", "Libdl", "Pkg"]
@@ -732,35 +738,29 @@ version = "0.9.4"
 [[deps.Sockets]]
 uuid = "6462fe0b-24de-5631-8697-dd941f90decc"
 
-[[deps.Sole]]
-deps = ["Random", "Reexport", "SoleBase", "SoleData", "SoleLogics", "SoleModels"]
-git-tree-sha1 = "b7fa6e7e881180a59fbebc65b34fa7d62d18933c"
-uuid = "7b3b3b3f-8b15-4a80-a798-b383498bc2cf"
-version = "0.3.1"
-
 [[deps.SoleBase]]
-deps = ["IterTools", "Logging", "Random"]
-git-tree-sha1 = "235725e98366c9efc1a4b319e25a672ab57c7e46"
+deps = ["CategoricalArrays", "FillArrays", "IterTools", "Logging", "Random", "StatsBase"]
+path = "/home/mauro/.julia/dev/SoleBase"
 uuid = "4475fa32-7023-44a0-aa70-4813b230e492"
-version = "0.11.1"
+version = "0.12.0"
 
 [[deps.SoleData]]
-deps = ["CSV", "Catch22", "DataFrames", "DataStructures", "Logging", "MLJModelInterface", "Random", "Reexport", "Revise", "ScientificTypes", "SoleBase", "Statistics", "StatsBase", "Tables"]
+deps = ["BenchmarkTools", "CSV", "Catch22", "CategoricalArrays", "DataFrames", "DataStructures", "Graphs", "HTTP", "Logging", "MLJBase", "MLJModelInterface", "MultiData", "ProgressMeter", "Random", "Reexport", "Revise", "ScientificTypes", "SoleBase", "SoleLogics", "Statistics", "StatsBase", "Tables", "ThreadSafeDicts", "UniqueVectors", "ZipFile"]
 path = "/home/mauro/.julia/dev/SoleData"
 uuid = "123f1ae1-6307-4526-ab5b-aab3a92a2b8c"
-version = "0.12.1"
+version = "0.13.0"
 
 [[deps.SoleLogics]]
 deps = ["AbstractTrees", "DataStructures", "Dictionaries", "Graphs", "IterTools", "Lazy", "PrettyTables", "Random", "Reexport", "Revise", "SoleBase", "StatsBase", "ThreadSafeDicts"]
 path = "/home/mauro/.julia/dev/SoleLogics"
 uuid = "b002da8f-3cb3-4d91-bbe3-2953433912b5"
-version = "0.6.14"
+version = "0.7.0"
 
 [[deps.SoleModels]]
-deps = ["AbstractTrees", "BenchmarkTools", "CSV", "CategoricalArrays", "DataFrames", "DataStructures", "FillArrays", "FunctionWrappers", "Graphs", "HTTP", "Lazy", "LinearAlgebra", "Logging", "MLJBase", "MLJModelInterface", "ProgressMeter", "Random", "Reexport", "Revise", "SoleBase", "SoleData", "SoleLogics", "StatsBase", "Suppressor", "Tables", "ThreadSafeDicts", "UniqueVectors", "ZipFile"]
+deps = ["AbstractTrees", "BenchmarkTools", "CSV", "CategoricalArrays", "DataFrames", "DataStructures", "FillArrays", "FunctionWrappers", "Graphs", "HTTP", "Lazy", "LinearAlgebra", "Logging", "MLJBase", "MLJModelInterface", "ProgressMeter", "Random", "Reexport", "Revise", "SoleBase", "SoleData", "SoleLogics", "StatsBase", "Suppressor", "Tables", "ThreadSafeDicts", "ZipFile"]
 path = "/home/mauro/.julia/dev/SoleModels"
 uuid = "4249d9c7-3290-4ddd-961c-e1d3ec2467f8"
-version = "0.5.6"
+version = "0.6.0"
 
 [[deps.SortingAlgorithms]]
 deps = ["DataStructures"]
@@ -786,9 +786,9 @@ version = "2.3.1"
 
 [[deps.StaticArrays]]
 deps = ["LinearAlgebra", "PrecompileTools", "Random", "StaticArraysCore"]
-git-tree-sha1 = "f68dd04d131d9a8a8eb836173ee8f105c360b0c5"
+git-tree-sha1 = "7b0e9c14c624e435076d19aea1e5cbdec2b9ca37"
 uuid = "90137ffa-7385-5640-81b9-e52037218182"
-version = "1.9.1"
+version = "1.9.2"
 
     [deps.StaticArrays.extensions]
     StaticArraysChainRulesCoreExt = "ChainRulesCore"
@@ -899,9 +899,9 @@ uuid = "f3112013-b923-4dfa-b867-8806c885f823"
 version = "0.4.0"
 
 [[deps.TranscodingStreams]]
-git-tree-sha1 = "1fbeaaca45801b4ba17c251dd8603ef24801dd84"
+git-tree-sha1 = "54194d92959d8ebaa8e26227dbe3cdefcdcd594f"
 uuid = "3bb67fe8-82b1-5028-8e26-92a6c54297fa"
-version = "0.10.2"
+version = "0.10.3"
 weakdeps = ["Random", "Test"]
 
     [deps.TranscodingStreams.extensions]

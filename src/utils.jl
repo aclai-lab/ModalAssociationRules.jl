@@ -71,14 +71,14 @@ such as
 whose [`syntaxstring`](@ref) is
     `min[V3] > 1.1`
 
-See also [`syntaxstring`](@ref), [`SoleModels.TestOperator`](@ref),
+See also [`syntaxstring`](@ref), [`SoleData.TestOperator`](@ref),
 [`SoleLogics.UnivariateFeature`](@ref).
 """
 function make_conditions(
     thresholds::Vector{<:Real},
     nvariables::Vector{Int64},
     features::Vector{DataType}, # NOTE: this should be Vector{<:AbstractFeature}
-    testops::Vector{SoleModels.TestOperator};
+    testops::Vector{SoleData.TestOperator};
     conditiontype = ScalarCondition
 )
     return IterTools.imap(

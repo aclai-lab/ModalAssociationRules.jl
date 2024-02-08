@@ -20,6 +20,7 @@ function _lmeas_decorator(
 
     return ans
 end
+
 function _gmeas_decorator(
     itemset::Itemset,
     X::AbstractDataset,
