@@ -10,6 +10,7 @@ Main:
     # localdict{string(local measure) -> counter} # if local measure is given
     # globldict{string(local measure) -> counter} # if local measure is given with globality on
   ✔ write an initial apriori implementation @done(24-02-05 23:52)
+    ☐ leverage the fact that `prune` is a generator
   ☐ write an initial fpgrowth implementation
 
 Generic:
