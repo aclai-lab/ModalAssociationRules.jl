@@ -26,13 +26,13 @@ Itemset(item::Item) = Itemset([item])
 Itemset(itemsets::Vector{Itemset}) = Itemset(union(itemsets...))
 
 """
-    value(itemset::Itemset) # TODO: change toformula
+    toformula(itemset::Itemset)
 
 Conjunctive normal form of the [`Item`](@ref)s contained in `itemset`.
 
 See also [`SoleLogics.LeftmostConjunctiveForm`](@ref)
 """
-value(itemset::Itemset) = LeftmostConjunctiveForm(itemset)
+toformula(itemset::Itemset) = LeftmostConjunctiveForm(itemset)
 
 """
     const ARule = Tuple{Itemset,Itemset}
@@ -131,31 +131,15 @@ const GmeasMemoKey = Tuple{Symbol,ARMSubject}
 Association between a global measure of a [`ARMSubject`](@ref) on a dataset, and its value.
 
 The reference to the dataset is not explicited here, since [`GmeasMemo`](@ref) is intended
-to be used as a [memoization](https://en.wikipedia.org/wiki/Memoization) structure inside # TODO: remove repetition
-structures which performs mining, and knows the dataset they are working with.
+to be used as a [memoization](https://en.wikipedia.org/wiki/Memoization) structure inside
+[`ARuleMiner`](@ref) objects, and the latter already knows the dataset they are working with.
 
 See also [`GmeasMemoKey`](@ref), [`ARMSubject`](@ref).
 """
 const GmeasMemo = Dict{GmeasMemoKey,Float64} # global measure of an itemset/arule => value
 
-"""
-    combine(itemsets, newlength)
-
-Combines itemsets from `itemsets` into new itemsets of length `newlength`
-by taking all combinations of two itemsets and unioning them.
-"""
-function combine(itemsets::Vector{<:Itemset}, newlength::Integer)
-    return Iterators.filter(
-        combo -> length(combo) == newlength,
-        Iterators.map(
-            combo -> union(combo[1], combo[2]),
-            combinations(itemsets, 2)
-        )
-    )
-end
-
 ############################################################################################
-#### Association rule miner machine ########################################################
+#### Association rule miner machines #######################################################
 ############################################################################################
 
 """
@@ -362,237 +346,4 @@ function apply(miner::ARuleMiner, X::AbstractDataset)
     # extract frequent itemsets
     miner.algo(miner, X)
     return arules_generator(freqitems(miner), miner)
-end
-
-"""
-    arules_generator(itemsets::Vector{Itemset}, miner::ARuleMiner)
-
-Generates association rules from the given collection of `itemsets` and `miner`.
-Iterates through the powerset of each itemset to generate meaningful [`ARule`](@ref).
-
-To establish the meaningfulness of each association rule, check if it meets the global
-constraints specified in `rule_meas(miner)`, and yields the rule if so.
-
-See also [`ARule`](@ref), [`ARuleMiner`](@ref), [`Itemset`](@ref), [`rule_meas`](@ref).
-"""
-@resumable function arules_generator(
-    itemsets::Vector{Itemset},
-    miner::ARuleMiner
-)
-    for itemset in itemsets
-        subsets = powerset(itemset)
-        for subset in subsets
-            _antecedent = subset
-            _consequent = symdiff(itemset, subset)
-
-            if length(_antecedent) == 0 || length(_consequent) == 0
-                continue
-            end
-
-            interesting = true
-            currentrule = ARule((_antecedent, _consequent))
-
-            for meas in rule_meas(miner)
-                (gmeas_algo, lthreshold, gthreshold) = meas
-                gmeas_result = gmeas_algo(
-                    currentrule, dataset(miner), lthreshold, miner=miner)
-
-                if gmeas_result < gthreshold
-                    interesting = false
-                    break
-                end
-            end
-
-            @yield currentrule
-        end
-    end
-end
-
-############################################################################################
-#### Meaningfulness measures ###############################################################
-############################################################################################
-
-"""
-    function lsupport(
-        itemset::Itemset,
-        logi_instance::LogicalInstance;
-        miner::Union{Nothing,ARuleMiner}=nothing
-    )::Float64
-
-Compute the local support for the given `itemset` in the given `logi_instance`.
-
-Local support is the ratio between the number of worlds in a [`LogicalInstance`](@ref) where
-and [`Itemset`](@ref) is true and the total number of worlds in the same instance.
-
-If a miner is provided, then its internal state is updated and used to leverage memoization.
-
-See also [`ARuleMiner`](@ref), [`LogicalInstance`](@ref), [`Itemset`](@ref).
-"""
-function lsupport(
-    itemset::Itemset,
-    logi_instance::LogicalInstance;
-    miner::Union{Nothing,ARuleMiner}=nothing
-)::Float64
-    # retrieve logiset, and the specific instance
-    X, i_instance = logi_instance.s, logi_instance.i_instance
-
-    # this is needed to access memoization structures
-    memokey = LmeasMemoKey((Symbol(lsupport), itemset, i_instance))
-
-    # leverage memoization if a miner is provided, and it already computed the measure
-    if !isnothing(miner)
-        memoized = getlocalmemo(miner, memokey)
-        if !isnothing(memoized)
-            return memoized
-        end
-    end
-
-    # compute local measure, then divide it by the instance total number of worlds
-    ans = sum([check(value(itemset), X, i_instance, w)
-               for w in allworlds(X, i_instance)]) / nworlds(X, i_instance)
-
-    if !isnothing(miner)
-        setlocalmemo(miner, memokey, ans)
-    end
-
-    return ans
-end
-
-"""
-    function gsupport(
-        itemset::Itemset,
-        X::SupportedLogiset,
-        threshold::Threshold;
-        miner::Union{Nothing,ARuleMiner} = nothing
-    )::Float64
-
-Compute the global support for the given `itemset` on a logiset `X`, considering `threshold`
-as the threshold for the local support called internally.
-
-Global support is the ratio between the number of [`LogicalInstance`](@ref)s in a [`SupportedLogiset`](@ref)
-for which the local support, [`lsupport`](@ref), is greater than a [`Threshold`](@ref),
-and the total number of instances in the same logiset.
-
-If a miner is provided, then its internal state is updated and used to leverage memoization.
-
-See also [`ARuleMiner`](@ref), [`LogicalInstance`](@ref), [`Itemset`](@ref),
-[`SupportedLogiset`](@ref), [`Threshold`](@ref).
-"""
-function gsupport(
-    itemset::Itemset,
-    X::SupportedLogiset,
-    threshold::Threshold;
-    miner::Union{Nothing,ARuleMiner} = nothing
-)::Float64
-    # this is needed to access memoization structures
-    memokey = GmeasMemoKey((Symbol(gsupport), itemset))
-
-    # leverage memoization if a miner is provided, and it already computed the measure
-    if !isnothing(miner)
-        memoized = getglobalmemo(miner, memokey)
-        if !isnothing(memoized) return memoized end
-    end
-
-    # compute global measure, then divide it by the dataset total number of instances
-    ans = sum([lsupport(itemset, getinstance(X, i_instance); miner=miner) >= threshold
-        for i_instance in 1:ninstances(X)]) / ninstances(X)
-
-    if !isnothing(miner)
-        setglobalmemo(miner, memokey, ans)
-    end
-
-    return ans
-end
-
-"""
-    function lconfidence(
-        rule::ARule,
-        logi_instance::LogicalInstance;
-        miner::Union{Nothing,ARuleMiner} = nothing
-    )::Float64
-
-Compute the local confidence for the given `rule` in the given `logi_instance`.
-
-Local confidence is the ratio between [`lsupport`](@ref) of an [`ARule`](@ref) on
-a [`LogicalInstance`](@ref) and the [`lsupport`](@ref) of the [`antecedent`](@ref) of the
-same rule.
-
-If a miner is provided, then its internal state is updated and used to leverage memoization.
-
-See also [`antecedent`](@ref), [`ARule`](@ref), [`ARuleMiner`](@ref),
-[`LogicalInstance`](@ref), [`lsupport`](@ref).
-"""
-function lconfidence(
-    rule::ARule,
-    logi_instance::LogicalInstance;
-    miner::Union{Nothing,ARuleMiner} = nothing
-)::Float64
-    # this is needed to access memoization structures
-    memokey = LmeasMemoKey((Symbol(lconfidence), rule, logi_instance.i_instance))
-
-    # leverage memoization if a miner is provided, and it already computed the measure
-    if !isnothing(miner)
-        memoized = getglobalmemo(miner, memokey)
-        if !isnothing(memoized) return memoized end
-    end
-
-    _antecedent = antecedent(rule)
-    _consequent = consequent(rule)
-
-    ans = lsupport(SoleRules.merge(_antecedent, _consequent), logi_instance; miner=miner) /
-        lsupport(_antecedent, logi_instance; miner=miner)
-
-    if !isnothing(miner)
-        setlocalmemo(miner, memokey, ans)
-    end
-
-    return ans
-end
-
-"""
-    function gconfidence(
-        rule::ARule,
-        X::SupportedLogiset,
-        threshold::Threshold;
-        miner::Union{Nothing,ARuleMiner} = nothing
-    )::Float64
-
-Compute the global confidence for the given `rule` on a logiset `X`, considering `threshold`
-as the threshold for the global support called internally.
-
-Global confidence is the ratio between [`gsupport`](@ref) of an [`ARule`](@ref) on
-a [`SupportedLogiset`](@ref) and the [`gsupport`](@ref) of the [`antecedent`](@ref) of the
-same rule.
-
-If a miner is provided, then its internal state is updated and used to leverage memoization.
-
-See also [`antecedent`](@ref), [`ARule`](@ref), [`ARuleMiner`](@ref),
-[`gsupport`](@ref), [`SupportedLogiset`](@ref).
-"""
-function gconfidence(
-    rule::ARule,
-    X::SupportedLogiset,
-    threshold::Threshold;
-    miner::Union{Nothing,ARuleMiner} = nothing
-)::Float64
-    # this is needed to access memoization structures
-    memokey = GmeasMemoKey((Symbol(gconfidence), rule))
-
-    # leverage memoization if a miner is provided, and it already computed the measure
-    if !isnothing(miner)
-        memoized = getglobalmemo(miner, memokey)
-        if !isnothing(memoized) return memoized end
-    end
-
-    _antecedent = antecedent(rule)
-    _consequent = consequent(rule)
-
-    ans = gsupport(union(_antecedent, _consequent), X, threshold; miner=miner) /
-        gsupport(_antecedent, X, threshold; miner=miner)
-
-    if !isnothing(miner)
-        setglobalmemo(miner, memokey, ans)
-    end
-
-    return ans
 end

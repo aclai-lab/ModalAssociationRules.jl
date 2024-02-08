@@ -23,24 +23,34 @@ using StatsBase
 include("core.jl")
 
 export Item
-export LmeasMemo, LmeasMemoKey, GmeasMemo, GmeasMemoKey
-
-export Itemset, ItemsetContent
-export setlocalmemo, getlocalmemo, getglobalmemo, setglobalmemo
-export value, merge, combine
+export Itemset, toformula
 
 export ARule
 export antecedent, consequent
 
-export ItemLmeas, ItemGmeas, RuleLmeas, RuleGmeas
+export Threshold, ConstrainedMeasure
+export ARMSubject
+export LmeasMemoKey, LmeasMemo
+export GmeasMemoKey, GmeasMemo
+
+export ARuleMiner
+export dataset, algorithm
+export item_meas, rule_meas
+export freqitems, nonfreqitems, arules
+export getlocalmemo, setlocalmemo
+export getglobalmemo, setglobalmemo
+
+export mine, apply
+
+include("meaningfulness-measures.jl")
+
 export lsupport, gsupport
 export lconfidence, gconfidence
 
-export ARuleMiner,
-    dataset, algorithm, alphabet,
-    item_meas, rule_meas,
-    freqitems, nonfreqitems, arules
-    mine, apply
+include("combinatorics.jl")
+
+export combine
+export arules_generator
 
 include("apriori.jl")
 

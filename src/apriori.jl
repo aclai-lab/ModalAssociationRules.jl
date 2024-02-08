@@ -11,22 +11,6 @@ function apriori(;
     verbose::Bool = true,
 )::Function
 
-    # look at the (k-1)-subsets of each candidate itemset:
-    # if a subset was not frequent, then prune it.
-    function _prune(
-        candidates::Vector{Itemset},
-        frequents::Vector{Itemset},
-        k::Integer
-    )
-        # if the frequents set does not contain the subset of a certain candidate,
-        # that candidate is pruned out.
-        return Iterators.filter(
-            # the iterator yields only itemsets for which every combo is in frequents
-            itemset -> all(combo -> combo in frequents, combinations(itemset, k-1)),
-            combine(candidates, k)
-        )
-    end
-
     # modal apriori main logic, as in https://ceur-ws.org/Vol-3284/492.pdf
     function _apriori(miner::ARuleMiner, X::AbstractDataset)::Nothing
         # candidates of length 1 - all the letters in our alphabet
