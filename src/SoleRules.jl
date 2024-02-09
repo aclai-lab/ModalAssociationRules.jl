@@ -37,6 +37,8 @@ export ARuleMiner
 export dataset, algorithm
 export item_meas, rule_meas
 export freqitems, nonfreqitems, arules
+export getlocalthreshold, setlocalthreshold
+export getglobalthreshold, setglobalthreshold
 export getlocalmemo, setlocalmemo
 export getglobalmemo, setglobalmemo
 
@@ -47,9 +49,10 @@ include("meaningfulness-measures.jl")
 export lsupport, gsupport
 export lconfidence, gconfidence
 
-include("combinatorics.jl")
+include("manipulations.jl")
 
-export combine
+export combine, prune
+export getcontributors
 export arules_generator
 
 include("algorithms/apriori.jl")
@@ -57,6 +60,9 @@ include("algorithms/apriori.jl")
 export apriori
 
 include("algorithms/fpgrowth.jl")
+
+export FPTree
+export HeaderTable, items, follow
 
 export fpgrowth
 

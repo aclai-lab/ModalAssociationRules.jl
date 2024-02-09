@@ -1,3 +1,7 @@
+############################################################################################
+#### Data structures #######################################################################
+############################################################################################
+
 """
 Fundamental data structure used in FP-Growth algorithm.
 Essentialy, an [`FPTree`](@ref) is a prefix tree where a root-leaf path represent an [`Itemset`](@ref).
@@ -12,26 +16,114 @@ if the worlds in which the they are true is the same.
 """
 struct FPTree
     content::Union{Nothing,Item}    # the Item contained in this node (nothing if root)
+
+    parent::Union{Nothing,FPTree}   # parent node
     children::Vector{FPTree}        # children nodes
+
+    count::Integer                  # number of equal Items this node represents
+
     contributors::UInt64            # hash representing the worlds contributing to this node
+    linkage::Union{Nothing,FPTree}  # link to another FPTree root
 
-    function FPTree()
-        new(nothing, FPTree[], 0)
+    # function FPTree()
+    #     new(nothing, nothing, FPTree[], 0, UInt64(0), nothing)
+    # end
+#
+    # function FPTree(itemset::Itemset, miner::ARuleMiner; isroot=true)
+    #     FPTree(itemset, miner, Val(isroot))
+    # end
+#
+    # # root constructor
+    # function FPTree(itemset::Itemset, miner::ARuleMiner, ::Val{true})
+    #     new(nothing, nothing, FPTree[FPTree(itemset, miner; isroot=false)],
+    #         0, UInt64(0), nothing)
+    # end
+#
+    # # internal tree constructor
+    # function FPTree(itemset::Itemset, miner::ARuleMiner, ::Val{false})
+    #     if length(itemset) == 1
+    #         new(itemset[1], FPTree[], UInt64(0), 1)
+    #     else
+    #         new(itemset[1],
+    #             FPTree[FPTree(itemset[2:end], miner, isroot=false)], UInt64(0), 1)
+    #     end
+    # end
+end
+
+doc_fptree_getters = """
+    content(fptree::FPTree)::Union{Nothing,Item}
+    children(fptree::FPTree)::Vector{FPTree}
+    contributors(fptree::FPTree)::UInt64
+    count(fptree::FPTree)::Integer
+    linkage(fptree::FPTree)::Union{Nothing,FPTree}
+
+[`FPTree`](@ref) getters.
+"""
+
+"""$(doc_fptree_getters)"""
+content(fptree::FPTree)::Union{Nothing,Item} = fptree.content
+"""$(doc_fptree_getters)"""
+children(fptree::FPTree)::Vector{FPTree} = fptree.children
+"""$(doc_fptree_getters)"""
+contributors(fptree::FPTree)::UInt64 = fptree.contributors
+"""$(doc_fptree_getters)"""
+count(fptree::FPTree)::Integer = fptree.count
+"""$(doc_fptree_getters)"""
+linkage(fptree::FPTree)::Union{Nothing,FPTree} = fptree.linkage
+
+"""
+    function follow(fptree::FPTree)::Union{Nothing,FPTree}
+
+Follow `fptree` linkage to (an internal node of) another [`FPTree`](@ref).
+"""
+function follow(fptree::FPTree)::Union{Nothing,FPTree}
+    arrival = linkage(fptree)
+    return arrival === nothing ? item : follow(arrival)
+end
+
+"""
+    struct HeaderTable
+        items::Vector{Item}
+        linkage::Dict{Item,Union{Nothing,FPTree}}
     end
 
-    function FPTree(itemset::Itemset; isroot=false)
-        FPTree(itemset, Val(isroot))
-    end
+Utility data structure used to fastly access [`FPTree`](@ref) internal nodes.
+"""
+struct HeaderTable
+    items::Vector{Item} # vector of Items, sorted decreasingly by global support
+    linkage::Dict{Item,Union{Nothing,FPTree}} # Item -> FPTree internal node association
 
-    # root constructor
-    function FPTree(itemset::Itemset, ::Val{true})
-
-    end
-
-    function FPTree(itemset::Itemset, ::Val{false})
-
+    function HeaderTable(items::Vector{Item})
+        new(items, Dict{Item,FPTree}([item => nothing for item in items]))
     end
 end
+
+doc_htable_getters = """
+    items(htable::HeaderTable)
+    linkage(htable::HeaderTable, item::Item)
+
+[`HeaderTable`](@ref) getters.
+"""
+
+"""$(doc_htable_getters)"""
+items(htable::HeaderTable) = htable.items
+
+"""$(doc_htable_getters)"""
+linkage(htable::HeaderTable, item::Item) = htable.linkage[item]
+
+"""
+    function follow(htable::HeaderTable, item::Item)::Union{Nothing,FPTree}
+
+Follow `htable` linkage to (an internal node of) a [`FPTree`](@ref).
+"""
+function follow(htable::HeaderTable, item::Item)::Union{Nothing,FPTree}
+    arrival = linkage(htable, item)
+    return arrival === nothing ? item : follow(arrival, item)
+end
+
+############################################################################################
+#### Main FP-Growth logic ##################################################################
+############################################################################################
 
 """
     fpgrowth(; fulldump::Bool=true, verbose::Bool=true)::Function

@@ -282,10 +282,13 @@ doc_aruleminer_getters = """
     nonfreqitems(miner::ARuleMiner)::Vector{Itemset}
     arules(miner::ARuleMiner)::Vector{ARule}
 
+    getlocalmemo(miner::ARuleMiner)::LmeasMemo
     getlocalmemo(miner::ARuleMiner, key::LmeasMemoKey)::Float64
+
+    getglobalmemo(miner::ARuleMiner)::GmeasMemo
     getglobalmemo(miner::ARuleMiner, key::GmeasMemoKey)::Float64
 
-Getters for [`ARuleMiner`](@ref) fields.
+[`ARuleMiner`](@ref) getters.
 """
 
 doc_aruleminer_setters = """
@@ -307,9 +310,9 @@ algorithm(miner::ARuleMiner)::MiningAlgo = miner.algo
 alphabet(miner::ARuleMiner) = miner.alphabet
 
 """$(doc_aruleminer_getters)"""
-item_meas(miner::ARuleMiner) = miner.item_constrained_measures
+item_meas(miner::ARuleMiner)::Vector{<:ConstrainedMeasure} = miner.item_constrained_measures
 """$(doc_aruleminer_getters)"""
-rule_meas(miner::ARuleMiner) = miner.rule_constrained_measures
+rule_meas(miner::ARuleMiner)::Vector{<:ConstrainedMeasure} = miner.rule_constrained_measures
 
 """$(doc_aruleminer_getters)"""
 getlocalthreshold(miner::ARuleMiner, meas::Function) = begin
@@ -339,10 +342,14 @@ nonfreqitems(miner::ARuleMiner) = miner.nonfreqitems
 arules(miner::ARuleMiner) = miner.arules
 
 """$(doc_aruleminer_getters)"""
+getlocalmemo(miner::ARuleMiner)::LmeasMemo = miner.lmemo
+"""$(doc_aruleminer_getters)"""
 getlocalmemo(miner::ARuleMiner, key::LmeasMemoKey) = get(miner.lmemo, key, nothing)
 """$(doc_aruleminer_setters)"""
 setlocalmemo(miner::ARuleMiner, key::LmeasMemoKey, val::Float64) = miner.lmemo[key] = val
 
+"""$(doc_aruleminer_getters)"""
+getglobalmemo(miner::ARuleMiner)::GmeasMemo = miner.gmemo
 """$(doc_aruleminer_getters)"""
 getglobalmemo(miner::ARuleMiner, key::GmeasMemoKey) = get(miner.gmemo, key, nothing)
 """$(doc_aruleminer_setters)"""
