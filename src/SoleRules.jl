@@ -52,9 +52,13 @@ include("combinatorics.jl")
 export combine
 export arules_generator
 
-include("apriori.jl")
+include("algorithms/apriori.jl")
 
 export apriori
+
+include("algorithms/fpgrowth.jl")
+
+export fpgrowth
 
 include("utils.jl")
 

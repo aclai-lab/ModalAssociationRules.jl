@@ -275,6 +275,9 @@ doc_aruleminer_getters = """
     item_meas(miner::ARuleMiner)::Vector{<:ConstrainedMeasure}
     rule_meas(miner::ARuleMiner)::Vector{<:ConstrainedMeasure}
 
+    getlocalthreshold(miner::ARuleMiner, meas::Function)::Float64
+    getglobalthreshold(miner::ARuleMiner, meas::Function)::Float64
+
     freqitems(miner::ARuleMiner)::Vector{Itemset}
     nonfreqitems(miner::ARuleMiner)::Vector{Itemset}
     arules(miner::ARuleMiner)::Vector{ARule}
@@ -286,6 +289,9 @@ Getters for [`ARuleMiner`](@ref) fields.
 """
 
 doc_aruleminer_setters = """
+    setlocalthreshold(miner::ARuleMiner, meas::Function, threshold::Threshold)
+    setglobalthreshold(miner::ARuleMiner, meas::Function, threshold::Threshold)
+
     setlocalmemo(miner::ARuleMiner, key::LmeasMemoKey, val::Float64)
     setglobalmemo(miner::ARuleMiner, key::GmeasMemoKey, val::Float64)
 
@@ -304,6 +310,26 @@ alphabet(miner::ARuleMiner) = miner.alphabet
 item_meas(miner::ARuleMiner) = miner.item_constrained_measures
 """$(doc_aruleminer_getters)"""
 rule_meas(miner::ARuleMiner) = miner.rule_constrained_measures
+
+"""$(doc_aruleminer_getters)"""
+getlocalthreshold(miner::ARuleMiner, meas::Function) = begin
+    for (m, tg, tl) in item_meas(miner) if m == meas return tl end end
+    error("The provided miner has no local threshold for $meas.")
+end
+"""$(doc_aruleminer_setters)"""
+setlocalthreshold(miner::ARuleMiner, meas::Function, threshold::Threshold) = begin
+    error("TODO: This method is not implemented yet.")
+end
+
+"""$(doc_aruleminer_getters)"""
+getglobalthreshold(miner::ARuleMiner, meas::Function)::Float64 = begin
+    for (m, tg, tl) in item_meas(miner) if m == meas return tg end end
+    error("The provided miner has no global threshold for $meas.")
+end
+"""$(doc_aruleminer_setters)"""
+setglobalthreshold(miner::ARuleMiner, meas::Function, threshold::Threshold) = begin
+    error("TODO: This method is not implemented yet.")
+end
 
 """$(doc_aruleminer_getters)"""
 freqitems(miner::ARuleMiner) = miner.freqitems

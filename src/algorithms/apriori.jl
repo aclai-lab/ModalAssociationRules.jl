@@ -1,14 +1,13 @@
 """
-    function apriori(
-        fulldump::Bool = true
-    )::Function
+    apriori(; fulldump::Bool=true, verbose::Bool=true)::Function
 
-Wrapper of Apriori algorithm over a (modal) dataset.
-This returns a void function whose arg
+Wrapper function for the Apriori algorithm over a modal dataset.
+Returns a `function f(miner::ARuleMiner, X::AbstractDataset)::Nothing` that runs the main
+Apriori algorithm logic, [as described here](https://ceur-ws.org/Vol-3284/492.pdf).
 """
 function apriori(;
-    fulldump::Bool = true,   # mostly for testing purposes
-    verbose::Bool = true,
+    fulldump::Bool=true,   # mostly for testing purposes, also keeps track of non-frequent patterns
+    verbose::Bool=true,
 )::Function
 
     # modal apriori main logic, as in https://ceur-ws.org/Vol-3284/492.pdf
@@ -20,10 +19,16 @@ function apriori(;
         nonfrequents = Vector{Itemset}([])  # non-frequent itemsets collection (testing)
 
         while !isempty(candidates)
-           # for each candidate, establish if it is interesting or not
+            # for each candidate, establish if it is interesting or not
             for item in candidates
                 interesting = true
 
+                # TODO: this could be a list comprehension
+                # frequents = [candidate
+                #    for (gmeas_algo, lthreshold, gthreshold) in item_meas(miner)
+                #        for candidate in candidates
+                #        if gmeas_algo(item, X, lthreshold, miner=miner) >= gthreshold
+                #    ]
                 for meas in item_meas(miner)
                     (gmeas_algo, lthreshold, gthreshold) = meas
                     if gmeas_algo(item, X, lthreshold, miner=miner) < gthreshold
@@ -56,8 +61,8 @@ function apriori(;
             empty!(nonfrequents)
 
             if verbose
-                println("Starting new computational loop with $(length(candidates)) "*
-                    "candidates.")
+                println("Starting new computational loop with $(length(candidates)) " *
+                        "candidates.")
             end
         end
     end

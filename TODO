@@ -20,6 +20,7 @@ Generic:
   ☐ global memoization should check if memoized treshold is larger than requested one
   ☐ override Base.show for itemsets and association rules
   ☐ think about alphabet parameter in apriori
+  ☐ measures inside an ARuleMiner should be unique
 
 Utility:
   ☐ build a macro to implement decorator pattern to build local and global measures, optionally exploiting ARuleMiner memoization
@@ -37,6 +38,10 @@ To SoleModels or SoleData:
 Testing:
   ☐ measure apriori algorithms execution time, leveraging SupportedLogiset optimization capabilities
   ☐ write unit tests
+
+Future:
+  ☐ item_contrained_measures and rule_constrained_measures fields in ARuleMiner could be dictionaries
+  ☐ instead of just (gmeas, lthreshold, gthreshold), may a collection of indipendent (lmeas, lthreshold) be useful?
 
 Documentation:
   ☐ write a v0.1 documentation

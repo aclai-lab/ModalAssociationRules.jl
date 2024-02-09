@@ -5,9 +5,9 @@ using SoleRules
 using SoleData
 using StatsBase
 
-# Preamble
+# preamble
 
-# Load NATOPS dataset and convert it to a Logiset
+# load NATOPS dataset and convert it to a Logiset
 X_df, y = SoleData.load_arff_dataset("NATOPS");
 X = scalarlogiset(X_df)
 
@@ -41,6 +41,9 @@ manual_alphabet = Vector{Item}([manual_p, manual_q, manual_r,
     @test length(freqitems(miner)) == 55
     @test length(nonfreqitems(miner)) == 4
     @test arules(miner) == []
+
+    # mine the frequent patterns
+    mine(miner)
 
     _temp_lmemo_key = (:lsupport, freqitems(miner)[1], 1)
     _temp_lmemo_val = getlocalmemo(miner, _temp_lmemo_key)
