@@ -39,10 +39,8 @@ mutable struct FPTree
     function FPTree(itemset::Itemset, miner::ARuleMiner, ::Val{true})
         fptree = FPTree()
 
-        push!(children(fptree), FPTree(itemset, miner; isroot=false))
-        for child in children(fptree)
-            parent(child) = fptree
-        end
+        children!(fptree, FPTree(itemset, miner; isroot=false))
+        map(child -> parent!(child, fptree), children(fptree))
 
         return fptree
     end
@@ -57,9 +55,7 @@ mutable struct FPTree
             new(firstitem, nothing, FPTree[FPTree(itemset[2:end], miner; isroot=false)],
                 1, contribhash, nothing)
 
-        for child in children(fptree)
-            parent(child) = fptree
-        end
+        map(child -> parent!(child, fptree), children(fptree))
 
         return fptree
     end
@@ -94,10 +90,12 @@ content(fptree::FPTree)::Union{Nothing,Item} = fptree.content
 parent(fptree::FPTree)::Union{Nothing,FPTree} = fptree.parent
 """$(doc_fptree_getters)"""
 children(fptree::FPTree)::Vector{FPTree} = fptree.children
+
 """$(doc_fptree_getters)"""
 count(fptree::FPTree)::Int64 = fptree.count
 """$(doc_fptree_getters)"""
 contributors(fptree::FPTree)::UInt64 = fptree.contributors
+
 """$(doc_fptree_getters)"""
 linkage(fptree::FPTree)::Union{Nothing,FPTree} = fptree.linkage
 
@@ -107,14 +105,13 @@ content!(fptree::FPTree, item::Union{Nothing,Item}) = fptree.content = item
 parent!(fptree::FPTree, parentfpt::Union{Nothing,FPTree}) = fptree.parent = parentfpt
 """$(doc_fptree_setters)"""
 children!(fptree::FPTree, child::FPTree) = push!(children(fptree), child)
-"""$(doc_fptree_setters)"""
-contributors!(fptree::FPTree, contribution::UInt64) = fptree.contributors = contribution
+
 """$(doc_fptree_setters)"""
 count!(fptree::FPTree, newcount::Int64) = fptree.count = newcount
 """$(doc_fptree_setters)"""
-addcount!(fptree::FPTree, deltacount::Int64) = fptree.count = fptree.count + deltacount
+contributors!(fptree::FPTree, contribution::UInt64) = fptree.contributors = contribution
 """$(doc_fptree_setters)"""
-content!(fptree::FPTree, item::Union{Nothing,Item}) = fptree.content = item
+addcount!(fptree::FPTree, deltacount::Int64) = fptree.count = fptree.count + deltacount
 
 """
     function follow(fptree::FPTree)::Union{Nothing,FPTree}
@@ -124,6 +121,24 @@ Follow `fptree` linkage to (an internal node of) another [`FPTree`](@ref).
 function follow(fptree::FPTree)::Union{Nothing,FPTree}
     arrival = linkage(fptree)
     return arrival === nothing ? item : follow(arrival)
+end
+
+"""
+    function link!(from::FPTree, to::FPTree)
+
+Establish a linkage between two [`FPTree`](@ref)s.
+If the starting tree is already linked with something, the already existing linkages are
+followed until a new "empty-linked" [`FPTree`](@ref) is found.
+
+See also [`follow`](@ref), [`FPTree`](@ref), [`HeaderTable`](@ref).
+"""
+function link!(from::FPTree, to::FPTree)
+    # find the last FPTree by iteratively following the internal link
+    if !isnothing(linkage(from))
+        from = follow(from)
+    end
+
+    from.linkage = to
 end
 
 """
@@ -138,8 +153,16 @@ struct HeaderTable
     items::Vector{Item} # vector of Items, sorted decreasingly by global support
     linkage::Dict{Item,Union{Nothing,FPTree}} # Item -> FPTree internal node association
 
-    function HeaderTable(items::Vector{Item})
-        new(items, Dict{Item,FPTree}([item => nothing for item in items]))
+    function HeaderTable(items::Vector{Item}, fptseed::FPTree)
+        # make an empty htable, whose entries are `Item` objects, in `items`
+        htable = new(items, Dict{Item,FPTree}([item => nothing for item in items]))
+
+        # iteratively fill htable
+        child = children(fptseed)
+        while !isempty(child)
+            link!(htable, fptseed)
+            child = children(child)
+        end
     end
 end
 
@@ -150,11 +173,20 @@ doc_htable_getters = """
 [`HeaderTable`](@ref) getters.
 """
 
+doc_htable_setters = """
+    linkage!(htable::HeaderTable, item::Item, fptree::FPTree)
+
+[`HeaderTable`](@ref) setters.
+"""
+
 """$(doc_htable_getters)"""
 items(htable::HeaderTable) = htable.items
 
 """$(doc_htable_getters)"""
 linkage(htable::HeaderTable, item::Item) = htable.linkage[item]
+
+"""$(doc_htable_setters)"""
+linkage!(htable::HeaderTable, item::Item, fptree::FPTree) = htable.linkage[item] = fptree
 
 """
     function follow(htable::HeaderTable, item::Item)::Union{Nothing,FPTree}
@@ -163,7 +195,32 @@ Follow `htable` linkage to (an internal node of) a [`FPTree`](@ref).
 """
 function follow(htable::HeaderTable, item::Item)::Union{Nothing,FPTree}
     arrival = linkage(htable, item)
-    return arrival === nothing ? item : follow(arrival, item)
+    return isnothing(arrival) ? item : follow(arrival, item)
+end
+
+"""
+    function link!(htable::HeaderTable, fptree::FPTree)
+
+Establish a linkage between the entry in `htable` corresponding to the [`content`](@ref)
+of `fptree`.
+
+See also [`content`](@ref), [`FPTree`](@ref), [`HeaderTable`](@ref).
+"""
+function link!(htable::HeaderTable, fptree::FPTree)
+    _content = content(fptree)
+    arrival = follow(htable, _content)
+
+    # the content of `fptree` was never seen before by this `htable`
+    if linkage(htable, _content) |> isnothing
+        linkage!(htable, content, fptree)
+    # the arrival FPTree is linked to the new `fptree`
+    elseif arrival isa FPTree
+        link!(arrival, fptree)
+    # invalid option
+    else
+        error("Error trying to establish a linkage between HeaderTable and an object " *
+            "of type $(typeof(arrival)).")
+    end
 end
 
 ############################################################################################
