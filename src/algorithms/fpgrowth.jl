@@ -14,15 +14,15 @@ This implementation generalizes the propositional logic case scenario to modal l
 given two [`Itemset`](@ref)s sharing a [`Item`](@ref) prefix, they share the same path only
 if the worlds in which the they are true is the same.
 """
-struct FPTree
+mutable struct FPTree
     content::Union{Nothing,Item}    # the Item contained in this node (nothing if root)
 
     parent::Union{Nothing,FPTree}   # parent node
-    children::Vector{FPTree}        # children nodes
+    const children::Vector{FPTree}  # children nodes
 
-    count::Integer                  # number of equal Items this node represents
+    count::Int64                    # number of equal Items this node represents
 
-    contributors::UInt64            # hash representing the worlds contributing to this node
+    const contributors::UInt64      # hash representing the worlds contributing to this node
     linkage::Union{Nothing,FPTree}  # link to another FPTree root
 
     # empty constructor
@@ -67,28 +67,54 @@ end
 
 doc_fptree_getters = """
     content(fptree::FPTree)::Union{Nothing,Item}
+    parent(fptree::FPTree)::Union{Nothing,FPTree}
     children(fptree::FPTree)::Vector{FPTree}
+    count(fptree::FPTree)::Int64
     contributors(fptree::FPTree)::UInt64
-    count(fptree::FPTree)::Integer
     linkage(fptree::FPTree)::Union{Nothing,FPTree}
 
 [`FPTree`](@ref) getters.
 """
 
 doc_fptree_setters = """
+    content!(fptree::FPTree)::Union{Nothing,Item}
+    parent!(fptree::FPTree)::Union{Nothing,FPTree}
+    children!(fptree::FPTree)::Vector{FPTree}
+    count!(fptree::FPTree)::Int64
+    addcount!(fptree::FPTree, deltacount::Int64)
+    contributors!(fptree::FPTree)::UInt64
+    linkage!(fptree::FPTree)::Union{Nothing,FPTree}
+
 [`FPTree`](@ref) setters.
 """
 
 """$(doc_fptree_getters)"""
 content(fptree::FPTree)::Union{Nothing,Item} = fptree.content
 """$(doc_fptree_getters)"""
+parent(fptree::FPTree)::Union{Nothing,FPTree} = fptree.parent
+"""$(doc_fptree_getters)"""
 children(fptree::FPTree)::Vector{FPTree} = fptree.children
+"""$(doc_fptree_getters)"""
+count(fptree::FPTree)::Int64 = fptree.count
 """$(doc_fptree_getters)"""
 contributors(fptree::FPTree)::UInt64 = fptree.contributors
 """$(doc_fptree_getters)"""
-count(fptree::FPTree)::Integer = fptree.count
-"""$(doc_fptree_getters)"""
 linkage(fptree::FPTree)::Union{Nothing,FPTree} = fptree.linkage
+
+"""$(doc_fptree_setters)"""
+content!(fptree::FPTree, item::Union{Nothing,Item}) = fptree.content = item
+"""$(doc_fptree_setters)"""
+parent!(fptree::FPTree, parentfpt::Union{Nothing,FPTree}) = fptree.parent = parentfpt
+"""$(doc_fptree_setters)"""
+children!(fptree::FPTree, child::FPTree) = push!(children(fptree), child)
+"""$(doc_fptree_setters)"""
+contributors!(fptree::FPTree, contribution::UInt64) = fptree.contributors = contribution
+"""$(doc_fptree_setters)"""
+count!(fptree::FPTree, newcount::Int64) = fptree.count = newcount
+"""$(doc_fptree_setters)"""
+addcount!(fptree::FPTree, deltacount::Int64) = fptree.count = fptree.count + deltacount
+"""$(doc_fptree_setters)"""
+content!(fptree::FPTree, item::Union{Nothing,Item}) = fptree.content = item
 
 """
     function follow(fptree::FPTree)::Union{Nothing,FPTree}
