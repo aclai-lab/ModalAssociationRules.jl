@@ -317,7 +317,10 @@ rule_meas(miner::ARuleMiner)::Vector{<:ConstrainedMeasure} = miner.rule_constrai
 """$(doc_aruleminer_getters)"""
 getlocalthreshold(miner::ARuleMiner, meas::Function) = begin
     for (m, tg, tl) in item_meas(miner) if m == meas return tl end end
-    error("The provided miner has no local threshold for $meas.")
+    error("The provided miner has no local threshold for $meas. Maybe the miner is not " *
+        "initialized properly, and $meas is omitted. Please use item_meas/rule_meas " *
+        "to check which measures are available, and setlocalthreshold to add a new " *
+        "local measure, together with its local threshold.")
 end
 """$(doc_aruleminer_setters)"""
 setlocalthreshold(miner::ARuleMiner, meas::Function, threshold::Threshold) = begin
@@ -327,7 +330,10 @@ end
 """$(doc_aruleminer_getters)"""
 getglobalthreshold(miner::ARuleMiner, meas::Function)::Float64 = begin
     for (m, tg, tl) in item_meas(miner) if m == meas return tg end end
-    error("The provided miner has no global threshold for $meas.")
+    error("The provided miner has no global threshold for $meas. Maybe the miner is not " *
+    "initialized properly, and $meas is omitted. Please use item_meas/rule_meas " *
+    "to check which measures are available, and setglobalthreshold to add a new " *
+    "global measure, together with local and global thresholds.")
 end
 """$(doc_aruleminer_setters)"""
 setglobalthreshold(miner::ARuleMiner, meas::Function, threshold::Threshold) = begin

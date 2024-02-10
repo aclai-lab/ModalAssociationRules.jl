@@ -61,7 +61,8 @@ export apriori
 
 include("algorithms/fpgrowth.jl")
 
-export FPTree
+export FPTree, content, children, contributors, count, linkage
+
 export HeaderTable, items, follow
 
 export fpgrowth

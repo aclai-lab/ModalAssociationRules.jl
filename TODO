@@ -12,6 +12,8 @@ Main:
   ✔ write an initial apriori implementation @done(24-02-05 23:52)
     ☐ leverage the fact that `prune` is a generator
   ☐ write an initial fpgrowth implementation
+    ☐ in FPTree, realize a getcontributors function to hash the worlds in which an Item is true 
+
 
 Generic:
   ✔ move memoization accountability to ARuleMiner @done(24-02-07 23:58)
@@ -24,6 +26,7 @@ Generic:
 
 Utility:
   ☐ build a macro to implement decorator pattern to build local and global measures, optionally exploiting ARuleMiner memoization
+  ☐ better design how an ARuleMiner keeps track of local measures. Local and global measures CAN be indipendent. 
   ✔ expose a simple-to-understand pool of utility methods to perform combinatorics over itemsets @done(24-02-08 20:30)
     ✔ # (Itemset changed to Vector type from custom) @done(24-02-08 20:28)
     ✔ combine @done(24-02-08 20:30)

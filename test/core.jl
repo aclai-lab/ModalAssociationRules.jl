@@ -65,3 +65,16 @@ manual_alphabet = Vector{Item}([manual_p, manual_q, manual_r,
         @test _temp_arule isa ARule
     end
 end
+
+@testset "FP-Growth data structures (FPTree and HeaderTable)" begin
+    p,q,r,s = Atom.(["p","q","r","s"])
+    itemset = Itemset([p,q,r,s])
+
+    root = FPTree()
+    @test content(root) === nothing
+    @test children(root) == FPTree[]
+    @test contributors(root) = 0
+    @test count(root) == 0
+    @test linkage(root) === nothing
+
+end

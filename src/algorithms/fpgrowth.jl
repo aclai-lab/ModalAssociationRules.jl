@@ -25,29 +25,42 @@ struct FPTree
     contributors::UInt64            # hash representing the worlds contributing to this node
     linkage::Union{Nothing,FPTree}  # link to another FPTree root
 
-    # function FPTree()
-    #     new(nothing, nothing, FPTree[], 0, UInt64(0), nothing)
-    # end
-#
-    # function FPTree(itemset::Itemset, miner::ARuleMiner; isroot=true)
-    #     FPTree(itemset, miner, Val(isroot))
-    # end
-#
-    # # root constructor
-    # function FPTree(itemset::Itemset, miner::ARuleMiner, ::Val{true})
-    #     new(nothing, nothing, FPTree[FPTree(itemset, miner; isroot=false)],
-    #         0, UInt64(0), nothing)
-    # end
-#
-    # # internal tree constructor
-    # function FPTree(itemset::Itemset, miner::ARuleMiner, ::Val{false})
-    #     if length(itemset) == 1
-    #         new(itemset[1], FPTree[], UInt64(0), 1)
-    #     else
-    #         new(itemset[1],
-    #             FPTree[FPTree(itemset[2:end], miner, isroot=false)], UInt64(0), 1)
-    #     end
-    # end
+    function FPTree()
+        new(nothing, nothing, FPTree[], 0, UInt64(0), nothing)
+    end
+
+    function FPTree(itemset::Itemset, miner::ARuleMiner; isroot=true)
+        FPTree(itemset, miner, Val(isroot))
+    end
+
+    # root constructor
+    function FPTree(itemset::Itemset, miner::ARuleMiner, ::Val{true})
+        fptree = FPTree()
+
+        fptree.children = FPTree[FPTree(itemset, miner; isroot=false)]
+        for child in _children
+            child.parent = fptree
+        end
+
+        return fptree
+    end
+
+    # internal tree constructor
+    function FPTree(itemset::Itemset, miner::ARuleMiner, ::Val{false})
+        firstitem = itemset[1]
+        contribhash = getcontributors(firstitem, miner)
+
+        fptree = length(itemset) == 1 ?
+            FPTree(firstitem, nothing, FPTree[], contribhash, 1) :
+            FPTree(firstitem, nothing, FPTree[FPTree(itemset[2:end], miner; isroot=false)],
+                contribhash, 1)
+
+        for child in fptree.children
+            child.parent = fptree
+        end
+
+        return fptree
+    end
 end
 
 doc_fptree_getters = """
