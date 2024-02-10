@@ -104,14 +104,17 @@ content!(fptree::FPTree, item::Union{Nothing,Item}) = fptree.content = item
 """$(doc_fptree_setters)"""
 parent!(fptree::FPTree, parentfpt::Union{Nothing,FPTree}) = fptree.parent = parentfpt
 """$(doc_fptree_setters)"""
-children!(fptree::FPTree, child::FPTree) = push!(children(fptree), child)
+children!(fptree::FPTree, child::FPTree) = begin
+    push!(children(fptree), child)
+    parent!(child, fptree)
+end
 
 """$(doc_fptree_setters)"""
 count!(fptree::FPTree, newcount::Int64) = fptree.count = newcount
 """$(doc_fptree_setters)"""
-contributors!(fptree::FPTree, contribution::UInt64) = fptree.contributors = contribution
-"""$(doc_fptree_setters)"""
 addcount!(fptree::FPTree, deltacount::Int64) = fptree.count = fptree.count + deltacount
+"""$(doc_fptree_setters)"""
+contributors!(fptree::FPTree, contribution::UInt64) = fptree.contributors = contribution
 
 """
     function follow(fptree::FPTree)::Union{Nothing,FPTree}
@@ -139,6 +142,42 @@ function link!(from::FPTree, to::FPTree)
     end
 
     from.linkage = to
+end
+
+"""
+    function Base.push!(fptree::FPTree, itemset::Itemset, miner::ARuleMiner)
+    function Base.push!(fptree::FPTree, itemsets::Vector{Itemset}, miner::ARuleMiner)
+
+Push one or more [`Itemset`](@ref)s to an [`FPTree`](@ref).
+
+!!! warning
+    To optimally leverage the compression capabilities of [`FPTree`](@ref)s, the
+    [`Itemset`](@ref)s provided should be sorted decreasingly by [`gsupport`](@ref).
+    By default, to improve performances, this check is not performed inside this method.
+
+See also [`FPTree`](@ref), [`gsupport`](@ref), [`Itemset`](@ref).
+"""
+function Base.push!(fptree::FPTree, itemset::Itemset, miner::ARuleMiner)
+    # recursion base case
+    if length(itemset) == 0
+        return
+    end
+
+    # check if a subtree whose content is the first item in `itemset` already exists
+    for child in children(fptree)
+        if content(child) == itemset[1]
+            addcount!(fptree, 1)
+            push!(child, itemset[2:end], miner)
+            return
+        end
+    end
+
+    # if no subtree exists, create a new one
+    children!(fptree, FPTree(itemset, miner; isroot=false))
+end
+function Base.push!(fptree::FPTree, itemsets::Vector{Itemset}, miner::ARuleMiner)
+    # simply call the single itemset case multiple times
+    map(item -> push!(fptree, item, miner), itemsets)
 end
 
 """
@@ -239,7 +278,7 @@ function fpgrowth(;
     verbose::Bool=true,
 )::Function
 
-    function _fpgrowth(miner::ARuleMiner, X::AbstractDataset)::Nothing
+    function _fpgrowth_preamble(miner::ARuleMiner, X::AbstractDataset)::Nothing
         @assert SoleRules.gsupport in reduce(vcat, item_meas(miner)) "FP-Growth requires "*
             "global support (SoleRules.gsupport) as meaningfulness measure in order to " *
             "work. Please, add a tuple (SoleRules.gsupport, local support threshold, " *
@@ -270,8 +309,16 @@ function fpgrowth(;
             ], by=t -> getglobalmemo(miner, (:gsupport, t)), rev=true)
         end
 
+        # create an initial fptree
+        fptree = FPTree()
+        push!(fptree, ninstance_toitemsets_sorted, miner)
+z
+        # create a header table, which is used to quickly access the frequent itemsets
 
     end
 
-    return _fpgrowth
+    function _fpgrowth_kernel()
+    end
+
+    return _fpgrowth_preamble
 end

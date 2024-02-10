@@ -12,7 +12,11 @@ Main:
   ✔ write an initial apriori implementation @done(24-02-05 23:52)
     ☐ leverage the fact that `prune` is a generator
   ☐ write an initial fpgrowth implementation
-    ☐ in FPTree, realize a getcontributors function to hash the worlds in which an Item is true 
+    ✔ in FPTree, realize a getcontributors function to hash the worlds in which an Item is true @done(24-02-10 21:12)
+    ✔ FPTree getters, setters and utilities @done(24-02-10 21:13)
+    ✔ HeaderTable with link! and follow @done(24-02-10 21:13)
+    ✔ FPTree Base.push! overloading @done(24-02-10 21:35)
+    ☐ packing simultaneous FPTree and HeaderTable construction, then follow the algorithm described in the thesis "Algorithm for association rules mining from modal, temporal, spatial datasets"
 
 
 Generic:
@@ -27,6 +31,7 @@ Generic:
 Utility:
   ☐ build a macro to implement decorator pattern to build local and global measures, optionally exploiting ARuleMiner memoization
   ☐ better design how an ARuleMiner keeps track of local measures. Local and global measures CAN be indipendent. 
+  ☐ Base.push!(fptree::FPTree, itemset::Itemset, miner::ARuleMiner) doesn't check if itemset is sorted by gsupport. Add a safe=false flag.
   ✔ expose a simple-to-understand pool of utility methods to perform combinatorics over itemsets @done(24-02-08 20:30)
     ✔ # (Itemset changed to Vector type from custom) @done(24-02-08 20:28)
     ✔ combine @done(24-02-08 20:30)

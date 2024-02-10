@@ -34,6 +34,12 @@ See also [`SoleLogics.LeftmostConjunctiveForm`](@ref)
 """
 toformula(itemset::Itemset) = LeftmostConjunctiveForm(itemset)
 
+function Base.convert(::Type{Item}, itemset::Itemset)::Item
+    @assert length(itemset) == 1 "Cannot convert $(itemset) of length $(length(itemset)) " *
+        "to Item: itemset must contain exactly one item"
+    return itemset[1]
+end
+
 """
     const ARule = Tuple{Itemset,Itemset}
 
