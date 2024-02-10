@@ -54,7 +54,7 @@ struct FPTree
 
         fptree = length(itemset) == 1 ?
             new(firstitem, nothing, FPTree[], 1, contribhash, nothing) :
-            FPTree(firstitem, nothing, FPTree[FPTree(itemset[2:end], miner; isroot=false)],
+            new(firstitem, nothing, FPTree[FPTree(itemset[2:end], miner; isroot=false)],
                 1, contribhash, nothing)
 
         for child in children(fptree)
