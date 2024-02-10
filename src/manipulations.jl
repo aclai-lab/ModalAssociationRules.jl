@@ -57,7 +57,9 @@ function getcontributors(
     ninstances::Integer,
     threshold::Threshold
 )::UInt64
-    return hash([i for i in 1:ninstances if lmemo[(:lsupport, item, i)] >= threshold])
+    return hash([i for i in 1:ninstances
+        if lmemo[(:lsupport, Itemset(item), i)] >= threshold
+    ])
 end
 
 ############################################################################################

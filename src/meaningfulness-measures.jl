@@ -91,6 +91,9 @@ function gsupport(
     return ans
 end
 
+islocalof(::typeof(lsupport), ::typeof(gsupport)) = true
+isglobalof(::typeof(gsupport), ::typeof(lsupport)) = true
+
 """
     function lconfidence(
         rule::ARule,
@@ -183,3 +186,6 @@ function gconfidence(
 
     return ans
 end
+
+islocalof(::typeof(lconfidence), ::typeof(gconfidence)) = true
+isglobalof(::typeof(gconfidence), ::typeof(lconfidence)) = true

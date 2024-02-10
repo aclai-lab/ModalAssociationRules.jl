@@ -28,7 +28,8 @@ export Itemset, toformula
 export ARule
 export antecedent, consequent
 
-export Threshold, ConstrainedMeasure
+export Threshold
+export ConstrainedMeasure, islocalof, isglobalof
 export ARMSubject
 export LmeasMemoKey, LmeasMemo
 export GmeasMemoKey, GmeasMemo
@@ -62,9 +63,7 @@ export apriori
 include("algorithms/fpgrowth.jl")
 
 export FPTree, content, children, contributors, count, linkage
-
 export HeaderTable, items, follow
-
 export fpgrowth
 
 include("utils.jl")

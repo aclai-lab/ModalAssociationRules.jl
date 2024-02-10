@@ -38,12 +38,12 @@ manual_alphabet = Vector{Item}([manual_p, manual_q, manual_r,
     @test item_meas(miner) == _item_meas
     @test rule_meas(miner) == _rule_meas
 
+    # mine the frequent patterns
+    mine(miner)
+
     @test length(freqitems(miner)) == 55
     @test length(nonfreqitems(miner)) == 4
     @test arules(miner) == []
-
-    # mine the frequent patterns
-    mine(miner)
 
     _temp_lmemo_key = (:lsupport, freqitems(miner)[1], 1)
     _temp_lmemo_val = getlocalmemo(miner, _temp_lmemo_key)
@@ -66,11 +66,56 @@ manual_alphabet = Vector{Item}([manual_p, manual_q, manual_r,
     end
 end
 
+@testset "Meaningfulness measures" begin
+    @test islocalof(lsupport, lsupport) == false
+    @test islocalof(lsupport, gsupport) == true
+    @test islocalof(lsupport, lconfidence) == false
+    @test islocalof(lsupport, gconfidence) == false
+
+    @test islocalof(gsupport, lsupport) == false
+    @test islocalof(gsupport, gsupport) == false
+    @test islocalof(gsupport, lconfidence) == false
+    @test islocalof(gsupport, gconfidence) == false
+
+    @test islocalof(lconfidence, lsupport) == false
+    @test islocalof(lconfidence, gsupport) == false
+    @test islocalof(lconfidence, lconfidence) == false
+    @test islocalof(lconfidence, gconfidence) == true
+
+    @test islocalof(gconfidence, lsupport) == false
+    @test islocalof(gconfidence, gsupport) == false
+    @test islocalof(gconfidence, lconfidence) == false
+    @test islocalof(gconfidence, gconfidence) == false
+
+    @test isglobalof(lsupport, lsupport) == false
+    @test isglobalof(lsupport, gsupport) == false
+    @test isglobalof(lsupport, lconfidence) == false
+    @test isglobalof(lsupport, gconfidence) == false
+
+    @test isglobalof(gsupport, lsupport) == true
+    @test isglobalof(gsupport, gsupport) == false
+    @test isglobalof(gsupport, lconfidence) == false
+    @test isglobalof(gsupport, gconfidence) == false
+
+    @test isglobalof(lconfidence, lsupport) == false
+    @test isglobalof(lconfidence, gsupport) == false
+    @test isglobalof(lconfidence, lconfidence) == false
+    @test isglobalof(lconfidence, gconfidence) == false
+
+    @test isglobalof(gconfidence, lsupport) == false
+    @test isglobalof(gconfidence, gsupport) == false
+    @test isglobalof(gconfidence, lconfidence) == true
+    @test isglobalof(gconfidence, gconfidence) == false
+end
+
 @testset "FP-Growth data structures (FPTree and HeaderTable)" begin
-    p,q,r,s = Atom.(["p","q","r","s"])
-    itemset = Itemset([p,q,r,s])
+    # mine the frequent patterns
+    mine(miner)
+
+    fitemset = freqitems(miner)[1]
 
     root = FPTree()
+    @test root isa FPTree
     @test content(root) === nothing
     @test children(root) == FPTree[]
     @test contributors(root) = 0

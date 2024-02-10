@@ -84,6 +84,29 @@ See also [`gconfidence`](@ref), [`gsupport`](@ref).
 """
 const ConstrainedMeasure = Tuple{Function, Threshold, Threshold}
 
+doc_islocalof = doc_isglobalof = """
+    islocalof(::Function, ::Function)::Bool
+    isglobalof(::Function, ::Function)::Bool
+
+Trait to indicate that a local meaningfulness measure is used as subroutine in a global
+measure, or, vice versa, a global measure contains a local measure.
+
+For example, `islocalof(lsupport, gsupport)` is `true`, and `isglobalof(gsupport, lsupport)`
+is `false`.
+
+!!! warning
+    When implementing a custom meaningfulness measure, make sure to implement both
+    traits if necessary. This is fundamental to guarantee the correct behavior of some
+    methods, such as [`getlocalthreshold`](@ref).
+
+See also [`getlocalthreshold`](@ref), [`gsupport`](@ref), [`lsupport`](@ref).
+"""
+
+"""$(doc_islocalof)"""
+islocalof(::Function, ::Function)::Bool = false
+"""$(doc_isglobalof)"""
+isglobalof(::Function, ::Function)::Bool = false
+
 """
     ARMSubject = Union{Itemset,ARule}
 
@@ -316,7 +339,12 @@ rule_meas(miner::ARuleMiner)::Vector{<:ConstrainedMeasure} = miner.rule_constrai
 
 """$(doc_aruleminer_getters)"""
 getlocalthreshold(miner::ARuleMiner, meas::Function) = begin
-    for (m, tg, tl) in item_meas(miner) if m == meas return tl end end
+    for (gmeas, _, lthreshold) in item_meas(miner)
+        if gmeas == meas || islocalof(meas, gmeas)
+            return lthreshold
+        end
+    end
+
     error("The provided miner has no local threshold for $meas. Maybe the miner is not " *
         "initialized properly, and $meas is omitted. Please use item_meas/rule_meas " *
         "to check which measures are available, and setlocalthreshold to add a new " *
@@ -329,7 +357,12 @@ end
 
 """$(doc_aruleminer_getters)"""
 getglobalthreshold(miner::ARuleMiner, meas::Function)::Float64 = begin
-    for (m, tg, tl) in item_meas(miner) if m == meas return tg end end
+    for (gmeas, gthreshold, _) in item_meas(miner)
+        if gmeas == meas
+            return gthreshold
+        end
+    end
+
     error("The provided miner has no global threshold for $meas. Maybe the miner is not " *
     "initialized properly, and $meas is omitted. Please use item_meas/rule_meas " *
     "to check which measures are available, and setglobalthreshold to add a new " *

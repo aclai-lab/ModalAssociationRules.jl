@@ -25,21 +25,23 @@ struct FPTree
     contributors::UInt64            # hash representing the worlds contributing to this node
     linkage::Union{Nothing,FPTree}  # link to another FPTree root
 
+    # empty constructor
     function FPTree()
         new(nothing, nothing, FPTree[], 0, UInt64(0), nothing)
     end
 
+    # choose root or new subtree constructor
     function FPTree(itemset::Itemset, miner::ARuleMiner; isroot=true)
-        FPTree(itemset, miner, Val(isroot))
+        FPTree(itemset, miner, Val(isroot)) # singleton design pattern
     end
 
     # root constructor
     function FPTree(itemset::Itemset, miner::ARuleMiner, ::Val{true})
         fptree = FPTree()
 
-        fptree.children = FPTree[FPTree(itemset, miner; isroot=false)]
-        for child in _children
-            child.parent = fptree
+        push!(children(fptree), FPTree(itemset, miner; isroot=false))
+        for child in children(fptree)
+            parent(child) = fptree
         end
 
         return fptree
@@ -51,12 +53,12 @@ struct FPTree
         contribhash = getcontributors(firstitem, miner)
 
         fptree = length(itemset) == 1 ?
-            FPTree(firstitem, nothing, FPTree[], contribhash, 1) :
+            new(firstitem, nothing, FPTree[], 1, contribhash, nothing) :
             FPTree(firstitem, nothing, FPTree[FPTree(itemset[2:end], miner; isroot=false)],
-                contribhash, 1)
+                1, contribhash, nothing)
 
-        for child in fptree.children
-            child.parent = fptree
+        for child in children(fptree)
+            parent(child) = fptree
         end
 
         return fptree
@@ -71,6 +73,10 @@ doc_fptree_getters = """
     linkage(fptree::FPTree)::Union{Nothing,FPTree}
 
 [`FPTree`](@ref) getters.
+"""
+
+doc_fptree_setters = """
+[`FPTree`](@ref) setters.
 """
 
 """$(doc_fptree_getters)"""
