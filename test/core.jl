@@ -112,8 +112,6 @@ end
     # mine the frequent patterns
     mine(miner)
 
-    fitemset = freqitems(miner)[1]
-
     root = FPTree()
     @test root isa FPTree
     @test content(root) === nothing
@@ -122,4 +120,6 @@ end
     @test count(root) == 0
     @test linkage(root) === nothing
 
+    @test_nowarn FPTree(freqitems(miner)[1], miner)
+    @test_nowarn FPTree(freqitems(miner)[30], miner, root)
 end
