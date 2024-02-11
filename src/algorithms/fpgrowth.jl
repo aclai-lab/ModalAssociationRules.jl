@@ -145,42 +145,6 @@ function link!(from::FPTree, to::FPTree)
 end
 
 """
-    function Base.push!(fptree::FPTree, itemset::Itemset, miner::ARuleMiner)
-    function Base.push!(fptree::FPTree, itemsets::Vector{Itemset}, miner::ARuleMiner)
-
-Push one or more [`Itemset`](@ref)s to an [`FPTree`](@ref).
-
-!!! warning
-    To optimally leverage the compression capabilities of [`FPTree`](@ref)s, the
-    [`Itemset`](@ref)s provided should be sorted decreasingly by [`gsupport`](@ref).
-    By default, to improve performances, this check is not performed inside this method.
-
-See also [`FPTree`](@ref), [`gsupport`](@ref), [`Itemset`](@ref).
-"""
-function Base.push!(fptree::FPTree, itemset::Itemset, miner::ARuleMiner)
-    # recursion base case
-    if length(itemset) == 0
-        return
-    end
-
-    # check if a subtree whose content is the first item in `itemset` already exists
-    for child in children(fptree)
-        if content(child) == itemset[1]
-            addcount!(fptree, 1)
-            push!(child, itemset[2:end], miner)
-            return
-        end
-    end
-
-    # if no subtree exists, create a new one
-    children!(fptree, FPTree(itemset, miner; isroot=false))
-end
-function Base.push!(fptree::FPTree, itemsets::Vector{Itemset}, miner::ARuleMiner)
-    # simply call the single itemset case multiple times
-    map(item -> push!(fptree, item, miner), itemsets)
-end
-
-"""
     struct HeaderTable
         items::Vector{Item}
         linkage::Dict{Item,Union{Nothing,FPTree}}
@@ -202,6 +166,10 @@ struct HeaderTable
             link!(htable, fptseed)
             child = children(child)
         end
+    end
+
+    function HeaderTable(itemsets::Vector{Itemset}, fptseed::FPTree)
+        return HeaderTable(convert.(Item, itemsets), fptseed)
     end
 end
 
@@ -262,6 +230,59 @@ function link!(htable::HeaderTable, fptree::FPTree)
     end
 end
 
+"""
+    function Base.push!(fptree::FPTree, itemset::Itemset, miner::ARuleMiner)
+    function Base.push!(fptree::FPTree, itemsets::Vector{Itemset}, miner::ARuleMiner)
+
+Push one or more [`Itemset`](@ref)s to an [`FPTree`](@ref).
+If an [`HeaderTable`](@ref) is provided, it is leveraged to develop internal links.
+
+!!! warning
+    To optimally leverage the compression capabilities of [`FPTree`](@ref)s, the
+    [`Itemset`](@ref)s provided should be sorted decreasingly by [`gsupport`](@ref).
+    By default, to improve performances, this check is not performed inside this method.
+
+See also [`FPTree`](@ref), [`gsupport`](@ref), [`HeaderTable`](@ref), [`Itemset`](@ref).
+"""
+function Base.push!(
+    fptree::FPTree,
+    itemset::Itemset,
+    miner::ARuleMiner;
+    htable::Union{Nothing,HeaderTable}=nothing
+)
+    # recursion base case
+    if length(itemset) == 0
+        return
+    end
+
+    item = convert(Item, itemset)
+    item_contributors = getcontributors(item, miner)
+
+    # check if a subtree whose content is the first item in `itemset` already exists
+    for child in children(fptree)
+        if content(child) == item && contributors(child) == item_contributors
+            addcount!(fptree, 1)
+            push!(child, itemset[2:end], miner)
+            return
+        end
+    end
+
+    # if no subtree exists, create a new one
+    subfptree = FPTree(item, item_contributors)
+    children!(fptree, subfptree)
+    # and stretch the link coming out from `item` in `htable`, to consider the new child
+    link!(htable, subfptree)
+end
+function Base.push!(
+    fptree::FPTree,
+    itemsets::Vector{Itemset},
+    miner::ARuleMiner,
+    htable::HeaderTable
+)
+    # simply call the single itemset case multiple times
+    map(item -> push!(fptree, item, miner; htable=htable), itemsets)
+end
+
 ############################################################################################
 #### Main FP-Growth logic ##################################################################
 ############################################################################################
@@ -293,7 +314,7 @@ function fpgrowth(;
         frequents = [candidate
             for (gmeas_algo, lthreshold, gthreshold) in item_meas(miner)
             for candidate in Itemset.(alphabet(miner))
-            if gmeas_algo(item, X, lthreshold, miner=miner) >= gthreshold
+            if gmeas_algo(candidate, X, lthreshold, miner=miner) >= gthreshold
         ]
 
         # associate each instance in the dataset with its frequent itemsets
@@ -311,13 +332,28 @@ function fpgrowth(;
 
         # create an initial fptree
         fptree = FPTree()
+        # create and fill an header table, necessary to traverse FPTrees horizontally
+        htable = HeaderTable(frequents, fptree)
         push!(fptree, ninstance_toitemsets_sorted, miner)
-z
-        # create a header table, which is used to quickly access the frequent itemsets
 
+        # call main logic
+        _fpgrowth_kernel(fptree, htable, miner, Itemset())
     end
 
-    function _fpgrowth_kernel()
+    function _fpgrowth_kernel(
+        fptree::FPTree,
+        htable::HeaderTable,
+        miner::ARuleMiner,
+        pattern::Itemset
+    )
+        # if fptree only contains a single path, then combine all the possible itemsets
+        # if issinglepath(fptree)
+        #   pathitems = collectitems(fptree)
+        #   map(itemset -> push!(freqitems(miner), itemset),
+        #       combinations(Itemset([pattern, pathitems])))
+        # else
+        #   get the TODO...
+
     end
 
     return _fpgrowth_preamble

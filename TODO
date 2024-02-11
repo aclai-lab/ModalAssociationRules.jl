@@ -16,6 +16,7 @@ Main:
     ✔ FPTree getters, setters and utilities @done(24-02-10 21:13)
     ✔ HeaderTable with link! and follow @done(24-02-10 21:13)
     ✔ FPTree Base.push! overloading @done(24-02-10 21:35)
+    ☐ consider `contributors` hash when following a link from an header table
     ☐ packing simultaneous FPTree and HeaderTable construction, then follow the algorithm described in the thesis "Algorithm for association rules mining from modal, temporal, spatial datasets"
 
 

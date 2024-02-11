@@ -23,7 +23,7 @@ specific meaningfulness measures such as [`lsupport`](@ref) and [`gsupport`](@re
 """
 const Itemset = Vector{Item}
 Itemset(item::Item) = Itemset([item])
-Itemset(itemsets::Vector{Itemset}) = Itemset(union(itemsets...))
+Itemset(itemsets::Vector{Itemset}) = Itemset.([union(itemsets...)...])
 
 """
     toformula(itemset::Itemset)

@@ -25,15 +25,16 @@ manual_lr = boxlater(manual_r)
 manual_alphabet = Vector{Item}([manual_p, manual_q, manual_r,
     manual_lp, manual_lq, manual_lr])
 
+_item_meas = [(gsupport, 0.1, 0.1)]
+_rule_meas = [(gconfidence, 0.2, 0.2)]
+miner = ARuleMiner(X, apriori(), manual_alphabet, _item_meas, _rule_meas)
+
+
 @testset "ARuleMiner" begin
     @test_nowarn ARuleMiner(X, apriori(), manual_alphabet)
     @test_nowarn algorithm(ARuleMiner(X, apriori(), manual_alphabet)) isa MiningAlgo
 
     @test alphabet(ARuleMiner(X, apriori(), manual_alphabet)) == manual_alphabet
-
-    _item_meas = [(gsupport, 0.1, 0.1)]
-    _rule_meas = [(gconfidence, 0.2, 0.2)]
-    miner = ARuleMiner(X, apriori(), manual_alphabet, _item_meas, _rule_meas)
 
     @test item_meas(miner) == _item_meas
     @test rule_meas(miner) == _rule_meas
