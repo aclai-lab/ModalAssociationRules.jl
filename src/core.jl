@@ -277,7 +277,7 @@ struct ARuleMiner
     function ARuleMiner(
         X::AbstractDataset,
         algo::Function,
-        alphabet::Vector{Item},
+        alphabet::Vector{<:Item},
         item_constrained_measures::Vector{<:ConstrainedMeasure},
         rule_constrained_measures::Vector{<:ConstrainedMeasure};
         info::NamedTuple = (;)
@@ -293,7 +293,7 @@ struct ARuleMiner
     function ARuleMiner(
         X::AbstractDataset,
         algo::Function,
-        alphabet::Vector{Item}
+        alphabet::Vector{<:Item}
     )
         ARuleMiner(X, MiningAlgo(algo), alphabet,
             [(gsupport, 0.1, 0.1)], [(gconfidence, 0.2, 0.2)]

@@ -162,9 +162,10 @@ struct HeaderTable
     items::Vector{Item} # vector of Items, sorted decreasingly by global support
     linkage::Dict{Item,Union{Nothing,FPTree}} # Item -> FPTree internal node association
 
-    function HeaderTable(items::Vector{Item}, fptseed::FPTree)
+    function HeaderTable(items::Vector{<:Item}, fptseed::FPTree)
         # make an empty htable, whose entries are `Item` objects, in `items`
-        htable = new(items, Dict{Item,FPTree}([item => nothing for item in items]))
+        htable = new(items, Dict{Item,Union{Nothing,FPTree}}([
+            item => nothing for item in items]))
 
         # iteratively fill htable
         child = children(fptseed)
@@ -174,7 +175,8 @@ struct HeaderTable
         end
     end
 
-    function HeaderTable(itemsets::Vector{Itemset}, fptseed::FPTree)
+    function HeaderTable(itemsets::Vector{<:Itemset}, fptseed::FPTree)
+        println("OK")
         return HeaderTable(convert.(Item, itemsets), fptseed)
     end
 end
@@ -300,23 +302,24 @@ function fpgrowth(;
 
     # utility function to build a modal FP-Tree by eager-loading `ninstance` `itemsets`.
     # For each internal node, a contributor-worlds array is kept.
-    function _allinstancespush(
+    function _allinstancespush!(
         fptree::FPTree,
-        itemsets::Vector{Itemset},
-        ninstance::Int64,
+        itemsets::Vector{Itemset}, #DEBUG: choose correct type here
+        ninstances::Int64,
         miner::ARuleMiner,
         htable::HeaderTable
     )
         # simply call the single itemset case multiple times,
         # assuming i-th itemsets refers to i-th instance
-        for i in 1:ninstance
-            push!(fptree, itemsets[i], i, miner; htable=htable)
-        end
+        [
+            push!(fptree, itemsets[i], i, miner; htable=htable) #DEBUG: unpack correct type here
+            for i in 1:ninstances
+        ]
     end
 
 
     function _fpgrowth_preamble(miner::ARuleMiner, X::AbstractDataset)::Nothing
-        @assert SoleRules.gsupport in reduce(vcat, item_meas(miner)) "FP-Growth requires "*
+        @assert SoleRules.gsupport in reduce(vcat, item_meas(miner)) "FP-Growth requires " *
             "global support (SoleRules.gsupport) as meaningfulness measure in order to " *
             "work. Please, add a tuple (SoleRules.gsupport, local support threshold, " *
             "global support threshold) to miner.item_constrained_measures field."
@@ -331,15 +334,15 @@ function fpgrowth(;
             for (gmeas_algo, lthreshold, gthreshold) in item_meas(miner)
             for candidate in Itemset.(alphabet(miner))
             if gmeas_algo(candidate, X, lthreshold, miner=miner) >= gthreshold
-        ]
+        ] |> unique
 
         # associate each instance in the dataset with its frequent itemsets
         _ninstances = ninstances(X)
-        ninstance_toitemsets_sorted = Itemset[[] for _ in 1:_ninstances] # DEBUG: here
+        ninstance_toitemsets_sorted = [Vector{Itemset}([]) for _ in 1:_ninstances]
 
         # for each instance, sort its frequent itemsets by global support
         for i in 1:_ninstances
-            ninstance_toitemsets_sorted[i] = sort([                      # DEBUG: and here
+            ninstance_toitemsets_sorted[i] = sort([
                     itemset
                     for itemset in frequents
                     if getlocalmemo(miner, (:lsupport, itemset, i)) > lsupport_threshold

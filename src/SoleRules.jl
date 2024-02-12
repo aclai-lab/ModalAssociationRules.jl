@@ -72,6 +72,7 @@ export HeaderTable, items
 export linkage, linkage!, follow, link! # common between FPTree and HeaderTable
 
 export fpgrowth
+export fpoptimize
 
 include("utils.jl")
 
