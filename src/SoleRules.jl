@@ -33,6 +33,7 @@ export ConstrainedMeasure, islocalof, isglobalof
 export ARMSubject
 export LmeasMemoKey, LmeasMemo
 export GmeasMemoKey, GmeasMemo
+export WorldsMask, Contributors
 
 export ARuleMiner
 export dataset, algorithm
@@ -42,6 +43,7 @@ export getlocalthreshold, setlocalthreshold
 export getglobalthreshold, setglobalthreshold
 export getlocalmemo, setlocalmemo
 export getglobalmemo, setglobalmemo
+export info
 
 export mine, apply
 

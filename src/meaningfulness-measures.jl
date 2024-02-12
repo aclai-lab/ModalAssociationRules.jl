@@ -34,12 +34,16 @@ function lsupport(
         end
     end
 
-    # compute local measure, then divide it by the instance total number of worlds
-    ans = sum([check(toformula(itemset), X, i_instance, w)
-               for w in allworlds(X, i_instance)]) / nworlds(X, i_instance)
+    # keep track of which worlds contributes to compute local support, then compute it
+    contributor_worlds = WorldsMask([
+        check(toformula(itemset), X, i_instance, w)
+        for w in allworlds(X, i_instance)
+    ])
+    ans = sum(contributor_worlds) / nworlds(X, i_instance)
 
     if !isnothing(miner)
         setlocalmemo(miner, memokey, ans)
+        info(miner, :contributors)[memokey] = contributor_worlds
     end
 
     return ans

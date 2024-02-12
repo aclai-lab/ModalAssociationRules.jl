@@ -11,51 +11,56 @@ An [`FPTree`](@ref) is such that the common [`Item`](@ref)s-prefix shared by dif
 [`Itemset`](@ref)s is not stored multiple times.
 
 This implementation generalizes the propositional logic case scenario to modal logic;
-given two [`Itemset`](@ref)s sharing a [`Item`](@ref) prefix, they share the same path only
-if the worlds in which the they are true is the same.
+given two [`Itemset`](@ref)s sharing a [`Item`](@ref) prefix, the worlds in which they are
+true is accumulated.
 """
 mutable struct FPTree
-    content::Union{Nothing,Item}    # the Item contained in this node (nothing if root)
+    content::Union{Nothing,Item}        # Item contained in this node (nothing if root)
 
-    parent::Union{Nothing,FPTree}   # parent node
-    const children::Vector{FPTree}  # children nodes
+    parent::Union{Nothing,FPTree}       # parent node
+    const children::Vector{FPTree}      # children nodes
 
-    count::Int64                    # number of equal Items this node represents
+    count::Int64                        # number of equal Items this node represents
 
-    const contributors::UInt64      # hash representing the worlds contributing to this node
-    linkage::Union{Nothing,FPTree}  # link to another FPTree root
+    const contributors::WorldsMask      # worlds contributing to this node
+    linkage::Union{Nothing,FPTree}      # link to another FPTree root
 
     # empty constructor
     function FPTree()
-        new(nothing, nothing, FPTree[], 0, UInt64(0), nothing)
+        new(nothing, nothing, FPTree[], 0, Int64[], nothing)
     end
 
-    # choose root or new subtree constructor
-    function FPTree(itemset::Itemset, miner::ARuleMiner; isroot=true)
-        FPTree(itemset, miner, Val(isroot)) # singleton design pattern
+    # choose root or new subtree constructor;
+    # ninstance is needed to start defining `contributors` for each node,
+    # as this is not a standard, propositional FPTree but a more general modal one.
+    function FPTree(itemset::Itemset, ninstance::Int64, miner::ARuleMiner; isroot=true)
+        FPTree(itemset, ninstance, miner, Val(isroot)) # singleton design pattern
     end
 
     # root constructor
-    function FPTree(itemset::Itemset, miner::ARuleMiner, ::Val{true})
+    function FPTree(itemset::Itemset, ninstance::Int64, miner::ARuleMiner, ::Val{true})
+        # make FPTree empty root
         fptree = FPTree()
 
+        # start growing a path
         children!(fptree, FPTree(itemset, miner; isroot=false))
-        map(child -> parent!(child, fptree), children(fptree))
 
         return fptree
     end
 
     # internal tree constructor
-    function FPTree(itemset::Itemset, miner::ARuleMiner, ::Val{false})
+    function FPTree(itemset::Itemset, ninstance::Int64, miner::ARuleMiner, ::Val{false})
         firstitem = itemset[1]
-        contribhash = getcontributors(firstitem, miner)
+        _contributors = contributors(:lsupport, firstitem, ninstance, miner)
 
         fptree = length(itemset) == 1 ?
-            new(firstitem, nothing, FPTree[], 1, contribhash, nothing) :
-            new(firstitem, nothing, FPTree[FPTree(itemset[2:end], miner; isroot=false)],
-                1, contribhash, nothing)
+            new(firstitem, nothing, FPTree[], 1, WorldsMask[], nothing) :
+            new(firstitem, nothing,
+                FPTree[FPTree(itemset[2:end], ninstance, miner; isroot=false)],
+                1, WorldsMask[], nothing)
 
         map(child -> parent!(child, fptree), children(fptree))
+        addcontributors!(fptree, _contributors)
 
         return fptree
     end
@@ -66,7 +71,7 @@ doc_fptree_getters = """
     parent(fptree::FPTree)::Union{Nothing,FPTree}
     children(fptree::FPTree)::Vector{FPTree}
     count(fptree::FPTree)::Int64
-    contributors(fptree::FPTree)::UInt64
+    contributors(fptree::FPTree)::WorldsMask
     linkage(fptree::FPTree)::Union{Nothing,FPTree}
 
 [`FPTree`](@ref) getters.
@@ -78,7 +83,7 @@ doc_fptree_setters = """
     children!(fptree::FPTree)::Vector{FPTree}
     count!(fptree::FPTree)::Int64
     addcount!(fptree::FPTree, deltacount::Int64)
-    contributors!(fptree::FPTree)::UInt64
+    addcontributors!(fptree::FPTree)::WorldsMask
     linkage!(fptree::FPTree)::Union{Nothing,FPTree}
 
 [`FPTree`](@ref) setters.
@@ -94,7 +99,7 @@ children(fptree::FPTree)::Vector{FPTree} = fptree.children
 """$(doc_fptree_getters)"""
 count(fptree::FPTree)::Int64 = fptree.count
 """$(doc_fptree_getters)"""
-contributors(fptree::FPTree)::UInt64 = fptree.contributors
+contributors(fptree::FPTree)::WorldsMask = fptree.contributors
 
 """$(doc_fptree_getters)"""
 linkage(fptree::FPTree)::Union{Nothing,FPTree} = fptree.linkage
@@ -114,7 +119,8 @@ count!(fptree::FPTree, newcount::Int64) = fptree.count = newcount
 """$(doc_fptree_setters)"""
 addcount!(fptree::FPTree, deltacount::Int64) = fptree.count = fptree.count + deltacount
 """$(doc_fptree_setters)"""
-contributors!(fptree::FPTree, contribution::UInt64) = fptree.contributors = contribution
+addcontributors!(fptree::FPTree, newcontribution::WorldsMask) =
+    fptree.contributors = fptree.contributors + newcontribution
 
 """
     function follow(fptree::FPTree)::Union{Nothing,FPTree}
@@ -247,6 +253,7 @@ See also [`FPTree`](@ref), [`gsupport`](@ref), [`HeaderTable`](@ref), [`Itemset`
 function Base.push!(
     fptree::FPTree,
     itemset::Itemset,
+    ninstance::Int64,
     miner::ARuleMiner;
     htable::Union{Nothing,HeaderTable}=nothing
 )
@@ -256,31 +263,23 @@ function Base.push!(
     end
 
     item = convert(Item, itemset)
-    item_contributors = getcontributors(item, miner)
+    _contributors = contributors(:lsupport, item, ninstance, miner)
 
     # check if a subtree whose content is the first item in `itemset` already exists
     for child in children(fptree)
-        if content(child) == item && contributors(child) == item_contributors
+        if content(child) == item
             addcount!(fptree, 1)
-            push!(child, itemset[2:end], miner)
+            addcontributors!(fptree, _contributors)
+            push!(child, itemset[2:end], ninstance, miner)
             return
         end
     end
 
     # if no subtree exists, create a new one
-    subfptree = FPTree(item, item_contributors)
+    subfptree = FPTree(itemset, ninstance, miner; isroot=false)
     children!(fptree, subfptree)
     # and stretch the link coming out from `item` in `htable`, to consider the new child
     link!(htable, subfptree)
-end
-function Base.push!(
-    fptree::FPTree,
-    itemsets::Vector{Itemset},
-    miner::ARuleMiner,
-    htable::HeaderTable
-)
-    # simply call the single itemset case multiple times
-    map(item -> push!(fptree, item, miner; htable=htable), itemsets)
 end
 
 ############################################################################################
@@ -298,6 +297,23 @@ function fpgrowth(;
     fulldump::Bool=true,   # mostly for testing purposes, also keeps track of non-frequent patterns
     verbose::Bool=true,
 )::Function
+
+    # utility function to build a modal FP-Tree by eager-loading `ninstance` `itemsets`.
+    # For each internal node, a contributor-worlds array is kept.
+    function _allinstancespush(
+        fptree::FPTree,
+        itemsets::Vector{Itemset},
+        ninstance::Int64,
+        miner::ARuleMiner,
+        htable::HeaderTable
+    )
+        # simply call the single itemset case multiple times,
+        # assuming i-th itemsets refers to i-th instance
+        for i in 1:ninstance
+            push!(fptree, itemsets[i], i, miner; htable=htable)
+        end
+    end
+
 
     function _fpgrowth_preamble(miner::ARuleMiner, X::AbstractDataset)::Nothing
         @assert SoleRules.gsupport in reduce(vcat, item_meas(miner)) "FP-Growth requires "*
@@ -319,22 +335,22 @@ function fpgrowth(;
 
         # associate each instance in the dataset with its frequent itemsets
         _ninstances = ninstances(X)
-        ninstance_toitemsets_sorted = fill(Vector{Itemset}, _ninstances)
+        ninstance_toitemsets_sorted = Itemset[[] for _ in 1:_ninstances] # DEBUG: here
 
         # for each instance, sort its frequent itemsets by global support
         for i in 1:_ninstances
-            ninstance_toitemsets_sorted[i] = sort([
-                itemset
-                for itemset in frequents
-                if getlocalmemo(miner, (:lsupport, itemset, i)) > lsupport_threshold
-            ], by=t -> getglobalmemo(miner, (:gsupport, t)), rev=true)
+            ninstance_toitemsets_sorted[i] = sort([                      # DEBUG: and here
+                    itemset
+                    for itemset in frequents
+                    if getlocalmemo(miner, (:lsupport, itemset, i)) > lsupport_threshold
+                ], by=t -> getglobalmemo(miner, (:gsupport, t)), rev=true)
         end
 
         # create an initial fptree
         fptree = FPTree()
         # create and fill an header table, necessary to traverse FPTrees horizontally
         htable = HeaderTable(frequents, fptree)
-        push!(fptree, ninstance_toitemsets_sorted, miner)
+        _allinstancespush!(fptree, ninstance_toitemsets_sorted, _ninstances, miner, htable)
 
         # call main logic
         _fpgrowth_kernel(fptree, htable, miner, Itemset())

@@ -80,8 +80,8 @@ an external global measure and an internal local measure.
 The global measure tests for how many instances a local measure overpass a local threshold.
 At the end of the process, a global threshold can be used to establish if the global measure
 is actually meaningful or not.
-(Note that this generalizes the propositional logic case scenario, where it is enough to just apply a
-measure across instances.)
+(Note that this generalizes the propositional logic case scenario, where it is enough to
+just apply a measure across instances.)
 
 Therefore, a [`ConstrainedMeasure`](@ref) is a tuple composed of a global meaningfulness
 measure, a local threshold and a global threshold.
@@ -167,6 +167,23 @@ See also [`GmeasMemoKey`](@ref), [`ARMSubject`](@ref).
 """
 const GmeasMemo = Dict{GmeasMemoKey,Float64} # global measure of an itemset/arule => value
 
+"""
+See also [`Contributors`](@ref).
+"""
+const WorldsMask = Vector{Int64}
+
+"""
+Structure for storing association between a local measure, applied on a certain
+[`ARMSubject`](@ref) on a certain [`LogicalInstance`](@ref), and a vector of integers
+representing the worlds for which the measure is greater than a certain threshold.
+
+This type is intended to be used inside an [`ARuleMiner`](@ref) `info` named tuple, to
+support the execution of, for example, [`fpgrowth`](@ref) algorthm.
+
+See also [`LmeasMemoKey`](@ref), [`WorldMask`](@ref)
+"""
+const Contributors = Dict{LmeasMemoKey, WorldsMask}
+
 ############################################################################################
 #### Association rule miner machines #######################################################
 ############################################################################################
@@ -243,7 +260,7 @@ struct ARuleMiner
     X::AbstractDataset
     # algorithm used to perform extraction
     algo::FunctionWrapper{Nothing,Tuple{ARuleMiner,AbstractDataset}}
-    alphabet::Vector{Item} # NOTE: this could be a generator, TODO: change name
+    alphabet::Vector{Item}
 
     # meaningfulness measures
     item_constrained_measures::Vector{<:ConstrainedMeasure}
@@ -262,13 +279,14 @@ struct ARuleMiner
         algo::Function,
         alphabet::Vector{Item},
         item_constrained_measures::Vector{<:ConstrainedMeasure},
-        rule_constrained_measures::Vector{<:ConstrainedMeasure},
+        rule_constrained_measures::Vector{<:ConstrainedMeasure};
+        info::NamedTuple = (;)
     )
         new(X, MiningAlgo(algo), alphabet,
             item_constrained_measures,
             rule_constrained_measures,
             Vector{Itemset}([]), Vector{Itemset}([]), Vector{ARule}([]),
-            LmeasMemo(), GmeasMemo(), (;)
+            LmeasMemo(), GmeasMemo(), info
         )
     end
 
@@ -277,11 +295,8 @@ struct ARuleMiner
         algo::Function,
         alphabet::Vector{Item}
     )
-        # ARuleMiner(X, MiningAlgo(algo), alphabet,
-        new(X, MiningAlgo(algo), alphabet,
-            [(gsupport, 0.1, 0.1)], [(gconfidence, 0.2, 0.2)],
-            Vector{Itemset}([]), Vector{Itemset}([]), Vector{ARule}([]),
-            LmeasMemo(), GmeasMemo(), (;)
+        ARuleMiner(X, MiningAlgo(algo), alphabet,
+            [(gsupport, 0.1, 0.1)], [(gconfidence, 0.2, 0.2)]
         )
     end
 end
@@ -316,6 +331,9 @@ doc_aruleminer_getters = """
 
     getglobalmemo(miner::ARuleMiner)::GmeasMemo
     getglobalmemo(miner::ARuleMiner, key::GmeasMemoKey)::Float64
+
+    info(miner::ARuleMiner)::NamedTuple
+    info(miner::ARuleMiner, key::Symbol)
 
 [`ARuleMiner`](@ref) getters.
 """
@@ -399,6 +417,11 @@ getglobalmemo(miner::ARuleMiner)::GmeasMemo = miner.gmemo
 getglobalmemo(miner::ARuleMiner, key::GmeasMemoKey) = get(miner.gmemo, key, nothing)
 """$(doc_aruleminer_setters)"""
 setglobalmemo(miner::ARuleMiner, key::GmeasMemoKey, val::Float64) = miner.gmemo[key] = val
+
+"""$(doc_aruleminer_getters)"""
+info(miner::ARuleMiner)::NamedTuple = miner.info
+"""$(doc_aruleminer_getters)"""
+info(miner::ARuleMiner, key::Symbol) = getfield(miner.info, key)
 
 """
     function mine(miner::ARuleMiner)

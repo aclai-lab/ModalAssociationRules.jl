@@ -40,26 +40,33 @@ doc_getcontributors = """
 Consider all the contributors of an [`Item`](@ref), that is, all the worlds for which the
 [`lsupp`](@ref) is greater than a certain [`Threshold`](@ref).
 
-Return the contributors hash.
+Return a vector whose size is the number of worlds, and the content is 0 if the local
+threshold is not overpassed, 1 otherwise.
 
 See also [`Item`](@ref), [`lsupp`](@ref), [`Threshold`](@ref).
 """
 
 """$(doc_getcontributors)"""
-function getcontributors(item::Item, miner::ARuleMiner)::UInt64
-    return getcontributors(item, getlocalmemo(miner), ninstances(dataset(miner)),
-        getlocalthreshold(miner, lsupport))
+function contributors(
+    measname::Symbol,
+    item::Item,
+    ninstance::Int64,
+    miner::ARuleMiner
+)::WorldsMask
+    return contributors((measname, Itemset(item), ninstance), miner)
 end
 """$(doc_getcontributors)"""
-function getcontributors(
-    item::Item,
-    lmemo::LmeasMemo,
-    ninstances::Integer,
-    threshold::Threshold
-)::UInt64
-    return hash([i for i in 1:ninstances
-        if lmemo[(:lsupport, Itemset(item), i)] >= threshold
-    ])
+function contributors(
+    memokey::LmeasMemoKey,
+    miner::ARuleMiner
+)::WorldsMask
+    try
+        info(miner, :contributors)[memokey]
+    catch
+        error("Error when getting contributors of $(measname) applied to  $(item) at " *
+        "instance $(ninstance). Please, provide `info=(;contributors=Contributors([]))` " *
+        "when instanciating the miner.")
+    end
 end
 
 ############################################################################################
