@@ -3,10 +3,12 @@
 ############################################################################################
 
 """
-    combine(itemsets, newlength)
+    combine(itemsets::Vector{<:Itemset}, newlength::Integer)
 
-Combines itemsets from `itemsets` into new itemsets of length `newlength`
-by taking all combinations of two itemsets and unioning them.
+Return a generator which combines [`Itemset`](@ref)s from `itemsets` into new itemsets of
+length `newlength` by taking all combinations of two itemsets and joining them.
+
+See also [`Itemset`](@ref).
 """
 function combine(itemsets::Vector{<:Itemset}, newlength::Integer)
     return Iterators.filter(
@@ -16,6 +18,19 @@ function combine(itemsets::Vector{<:Itemset}, newlength::Integer)
             combinations(itemsets, 2)
         )
     )
+end
+
+
+"""
+    combine(variable::Vector{<:Item}, fixed::Vector{<:Item})
+
+Return a generator which iterates the combinations of [`Item`](@ref)s in `variable` and
+prepend them to `fixed` vector.
+
+See also [`Item`](@ref).
+"""
+function combine(variable::Vector{<:Item}, fixed::Vector{<:Item})
+    (Itemset(vcat(combo, fixed)) for combo in combinations(variable))
 end
 
 """

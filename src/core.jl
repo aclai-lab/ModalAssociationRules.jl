@@ -25,6 +25,10 @@ const Itemset = Vector{Item}
 Itemset(item::Item) = Itemset([item])
 Itemset(itemsets::Vector{Itemset}) = Itemset.([union(itemsets...)...])
 
+function Base.show(io::IO, itemset::Itemset)
+    print(io, "[" * join([syntaxstring(item) for item in itemset], ", ") * "]")
+end
+
 """
     toformula(itemset::Itemset)
 
@@ -447,4 +451,22 @@ function apply(miner::ARuleMiner, X::AbstractDataset)
     # extract frequent itemsets
     miner.algo(miner, X)
     return arules_generator(freqitems(miner), miner)
+end
+
+function Base.show(io::IO, miner::ARuleMiner)
+    println(io, "$(dataset(miner))")
+
+    println(io, "Alphabet: $(alphabet(miner))\n")
+    println(io, "Items measures: $(item_meas(miner))")
+    println(io, "Rules measures: $(rule_meas(miner))\n")
+
+    println(io, "# of frequent patterns mined: $(length(freqitems(miner)))")
+    println(io, "# of association rules mined: $(length(arules(miner)))\n")
+
+    println(io, "Local measures memoization structure entries: " *
+        "$(length(miner.lmemo |> keys))")
+    println(io, "Global measures memoization structure entries: " *
+        "$(length(miner.gmemo |> keys))\n")
+
+    print(io, "Additional infos: $(info(miner) |> keys)")
 end

@@ -4,7 +4,8 @@
 
 """
 Fundamental data structure used in FP-Growth algorithm.
-Essentialy, an [`FPTree`](@ref) is a prefix tree where a root-leaf path represent an [`Itemset`](@ref).
+Essentialy, an [`FPTree`](@ref) is a prefix tree where a root-leaf path represent an
+[`Itemset`](@ref).
 
 Consider the [`Itemset`](@ref)s sorted by [`gsupport`](@ref) of their items.
 An [`FPTree`](@ref) is such that the common [`Item`](@ref)s-prefix shared by different
@@ -122,16 +123,61 @@ addcount!(fptree::FPTree, deltacount::Int64) = fptree.count = fptree.count + del
 contributors!(fptree::FPTree, contribution::WorldsMask) = fptree.contributors = contribution
 """$(doc_fptree_setters)"""
 addcontributors!(fptree::FPTree, contribution::WorldsMask) =
-    fptree.contributors = fptree.contributors + contribution
+    fptree.contributors .+= contribution
+
+"""
+    islist(fptree::FPTree)::Bool
+
+Return true if every subtree in `fptree` has exactly 0 or 1 children.
+
+See also [`FPTree`](@ref)
+"""
+function islist(fptree::FPTree)::Bool
+    arity = fptree |> children |> length
+
+    if arity == 1
+        return islist(fptree |> children |> first)
+    elseif arity > 1
+        return false
+    else
+        # arity is 0
+        return true
+    end
+end
+
+"""
+    function retrieveall(fptree::FPTree)::Itemset
+
+Return all the [`Item`](@ref) contained in `fptree`.
+
+See also [`FPTree`](@ref), [`Item`](@ref), [`Itemset`](@ref).
+"""
+function retrieveall(fptree::FPTree)::Itemset
+
+    function _retrieve(fptree::FPTree)
+        retrieved = Itemset([_retrieve(child) for child in children(fptree)])
+
+        _content = content(fptree)
+        if !isnothing(_content)
+            push!(retrieved, Itemset(_content))
+        end
+
+        return retrieved
+    end
+
+    return reduce(vcat, _retrieve(fptree)) |> unique
+end
 
 """
     function follow(fptree::FPTree)::Union{Nothing,FPTree}
 
 Follow `fptree` linkage to (an internal node of) another [`FPTree`](@ref).
+
+See also [`FPTree`](@ref), [`HeaderTable`](@ref).
 """
 function follow(fptree::FPTree)::Union{Nothing,FPTree}
     arrival = linkage(fptree)
-    return arrival === nothing ? item : follow(arrival)
+    return isnothing(arrival) ? item : follow(arrival)
 end
 
 """
@@ -260,9 +306,9 @@ function Base.push!(
     itemset::Itemset,
     ninstance::Int64,
     miner::ARuleMiner;
-    htable::Union{Nothing,HeaderTable}=nothing
+    htable::Union{Nothing,HeaderTable}=nothing,
 )
-    # recursion base case
+    # end of push case
     if length(itemset) == 0
         return
     end
@@ -273,12 +319,14 @@ function Base.push!(
     # check if a subtree whose content is the first item in `itemset` already exists
     for child in children(fptree)
         if content(child) == item
-            # update the current fptree count and contributors array,
-            addcount!(fptree, 1)
-            addcontributors!(fptree, _contributors)
+            # update the current fptree count and contributors array
+            addcount!(child, 1)
+
+            # update contributors (if `fptree` is not the main empty root)
+            addcontributors!(child, _contributors)
 
             # recursively create a subtree, then end
-            push!(child, itemset[2:end], ninstance, miner)
+            push!(child, itemset[2:end], ninstance, miner; htable=htable)
             return
         end
     end
@@ -286,6 +334,9 @@ function Base.push!(
     # if no subtree exists, create a new one
     subfptree = FPTree(itemset, ninstance, miner; isroot=false)
     children!(fptree, subfptree)
+    addcount!(subfptree, 1)
+    addcontributors!(subfptree, _contributors)
+
     # and stretch the link coming out from `item` in `htable`, to consider the new child
     link!(htable, subfptree)
 end
@@ -306,10 +357,11 @@ Base.push!(
 
 Wrapper function for the FP-Growth algorithm over a modal dataset.
 Returns a `function f(miner::ARuleMiner, X::AbstractDataset)::Nothing` that runs the main
-FP-Growth algorithm logic, [as described here](https://www.cs.sfu.ca/~jpei/publications/sigmod00.pdf).
+FP-Growth algorithm logic,
+[as described here](https://www.cs.sfu.ca/~jpei/publications/sigmod00.pdf).
 """
 function fpgrowth(;
-    fulldump::Bool=true,   # mostly for testing purposes, also keeps track of non-frequent patterns
+    fulldump::Bool=true,   # mostly for testing purposes
     verbose::Bool=true,
 )::Function
 
@@ -328,8 +380,7 @@ function fpgrowth(;
             for i in 1:ninstances]
     end
 
-
-    function _fpgrowth_preamble(miner::ARuleMiner, X::AbstractDataset)::Nothing
+    function _fpgrowth_preamble(miner::ARuleMiner, X::AbstractDataset) # ::Nothing
         @assert SoleRules.gsupport in reduce(vcat, item_meas(miner)) "FP-Growth requires " *
             "global support (SoleRules.gsupport) as meaningfulness measure in order to " *
             "work. Please, add a tuple (SoleRules.gsupport, local support threshold, " *
@@ -367,16 +418,25 @@ function fpgrowth(;
 
         _allinstancespush!(fptree, ninstance_toitemsets_sorted, _ninstances, miner, htable)
 
+        return fptree, htable
+
         # call main logic
-        _fpgrowth_kernel(fptree, htable, miner, Itemset())
+        # _fpgrowth_kernel(fptree, htable, miner, Itemset())
     end
 
     function _fpgrowth_kernel(
         fptree::FPTree,
         htable::HeaderTable,
         miner::ARuleMiner,
-        pattern::Itemset
+        leftout_items::Itemset
     )
+        if islist(fptree)
+            survivor_items = retrieveall(fptree)
+            push!(freqitems(miner), (combine(leftout_items, survivor_items)|>collect)...)
+        else
+
+        end
+
         # if fptree only contains a single path, then combine all the possible itemsets
         # if issinglepath(fptree)
         #   pathitems = collectitems(fptree)

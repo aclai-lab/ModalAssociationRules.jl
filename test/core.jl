@@ -28,9 +28,7 @@ manual_alphabet = Vector{Item}([manual_p, manual_q, manual_r,
 _item_meas = [(gsupport, 0.1, 0.1)]
 _rule_meas = [(gconfidence, 0.2, 0.2)]
 
-miner = ARuleMiner(X, apriori(), manual_alphabet, _item_meas, _rule_meas;
-    info=(;contributors=Contributors([])))
-
+miner = @fpoptimize ARuleMiner(X, fpgrowth(), manual_alphabet, _item_meas, _rule_meas)
 
 @testset "ARuleMiner" begin
     @test_nowarn ARuleMiner(X, apriori(), manual_alphabet)
@@ -40,6 +38,8 @@ miner = ARuleMiner(X, apriori(), manual_alphabet, _item_meas, _rule_meas;
 
     @test item_meas(miner) == _item_meas
     @test rule_meas(miner) == _rule_meas
+
+    miner = ARuleMiner(X, apriori(), manual_alphabet, _item_meas, _rule_meas)
 
     # mine the frequent patterns
     mine(miner)

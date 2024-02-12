@@ -1,6 +1,7 @@
 module SoleRules
 # Currently, the only topic covered by SoleRules is Association Rules.
 
+import Base.show
 using Combinatorics
 using FunctionWrappers: FunctionWrapper
 using IterTools
@@ -66,13 +67,12 @@ include("algorithms/fpgrowth.jl")
 
 export FPTree
 export content, parent, children, count, contributors
-export content!, parent!, children!, count!, addcount!, contributors!
+export content!, parent!, children!, count!, addcount!, contributors!, addcontributors!
+export islist, retrieveall
 
 export HeaderTable, items
 export linkage, linkage!, follow, link! # common between FPTree and HeaderTable
-
-export fpgrowth
-export fpoptimize
+export fpgrowth, @fpoptimize
 
 include("utils.jl")
 
