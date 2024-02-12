@@ -374,3 +374,29 @@ function fpgrowth(;
 
     return _fpgrowth_preamble
 end
+
+############################################################################################
+#### Specific utilities ####################################################################
+############################################################################################
+
+
+"""
+    macro fpoptimize(ex)
+
+Enable [`ARuleMiner`](@ref) contructor to handle [`fpgrowth`](@ref) efficiently by
+leveraging a [`Contributors`](@ref) structure.
+
+# Usage
+julia> miner = @fpoptimize ARuleMiner(X, apriori(), manual_alphabet, _item_meas, _rule_meas)
+
+See also [`ARuleMiner`](@ref), [`Contributors`](@ref), [`fpgrowth`](@ref).
+"""
+macro fpoptimize(ex)
+    # Extracting function name and arguments
+    func, args = ex.args[1], ex.args[2:end]
+
+    # Constructing the modified expression with kwargs
+    return esc(:($(func)($(args...); info=(; contributors=Contributors([])))))
+
+    return new_ex
+end
