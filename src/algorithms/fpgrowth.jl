@@ -51,16 +51,15 @@ mutable struct FPTree
     # internal tree constructor
     function FPTree(itemset::Itemset, ninstance::Int64, miner::ARuleMiner, ::Val{false})
         firstitem = itemset[1]
-        _contributors = contributors(:lsupport, firstitem, ninstance, miner)
+        _contributors = SoleRules.contributors(:lsupport, firstitem, ninstance, miner)
 
         fptree = length(itemset) == 1 ?
-            new(firstitem, nothing, FPTree[], 1, WorldsMask[], nothing) :
+            new(firstitem, nothing, FPTree[], 1, _contributors, nothing) :
             new(firstitem, nothing,
                 FPTree[FPTree(itemset[2:end], ninstance, miner; isroot=false)],
-                1, WorldsMask[], nothing)
+                1, _contributors, nothing)
 
         map(child -> parent!(child, fptree), children(fptree))
-        addcontributors!(fptree, _contributors)
 
         return fptree
     end
@@ -83,6 +82,7 @@ doc_fptree_setters = """
     children!(fptree::FPTree)::Vector{FPTree}
     count!(fptree::FPTree)::Int64
     addcount!(fptree::FPTree, deltacount::Int64)
+    contributors!(fptree::FPTree, contribution::WorldsMask)
     addcontributors!(fptree::FPTree)::WorldsMask
     linkage!(fptree::FPTree)::Union{Nothing,FPTree}
 
@@ -119,8 +119,10 @@ count!(fptree::FPTree, newcount::Int64) = fptree.count = newcount
 """$(doc_fptree_setters)"""
 addcount!(fptree::FPTree, deltacount::Int64) = fptree.count = fptree.count + deltacount
 """$(doc_fptree_setters)"""
-addcontributors!(fptree::FPTree, newcontribution::WorldsMask) =
-    fptree.contributors = fptree.contributors + newcontribution
+contributors!(fptree::FPTree, contribution::WorldsMask) = fptree.contributors = contribution
+"""$(doc_fptree_setters)"""
+addcontributors!(fptree::FPTree, contribution::WorldsMask) =
+    fptree.contributors = fptree.contributors + contribution
 
 """
     function follow(fptree::FPTree)::Union{Nothing,FPTree}
@@ -173,10 +175,11 @@ struct HeaderTable
             link!(htable, fptseed)
             child = children(child)
         end
+
+        return htable
     end
 
     function HeaderTable(itemsets::Vector{<:Itemset}, fptseed::FPTree)
-        println("OK")
         return HeaderTable(convert.(Item, itemsets), fptseed)
     end
 end
@@ -210,7 +213,7 @@ Follow `htable` linkage to (an internal node of) a [`FPTree`](@ref).
 """
 function follow(htable::HeaderTable, item::Item)::Union{Nothing,FPTree}
     arrival = linkage(htable, item)
-    return isnothing(arrival) ? item : follow(arrival, item)
+    return isnothing(arrival) ? arrival : follow(arrival, item)
 end
 
 """
@@ -227,7 +230,7 @@ function link!(htable::HeaderTable, fptree::FPTree)
 
     # the content of `fptree` was never seen before by this `htable`
     if linkage(htable, _content) |> isnothing
-        linkage!(htable, content, fptree)
+        linkage!(htable, _content, fptree)
     # the arrival FPTree is linked to the new `fptree`
     elseif arrival isa FPTree
         link!(arrival, fptree)
@@ -270,8 +273,11 @@ function Base.push!(
     # check if a subtree whose content is the first item in `itemset` already exists
     for child in children(fptree)
         if content(child) == item
+            # update the current fptree count and contributors array,
             addcount!(fptree, 1)
             addcontributors!(fptree, _contributors)
+
+            # recursively create a subtree, then end
             push!(child, itemset[2:end], ninstance, miner)
             return
         end
@@ -283,6 +289,13 @@ function Base.push!(
     # and stretch the link coming out from `item` in `htable`, to consider the new child
     link!(htable, subfptree)
 end
+Base.push!(
+    fptree::FPTree,
+    itemsets::Vector{Itemset},
+    ninstance::Int64,
+    miner::ARuleMiner;
+    htable::Union{Nothing,HeaderTable}=nothing
+) = [push!(fptree, itemset, ninstance, miner; htable=htable) for itemset in itemsets]
 
 ############################################################################################
 #### Main FP-Growth logic ##################################################################
@@ -300,21 +313,19 @@ function fpgrowth(;
     verbose::Bool=true,
 )::Function
 
-    # utility function to build a modal FP-Tree by eager-loading `ninstance` `itemsets`.
-    # For each internal node, a contributor-worlds array is kept.
+    # utility function to build a modal FP-Tree by eager-loading `ninstance` `itemsets`;
+    # for each internal node, a contributor-worlds array is kept.
     function _allinstancespush!(
         fptree::FPTree,
-        itemsets::Vector{Itemset}, #DEBUG: choose correct type here
+        ninstance_to_itemsets::Vector{Vector{Itemset}},
         ninstances::Int64,
         miner::ARuleMiner,
         htable::HeaderTable
     )
         # simply call the single itemset case multiple times,
         # assuming i-th itemsets refers to i-th instance
-        [
-            push!(fptree, itemsets[i], i, miner; htable=htable) #DEBUG: unpack correct type here
-            for i in 1:ninstances
-        ]
+        [push!(fptree, ninstance_to_itemsets[i], i, miner; htable=htable)
+            for i in 1:ninstances]
     end
 
 
@@ -353,6 +364,7 @@ function fpgrowth(;
         fptree = FPTree()
         # create and fill an header table, necessary to traverse FPTrees horizontally
         htable = HeaderTable(frequents, fptree)
+
         _allinstancespush!(fptree, ninstance_toitemsets_sorted, _ninstances, miner, htable)
 
         # call main logic
