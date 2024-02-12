@@ -16,6 +16,7 @@ Main:
     ✔ FPTree getters, setters and utilities @done(24-02-10 21:13)
     ✔ HeaderTable with link! and follow @done(24-02-10 21:13)
     ✔ FPTree Base.push! overloading @done(24-02-10 21:35)
+    ✔ Modal FPTree (see contributors) @done(24-02-12 02:30)
     ☐ consider `contributors` hash when following a link from an header table
     ☐ packing simultaneous FPTree and HeaderTable construction, then follow the algorithm described in the thesis "Algorithm for association rules mining from modal, temporal, spatial datasets"
 
@@ -40,6 +41,7 @@ Utility:
     ✔ combine @done(24-02-08 20:30)
     ✔ prune @done(24-02-08 20:30)
     ✔ arules generation with powerset @done(24-02-08 20:30)
+  ✔ contributors-related consts, contributors getter and addcontributors! setter (to implement modal FPTree) @done(24-02-12 02:31)
 
 To SoleModels or SoleData:
   ✔ consider feature when binning @done(24-02-02 15:52)
