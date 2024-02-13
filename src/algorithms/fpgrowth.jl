@@ -510,7 +510,7 @@ function patternbase(item::Item, htable::HeaderTable, miner::ARuleMiner)
             # prepend! instead of push! because we must keep the top-down order of items
             # in a path, but we are visiting a branch from bottom upwards.
             prepend!(enchanceditemset, (content(ancestorfpt), fptcount,
-                merge(minimum, fptcontributors, contributors(ancestorfpt))))
+                map(minimum, fptcontributors, contributors(ancestorfpt))))
             ancestorfpt = parent(ancestorfpt)
         end
 
@@ -526,25 +526,33 @@ function patternbase(item::Item, htable::HeaderTable, miner::ARuleMiner)
     # TODO: allocating two dictionaries here, instead of a single Dict with `Pair` values,
     # is a waste. Is there a way to obtain the same effect using no immutable structures?
 
-    # collection phase
-    globalbouncer = Dict{Item,Int64}([])
-    localbouncer = Dict{Item,WorldsMask}([])
-    promoted = Dict{Item,Bool}([])
+    _patternbase = ConditionalPatternBase([]) # final pattern base
+    globalbouncer = Dict{Item,Int64}([])      # keeps track of respected global thresholds
+    localbouncer = Dict{Item,WorldsMask}([])  # keeps track of respected local thresholds
+    ispromoted = Dict{Item,Bool}([])          # winner items, which will compose the pbase
 
-    for itemsets in _patternbase # for each Vector{Tuple{Item,Int64,WorldsMask}}
-        for itemset in itemsets  # for each Tuple{Item,Int64,WorldsMask} in itemsets
-            item, _count, _contributors = itemset
+    # collection phase
+    for itemset in _patternbase         # for each Vector{Tuple{Item,Int64,WorldsMask}}
+        for enhanceditem in itemset     # for each Tuple{Item,Int64,WorldsMask} in itemset
+            item, _count, _contributors = enhanceditem
             globalbouncer[item] += _count
-            merge!(sum, localbouncer[item], _contributors)
+            map!(sum, localbouncer[item], _contributors)
         end
     end
 
+    # now that dictionaries are filled, establish which are promoted and apply changes
+    # in the filtering phase.
     for item in keys(globalbouncer)
-        # TODO
+        if globalbouncer[item] < gsupp_integer_threshold ||
+            Base.count(x -> x > 0, localbouncer[item]) < lsupp_integer_threshold
+            ispromoted[item] = false
+        else
+            ispromoted[item] = true
+        end
     end
 
     # filtering phase
-
+    [filter!(t->ispromoted[first(t)]==true, itemset) for itemset in _patternbase]
 
     return _patternbase
 end

@@ -1,22 +1,4 @@
 ############################################################################################
-#### General ###############################################################################
-############################################################################################
-
-doc_worldsmask_merge = """
-    Base.merge(f::Function, mask1::WorldsMask, mask2::WorldsMask)::WorldsMask =
-    Base.merge!(f::Function, mask1::WorldsMask, mask2::WorldsMask)::WorldsMask =
-
-Merge two [`WorldsMask`](@ref) by applying a specific function pairwise.
-
-See also [`WorldsMask`](@ref).
-"""
-
-"""$(doc_worldsmask_merge)"""
-Base.merge(f::Function, m1::WorldsMask, m2::WorldsMask)::WorldsMask = map(f, m1, m2)
-"""$(doc_worldsmask_merge)"""
-Base.merge!(f::Function, m1::WorldsMask, m2::WorldsMask)::WorldsMask = map!(f, m1, m2)
-
-############################################################################################
 #### Itemsets ##############################################################################
 ############################################################################################
 
