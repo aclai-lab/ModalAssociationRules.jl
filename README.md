@@ -1,2 +1,2 @@
 # SoleRules.jl
-Association rules and more in Julia!
+Association rules, decision lists and rule extraction in Julia!

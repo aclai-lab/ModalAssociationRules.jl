@@ -1,7 +1,7 @@
 name = "SoleRules"
 uuid = "fb95e5f7-b6b0-4744-a282-88ebeeae65a3"
 license = "MIT"
-authors = ["Federico Manzella", "Mauro Milella, Giovanni Pagliarini"]
+authors = ["Mauro Milella", "Giovanni Pagliarini", "Edoardo Ponsanesi"]
 version = "0.1.0"
 
 [deps]
@@ -19,3 +19,18 @@ SoleData = "123f1ae1-6307-4526-ab5b-aab3a92a2b8c"
 SoleLogics = "b002da8f-3cb3-4d91-bbe3-2953433912b5"
 SoleModels = "4249d9c7-3290-4ddd-961c-e1d3ec2467f8"
 StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
+
+[compat]
+Random = "1"
+StatsBase = "0.30 - 0.34"
+julia = "1"
+
+[extras]
+Graphs = "86223c79-3864-5bf0-83f7-82e725a168b6"
+InteractiveUtils = "b77e0a4c-d291-57a0-90e8-8db25a27a240"
+Markdown = "d6f4376e-aef5-505a-96c1-9c027394607a"
+PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test", "Markdown", "Graphs", "InteractiveUtils", "PlutoUI"]
