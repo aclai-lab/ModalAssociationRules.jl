@@ -25,6 +25,7 @@ Main:
     ☐ in a FPTree, instead of counting how many integers inside `contributors` are different from 0, use a counter `contributors_count`
     ☐ pack `patternbase` inside `projection`
     ☐ `patternbase` must filter out the items inside the conditional pattern base which are not enough frequents
+    ☐ avoid instantiating two dictionaries in `patternbase`. Dict{Item,Pair{Int64,WorldsMask}} could be an idea, but updating immutable structures is a bad idea, since WorldsMask is very long.
 
 Generic:
   ✔ move memoization accountability to ARuleMiner @done(24-02-07 23:58)

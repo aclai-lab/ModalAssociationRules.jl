@@ -514,9 +514,6 @@ function patternbase(item::Item, htable::HeaderTable, miner::ARuleMiner)
             ancestorfpt = parent(ancestorfpt)
         end
 
-        # elements in `_patternbase` that are not frequent enough should be filtered out
-        # TODO
-
         # before following the linkage, push the collected enhanced itemset;
         # items inside the itemset are sorted decreasingly by global support
         sort!(enhanceditemset, by=t -> getglobalmemo(
@@ -524,6 +521,30 @@ function patternbase(item::Item, htable::HeaderTable, miner::ARuleMiner)
         push!(_patternbase, enchanceditemset)
         fptree = linkage(fptree)
     end
+
+    # filter out unfrequent itemsets from a pattern base
+    # TODO: allocating two dictionaries here, instead of a single Dict with `Pair` values,
+    # is a waste. Is there a way to obtain the same effect using no immutable structures?
+
+    # collection phase
+    globalbouncer = Dict{Item,Int64}([])
+    localbouncer = Dict{Item,WorldsMask}([])
+    promoted = Dict{Item,Bool}([])
+
+    for itemsets in _patternbase # for each Vector{Tuple{Item,Int64,WorldsMask}}
+        for itemset in itemsets  # for each Tuple{Item,Int64,WorldsMask} in itemsets
+            item, _count, _contributors = itemset
+            globalbouncer[item] += _count
+            merge!(sum, localbouncer[item], _contributors)
+        end
+    end
+
+    for item in keys(globalbouncer)
+        # TODO
+    end
+
+    # filtering phase
+
 
     return _patternbase
 end
