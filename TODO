@@ -22,6 +22,7 @@ Main:
     ✔ packing simultaneous FPTree and HeaderTable construction, then follow the algorithm described in the thesis "Algorithm for association rules mining from modal, temporal, spatial datasets" @done(24-02-13 15:13)
     ✔ guarantee HeaderTable internal state is correct when projecting an FPTree @done(24-02-13 15:57)
       # that is, check if items are sorted decreasingly by global support. This can be done only if a miner is provided!
+    ☐ in a FPTree, instead of counting how many integers inside `contributors` are different from 0, use a counter `contributors_count`
     ☐ pack `patternbase` inside `projection`
     ☐ `patternbase` must filter out the items inside the conditional pattern base which are not enough frequents
 

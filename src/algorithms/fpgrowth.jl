@@ -66,11 +66,11 @@ mutable struct FPTree
     end
 
     function FPTree(itemset::EnhancedItemset)
-        item, _contributors = first(itemset)
+        item, _count, _contributors = first(itemset)
         fptree = length(itemset) == 1 ?
-            new(item, nothing, FPTree[], 1, _contributors, nothing) :
+            new(item, nothing, FPTree[], _count, _contributors, nothing) :
             new(item, nothing, FPTree[FPTree(itemset[2:end]), miner],
-                1, _contributors, nothing)
+                _count, _contributors, nothing)
 
         map(child -> parent!(child, fptree), children(fptree))
 
@@ -417,13 +417,13 @@ function Base.push!(
         return
     end
 
-    item, _contributors = first(enhanceditemset)
+    item, _count, _contributors = first(enhanceditemset)
 
     # check if a subtree whose content is the first item in `enhanceditemset` already exists
     for child in children(fptree)
         if content(child) == item
             # update the current fptree count and contributors array
-            addcount!(child, 1)
+            addcount!(child, _count)
 
             # update contributors (if `fptree` is not the main empty root)
             addcontributors!(child, _contributors)
@@ -437,7 +437,7 @@ function Base.push!(
     # if no subtree exists, create a new one
     subfptree = FPTree(enhanceditemset)
     children!(fptree, subfptree)
-    addcount!(subfptree, 1)
+    addcount!(subfptree, _count)
     addcontributors!(subfptree, _contributors)
 
     # and stretch the link coming out from `item` in `htable`, to consider the new child
@@ -490,7 +490,17 @@ function patternbase(item::Item, htable::HeaderTable, miner::ARuleMiner)
     # for each reference, collect all the ancestors keeping a WorldsMask which, at each
     # position, is the minimum between the value in reference's mask and the new node one.
     fptree = linkage(htable, item)
+    fptcount = count(fptree)
     fptcontributors = contributors(fptree)
+
+    # needed to filter out new unfrequent items in the pattern base;
+    # IDEA: local support threshold could be taken directly from length(fptcontributor)
+    lsupp_integer_threshold = convert(Int64, floor(
+        getlocalthreshold(miner, lsupport) * SoleData.nworlds(frame(dataset(miner)), 1)
+    ))
+    gsupp_integer_threshold = convert(Int64, floor(
+        getglobalthreshold(miner, gsupport) * ninstances(dataset(miner))
+    ))
 
     while !isnothing(fptree)
         enchanceditemset = EnhancedItemset([])
@@ -499,10 +509,13 @@ function patternbase(item::Item, htable::HeaderTable, miner::ARuleMiner)
         while !isnothing(content(ancestorfpt))
             # prepend! instead of push! because we must keep the top-down order of items
             # in a path, but we are visiting a branch from bottom upwards.
-            prepend!(enchanceditemset, (content(fptree),
+            prepend!(enchanceditemset, (content(ancestorfpt), fptcount,
                 merge(minimum, fptcontributors, contributors(ancestorfpt))))
             ancestorfpt = parent(ancestorfpt)
         end
+
+        # elements in `_patternbase` that are not frequent enough should be filtered out
+        # TODO
 
         # before following the linkage, push the collected enhanced itemset;
         # items inside the itemset are sorted decreasingly by global support
@@ -511,9 +524,6 @@ function patternbase(item::Item, htable::HeaderTable, miner::ARuleMiner)
         push!(_patternbase, enchanceditemset)
         fptree = linkage(fptree)
     end
-
-    # WARNING: TODO: elements in `_patternbase` that are not frequent enough should be
-    # filtered out here
 
     return _patternbase
 end

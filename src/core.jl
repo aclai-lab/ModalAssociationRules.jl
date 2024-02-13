@@ -25,6 +25,12 @@ const Itemset = Vector{<:Item}
 Itemset(item::Item) = Itemset([item])
 Itemset(itemsets::Vector{Itemset}) = Itemset.([union(itemsets...)...])
 
+function Base.convert(::Type{Item}, itemset::Itemset)::Item
+    @assert length(itemset) == 1 "Cannot convert $(itemset) of length $(length(itemset)) " *
+        "to Item: itemset must contain exactly one item"
+    return first(itemset)
+end
+
 function Base.show(io::IO, itemset::Itemset)
     print(io, "[" * join([syntaxstring(item) for item in itemset], ", ") * "]")
 end
@@ -58,11 +64,11 @@ const WorldsMask = Vector{Int64}
     const EnhancedItemset = Tuple{Item,WorldsMask}
 
 "Enhanced" representation of a vector of [`Itemset`](@ref), in which each [`Item`](@ref) is
-associated to a specific [`WorldsMask`](@ref).
+associated to a counter and a specific [`WorldsMask`](@ref).
 
 See also [`Item`](@ref), [`Itemset`](@ref), [`WorldsMask`](@ref).
 """
-const EnhancedItemset = Vector{<:Tuple{<:Item,WorldsMask}}
+const EnhancedItemset = Vector{<:Tuple{<:Item,Integer,WorldsMask}}
 
 """
     const ConditionalPatternBase = Vector{Vector{EnhancedItemset}}
