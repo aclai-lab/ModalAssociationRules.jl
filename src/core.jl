@@ -38,12 +38,6 @@ See also [`SoleLogics.LeftmostConjunctiveForm`](@ref)
 """
 toformula(itemset::Itemset) = LeftmostConjunctiveForm(itemset)
 
-function Base.convert(::Type{Item}, itemset::Itemset)::Item
-    @assert length(itemset) == 1 "Cannot convert $(itemset) of length $(length(itemset)) " *
-        "to Item: itemset must contain exactly one item"
-    return itemset[1]
-end
-
 # See meaningfulness measures section.
 # A ConstrainedMeasure is a tuple shaped as (global measure, local threshold, global threshold)
 """

@@ -19,8 +19,11 @@ Main:
     ✔ FPTree Base.push! overloading @done(24-02-10 21:35)
     ✔ Modal FPTree (see contributors) @done(24-02-12 02:30)
     ✔ pattern base constructor (enhanced itemset type, conditional pattern base type) @done(24-02-13 12:51)
-    ☐ packing simultaneous FPTree and HeaderTable construction, then follow the algorithm described in the thesis "Algorithm for association rules mining from modal, temporal, spatial datasets"
-
+    ✔ packing simultaneous FPTree and HeaderTable construction, then follow the algorithm described in the thesis "Algorithm for association rules mining from modal, temporal, spatial datasets" @done(24-02-13 15:13)
+    ✔ guarantee HeaderTable internal state is correct when projecting an FPTree @done(24-02-13 15:57)
+      # that is, check if items are sorted decreasingly by global support. This can be done only if a miner is provided!
+    ☐ pack `patternbase` inside `projection`
+    ☐ `patternbase` must filter out the items inside the conditional pattern base which are not enough frequents
 
 Generic:
   ✔ move memoization accountability to ARuleMiner @done(24-02-07 23:58)
@@ -31,6 +34,8 @@ Generic:
   ☐ measures inside an ARuleMiner should be unique
   ☐ miner.alphbaet should be renamed to represent a vector of item
   ☐ Base.push!(fptree::FPTree etc...) dispatches for `Itemset` and `EnhancedItemset` are very similar... think about avoid repetitions
+    # check push! docstrings
+  ☐ make more macros like @fpoptimize (e.g., to handle mining timing). This is not trivial, as these macros can be chained
 
 Optimizations:
   ☐ miner.alphabet should be treated as a generator 

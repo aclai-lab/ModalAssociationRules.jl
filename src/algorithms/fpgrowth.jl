@@ -51,12 +51,12 @@ mutable struct FPTree
 
     # internal tree constructor
     function FPTree(itemset::Itemset, ninstance::Int64, miner::ARuleMiner, ::Val{false})
-        firstitem = itemset[1]
-        _contributors = SoleRules.contributors(:lsupport, firstitem, ninstance, miner)
+        item = itemset[1]
+        _contributors = SoleRules.contributors(:lsupport, item, ninstance, miner)
 
         fptree = length(itemset) == 1 ?
-            new(firstitem, nothing, FPTree[], 1, _contributors, nothing) :
-            new(firstitem, nothing,
+            new(item, nothing, FPTree[], 1, _contributors, nothing) :
+            new(item, nothing,
                 FPTree[FPTree(itemset[2:end], ninstance, miner; isroot=false)],
                 1, _contributors, nothing)
 
@@ -65,12 +65,16 @@ mutable struct FPTree
         return fptree
     end
 
-    function FPTree(pbase::ConditionalPatternBase, miner::ARuleMiner)
-        fptree = FPTree()
+    function FPTree(itemset::EnhancedItemset)
+        item, _contributors = first(itemset)
+        fptree = length(itemset) == 1 ?
+            new(item, nothing, FPTree[], 1, _contributors, nothing) :
+            new(item, nothing, FPTree[FPTree(itemset[2:end]), miner],
+                1, _contributors, nothing)
 
-        for enhanceditemset in pbase
-            continue
-        end
+        map(child -> parent!(child, fptree), children(fptree))
+
+        return fptree
     end
 end
 
@@ -218,6 +222,10 @@ struct HeaderTable
     items::Vector{Item} # vector of Items, sorted decreasingly by global support
     linkage::Dict{Item,Union{Nothing,FPTree}} # Item -> FPTree internal node association
 
+    function HeaderTable()
+        new(Item[], Dict{Item,Union{Nothing,FPTree}}())
+    end
+
     function HeaderTable(items::Vector{<:Item}, fptseed::FPTree)
         # make an empty htable, whose entries are `Item` objects, in `items`
         htable = new(items, Dict{Item,Union{Nothing,FPTree}}([
@@ -258,7 +266,14 @@ items(htable::HeaderTable) = htable.items
 linkage(htable::HeaderTable, item::Item) = htable.linkage[item]
 
 """$(doc_htable_setters)"""
-linkage!(htable::HeaderTable, item::Item, fptree::FPTree) = htable.linkage[item] = fptree
+function linkage!(htable::HeaderTable, item::Item, fptree::FPTree)
+    htitems = items(htable)
+    if !(item in htitems)
+        push!(htitems, item)
+    end
+
+    htable.linkage[item] = fptree
+end
 
 """
     function follow(htable::HeaderTable, item::Item)::Union{Nothing,FPTree}
@@ -293,6 +308,13 @@ function link!(htable::HeaderTable, fptree::FPTree)
         error("Error trying to establish a linkage between HeaderTable and an object " *
             "of type $(typeof(arrival)).")
     end
+end
+
+# check if `htable` internal state is correct, that is, its itemsets are sorted decreasingly
+# by global support.
+function checksanity!(htable::HeaderTable, miner::ARuleMiner)::Bool
+    sort(ite)
+    error("This is not implemented yet")
 end
 
 doc_fptree_push = """
@@ -340,7 +362,7 @@ function Base.push!(
         return
     end
 
-    item = convert(Item, itemset)
+    item = first(itemset)
     _contributors = contributors(:lsupport, item, ninstance, miner)
 
     # check if a subtree whose content is the first item in `itemset` already exists
@@ -365,26 +387,39 @@ function Base.push!(
     addcontributors!(subfptree, _contributors)
 
     # and stretch the link coming out from `item` in `htable`, to consider the new child
-    link!(htable, subfptree)
+    if !isnothing(htable)
+        link!(htable, subfptree)
+    end
 end
 
-"""$(doc_fptree_push)"""
-function Base.push!(
+Base.push!(
     fptree::FPTree,
-    itemset::EnhancedItemset,
+    itemsets::Vector{Itemset},
     ninstance::Int64,
     miner::ARuleMiner;
+    htable::Union{Nothing,HeaderTable}=nothing
+) = [push!(fptree, itemset, ninstance, miner; htable=htable) for itemset in itemsets]
+
+# TODO: the following is almost identical to the dispatch for `Itemset`s;
+# just change
+# - how contributors is computed (in one chase, using `contributors` and in this
+#   case by accessing the `EnhancedItemset`).
+# - make ninstance facultative (it is not needed when using enhanced itemsets)
+# The dispatch that takes a collection instead of a single (enhanced) itemset, should
+# consider itemsets::Vector{T} where {T <: Union{EnhancedItemset,Itemset}}
+function Base.push!(
+    fptree::FPTree,
+    enhanceditemset::EnhancedItemset;
     htable::Union{Nothing,HeaderTable}=nothing,
 )
     # end of push case
-    if length(itemset) == 0
+    if length(enhanceditemset) == 0
         return
     end
-    # TODO: rewrite this for Enhanced itemsets case
-    item = convert(Item, itemset)
-    _contributors = contributors(:lsupport, item, ninstance, miner)
 
-    # check if a subtree whose content is the first item in `itemset` already exists
+    item, _contributors = first(enhanceditemset)
+
+    # check if a subtree whose content is the first item in `enhanceditemset` already exists
     for child in children(fptree)
         if content(child) == item
             # update the current fptree count and contributors array
@@ -394,50 +429,58 @@ function Base.push!(
             addcontributors!(child, _contributors)
 
             # recursively create a subtree, then end
-            push!(child, itemset[2:end], ninstance, miner; htable=htable)
+            push!(child, enhanceditemset[2:end]; htable=htable)
             return
         end
     end
 
     # if no subtree exists, create a new one
-    subfptree = FPTree(itemset, ninstance, miner; isroot=false)
+    subfptree = FPTree(enhanceditemset)
     children!(fptree, subfptree)
     addcount!(subfptree, 1)
     addcontributors!(subfptree, _contributors)
 
     # and stretch the link coming out from `item` in `htable`, to consider the new child
-    link!(htable, subfptree)
+    if !isnothing(htable)
+        link!(htable, subfptree)
+    end
 end
 
 """$(doc_fptree_push)"""
 Base.push!(
     fptree::FPTree,
-    itemsets::Vector{T},
-    ninstance::Int64,
-    miner::ARuleMiner;
+    enhanceditemsets::ConditionalPatternBase;
     htable::Union{Nothing,HeaderTable}=nothing
-) where {T <: Union{Itemset, EnhancedItemset}} = [push!(
-    fptree, itemset, ninstance, miner; htable=htable) for itemset in itemsets]
+) = [push!(fptree, itemset; htable=htable) for itemset in enhanceditemsets]
 
+"""
+    Base.reverse(htable::HeaderTable)
+
+Iterator on `htable` [`items`](@ref).
+
+See also [`HeaderTable`](@ref), [`Item`](@ref), [`items`](@ref).
+"""
 Base.reverse(htable::HeaderTable) = reverse(items(htable))
 
 """
-    patternbase(item::Item, htable::HeaderTable)::ConditionalPatternBase
+    patternbase(item::Item, htable::HeaderTable, miner::ARuleMiner)::ConditionalPatternBase
 
 Retrieve the conditional pattern base of `fptree` based on `item`.
 
 The conditional pattern based on a [`FPTree`](@ref) is the set of all the paths from the
-tree root to nodes containing `item` (not included).
-
-Thinking about the modal generalization of [`fpgrowth`](@ref), you can see each collected
-path to be an "enhanced [`Itemset`](@ref)", where each [`Item`](@ref) is associated with
-a [`WorldsMask`](@ref), given by the minimum of its [`contributors`](@ref) and the ones of
+tree root to nodes containing `item` (not included). Each of these paths is represented
+by an [`EnhancedItemset`](@ref), where each [`Item`](@ref) is associated with a
+[`WorldsMask`](@ref), given by the minimum of its [`contributors`](@ref) and the ones of
 `item`.
 
-See also [`contributors`](@ref), [`fpgrowth`](@ref), [`FPTree`](@ref), [`Item`](@ref),
+The [`EnhancedItemset`](@ref)s in the returned [`ConditionalPatternBase`](@ref) are sorted
+decreasingly by [`gsupport`](@ref), as memoized in `miner`.
+
+See also [`ARuleMiner`](@ref), [`ConditionalPatternBase`](@ref), [`contributors`](@ref),
+[`EnhancedItemset`](@ref), [`fpgrowth`](@ref), [`FPTree`](@ref), [`Item`](@ref),
 [`Itemset`](@ref), [`WorldsMask`](@ref).
 """
-function patternbase(item::Item, htable::HeaderTable)
+function patternbase(item::Item, htable::HeaderTable, miner::ARuleMiner)
     # think a pattern base as a vector of vector of itemsets (a vector of vector of items);
     # the reason why the type is explicited differently here, is that every item must be
     # associated with a specific WorldsMask to guarantee correctness.
@@ -461,12 +504,49 @@ function patternbase(item::Item, htable::HeaderTable)
             ancestorfpt = parent(ancestorfpt)
         end
 
-        # before following the linkage, push the collected "enhanced Itemset"
+        # before following the linkage, push the collected enhanced itemset;
+        # items inside the itemset are sorted decreasingly by global support
+        sort!(enhanceditemset, by=t -> getglobalmemo(
+            miner, (:gsupport, first(t))), rev=true)
         push!(_patternbase, enchanceditemset)
         fptree = linkage(fptree)
     end
 
+    # WARNING: TODO: elements in `_patternbase` that are not frequent enough should be
+    # filtered out here
+
     return _patternbase
+end
+
+"""
+    function projection(
+        pbase::ConditionalPatternBase;
+        miner::Union{Nothing,ARuleMiner}=nothing
+    )
+
+Return respectively a [`FPTree`](@ref) and a [`HeaderTable`](@ref) starting from `pbase`.
+It is reccomended to also provide an [`ARuleMiner`](@ref) to guarantee the generated
+header table internal state is OK, that is, its items are sorted decreasingly by
+[`gsupport`](@ref).
+
+See also [`ConditionalPatternBase`](@ref), [`FPTree`](@ref), [`gsupport`](@ref),
+[`HeaderTable`](@ref).
+"""
+function projection(
+    pbase::ConditionalPatternBase;
+    miner::Union{Nothing,ARuleMiner}=nothing
+)
+    fptree = FPTree()
+    htable = HeaderTable()
+    push!(fptree, pbase; htable=htable)
+
+    if !isnothing(miner)
+        checksanity!(htable, miner)
+    else
+        @warn "Mining structure not provided. Correctness is not guaranteed."
+    end
+
+    return fptree, htable
 end
 
 ############################################################################################
@@ -539,10 +619,10 @@ function fpgrowth(;
 
         _allinstancespush!(fptree, ninstance_toitemsets_sorted, _ninstances, miner, htable)
 
-        return fptree, htable
+        # return fptree, htable DEBUG: for testing; remove this after debugging
 
         # call main logic
-        # _fpgrowth_kernel(fptree, htable, miner, Itemset())
+        _fpgrowth_kernel(fptree, htable, miner, Itemset())
     end
 
     function _fpgrowth_kernel(
@@ -558,10 +638,23 @@ function fpgrowth(;
             push!(freqitems(miner), (combine(leftout_items, survivor_items)|>collect)...)
         else
             for item in reverse(htable)
-                # conditional pattern base is a vector of "enhanced" itemsets, that is,
+                # a (conditional) pattern base is a vector of "enhanced" itemsets, that is,
                 # itemsets whose items are paired with a contributors vector.
-                conditional_patternbase = patternbase(item, htable)
+                _patternbase = patternbase(item, htable, miner)
 
+                # A new FPTree is built starting from just the conditional pattern base;
+                # note that a header table is associated with the new fptree.
+                # WARNING: `conditional_htable` internal state might be corrupted;
+                # implement and invoke a method called `checksanity!` here.
+                conditional_fptree, conditional_htable =
+                    projection(_patternbase; miner=miner)
+
+                # if the new fptree is not empty, call this recursively, considering `item`
+                # as a leftout item.
+                if children(conditional_fptree) > 0
+                    _fpgrowth_kernel(conditional_fptree, conditional_htable, miner,
+                        vcat(leftout_items, item))
+                end
             end
         end
     end

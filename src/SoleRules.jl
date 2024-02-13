@@ -73,11 +73,11 @@ export content!, parent!, children!, count!, addcount!, contributors!, addcontri
 export islist, retrieveall
 
 export HeaderTable, items
-export linkage, linkage!, follow, link! # common between FPTree and HeaderTable
+export linkage, linkage!, follow, link! # dispatches for both FPTree and HeaderTable
 export patternbase
 export fpgrowth, @fpoptimize
 
-include("utils.jl")
+include("utils.jl") # IDEA: move this in SoleData
 
 export equicut, quantilecut
 export make_conditions
