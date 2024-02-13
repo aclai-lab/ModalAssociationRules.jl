@@ -18,7 +18,7 @@ Main:
     ✔ HeaderTable with link! and follow @done(24-02-10 21:13)
     ✔ FPTree Base.push! overloading @done(24-02-10 21:35)
     ✔ Modal FPTree (see contributors) @done(24-02-12 02:30)
-    ☐ consider `contributors` hash when following a link from an header table
+    ✔ pattern base constructor (enhanced itemset type, conditional pattern base type) @done(24-02-13 12:51)
     ☐ packing simultaneous FPTree and HeaderTable construction, then follow the algorithm described in the thesis "Algorithm for association rules mining from modal, temporal, spatial datasets"
 
 
@@ -30,6 +30,7 @@ Generic:
   ☐ override Base.show for itemsets and association rules
   ☐ measures inside an ARuleMiner should be unique
   ☐ miner.alphbaet should be renamed to represent a vector of item
+  ☐ Base.push!(fptree::FPTree etc...) dispatches for `Itemset` and `EnhancedItemset` are very similar... think about avoid repetitions
 
 Optimizations:
   ☐ miner.alphabet should be treated as a generator 

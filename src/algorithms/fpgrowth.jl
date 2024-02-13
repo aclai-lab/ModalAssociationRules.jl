@@ -64,6 +64,14 @@ mutable struct FPTree
 
         return fptree
     end
+
+    function FPTree(pbase::ConditionalPatternBase, miner::ARuleMiner)
+        fptree = FPTree()
+
+        for enhanceditemset in pbase
+            continue
+        end
+    end
 end
 
 doc_fptree_getters = """
@@ -287,11 +295,27 @@ function link!(htable::HeaderTable, fptree::FPTree)
     end
 end
 
-"""
-    function Base.push!(fptree::FPTree, itemset::Itemset, miner::ARuleMiner)
-    function Base.push!(fptree::FPTree, itemsets::Vector{Itemset}, miner::ARuleMiner)
+doc_fptree_push = """
+    function Base.push!(
+        fptree::FPTree,
+        itemset::Itemset,
+        ninstance::Int64,
+        miner::ARuleMiner;
+        htable::Union{Nothing,HeaderTable}=nothing
+    )
 
-Push one or more [`Itemset`](@ref)s to an [`FPTree`](@ref).
+    function Base.push!(
+        fptree::FPTree,
+        itemset::EnhancedItemset,
+        ninstance::Int64,
+        miner::ARuleMiner;
+        htable::Union{Nothing,HeaderTable}=nothing
+    )
+
+    function Base.push!(fptree::FPTree, itemsets::Vector{T}, miner::ARuleMiner) where
+        {T <: Union{Itemset, EnhancedItemset}}
+
+Push one or more [`Itemset`](@ref)s/[`EnhancedItemset`](@ref) to an [`FPTree`](@ref).
 If an [`HeaderTable`](@ref) is provided, it is leveraged to develop internal links.
 
 !!! warning
@@ -299,8 +323,11 @@ If an [`HeaderTable`](@ref) is provided, it is leveraged to develop internal lin
     [`Itemset`](@ref)s provided should be sorted decreasingly by [`gsupport`](@ref).
     By default, to improve performances, this check is not performed inside this method.
 
-See also [`FPTree`](@ref), [`gsupport`](@ref), [`HeaderTable`](@ref), [`Itemset`](@ref).
+See also [`EnhancedItemset`](@ref), [`FPTree`](@ref), [`gsupport`](@ref),
+[`HeaderTable`](@ref), [`Itemset`](@ref).
 """
+
+"""$(doc_fptree_push)"""
 function Base.push!(
     fptree::FPTree,
     itemset::Itemset,
@@ -340,13 +367,107 @@ function Base.push!(
     # and stretch the link coming out from `item` in `htable`, to consider the new child
     link!(htable, subfptree)
 end
+
+"""$(doc_fptree_push)"""
+function Base.push!(
+    fptree::FPTree,
+    itemset::EnhancedItemset,
+    ninstance::Int64,
+    miner::ARuleMiner;
+    htable::Union{Nothing,HeaderTable}=nothing,
+)
+    # end of push case
+    if length(itemset) == 0
+        return
+    end
+    # TODO: rewrite this for Enhanced itemsets case
+    item = convert(Item, itemset)
+    _contributors = contributors(:lsupport, item, ninstance, miner)
+
+    # check if a subtree whose content is the first item in `itemset` already exists
+    for child in children(fptree)
+        if content(child) == item
+            # update the current fptree count and contributors array
+            addcount!(child, 1)
+
+            # update contributors (if `fptree` is not the main empty root)
+            addcontributors!(child, _contributors)
+
+            # recursively create a subtree, then end
+            push!(child, itemset[2:end], ninstance, miner; htable=htable)
+            return
+        end
+    end
+
+    # if no subtree exists, create a new one
+    subfptree = FPTree(itemset, ninstance, miner; isroot=false)
+    children!(fptree, subfptree)
+    addcount!(subfptree, 1)
+    addcontributors!(subfptree, _contributors)
+
+    # and stretch the link coming out from `item` in `htable`, to consider the new child
+    link!(htable, subfptree)
+end
+
+"""$(doc_fptree_push)"""
 Base.push!(
     fptree::FPTree,
-    itemsets::Vector{Itemset},
+    itemsets::Vector{T},
     ninstance::Int64,
     miner::ARuleMiner;
     htable::Union{Nothing,HeaderTable}=nothing
-) = [push!(fptree, itemset, ninstance, miner; htable=htable) for itemset in itemsets]
+) where {T <: Union{Itemset, EnhancedItemset}} = [push!(
+    fptree, itemset, ninstance, miner; htable=htable) for itemset in itemsets]
+
+Base.reverse(htable::HeaderTable) = reverse(items(htable))
+
+"""
+    patternbase(item::Item, htable::HeaderTable)::ConditionalPatternBase
+
+Retrieve the conditional pattern base of `fptree` based on `item`.
+
+The conditional pattern based on a [`FPTree`](@ref) is the set of all the paths from the
+tree root to nodes containing `item` (not included).
+
+Thinking about the modal generalization of [`fpgrowth`](@ref), you can see each collected
+path to be an "enhanced [`Itemset`](@ref)", where each [`Item`](@ref) is associated with
+a [`WorldsMask`](@ref), given by the minimum of its [`contributors`](@ref) and the ones of
+`item`.
+
+See also [`contributors`](@ref), [`fpgrowth`](@ref), [`FPTree`](@ref), [`Item`](@ref),
+[`Itemset`](@ref), [`WorldsMask`](@ref).
+"""
+function patternbase(item::Item, htable::HeaderTable)
+    # think a pattern base as a vector of vector of itemsets (a vector of vector of items);
+    # the reason why the type is explicited differently here, is that every item must be
+    # associated with a specific WorldsMask to guarantee correctness.
+    _patternbase = ConditionalPatternBase([])
+
+    # follow horizontal references starting from `htable`;
+    # for each reference, collect all the ancestors keeping a WorldsMask which, at each
+    # position, is the minimum between the value in reference's mask and the new node one.
+    fptree = linkage(htable, item)
+    fptcontributors = contributors(fptree)
+
+    while !isnothing(fptree)
+        enchanceditemset = EnhancedItemset([])
+
+        ancestorfpt = parent(fptree)
+        while !isnothing(content(ancestorfpt))
+            # prepend! instead of push! because we must keep the top-down order of items
+            # in a path, but we are visiting a branch from bottom upwards.
+            prepend!(enchanceditemset, (content(fptree),
+                merge(minimum, fptcontributors, contributors(ancestorfpt))))
+            ancestorfpt = parent(ancestorfpt)
+        end
+
+        # before following the linkage, push the collected "enhanced Itemset"
+        push!(_patternbase, enchanceditemset)
+        fptree = linkage(fptree)
+    end
+
+    return _patternbase
+end
 
 ############################################################################################
 #### Main FP-Growth logic ##################################################################
@@ -430,21 +551,19 @@ function fpgrowth(;
         miner::ARuleMiner,
         leftout_items::Itemset
     )
+        # if `fptree` contains only one path (hence, it can be considered a linked list),
+        # then combine all the Itemset collected from previous step with the remained ones.
         if islist(fptree)
             survivor_items = retrieveall(fptree)
             push!(freqitems(miner), (combine(leftout_items, survivor_items)|>collect)...)
         else
+            for item in reverse(htable)
+                # conditional pattern base is a vector of "enhanced" itemsets, that is,
+                # itemsets whose items are paired with a contributors vector.
+                conditional_patternbase = patternbase(item, htable)
 
+            end
         end
-
-        # if fptree only contains a single path, then combine all the possible itemsets
-        # if issinglepath(fptree)
-        #   pathitems = collectitems(fptree)
-        #   map(itemset -> push!(freqitems(miner), itemset),
-        #       combinations(Itemset([pattern, pathitems])))
-        # else
-        #   get the TODO...
-
     end
 
     return _fpgrowth_preamble

@@ -26,15 +26,17 @@ include("core.jl")
 export Item
 export Itemset, toformula
 
+export Threshold
+export WorldsMask, EnhancedItemset, ConditionalPatternBase
+
 export ARule
 export antecedent, consequent
 
-export Threshold
 export ConstrainedMeasure, islocalof, isglobalof
 export ARMSubject
-export LmeasMemoKey, LmeasMemo
+export LmeasMemoKey, LmeasMemo, Contributors
 export GmeasMemoKey, GmeasMemo
-export WorldsMask, Contributors
+export Contributors
 
 export ARuleMiner
 export dataset, algorithm
@@ -72,6 +74,7 @@ export islist, retrieveall
 
 export HeaderTable, items
 export linkage, linkage!, follow, link! # common between FPTree and HeaderTable
+export patternbase
 export fpgrowth, @fpoptimize
 
 include("utils.jl")

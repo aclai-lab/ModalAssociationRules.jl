@@ -21,7 +21,7 @@ In the context of association rule mining, we want to work with interesting
 [`Itemset`](@ref)s: how much interesting is an [`Itemset`](@ref) is established through
 specific meaningfulness measures such as [`lsupport`](@ref) and [`gsupport`](@ref).
 """
-const Itemset = Vector{Item}
+const Itemset = Vector{<:Item}
 Itemset(item::Item) = Itemset([item])
 Itemset(itemsets::Vector{Itemset}) = Itemset.([union(itemsets...)...])
 
@@ -44,6 +44,42 @@ function Base.convert(::Type{Item}, itemset::Itemset)::Item
     return itemset[1]
 end
 
+# See meaningfulness measures section.
+# A ConstrainedMeasure is a tuple shaped as (global measure, local threshold, global threshold)
+"""
+    const Threshold = Float64
+
+Threshold value for meaningfulness measures.
+"""
+const Threshold = Float64
+
+"""
+    const WorldsMask = Vector{Int64}
+
+See also [`Contributors`](@ref).
+"""
+const WorldsMask = Vector{Int64}
+
+"""
+    const EnhancedItemset = Tuple{Item,WorldsMask}
+
+"Enhanced" representation of a vector of [`Itemset`](@ref), in which each [`Item`](@ref) is
+associated to a specific [`WorldsMask`](@ref).
+
+See also [`Item`](@ref), [`Itemset`](@ref), [`WorldsMask`](@ref).
+"""
+const EnhancedItemset = Vector{<:Tuple{<:Item,WorldsMask}}
+
+"""
+    const ConditionalPatternBase = Vector{Vector{EnhancedItemset}}
+
+This is needed to implement [`fpgrowth`](@ref) algorithm
+[as described here](https://www.cs.sfu.ca/~jpei/publications/sigmod00.pdf).
+
+See also [`fpgrowth`](@ref).
+"""
+const ConditionalPatternBase = Vector{EnhancedItemset}
+
 """
     const ARule = Tuple{Itemset,Itemset}
 
@@ -61,15 +97,6 @@ See also [`gconfidence`](@ref), [`lconfidence`](@ref), [`Itemset`](@ref).
 const ARule = Tuple{Itemset,Itemset} # NOTE: see SoleLogics.Rule
 antecedent(rule::ARule) = first(rule)
 consequent(rule::ARule) = last(rule)
-
-# See meaningfulness measures section.
-# A ConstrainedMeasure is a tuple shaped as (global measure, local threshold, global threshold)
-"""
-    const Threshold = Float64
-
-Threshold value for meaningfulness measures.
-"""
-const Threshold = Float64
 
 """
     const ConstrainedMeasure = Tuple{Function, Threshold, Threshold}
@@ -149,6 +176,18 @@ See also [`LmeasMemoKey`](@ref), [`ARMSubject`](@ref).
 const LmeasMemo = Dict{LmeasMemoKey,Float64}
 
 """
+Structure for storing association between a local measure, applied on a certain
+[`ARMSubject`](@ref) on a certain [`LogicalInstance`](@ref), and a vector of integers
+representing the worlds for which the measure is greater than a certain threshold.
+
+This type is intended to be used inside an [`ARuleMiner`](@ref) `info` named tuple, to
+support the execution of, for example, [`fpgrowth`](@ref) algorthm.
+
+See also [`LmeasMemoKey`](@ref), [`WorldMask`](@ref)
+"""
+const Contributors = Dict{LmeasMemoKey, WorldsMask}
+
+"""
     const GmeasMemoKey = Tuple{Symbol,ARMSubject}
 
 Key of a [`GmeasMemo`](@ref) dictionary.
@@ -170,23 +209,6 @@ to be used as a [memoization](https://en.wikipedia.org/wiki/Memoization) structu
 See also [`GmeasMemoKey`](@ref), [`ARMSubject`](@ref).
 """
 const GmeasMemo = Dict{GmeasMemoKey,Float64} # global measure of an itemset/arule => value
-
-"""
-See also [`Contributors`](@ref).
-"""
-const WorldsMask = Vector{Int64}
-
-"""
-Structure for storing association between a local measure, applied on a certain
-[`ARMSubject`](@ref) on a certain [`LogicalInstance`](@ref), and a vector of integers
-representing the worlds for which the measure is greater than a certain threshold.
-
-This type is intended to be used inside an [`ARuleMiner`](@ref) `info` named tuple, to
-support the execution of, for example, [`fpgrowth`](@ref) algorthm.
-
-See also [`LmeasMemoKey`](@ref), [`WorldMask`](@ref)
-"""
-const Contributors = Dict{LmeasMemoKey, WorldsMask}
 
 ############################################################################################
 #### Association rule miner machines #######################################################
