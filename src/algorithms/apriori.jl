@@ -23,14 +23,13 @@ function apriori(;
             for item in candidates
                 interesting = true
 
-                # TODO: this could be a list comprehension
+                # IDEA: this could be a list comprehension
                 # frequents = [candidate
                 #    for (gmeas_algo, lthreshold, gthreshold) in item_meas(miner)
                 #        for candidate in candidates
                 #        if gmeas_algo(item, X, lthreshold, miner=miner) >= gthreshold
                 #    ]
-                for meas in item_meas(miner)
-                    (gmeas_algo, lthreshold, gthreshold) = meas
+                for (gmeas_algo, lthreshold, gthreshold) in item_meas(miner)
                     if gmeas_algo(item, X, lthreshold, miner=miner) < gthreshold
                         interesting = false
                         break
@@ -45,6 +44,10 @@ function apriori(;
                     push!(nonfrequents, item)
                 end
             end
+
+            # TODO: unique! here?
+            unique!(frequents)
+            sort!(frequents, by=t -> getglobalmemo(miner, (:gsupport, t)) , rev=true)
 
             # save frequent and nonfrequent itemsets inside miner structure
             push!(freqitems(miner), frequents...)

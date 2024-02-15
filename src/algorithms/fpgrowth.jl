@@ -24,7 +24,7 @@ mutable struct FPTree
     count::Int64                        # number of equal Items this node represents
 
     const contributors::WorldsMask      # worlds contributing to this node
-    linkages::Union{Nothing,FPTree}      # link to another FPTree root
+    linkages::Union{Nothing,FPTree}     # link to another FPTree root
 
     # empty constructor
     function FPTree()
