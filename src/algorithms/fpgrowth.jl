@@ -565,8 +565,6 @@ function patternbase(
         fptree = linkages(fptree)
     end
 
-    println("Pattern base length: $(length(_patternbase)) ...")
-
     # filter out unfrequent itemsets from a pattern base
     # IDEA: allocating two dictionaries here, instead of a single Dict with `Pair` values,
     # is a waste. Is there a way to obtain the same effect using no immutable structures?
@@ -574,8 +572,6 @@ function patternbase(
     localbouncer = DefaultDict{Item,WorldsMask}( # record of respected local thresholds
         zeros(Int64, _fptcontributors_length))
     ispromoted = Dict{Item,Bool}([])          # winner items, which will compose the pbase
-
-    println("Pattern base at last $(length(_patternbase)) ...")
 
     # collection phase
     for itemset in _patternbase         # for each Vector{Tuple{Item,Int64,WorldsMask}}
