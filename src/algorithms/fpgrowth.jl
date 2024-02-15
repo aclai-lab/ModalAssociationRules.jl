@@ -332,7 +332,7 @@ end
 # by global support.
 function checksanity!(htable::HeaderTable, miner::ARuleMiner)::Bool
     return issorted(items(htable),
-        by=t -> getglobalmemo(miner, (:gsupport, Itemset(t))), rev=true)
+        by=t -> globalmemo(miner, (:gsupport, Itemset(t))), rev=true)
 end
 
 doc_fptree_push = """
@@ -559,7 +559,7 @@ function patternbase(
         # Note that, although we are working with enhanced itemsets, the sorting only
         # requires to consider the items inside them (so, the "non-enhanced" part).
         sort!(enhanceditemset,
-            by=t -> getglobalmemo(miner, (:gsupport, Itemset([t |> first]) )), rev=true)
+            by=t -> globalmemo(miner, (:gsupport, Itemset([t |> first]) )), rev=true)
 
         push!(_patternbase, enhanceditemset)
         fptree = linkages(fptree)
@@ -648,11 +648,12 @@ function fpgrowth(;
     verbose::Bool=true,
 )::Function
 
-    function _fpgrowth_preamble(miner::ARuleMiner, X::AbstractDataset) # ::Nothing
+    function _fpgrowth_preamble(miner::ARuleMiner, X::AbstractDataset)::Nothing
         @assert SoleRules.gsupport in reduce(vcat, item_meas(miner)) "FP-Growth requires " *
-            "global support (SoleRules.gsupport) as meaningfulness measure in order to " *
-            "work. Please, add a tuple (SoleRules.gsupport, local support threshold, " *
-            "global support threshold) to miner.item_constrained_measures field."
+            "global support (gsupport) as meaningfulness measure in order to " *
+            "work. Please, add a tuple (gsupport, local support threshold, " *
+            "global support threshold) to miner.item_constrained_measures field.\n" *
+            "Local support is needed too, but it is already considered in the global case."
 
         # retrieve local support threshold, as this is necessary later to filter which
         # frequent items are meaningful on each instance.
@@ -678,8 +679,8 @@ function fpgrowth(;
             ninstance_toitemsets_sorted[i] = reduce(vcat, sort([
                     itemset
                     for itemset in frequents
-                    if getlocalmemo(miner, (:lsupport, itemset, i)) > lsupport_threshold
-                ], by=t -> getglobalmemo(miner, (:gsupport, t)), rev=true)
+                    if localmemo(miner, (:lsupport, itemset, i)) > lsupport_threshold
+                ], by=t -> globalmemo(miner, (:gsupport, t)), rev=true)
             )
         end
 
@@ -731,29 +732,4 @@ function fpgrowth(;
     end
 
     return _fpgrowth_preamble
-end
-
-############################################################################################
-#### Specific utilities ####################################################################
-############################################################################################
-
-"""
-    macro fpoptimize(ex)
-
-Enable [`ARuleMiner`](@ref) contructor to handle [`fpgrowth`](@ref) efficiently by
-leveraging a [`Contributors`](@ref) structure.
-
-# Usage
-julia> miner = @fpoptimize ARuleMiner(X, apriori(), manual_alphabet, _item_meas, _rule_meas)
-
-See also [`ARuleMiner`](@ref), [`Contributors`](@ref), [`fpgrowth`](@ref).
-"""
-macro fpoptimize(ex)
-    # Extracting function name and arguments
-    func, args = ex.args[1], ex.args[2:end]
-
-    # Constructing the modified expression with kwargs
-    return esc(:($(func)($(args...); info=(; contributors=Contributors([])))))
-
-    return new_ex
 end

@@ -50,38 +50,7 @@ function prune(candidates::Vector{Itemset}, frequents::Vector{Itemset}, k::Integ
     )
 end
 
-doc_getcontributors = """
-Consider all the contributors of an [`Item`](@ref), that is, all the worlds for which the
-[`lsupp`](@ref) is greater than a certain [`Threshold`](@ref).
 
-Return a vector whose size is the number of worlds, and the content is 0 if the local
-threshold is not overpassed, 1 otherwise.
-
-See also [`Item`](@ref), [`lsupp`](@ref), [`Threshold`](@ref).
-"""
-
-"""$(doc_getcontributors)"""
-function contributors(
-    measname::Symbol,
-    item::Item,
-    ninstance::Int64,
-    miner::ARuleMiner
-)::WorldsMask
-    return contributors((measname, Itemset(item), ninstance), miner)
-end
-"""$(doc_getcontributors)"""
-function contributors(
-    memokey::LmeasMemoKey,
-    miner::ARuleMiner
-)::WorldsMask
-    try
-        info(miner, :contributors)[memokey]
-    catch
-        error("Error when getting contributors of $(measname) applied to  $(item) at " *
-        "instance $(ninstance). Please, provide `info=(;contributors=Contributors([]))` " *
-        "when instanciating the miner.")
-    end
-end
 
 ############################################################################################
 #### Association rules #####################################################################

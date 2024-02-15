@@ -37,9 +37,9 @@ Generic:
   ☐ miner.alphbaet should be renamed to represent a vector of item
   ☐ Base.push!(fptree::FPTree etc...) dispatches for `Itemset` and `EnhancedItemset` are very similar... think about avoid repetitions
     # check push! docstrings
-  ☐ make more macros like @fpoptimize (e.g., to handle mining timing). This is not trivial, as these macros can be chained
+  ☐ make more macros like @modalminer (e.g., to handle mining timing). This is not trivial, as these macros can be chained
   ☐ show for Item, Itemset, EnhancedItemset, ARuleMiner, FPTree, HeaderTable
-  ☐ sort/issort by getglobalmemo, managing correct casting from Item, Itemset and EnhancedItemset
+  ☐ sort/issort by globalmemo, managing correct casting from Item, Itemset and EnhancedItemset
 
 Optimizations:
   ☐ miner.alphabet should be treated as a generator 

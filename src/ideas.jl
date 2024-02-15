@@ -10,13 +10,13 @@ function _lmeas_decorator(
     memokey = LmeasMemoKey((Symbol(lsupport), itemset, i_instance)) # NOTE: symbol should be an argument to
 
     # leverage memoization if a miner is provided, and it already computed the measure
-    memoized = getlocalmemo(miner, memokey)
+    memoized = localmemo(miner, memokey)
     if !isnothing(memoized) return memoized end
 
     ans = measlogic(itemset, X, i_instance)
 
     # before returning the measure result, perform memoization
-    setlocalmemo(miner, memokey, ans)
+    localmemo!(miner, memokey, ans)
 
     return ans
 end
@@ -31,13 +31,13 @@ function _gmeas_decorator(
     memokey = GmeasMemoKey((Symbol(gsupport), itemset)) # NOTE: symbol should be an argument to
 
     # leverage memoization if a miner is provided, and it already computed the measure
-    memoized = getglobalmemo(miner, memokey)
+    memoized = globalmemo(miner, memokey)
     if !isnothing(memoized) return memoized end
 
     ans = measlogic(itemset, X)
 
     # before returning the measure result, perform memoization
-    setglobalmemo(miner, memokey, ans)
+    globalmemo!(miner, memokey, ans)
 
     return ans
 end

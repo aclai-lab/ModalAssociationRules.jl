@@ -74,6 +74,10 @@ function Base.convert(::Type{Itemset}, enhanceditemset::EnhancedItemset)
     return [first(enhanceditem) for enhanceditem in enhanceditemset]
 end
 
+function Base.convert(::Type{EnhancedItemset}, itemset::Itemset, nworlds::Int64)
+    return [(item, zeros(Int64, nworlds)) for item in itemset]
+end
+
 """
     const ConditionalPatternBase = Vector{Vector{EnhancedItemset}}
 
@@ -313,9 +317,8 @@ struct ARuleMiner
         rule_constrained_measures::Vector{<:ConstrainedMeasure};
         info::NamedTuple = (;)
     )
-        new(X, MiningAlgo(algo), alphabet,
-            item_constrained_measures,
-            rule_constrained_measures,
+        new(X, MiningAlgo(algo), unique(alphabet),
+            item_constrained_measures, rule_constrained_measures,
             Vector{Itemset}([]), Vector{Itemset}([]), Vector{ARule}([]),
             LmeasMemo(), GmeasMemo(), info
         )
@@ -357,11 +360,11 @@ doc_aruleminer_getters = """
     nonfreqitems(miner::ARuleMiner)::Vector{Itemset}
     arules(miner::ARuleMiner)::Vector{ARule}
 
-    getlocalmemo(miner::ARuleMiner)::LmeasMemo
-    getlocalmemo(miner::ARuleMiner, key::LmeasMemoKey)::Float64
+    localmemo(miner::ARuleMiner)::LmeasMemo
+    localmemo(miner::ARuleMiner, key::LmeasMemoKey)::Float64
 
-    getglobalmemo(miner::ARuleMiner)::GmeasMemo
-    getglobalmemo(miner::ARuleMiner, key::GmeasMemoKey)::Float64
+    globalmemo(miner::ARuleMiner)::GmeasMemo
+    globalmemo(miner::ARuleMiner, key::GmeasMemoKey)::Float64
 
     info(miner::ARuleMiner)::NamedTuple
     info(miner::ARuleMiner, key::Symbol)
@@ -373,8 +376,8 @@ doc_aruleminer_setters = """
     setlocalthreshold(miner::ARuleMiner, meas::Function, threshold::Threshold)
     setglobalthreshold(miner::ARuleMiner, meas::Function, threshold::Threshold)
 
-    setlocalmemo(miner::ARuleMiner, key::LmeasMemoKey, val::Float64)
-    setglobalmemo(miner::ARuleMiner, key::GmeasMemoKey, val::Float64)
+    localmemo!(miner::ARuleMiner, key::LmeasMemoKey, val::Float64)
+    globalmemo!(miner::ARuleMiner, key::GmeasMemoKey, val::Float64)
 
 Setters for [`ARuleMiner`](@ref) fields.
 """
@@ -436,23 +439,158 @@ nonfreqitems(miner::ARuleMiner) = miner.nonfreqitems
 arules(miner::ARuleMiner) = miner.arules
 
 """$(doc_aruleminer_getters)"""
-getlocalmemo(miner::ARuleMiner)::LmeasMemo = miner.lmemo
+localmemo(miner::ARuleMiner)::LmeasMemo = miner.lmemo
 """$(doc_aruleminer_getters)"""
-getlocalmemo(miner::ARuleMiner, key::LmeasMemoKey) = get(miner.lmemo, key, nothing)
+localmemo(miner::ARuleMiner, key::LmeasMemoKey) = get(miner.lmemo, key, nothing)
 """$(doc_aruleminer_setters)"""
-setlocalmemo(miner::ARuleMiner, key::LmeasMemoKey, val::Float64) = miner.lmemo[key] = val
+localmemo!(miner::ARuleMiner, key::LmeasMemoKey, val::Float64) = miner.lmemo[key] = val
 
 """$(doc_aruleminer_getters)"""
-getglobalmemo(miner::ARuleMiner)::GmeasMemo = miner.gmemo
+globalmemo(miner::ARuleMiner)::GmeasMemo = miner.gmemo
 """$(doc_aruleminer_getters)"""
-getglobalmemo(miner::ARuleMiner, key::GmeasMemoKey) = get(miner.gmemo, key, nothing)
+globalmemo(miner::ARuleMiner, key::GmeasMemoKey) = get(miner.gmemo, key, nothing)
 """$(doc_aruleminer_setters)"""
-setglobalmemo(miner::ARuleMiner, key::GmeasMemoKey, val::Float64) = miner.gmemo[key] = val
+globalmemo!(miner::ARuleMiner, key::GmeasMemoKey, val::Float64) = miner.gmemo[key] = val
+
+############################################################################################
+#### ARuleMiner machines specializations ###################################################
+############################################################################################
 
 """$(doc_aruleminer_getters)"""
 info(miner::ARuleMiner)::NamedTuple = miner.info
 """$(doc_aruleminer_getters)"""
 info(miner::ARuleMiner, key::Symbol) = getfield(miner.info, key)
+
+"""
+    macro modalminer(ex)
+
+Enable [`ARuleMiner`](@ref) contructor to handle [`fpgrowth`](@ref) efficiently by
+leveraging a [`Contributors`](@ref) structure.
+
+# Usage
+julia> miner = @modalminer ARuleMiner(X, apriori(), manual_alphabet, _item_meas, _rule_meas)
+
+See also [`ARuleMiner`](@ref), [`Contributors`](@ref), [`fpgrowth`](@ref).
+"""
+macro modalminer(ex)
+    # Extracting function name and arguments
+    func, args = ex.args[1], ex.args[2:end]
+
+    # Constructing the modified expression with kwargs
+    return esc(:($(func)($(args...); info=(; contributors=Contributors([])))))
+
+    return new_ex
+end
+
+doc_getcontributors = """
+    function contributors(
+        measname::Symbol,
+        item::Item,
+        ninstance::Int64,
+        miner::ARuleMiner
+    )::WorldsMask
+
+    function contributors(
+        measname::Symbol,
+        itemset::Itemset,
+        ninstance::Int64,
+        miner::ARuleMiner
+    )::WorldsMask
+
+    function contributors(
+        memokey::LmeasMemoKey,
+        miner::ARuleMiner
+    )::WorldsMask
+
+Consider all the contributors of an [`Item`](@ref), that is, all the worlds for which the
+[`lsupp`](@ref) is greater than a certain [`Threshold`](@ref).
+
+Return a vector whose size is the number of worlds, and the content is 0 if the local
+threshold is not overpassed, 1 otherwise.
+
+!!! warning
+    This method requires the [`ARuleMiner`](@ref) to be declared using
+    [`@modalminer`](@ref).
+
+See also [`Item`](@ref), [`LmeasMemoKey`](@ref), [`lsupp`](@ref), [`@modalminer`](@ref),
+[`Threshold`](@ref), [`WorldsMask`](@ref).
+"""
+function contributors(
+    memokey::LmeasMemoKey,
+    miner::ARuleMiner
+)::WorldsMask
+    try
+        return info(miner, :contributors)[memokey]
+    catch
+        error("Error when getting contributors of $(measname) applied to  $(item) at " *
+        "instance $(ninstance). Please, use @modalminer or provide an " *
+        "`info=(;contributors=Contributors([]))` when instanciating the miner.")
+    end
+end
+function contributors(
+    measname::Symbol,
+    itemset::Itemset,
+    ninstance::Int64,
+    miner::ARuleMiner
+)::WorldsMask
+    return contributors((measname, itemset, ninstance), miner)
+end
+function contributors(
+    measname::Symbol,
+    item::Item,
+    ninstance::Int64,
+    miner::ARuleMiner
+)::WorldsMask
+    return contributors(measname, Itemset(item), ninstance, miner)
+end
+
+"""
+    function contributors!(miner::ARuleMiner, key::LmeasMemoKey, mask::WorldsMask)
+
+Set a `miner`'s contributors entry.
+
+See also [`ARuleMiner`](@ref), [`LmeasMemoKey`](@ref), [`@modalminer`](@ref),
+[`WorldsMask`](@ref).
+"""
+function contributors!(miner::ARuleMiner, key::LmeasMemoKey, mask::WorldsMask)
+    try
+        info(miner, :contributors)[key] = mask
+    catch
+        error("Please, use @modalminer or provide an " *
+        "`info=(;contributors=Contributors([]))` when instanciating the miner.")
+    end
+end
+
+"""
+    function mergecontributors(miner::ARuleMiner, key::LmeasMemoKey)
+
+Consider all the [`contributors`](@ref) of an [`ARMSubject`](@ref) on all the instances.
+Sum them up togheter.
+
+If a [`Threshold`](@ref) value is provided, a second boolean value is returned, indicating
+whether the resulting contributors overpasses the local support threshold enough times.
+
+See also [`ARMSubject`](@ref), [`contributors`](@ref), [`Threshold`](@ref).
+"""
+function mergecontributors(
+    itemset::Itemset,
+    miner::ARuleMiner;
+    lthreshold::Union{Nothing,Threshold}=nothing
+)
+    _ninstances = ninstances(dataset(miner))
+    _contributors = sum([contributors(:lsupport, itemset, i, miner) for i in 1:_ninstances])
+
+    if !isnothing(lthreshold)
+        lsupp_integer_threshold = convert(Int64, floor(
+            getlocalthreshold(miner, lsupport) * length(_contributors)
+        ))
+
+        return _contributors, Base.count(
+            x -> x > 0, _contributors) >= lsupp_integer_threshold
+    end
+
+    return _contributors
+end
 
 """
     function mine(miner::ARuleMiner)

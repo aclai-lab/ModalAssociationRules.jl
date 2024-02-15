@@ -45,9 +45,11 @@ export item_meas, rule_meas
 export freqitems, nonfreqitems, arules
 export getlocalthreshold, setlocalthreshold
 export getglobalthreshold, setglobalthreshold
-export getlocalmemo, setlocalmemo
-export getglobalmemo, setglobalmemo
+export localmemo, localmemo!
+export globalmemo, globalmemo!
+
 export info
+export contributors, contributors!, mergecontributors
 
 export mine, apply
 
@@ -56,10 +58,10 @@ include("meaningfulness-measures.jl")
 export lsupport, gsupport
 export lconfidence, gconfidence
 
-include("manipulations.jl")
+include("arulemining-utils.jl")
 
 export combine, prune
-export getcontributors
+export contributors
 export arules_generator
 
 include("algorithms/apriori.jl")
@@ -69,14 +71,14 @@ export apriori
 include("algorithms/fpgrowth.jl")
 
 export FPTree
-export content, parent, children, count, contributors
-export content!, parent!, children!, count!, addcount!, contributors!, addcontributors!
+export content, parent, children, count
+export content!, parent!, children!, count!, addcount!, addcontributors!
 export islist, retrieveall
 
 export HeaderTable, items
 export link, link!, follow  # dispatches for both FPTree and HeaderTable
 export patternbase
-export fpgrowth, @fpoptimize
+export fpgrowth, @modalminer
 
 include("utils.jl")         # IDEA: move this in SoleData
 

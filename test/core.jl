@@ -28,7 +28,7 @@ manual_alphabet = Vector{Item}([manual_p, manual_q, manual_r,
 _item_meas = [(gsupport, 0.1, 0.1)]
 _rule_meas = [(gconfidence, 0.2, 0.2)]
 
-miner = @fpoptimize ARuleMiner(X, fpgrowth(), manual_alphabet, _item_meas, _rule_meas)
+miner = @modalminer ARuleMiner(X, fpgrowth(), manual_alphabet, _item_meas, _rule_meas)
 
 @testset "ARuleMiner" begin
     @test_nowarn ARuleMiner(X, apriori(), manual_alphabet)
@@ -49,19 +49,19 @@ miner = @fpoptimize ARuleMiner(X, fpgrowth(), manual_alphabet, _item_meas, _rule
     @test arules(miner) == []
 
     _temp_lmemo_key = (:lsupport, freqitems(miner)[1], 1)
-    _temp_lmemo_val = getlocalmemo(miner, _temp_lmemo_key)
+    _temp_lmemo_val = localmemo(miner, _temp_lmemo_key)
     @test  _temp_lmemo_val >= 0.74 && _temp_lmemo_val <= 0.75
-    @test getlocalmemo(miner, (:lsupport, freqitems(miner)[1], 2)) == 1.0
-    @test getlocalmemo(miner, (:lsupport, freqitems(miner)[1], 4)) == 0.0
+    @test localmemo(miner, (:lsupport, freqitems(miner)[1], 2)) == 1.0
+    @test localmemo(miner, (:lsupport, freqitems(miner)[1], 4)) == 0.0
 
-    @test_nowarn setlocalmemo(miner, _temp_lmemo_key, 0.5)
-    @test getlocalmemo(miner, _temp_lmemo_key) == 0.5
+    @test_nowarn localmemo!(miner, _temp_lmemo_key, 0.5)
+    @test localmemo(miner, _temp_lmemo_key) == 0.5
 
     _temp_gmemo_key = (:gsupport, freqitems(miner)[3])
-    @test getglobalmemo(miner, _temp_gmemo_key) == 1.0
+    @test globalmemo(miner, _temp_gmemo_key) == 1.0
 
-    @test_nowarn setglobalmemo(miner, _temp_gmemo_key, 0.0)
-    @test getglobalmemo(miner, _temp_gmemo_key) == 0.0
+    @test_nowarn globalmemo!(miner, _temp_gmemo_key, 0.0)
+    @test globalmemo(miner, _temp_gmemo_key) == 0.0
 
     for _temp_arule in arules_generator(freqitems(miner), miner)
         @test _temp_arule in arules(miner)

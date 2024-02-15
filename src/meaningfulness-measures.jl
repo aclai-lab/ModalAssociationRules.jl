@@ -28,22 +28,22 @@ function lsupport(
 
     # leverage memoization if a miner is provided, and it already computed the measure
     if !isnothing(miner)
-        memoized = getlocalmemo(miner, memokey)
+        memoized = localmemo(miner, memokey)
         if !isnothing(memoized)
             return memoized
         end
     end
 
     # keep track of which worlds contributes to compute local support, then compute it
-    contributor_worlds = WorldsMask([
+    _contributors = WorldsMask([
         check(toformula(itemset), X, i_instance, w)
         for w in allworlds(X, i_instance)
     ])
-    ans = sum(contributor_worlds) / nworlds(X, i_instance)
+    ans = sum(_contributors) / nworlds(X, i_instance)
 
     if !isnothing(miner)
-        setlocalmemo(miner, memokey, ans)
-        info(miner, :contributors)[memokey] = contributor_worlds
+        localmemo!(miner, memokey, ans)
+        info(miner, :contributors)[memokey] = _contributors
     end
 
     return ans
@@ -80,7 +80,7 @@ function gsupport(
 
     # leverage memoization if a miner is provided, and it already computed the measure
     if !isnothing(miner)
-        memoized = getglobalmemo(miner, memokey)
+        memoized = globalmemo(miner, memokey)
         if !isnothing(memoized) return memoized end
     end
 
@@ -89,7 +89,7 @@ function gsupport(
         for i_instance in 1:ninstances(X)]) / ninstances(X)
 
     if !isnothing(miner)
-        setglobalmemo(miner, memokey, ans)
+        globalmemo!(miner, memokey, ans)
     end
 
     return ans
@@ -126,7 +126,7 @@ function lconfidence(
 
     # leverage memoization if a miner is provided, and it already computed the measure
     if !isnothing(miner)
-        memoized = getglobalmemo(miner, memokey)
+        memoized = globalmemo(miner, memokey)
         if !isnothing(memoized) return memoized end
     end
 
@@ -137,7 +137,7 @@ function lconfidence(
         lsupport(_antecedent, logi_instance; miner=miner)
 
     if !isnothing(miner)
-        setlocalmemo(miner, memokey, ans)
+        localmemo!(miner, memokey, ans)
     end
 
     return ans
@@ -174,7 +174,7 @@ function gconfidence(
 
     # leverage memoization if a miner is provided, and it already computed the measure
     if !isnothing(miner)
-        memoized = getglobalmemo(miner, memokey)
+        memoized = globalmemo(miner, memokey)
         if !isnothing(memoized) return memoized end
     end
 
@@ -185,7 +185,7 @@ function gconfidence(
         gsupport(_antecedent, X, threshold; miner=miner)
 
     if !isnothing(miner)
-        setglobalmemo(miner, memokey, ans)
+        globalmemo!(miner, memokey, ans)
     end
 
     return ans
