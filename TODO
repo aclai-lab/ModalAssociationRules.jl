@@ -38,6 +38,7 @@ Generic:
   ☐ Base.push!(fptree::FPTree etc...) dispatches for `Itemset` and `EnhancedItemset` are very similar... think about avoid repetitions
     # check push! docstrings
   ☐ make more macros like @fpoptimize (e.g., to handle mining timing). This is not trivial, as these macros can be chained
+  ☐ show for Item, Itemset, EnhancedItemset, ARuleMiner, FPTree, HeaderTable
 
 Optimizations:
   ☐ miner.alphabet should be treated as a generator 
@@ -54,6 +55,9 @@ Optimizations:
     ✔ prune @done(24-02-08 20:30)
     ✔ arules generation with powerset @done(24-02-08 20:30)
   ✔ contributors-related consts, contributors getter and addcontributors! setter (to implement modal FPTree) @done(24-02-12 02:31)
+
+Global:
+  ☐ make association rule mining a SoleRules submodule
 
 To SoleModels or SoleData:
   ✔ consider feature when binning @done(24-02-02 15:52)

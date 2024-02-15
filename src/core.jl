@@ -21,7 +21,7 @@ In the context of association rule mining, we want to work with interesting
 [`Itemset`](@ref)s: how much interesting is an [`Itemset`](@ref) is established through
 specific meaningfulness measures such as [`lsupport`](@ref) and [`gsupport`](@ref).
 """
-const Itemset = Vector{<:Item}
+const Itemset = Vector{Item}
 Itemset(item::Item) = Itemset([item])
 Itemset(itemsets::Vector{Itemset}) = Itemset.([union(itemsets...)...])
 
@@ -68,7 +68,11 @@ associated to a counter and a specific [`WorldsMask`](@ref).
 
 See also [`Item`](@ref), [`Itemset`](@ref), [`WorldsMask`](@ref).
 """
-const EnhancedItemset = Vector{<:Tuple{<:Item,Integer,WorldsMask}}
+const EnhancedItemset = Vector{Tuple{Item,Integer,WorldsMask}} # TODO Item or <:Item?
+
+function Base.convert(::Type{Itemset}, enhanceditemset::EnhancedItemset)
+    return [first(enhanceditem) for enhanceditem in enhanceditemset]
+end
 
 """
     const ConditionalPatternBase = Vector{Vector{EnhancedItemset}}
@@ -145,14 +149,14 @@ islocalof(::Function, ::Function)::Bool = false
 isglobalof(::Function, ::Function)::Bool = false
 
 """
-    ARMSubject = Union{Itemset,ARule}
+    ARMSubject = Union{ARule,Itemset}
 
 [Memoizable](https://en.wikipedia.org/wiki/Memoization) types for association rule mining
 (ARM).
 
 See also [`GmeasMemo`](@ref), [`LmeasMemo`](@ref).
 """
-const ARMSubject = Union{Itemset,ARule} # memoizable association-rule-mining types
+const ARMSubject = Union{ARule,Itemset} # memoizable association-rule-mining types
 
 """
     const LmeasMemoKey = Tuple{Symbol,ARMSubject,Int64}
@@ -168,8 +172,8 @@ const LmeasMemoKey = Tuple{Symbol,ARMSubject,Int64}
 """
     const LmeasMemo = Dict{LmeasMemoKey,Float64}
 
-Association between a local measure of a [`ARMSubject`](@ref) on a specific dataset instance,
-and its value.
+Association between a local measure of a [`ARMSubject`](@ref) on a specific dataset
+instance, and its value.
 
 See also [`LmeasMemoKey`](@ref), [`ARMSubject`](@ref).
 """
@@ -204,7 +208,8 @@ Association between a global measure of a [`ARMSubject`](@ref) on a dataset, and
 
 The reference to the dataset is not explicited here, since [`GmeasMemo`](@ref) is intended
 to be used as a [memoization](https://en.wikipedia.org/wiki/Memoization) structure inside
-[`ARuleMiner`](@ref) objects, and the latter already knows the dataset they are working with.
+[`ARuleMiner`](@ref) objects, and the latter already knows the dataset they are working
+with.
 
 See also [`GmeasMemoKey`](@ref), [`ARMSubject`](@ref).
 """
@@ -252,7 +257,7 @@ julia> p = Atom(ScalarCondition(UnivariateMin(1), >, -0.5))
 julia> q = Atom(ScalarCondition(UnivariateMin(2), <=, -2.2))
 julia> r = Atom(ScalarCondition(UnivariateMin(3), >, -3.6))
 
-# Prepare some modal atoms using later relationship - see [`SoleLogics.IntervalRelation`](@ref))
+# Prepare modal atoms using later relationship - see [`SoleLogics.IntervalRelation`](@ref))
 julia> lp = box(IA_L)(p)
 julia> lq = diamond(IA_L)(q)
 julia> lr = boxlater(r)
@@ -270,16 +275,16 @@ julia> miner = ARuleMiner(X, apriori(), manual_alphabet)
 julia> miner = ARuleMiner(X, apriori(), manual_alphabet,
     [(gsupport, 0.1, 0.1)], [(gconfidence, 0.2, 0.2)])
 
-# Consider the dataset and the learning algorithm wrapped by `miner` (respectively `X` and `apriori`)
-# Mine the frequent itemsets, that is to say the itemsets for which `item_constrained_measures` are large enough.
-# Then iterate the generator returned by [`mine`](@ref) to enumerate the meaningful association rules.
+# Consider the dataset and learning algorithm wrapped by `miner` (resp., `X` and `apriori`)
+# Mine the frequent itemsets, that is, those for which item measures are large enough.
+# Then iterate the generator returned by [`mine`](@ref) to enumerate association rules.
 julia> for arule in SoleRules.mine(miner)
     println(miner)
 end
 ```
 
-See also  [`ARule`](@ref), [`apriori`](@ref), [`ConstrainedMeasure`](@ref), [`Itemset`](@ref),
-[`GmeasMemo`](@ref), [`LmeasMemo`](@ref), [`MiningAlgo`](@ref).
+See also  [`ARule`](@ref), [`apriori`](@ref), [`ConstrainedMeasure`](@ref),
+[`Itemset`](@ref), [`GmeasMemo`](@ref), [`LmeasMemo`](@ref), [`MiningAlgo`](@ref).
 """
 struct ARuleMiner
     # target dataset

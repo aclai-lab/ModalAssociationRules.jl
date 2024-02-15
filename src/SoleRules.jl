@@ -1,7 +1,7 @@
 module SoleRules
 # Currently, the only topic covered by SoleRules is Association Rules.
 
-import Base.show
+import Base.count, Base.push!, Base.show
 using Combinatorics
 using FunctionWrappers: FunctionWrapper
 using IterTools
@@ -73,11 +73,11 @@ export content!, parent!, children!, count!, addcount!, contributors!, addcontri
 export islist, retrieveall
 
 export HeaderTable, items
-export linkage, linkage!, follow, link! # dispatches for both FPTree and HeaderTable
+export link, link!, follow  # dispatches for both FPTree and HeaderTable
 export patternbase
 export fpgrowth, @fpoptimize
 
-include("utils.jl") # IDEA: move this in SoleData
+include("utils.jl")         # IDEA: move this in SoleData
 
 export equicut, quantilecut
 export make_conditions
