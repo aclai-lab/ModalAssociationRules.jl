@@ -20,7 +20,6 @@ function combine(itemsets::Vector{<:Itemset}, newlength::Integer)
     )
 end
 
-
 """
     combine(variable::Vector{<:Item}, fixed::Vector{<:Item})
 
@@ -30,7 +29,7 @@ prepend them to `fixed` vector.
 See also [`Item`](@ref).
 """
 function combine(variable::Vector{<:Item}, fixed::Vector{<:Item})
-    (Itemset(vcat(combo, fixed)) for combo in combinations(variable))
+    return (Itemset(vcat(combo, fixed)) for combo in combinations(variable))
 end
 
 """

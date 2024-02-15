@@ -3,6 +3,7 @@ module SoleRules
 
 import Base.count, Base.push!, Base.show
 using Combinatorics
+using DataStructures
 using FunctionWrappers: FunctionWrapper
 using IterTools
 using Parameters

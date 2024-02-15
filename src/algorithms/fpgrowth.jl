@@ -65,11 +65,11 @@ mutable struct FPTree
         return fptree
     end
 
-    function FPTree(itemset::EnhancedItemset)
-        item, _count, _contributors = first(itemset)
-        fptree = length(itemset) == 1 ?
+    function FPTree(enhanceditemset::EnhancedItemset, miner::ARuleMiner)
+        item, _count, _contributors = first(enhanceditemset)
+        fptree = length(enhanceditemset) == 1 ?
             new(item, nothing, FPTree[], _count, _contributors, nothing) :
-            new(item, nothing, FPTree[FPTree(itemset[2:end]), miner],
+            new(item, nothing, FPTree[FPTree(enhanceditemset[2:end], miner)],
                 _count, _contributors, nothing)
 
         map(child -> parent!(child, fptree), children(fptree))
@@ -166,18 +166,24 @@ See also [`FPTree`](@ref), [`Item`](@ref), [`Itemset`](@ref).
 """
 function retrieveall(fptree::FPTree)::Itemset
 
+    # internal function just to avoid repeating the final `unique`
     function _retrieve(fptree::FPTree)
         retrieved = Itemset([_retrieve(child) for child in children(fptree)])
 
+        if !isempty(retrieved)
+            retrieved = reduce(vcat, retrieved |> unique)
+        end
+
         _content = content(fptree)
+
         if !isnothing(_content)
-            push!(retrieved, Itemset(_content))
+            push!(retrieved, _content)
         end
 
         return retrieved
     end
 
-    return reduce(vcat, _retrieve(fptree)) |> unique
+    return _retrieve(fptree)
 end
 
 """
@@ -325,7 +331,8 @@ end
 # check if `htable` internal state is correct, that is, its itemsets are sorted decreasingly
 # by global support.
 function checksanity!(htable::HeaderTable, miner::ARuleMiner)::Bool
-    return issorted(items(htable), by=t -> getglobalmemo(miner, (:gsupport, t)), rev=true)
+    return issorted(items(htable),
+        by=t -> getglobalmemo(miner, (:gsupport, Itemset(t))), rev=true)
 end
 
 doc_fptree_push = """
@@ -345,8 +352,12 @@ doc_fptree_push = """
         htable::Union{Nothing,HeaderTable}=nothing
     )
 
-    function Base.push!(fptree::FPTree, itemsets::Vector{T}, miner::ARuleMiner) where
-        {T <: Union{Itemset, EnhancedItemset}}
+    function Base.push!(
+        fptree::FPTree,
+        itemsets::Vector{T},
+        miner::ARuleMiner;
+        htable::HeaderTable
+    ) where {T <: Union{Itemset, EnhancedItemset}}
 
 Push one or more [`Itemset`](@ref)s/[`EnhancedItemset`](@ref) to an [`FPTree`](@ref).
 If an [`HeaderTable`](@ref) is provided, it is leveraged to develop internal links.
@@ -424,7 +435,8 @@ Base.push!(
 # consider itemsets::Vector{T} where {T <: Union{EnhancedItemset,Itemset}}
 function Base.push!(
     fptree::FPTree,
-    enhanceditemset::EnhancedItemset;
+    enhanceditemset::EnhancedItemset,
+    miner::ARuleMiner;
     htable::Union{Nothing,HeaderTable}=nothing,
 )
     # if an header table is provided, and its entry associated with the content of `fptree`
@@ -453,7 +465,7 @@ function Base.push!(
         subfptree = _children[_children_idx]
     # if it does not, then create a new children FPTree, and set this as its parent
     else
-        subfptree = FPTree(enhanceditemset) # IDEA: see IDEA below
+        subfptree = FPTree(enhanceditemset, miner) # IDEA: see IDEA below
         children!(fptree, subfptree)
     end
 
@@ -463,15 +475,16 @@ function Base.push!(
     # IDEA: this brings up a useless overhead, in the case of IDEA up above;
     # when a FPTree is created from an EnhancedItemset, the header table should already
     # do its linkings. Change FPTree(enhanceditemset) to a specific builder method.
-    push!(subfptree, itemset[2:end]; htable=htable)
+    push!(subfptree, enhanceditemset[2:end], miner; htable=htable)
 end
 
 """$(doc_fptree_push)"""
 Base.push!(
     fptree::FPTree,
-    enhanceditemsets::ConditionalPatternBase;
+    enhanceditemsets::ConditionalPatternBase,
+    miner::ARuleMiner;
     htable::Union{Nothing,HeaderTable}=nothing
-) = [push!(fptree, itemset; htable=htable) for itemset in enhanceditemsets]
+) = [push!(fptree, itemset, miner; htable=htable) for itemset in enhanceditemsets]
 
 """
     Base.reverse(htable::HeaderTable)
@@ -500,7 +513,11 @@ See also [`ARuleMiner`](@ref), [`ConditionalPatternBase`](@ref), [`contributors`
 [`EnhancedItemset`](@ref), [`fpgrowth`](@ref), [`FPTree`](@ref), [`Item`](@ref),
 [`Itemset`](@ref), [`WorldsMask`](@ref).
 """
-function patternbase(item::Item, htable::HeaderTable, miner::ARuleMiner)
+function patternbase(
+    item::Item,
+    htable::HeaderTable,
+    miner::ARuleMiner
+)::ConditionalPatternBase
     # think a pattern base as a vector of vector of itemsets (a vector of vector of items);
     # the reason why the type is explicited differently here, is that every item must be
     # associated with a specific WorldsMask to guarantee correctness.
@@ -513,9 +530,12 @@ function patternbase(item::Item, htable::HeaderTable, miner::ARuleMiner)
     fptcount = count(fptree)
     fptcontributors = contributors(fptree)
 
+    # new variable to avoid calling length multiple times later
+    _fptcontributors_length = length(fptcontributors)
+
     # needed to filter out new unfrequent items in the pattern base
     lsupp_integer_threshold = convert(Int64, floor(
-        getlocalthreshold(miner, lsupport) * length(fptcontributors)
+        getlocalthreshold(miner, lsupport) * _fptcontributors_length
     ))
     gsupp_integer_threshold = convert(Int64, floor(
         getglobalthreshold(miner, gsupport) * ninstances(dataset(miner))
@@ -545,13 +565,17 @@ function patternbase(item::Item, htable::HeaderTable, miner::ARuleMiner)
         fptree = linkages(fptree)
     end
 
+    println("Pattern base length: $(length(_patternbase)) ...")
+
     # filter out unfrequent itemsets from a pattern base
     # IDEA: allocating two dictionaries here, instead of a single Dict with `Pair` values,
     # is a waste. Is there a way to obtain the same effect using no immutable structures?
-    _patternbase = ConditionalPatternBase([]) # final pattern base
-    globalbouncer = Dict{Item,Int64}([])      # keeps track of respected global thresholds
-    localbouncer = Dict{Item,WorldsMask}([])  # keeps track of respected local thresholds
+    globalbouncer = DefaultDict{Item,Int64}(0)   # record of respected global thresholds
+    localbouncer = DefaultDict{Item,WorldsMask}( # record of respected local thresholds
+        zeros(Int64, _fptcontributors_length))
     ispromoted = Dict{Item,Bool}([])          # winner items, which will compose the pbase
+
+    println("Pattern base at last $(length(_patternbase)) ...")
 
     # collection phase
     for itemset in _patternbase         # for each Vector{Tuple{Item,Int64,WorldsMask}}
@@ -600,7 +624,7 @@ function projection(
 )
     fptree = FPTree()
     htable = HeaderTable()
-    push!(fptree, pbase; htable=htable)
+    push!(fptree, pbase, miner; htable=htable)
 
     if !isnothing(miner)
         checksanity!(htable, miner)
@@ -645,6 +669,9 @@ function fpgrowth(;
             for candidate in Itemset.(alphabet(miner))
             if gmeas_algo(candidate, X, lthreshold, miner=miner) >= gthreshold
         ] |> unique
+
+        # update miner with the frequent itemsets just computed
+        push!(freqitems(miner), frequents...)
 
         # associate each instance in the dataset with its frequent itemsets
         _ninstances = ninstances(X)
