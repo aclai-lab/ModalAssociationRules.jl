@@ -327,12 +327,23 @@ function link!(htable::HeaderTable, fptree::FPTree)
             "of type $(typeof(arrival)).")
     end
 end
+"""
+    function checksanity!(htable::HeaderTable, miner::ARuleMiner)::Bool
 
-# check if `htable` internal state is correct, that is, its itemsets are sorted decreasingly
-# by global support.
+Check if `htable` internal state is correct, that is, its `items` are sorted decreasingly
+by global support.
+
+See also [`ARuleMiner`](@ref), [`gsupport`](@ref), [`HeaderTable`](@ref), [`items`](@ref).
+"""
 function checksanity!(htable::HeaderTable, miner::ARuleMiner)::Bool
-    return issorted(items(htable),
+    _issorted = issorted(items(htable),
         by=t -> globalmemo(miner, (:gsupport, Itemset(t))), rev=true)
+
+    if !_issorted
+        sort!(items(htable), by=t -> globalmemo(miner, (:gsupport, Itemset(t))), rev=true)
+    end
+
+    return _issorted
 end
 
 doc_fptree_push = """
@@ -587,9 +598,7 @@ function patternbase(
     for item in keys(globalbouncer)
         if globalbouncer[item] < gsupp_integer_threshold ||
             Base.count(x ->
-                x > lsupp_integer_threshold, localbouncer[item]) < gsupp_integer_threshold
-            # NOTE: before, this was:
-            # Base.count(x -> x > 0, localbouncer[item]) < lsupp_integer_threshold
+                x > 0, localbouncer[item]) < lsupp_integer_threshold
             ispromoted[item] = false
         else
             ispromoted[item] = true
@@ -597,8 +606,7 @@ function patternbase(
     end
 
     # filtering phase
-    # IDEA: map(itemset -> filter!(t -> ispromoted[first(t)], itemset), _patternbase)
-    [filter!(t -> ispromoted[first(t)]==true, itemset) for itemset in _patternbase]
+    map(itemset -> filter!(t -> ispromoted[first(t)], itemset), _patternbase)
 
     return _patternbase
 end
@@ -706,21 +714,23 @@ function fpgrowth(;
         leftout_items::Itemset
     )
         # if `fptree` contains only one path (hence, it can be considered a linked list),
-        # then combine all the Itemset collected from previous step with the remained ones.
+        # then combine all the Itemsets collected from previous step with the remained ones.
         if islist(fptree)
             survivor_items = retrieveall(fptree)
-            push!(freqitems(miner), (combine(leftout_items, survivor_items)|>collect)...)
+            push!(freqitems(miner), (combine(survivor_items, leftout_items)|>collect)...)
         else
-            for item in reverse(htable)
+            # check header table internal state
+            checksanity!(htable,miner)
 
+            for item in reverse(htable)
                 # a (conditional) pattern base is a vector of "enhanced" itemsets, that is,
                 # itemsets whose items are paired with a contributors vector.
                 _patternbase = patternbase(item, htable, miner)
 
                 # A new FPTree is built starting from just the conditional pattern base;
                 # note that a header table is associated with the new fptree.
-                # WARNING: `conditional_htable` internal state might be corrupted;
-                # implement and invoke a method called `checksanity!` here.
+                # `conditional_htable` internal state might be corrupted (no sorted items),
+                # but projection invokes a sanity checker inside.
                 conditional_fptree, conditional_htable =
                     projection(_patternbase; miner=miner)
 

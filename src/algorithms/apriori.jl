@@ -52,25 +52,16 @@ function apriori(;
                 if gmeas_algo(candidate, X, lthreshold, miner=miner) >= gthreshold
             ]
 
+            # save frequent itemsets inside the miner machine
+            push!(freqitems(miner), frequents...)
+
             for itemset in frequents
                 localbouncer[itemset] = coalesce_contributors(itemset, miner) |> first
             end
 
-            # save frequent itemsets inside the miner machine
-            push!(freqitems(miner), frequents...)
-
             # generate new candidates
-            k = (candidates |> first |> length) + 1
-            candidates = prune(candidates, frequents, k) |> collect
-
-            # this check is proper of the modal case scenario, hence, this is what
-            # generalizes Apriori to Modal Apriori.
-            # IDEA: integrate pruning here
-            try
-                mirages!(candidates, localbouncer, lsupp_integer_threshold,
-                    gsupp_integer_threshold)
-            catch
-            end
+            prune!(candidates, frequents, (candidates |> first |> length) + 1,
+                localbouncer, lsupp_integer_threshold, gsupp_integer_threshold)
 
             if verbose
                 println("Starting new computational loop with $(length(candidates)) " *

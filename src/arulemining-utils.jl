@@ -50,6 +50,19 @@ function prune(candidates::Vector{Itemset}, frequents::Vector{Itemset}, k::Integ
     )
 end
 
+function prune!(
+    candidates::Vector{Itemset},
+    frequents::Vector{Itemset},
+    k::Integer,
+    bouncer::DefaultDict{Itemset,WorldsMask},
+    lthreshold::Int64,
+    gthreshold::Int64
+)
+    candidates = prune(candidates, frequents, k) |> collect
+    # calling mirages! is proper of the modal case scenario
+    mirages!(candidates, bouncer, lthreshold, gthreshold)
+end
+
 ############################################################################################
 #### Association rules #####################################################################
 ############################################################################################

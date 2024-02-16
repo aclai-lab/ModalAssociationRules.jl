@@ -60,7 +60,7 @@ export lconfidence, gconfidence
 
 include("arulemining-utils.jl")
 
-export combine, prune
+export combine, prune, prune!
 export contributors
 export arules_generator
 

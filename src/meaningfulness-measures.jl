@@ -39,6 +39,7 @@ function lsupport(
         check(toformula(itemset), X, i_instance, w)
         for w in allworlds(X, i_instance)
     ])
+
     ans = sum(_contributors) / nworlds(X, i_instance)
 
     if !isnothing(miner)
