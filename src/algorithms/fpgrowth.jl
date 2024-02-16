@@ -586,7 +586,10 @@ function patternbase(
     # in the filtering phase.
     for item in keys(globalbouncer)
         if globalbouncer[item] < gsupp_integer_threshold ||
-            Base.count(x -> x > 0, localbouncer[item]) < lsupp_integer_threshold
+            Base.count(x ->
+                x > lsupp_integer_threshold, localbouncer[item]) < gsupp_integer_threshold
+            # NOTE: before, this was:
+            # Base.count(x -> x > 0, localbouncer[item]) < lsupp_integer_threshold
             ispromoted[item] = false
         else
             ispromoted[item] = true

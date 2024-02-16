@@ -18,7 +18,7 @@ function apriori(;
         "global support threshold) to miner.item_constrained_measures field.\n" *
         "Local support is needed too, but it is already considered in the global case."
 
-        # this is needed to count on how which worlds a fact is true; see EnhancedItemset.
+        # this is needed to count on which worlds a fact is true; see EnhancedItemset.
         # N° worlds in an instance and number of contributors in an itemset are synonyms.
         _nworlds = SoleLogics.nworlds(X, 1) # nworlds on a generic instance (the first)
 
@@ -26,6 +26,10 @@ function apriori(;
         # frequent items are meaningful on each instance.
         lsupp_integer_threshold = convert(Int64, floor(
             getlocalthreshold(miner, lsupport) * _nworlds
+        ))
+
+        gsupp_integer_threshold = convert(Int64, floor(
+            getglobalthreshold(miner, gsupport) * ninstances(dataset(miner))
         ))
 
         # this hosts the sum of all the contributors across all instances for an itemset
@@ -48,6 +52,10 @@ function apriori(;
                 if gmeas_algo(candidate, X, lthreshold, miner=miner) >= gthreshold
             ]
 
+            for itemset in frequents
+                localbouncer[itemset] = coalesce_contributors(itemset, miner) |> first
+            end
+
             # save frequent itemsets inside the miner machine
             push!(freqitems(miner), frequents...)
 
@@ -57,7 +65,12 @@ function apriori(;
 
             # this check is proper of the modal case scenario, hence, this is what
             # generalizes Apriori to Modal Apriori.
-            mirages!(candidates, localbouncer, lsupp_integer_threshold)
+            # IDEA: integrate pruning here
+            try
+                mirages!(candidates, localbouncer, lsupp_integer_threshold,
+                    gsupp_integer_threshold)
+            catch
+            end
 
             if verbose
                 println("Starting new computational loop with $(length(candidates)) " *
