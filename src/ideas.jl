@@ -41,3 +41,27 @@ function _gmeas_decorator(
 
     return ans
 end
+
+"""
+    function mirages!(
+        candidates::Vector{Itemset},
+        bouncer::DefaultDict{Itemset,WorldsMask},
+        threshold::Int64
+    )
+"""
+function mirages!(
+    itemsets::Vector{Itemset},
+    bouncer::DefaultDict{Itemset,WorldsMask},
+    threshold::Int64
+)
+    k = itemsets |> first |> length
+
+    # for each candidate, consider the worlds mask/contributors of all its sub-items;
+    # compute the i-th contributor of the i-th contributor the minimum across all
+    # contributors, then ...
+    filter!(itemset ->
+        count(i -> i > 0,
+            [bouncer[c] for c in combinations(itemset, k-1)] |> findmin |> first
+        ) >= threshold, itemsets
+    )
+end

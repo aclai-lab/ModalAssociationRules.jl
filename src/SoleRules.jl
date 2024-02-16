@@ -85,4 +85,7 @@ include("utils.jl")         # IDEA: move this in SoleData
 export equicut, quantilecut
 export make_conditions
 
+include("ideas.jl")
+export mirages!
+
 end

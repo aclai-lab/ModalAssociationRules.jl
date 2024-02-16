@@ -48,14 +48,6 @@ function apriori(;
                 if gmeas_algo(candidate, X, lthreshold, miner=miner) >= gthreshold
             ]
 
-            for itemset in frequents
-                # IDEA: this is where filtering must be applied!!!
-                newmask, passed = coalesce_contributors(itemset, miner; lmeas=lsupport)
-                if passed == true
-                    localbouncer[itemset] = newmask
-                end
-            end
-
             # save frequent itemsets inside the miner machine
             push!(freqitems(miner), frequents...)
 
@@ -63,15 +55,9 @@ function apriori(;
             k = (candidates |> first |> length) + 1
             candidates = prune(candidates, frequents, k) |> collect
 
-            # this check is proper of the modal case scenario, and generalizes the
-            # propositional case. A localbouncer is used to check if the intersection
-            # between the contributors of all the sub-itemsets in a candidate does respect
-            # the local support.
-            for candidate in candidates
-                masks = [localbouncer[c] for c in combinations(candidate, k-1)] |>
-                    findmin |> first
-                count
-            end
+            # this check is proper of the modal case scenario, hence, this is what
+            # generalizes Apriori to Modal Apriori.
+            mirages!(candidates, localbouncer, lsupp_integer_threshold)
 
             if verbose
                 println("Starting new computational loop with $(length(candidates)) " *

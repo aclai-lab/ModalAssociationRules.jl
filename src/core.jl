@@ -577,7 +577,7 @@ See also [`ARMSubject`](@ref), [`contributors`](@ref), [`Threshold`](@ref).
 function coalesce_contributors(
     itemset::Itemset,
     miner::ARuleMiner;
-    lmeas::Union{Nothing,Function}=nothing
+    lmeas::Function=lsupport
 )
     if isnothing(lmeas)
         lmeas = lsupport
