@@ -40,6 +40,7 @@ Generic:
   ☐ make more macros like @modalminer (e.g., to handle mining timing). This is not trivial, as these macros can be chained
   ☐ show for Item, Itemset, EnhancedItemset, ARuleMiner, FPTree, HeaderTable
   ☐ sort/issort by globalmemo, managing correct casting from Item, Itemset and EnhancedItemset
+  ☐ contributors array should not be in ARuleMiner.info, but rather a proper attribute 
 
 Optimizations:
   ☐ miner.alphabet should be treated as a generator 

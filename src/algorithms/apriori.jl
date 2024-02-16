@@ -18,74 +18,60 @@ function apriori(;
         "global support threshold) to miner.item_constrained_measures field.\n" *
         "Local support is needed too, but it is already considered in the global case."
 
+        # this is needed to count on how which worlds a fact is true; see EnhancedItemset.
+        # N° worlds in an instance and number of contributors in an itemset are synonyms.
+        _nworlds = SoleLogics.nworlds(X, 1) # nworlds on a generic instance (the first)
+
         # retrieve local support threshold, as this is necessary later to filter which
         # frequent items are meaningful on each instance.
-        lsupport_threshold = getlocalthreshold(miner, SoleRules.gsupport)
+        lsupp_integer_threshold = convert(Int64, floor(
+            getlocalthreshold(miner, lsupport) * _nworlds
+        ))
 
-        # this is needed to count on how which worlds a fact is true. See EnhancedItemset.
-        _nworlds = SoleLogics.nworlds(X, 1) # nworlds on a generic instance (the first)
+        # this hosts the sum of all the contributors across all instances for an itemset
+        localbouncer = DefaultDict{Itemset,WorldsMask}(
+            zeros(Int64, _nworlds)
+        )
 
         # candidates of length 1 are all the letters in our alphabet
         candidates = Itemset.(alphabet(miner))
 
-        # get the frequent itemsets from the first candidates set;
-        # note that meaningfulness measure should leverage memoization when miner is given.
-        frequents = [candidate
-            for (gmeas_algo, lthreshold, gthreshold) in item_meas(miner)
-            for candidate in Itemset.(alphabet(miner))
-            if gmeas_algo(candidate, X, lthreshold, miner=miner) >= gthreshold
-        ]
-
-        # CONTINUE HERE
-        return
-
-        frequents = Vector{Itemset}([])     # frequent itemsets collection
-        nonfrequents = Vector{Itemset}([])  # non-frequent itemsets collection (testing)
-
         while !isempty(candidates)
-            # for each candidate, establish if it is interesting or not
-            for item in candidates
-                interesting = true
-
-                # IDEA: this could be a list comprehension
-                # frequents = [candidate
-                #    for (gmeas_algo, lthreshold, gthreshold) in item_meas(miner)
-                #        for candidate in candidates
-                #        if gmeas_algo(item, X, lthreshold, miner=miner) >= gthreshold
-                #    ]
+            # get the frequent itemsets from the first candidates set;
+            # note that meaningfulness measure should leverage memoization when
+            # miner is given.
+            frequents = [candidate
                 for (gmeas_algo, lthreshold, gthreshold) in item_meas(miner)
-                    if gmeas_algo(item, X, lthreshold, miner=miner) < gthreshold
-                        interesting = false
-                        break
-                    end
-                end
+                for candidate in candidates
+                # specifically, global support also calls local support and updates
+                # contributors
+                if gmeas_algo(candidate, X, lthreshold, miner=miner) >= gthreshold
+            ]
 
-                if interesting
-                    # dump the just computed frequent itemsets inside the miner
-                    push!(frequents, item)
-                elseif fulldump
-                    # dump the non-frequent itemsets (maybe because of testing purposes)
-                    push!(nonfrequents, item)
+            for itemset in frequents
+                # IDEA: this is where filtering must be applied!!!
+                newmask, passed = coalesce_contributors(itemset, miner; lmeas=lsupport)
+                if passed == true
+                    localbouncer[itemset] = newmask
                 end
             end
 
-            # TODO: unique! here?
-            unique!(frequents)
-            sort!(frequents, by=t -> globalmemo(miner, (:gsupport, t)) , rev=true)
-
-            # save frequent and nonfrequent itemsets inside miner structure
+            # save frequent itemsets inside the miner machine
             push!(freqitems(miner), frequents...)
-            push!(nonfreqitems(miner), nonfrequents...)
 
             # generate new candidates
             k = (candidates |> first |> length) + 1
-
-            # TODO: remove collect and make the code lazy
             candidates = prune(candidates, frequents, k) |> collect
 
-            # empty support structures
-            empty!(frequents)
-            empty!(nonfrequents)
+            # this check is proper of the modal case scenario, and generalizes the
+            # propositional case. A localbouncer is used to check if the intersection
+            # between the contributors of all the sub-itemsets in a candidate does respect
+            # the local support.
+            for candidate in candidates
+                masks = [localbouncer[c] for c in combinations(candidate, k-1)] |>
+                    findmin |> first
+                count
+            end
 
             if verbose
                 println("Starting new computational loop with $(length(candidates)) " *

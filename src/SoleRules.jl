@@ -49,7 +49,7 @@ export localmemo, localmemo!
 export globalmemo, globalmemo!
 
 export info
-export contributors, contributors!, mergecontributors
+export contributors, contributors!, coalesce_contributors
 
 export mine, apply
 

@@ -50,7 +50,33 @@ function prune(candidates::Vector{Itemset}, frequents::Vector{Itemset}, k::Integ
     )
 end
 
+"""
+    function mirages!(
+        candidates::Vector{Itemset},
+        bouncer::DefaultDict{Itemset,WorldsMask},
+        threshold::Int64
+    )
 
+TODO:
+"""
+function mirages!(
+    candidates::Vector{Itemset},
+    bouncer::DefaultDict{Itemset,WorldsMask},
+    threshold::Int64
+)
+    k = candidates |> first |> length
+
+    # for each candidate, consider the worlds mask/contributors of all its sub-items;
+    # compute the i-th contributor of the i-th contributor the minimum across all
+    # contributors, then TODO:
+    map(candidate ->
+        filter!(
+            count(i -> i > 0,
+                [bouncer[c] for c in combinations(candidate, k-1)] |> findmin |> first
+            ) >= threshold, candidate
+        ), candidates
+    )
+end
 
 ############################################################################################
 #### Association rules #####################################################################

@@ -595,7 +595,7 @@ function patternbase(
 
     # filtering phase
     # IDEA: map(itemset -> filter!(t -> ispromoted[first(t)], itemset), _patternbase)
-    [filter!(t->ispromoted[first(t)]==true, itemset) for itemset in _patternbase]
+    [filter!(t -> ispromoted[first(t)]==true, itemset) for itemset in _patternbase]
 
     return _patternbase
 end

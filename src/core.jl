@@ -562,34 +562,36 @@ function contributors!(miner::ARuleMiner, key::LmeasMemoKey, mask::WorldsMask)
 end
 
 """
-    function mergecontributors(miner::ARuleMiner, key::LmeasMemoKey)
+    function coalesce_contributors(
+        itemset::Itemset,
+        miner::ARuleMiner;
+        lthreshold::Union{Nothing,Threshold}=nothing
+    )
 
 Consider all the [`contributors`](@ref) of an [`ARMSubject`](@ref) on all the instances.
-Sum them up togheter.
-
-If a [`Threshold`](@ref) value is provided, a second boolean value is returned, indicating
-whether the resulting contributors overpasses the local support threshold enough times.
+Return their sum and a boolean value, indicating whether the resulting contributors
+overpasses the local support threshold enough times.
 
 See also [`ARMSubject`](@ref), [`contributors`](@ref), [`Threshold`](@ref).
 """
-function mergecontributors(
+function coalesce_contributors(
     itemset::Itemset,
     miner::ARuleMiner;
-    lthreshold::Union{Nothing,Threshold}=nothing
+    lmeas::Union{Nothing,Function}=nothing
 )
+    if isnothing(lmeas)
+        lmeas = lsupport
+    end
+
     _ninstances = ninstances(dataset(miner))
     _contributors = sum([contributors(:lsupport, itemset, i, miner) for i in 1:_ninstances])
 
-    if !isnothing(lthreshold)
-        lsupp_integer_threshold = convert(Int64, floor(
-            getlocalthreshold(miner, lsupport) * length(_contributors)
-        ))
+    lsupp_integer_threshold = convert(Int64, floor(
+        getlocalthreshold(miner, lmeas) * length(_contributors)
+    ))
 
-        return _contributors, Base.count(
-            x -> x > 0, _contributors) >= lsupp_integer_threshold
-    end
-
-    return _contributors
+    return _contributors, Base.count(
+        x -> x > 0, _contributors) >= lsupp_integer_threshold
 end
 
 """
