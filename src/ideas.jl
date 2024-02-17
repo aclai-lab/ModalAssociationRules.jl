@@ -77,9 +77,9 @@ function mirages!(
 
     # TODO: compare this code with fpgrowth.jl -> patternbase -> row 600
     filter!(itemset ->
-        Base.count(i -> i > 0,
+        Base.count(i -> i > lthreshold,
             [bouncer[c] for c in combinations(itemset, k-1)] |> findmin |> first
-        ) >= lthreshold,
+        ) >= gthreshold,
         itemsets
     )
 end

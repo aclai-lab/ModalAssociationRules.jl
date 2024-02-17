@@ -52,6 +52,8 @@ function apriori(;
                 if gmeas_algo(candidate, X, lthreshold, miner=miner) >= gthreshold
             ]
 
+            sort!(frequents, by=t -> globalmemo(miner, (:gsupport, t)), rev=true)
+
             # save frequent itemsets inside the miner machine
             push!(freqitems(miner), frequents...)
 
@@ -59,9 +61,13 @@ function apriori(;
                 localbouncer[itemset] = coalesce_contributors(itemset, miner) |> first
             end
 
+            k = (candidates |> first |> length) + 1
+            candidates = prune(
+                candidates, frequents, k, localbouncer, lsupp_integer_threshold, gsupp_integer_threshold)
+
             # generate new candidates
-            prune!(candidates, frequents, (candidates |> first |> length) + 1,
-                localbouncer, lsupp_integer_threshold, gsupp_integer_threshold)
+            # candidates = prune!(candidates, frequents, (candidates |> first |> length) + 1,
+            #    localbouncer, lsupp_integer_threshold)
 
             if verbose
                 println("Starting new computational loop with $(length(candidates)) " *

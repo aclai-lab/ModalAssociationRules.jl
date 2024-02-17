@@ -10,8 +10,9 @@ Main:
     # localdict{string(local measure) -> counter} # if local measure is given
     # globldict{string(local measure) -> counter} # if local measure is given with globality on
   ✔ write an initial apriori implementation @done(24-02-05 23:52)
-    ☐ leverage the fact that `prune` is a generator
+    ✔ leverage the fact that `prune` is a generator @done(24-02-17 01:40)
     ☐ remove FunctionWrappers, and simply convert `algo` in a miner into `Function`
+    ☐ change prune! to generate_and_prune! or something
   ☐ write an initial fpgrowth implementation
     ✔ in FPTree, realize a getcontributors function to hash the worlds in which an Item is true @done(24-02-10 21:12)
     ✔ FPTree getters, setters and utilities @done(24-02-10 21:13)
@@ -81,40 +82,39 @@ Documentation:
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Notes
 
-  TEST | APRIORI FREQUENT ITEMSETS MINED ():
-  ✔ [min[V1] > -0.5] @done(24-02-16 21:16)
-  ✔ [min[V2] ≤ -2.2] @done(24-02-16 21:16)
-  ✔ [min[V3] > -3.6] @done(24-02-16 21:16)
-  ✔ [[L]min[V1] > -0.5] @done(24-02-16 21:16)
-  ✔ [⟨L⟩min[V2] ≤ -2.2] @done(24-02-16 21:16)
-  ✔ [[L]min[V3] > -3.6] @done(24-02-16 21:16)
-  ✔ [min[V1] > -0.5, min[V3] > -3.6] @done(24-02-16 21:16)
-  ✔ [min[V1] > -0.5, [L]min[V1] > -0.5] @done(24-02-16 21:16)
-  ✔ [min[V1] > -0.5, [L]min[V3] > -3.6] @done(24-02-16 21:21)
-  ✔ [min[V3] > -3.6, [L]min[V1] > -0.5] @done(24-02-16 21:16)
-  ✔ [min[V3] > -3.6, [L]min[V3] > -3.6] @done(24-02-16 21:22)
-  ✔ [[L]min[V1] > -0.5, [L]min[V3] > -3.6] @done(24-02-16 21:15)
-  ✔ [min[V1] > -0.5, min[V3] > -3.6, [L]min[V3] > -3.6] @done(24-02-16 21:21)
-  [min[V1] > -0.5, min[V3] > -3.6, [L]min[V3] > -3.6] WARNING: DOUBLE
-  ✔ [min[V3] > -3.6, [L]min[V1] > -0.5, [L]min[V3] > -3.6] @done(24-02-16 21:17)
-  [min[V3] > -3.6, [L]min[V1] > -0.5, [L]min[V3] > -3.6] WARNING: DOUBLE
+  TEST | APRIORI FREQUENT ITEMSETS MINED:
+    ✔ [min[V3] > -3.6] @done(24-02-17 02:30)
+    ✔ [[L]min[V3] > -3.6] @done(24-02-17 02:30)
+    ✔ [min[V1] > -0.5] @done(24-02-17 02:31)
+    ✔ [[L]min[V1] > -0.5] @done(24-02-17 02:31)
+    ✔ [min[V2] ≤ -2.2] @done(24-02-17 02:31)
+    ✔ [⟨L⟩min[V2] ≤ -2.2] @done(24-02-17 02:31)
+    ✔ [min[V3] > -3.6, [L]min[V3] > -3.6] @done(24-02-17 02:31)
+    ✔ [min[V1] > -0.5, min[V3] > -3.6] @done(24-02-17 02:31)
+    ✔ [min[V1] > -0.5, [L]min[V3] > -3.6] @done(24-02-17 02:32)
+    ✔ [min[V3] > -3.6, [L]min[V1] > -0.5] @done(24-02-17 02:32)
+    ✔ [[L]min[V1] > -0.5, [L]min[V3] > -3.6] @done(24-02-17 02:34)
+    ✔ [min[V1] > -0.5, [L]min[V1] > -0.5] @done(24-02-17 02:35)
+    ☐ [min[V1] > -0.5, min[V3] > -3.6, [L]min[V3] > -3.6]
+    ☐ [min[V1] > -0.5, min[V3] > -3.6, [L]min[V3] > -3.6]
+    ✔ [min[V3] > -3.6, [L]min[V1] > -0.5, [L]min[V3] > -3.6] @done(24-02-17 02:37)
+    ☐ [min[V3] > -3.6, [L]min[V1] > -0.5, [L]min[V3] > -3.6]
 
-  TEST | FP GROWTH FREQUENT ITEMSETS MINED (17):
-
-  ✔ [min[V1] > -0.5] @done(24-02-16 21:16)
-  ✔ [min[V2] ≤ -2.2] @done(24-02-16 21:16)
-  ✔ [min[V3] > -3.6] @done(24-02-16 21:16)
-  ✔ [[L]min[V1] > -0.5] @done(24-02-16 21:16)
-  ✔ [⟨L⟩min[V2] ≤ -2.2] @done(24-02-16 21:16)
-  ✔ [[L]min[V3] > -3.6] @done(24-02-16 21:16)
-  ✔ [min[V1] > -0.5, [L]min[V1] > -0.5] @done(24-02-16 21:16)
-  ✔ [[L]min[V3] > -3.6, [L]min[V1] > -0.5] @done(24-02-16 21:16)
-  ✔ [min[V3] > -3.6, [L]min[V1] > -0.5] @done(24-02-16 21:16)
-  ✔ [min[V1] > -0.5, [L]min[V3] > -3.6, [L]min[V1] > -0.5] @done(24-02-16 21:17)
-  [min[V1] > -0.5, min[V3] > -3.6, [L]min[V1] > -0.5] WARNING: NEW
-  [[L]min[V3] > -3.6, min[V3] > -3.6, [L]min[V1] > -0.5] WARNING: DOUBLE
-  [min[V1] > -0.5, [L]min[V3] > -3.6, min[V3] > -3.6, [L]min[V1] > -0.5] WARNING: NEW
-  ✔ [[L]min[V3] > -3.6, min[V1] > -0.5] @done(24-02-16 21:21)
-  ✔ [min[V3] > -3.6, min[V1] > -0.5] @done(24-02-16 21:16)
-  ✔ [[L]min[V3] > -3.6, min[V3] > -3.6, min[V1] > -0.5] @done(24-02-16 21:21)
-  ✔ [min[V3] > -3.6, [L]min[V3] > -3.6] @done(24-02-16 21:22)
+  TEST | FP GROWTH FREQUENT ITEMSETS MINED:
+    ✔ [min[V1] > -0.5] @done(24-02-17 02:31)
+    ✔ [min[V2] ≤ -2.2] @done(24-02-17 02:31)
+    ✔ [min[V3] > -3.6] @done(24-02-17 02:30)
+    ✔ [[L]min[V1] > -0.5] @done(24-02-17 02:31)
+    ✔ [⟨L⟩min[V2] ≤ -2.2] @done(24-02-17 02:31)
+    ✔ [[L]min[V3] > -3.6] @done(24-02-17 02:30)
+    ✔ [min[V1] > -0.5, [L]min[V1] > -0.5] @done(24-02-17 02:35)
+    ✔ [[L]min[V3] > -3.6, [L]min[V1] > -0.5] @done(24-02-17 02:34)
+    ✔ [min[V3] > -3.6, [L]min[V1] > -0.5] @done(24-02-17 02:32)
+    ☐ [min[V1] > -0.5, [L]min[V3] > -3.6, [L]min[V1] > -0.5]
+    ☐ [min[V1] > -0.5, min[V3] > -3.6, [L]min[V1] > -0.5]
+    ✔ [[L]min[V3] > -3.6, min[V3] > -3.6, [L]min[V1] > -0.5] @done(24-02-17 02:37)
+    ☐ [min[V1] > -0.5, [L]min[V3] > -3.6, min[V3] > -3.6, [L]min[V1] > -0.5]
+    ✔ [[L]min[V3] > -3.6, min[V1] > -0.5] @done(24-02-17 02:32)
+    ✔ [min[V3] > -3.6, min[V1] > -0.5] @done(24-02-17 02:31)
+    ☐ [[L]min[V3] > -3.6, min[V3] > -3.6, min[V1] > -0.5]
+    ✔ [min[V3] > -3.6, [L]min[V3] > -3.6] @done(24-02-17 02:31)
