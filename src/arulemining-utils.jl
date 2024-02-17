@@ -46,21 +46,28 @@ function prune(candidates::Vector{Itemset}, frequents::Vector{Itemset}, k::Integ
     return Iterators.filter(
         # the iterator yields only itemsets for which every combo is in frequents
         itemset -> all(combo ->
-            combo in frequents, combinations(itemset, k-1)),combine(candidates, k)
+            combo in frequents, combinations(itemset, k-1)),
+        combine(candidates, k)
     )
 end
 
+# TODO: write docstring
+# TODO: make this prune!, avoiding returning candidates
 function prune(
     candidates::Vector{Itemset},
     frequents::Vector{Itemset},
     k::Integer,
     bouncer::DefaultDict{Itemset,WorldsMask},
     lthreshold::Int64,
-    gthreshold::Int64
+    gthreshold::Int64,
+    miner::ARuleMiner
 )
     candidates = prune(candidates, frequents, k) |> collect
+
     # calling mirages! is proper of the modal case scenario
-    mirages!(candidates, bouncer, lthreshold, gthreshold)
+    if !isempty(candidates)
+       mirages!(candidates, bouncer, lthreshold, gthreshold, miner)
+    end
 
     return candidates
 end

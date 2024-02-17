@@ -71,15 +71,34 @@ function mirages!(
     itemsets::Vector{Itemset},
     bouncer::DefaultDict{Itemset,WorldsMask},
     lthreshold::Int64,
-    gthreshold::Int64 # TODO: remove this
+    gthreshold::Int64,
+    miner::ARuleMiner
 )
     k = itemsets |> first |> length
 
-    # TODO: compare this code with fpgrowth.jl -> patternbase -> row 600
+    # WARNING: this part should be removed
+    for itemset in itemsets
+        for c in combinations(itemset, k-1)
+            c = Itemset(c)
+            if !haskey(bouncer, c)
+                # let miner know on how many worlds itemset is true
+                gsupport(c, dataset(miner), getlocalthreshold(miner, gsupport); miner=miner)
+                # update bouncer
+                bouncer[c] = coalesce_contributors(c, miner)
+            end
+        end
+    end
+
+    println("Pre-mirage candidates are:\n $(itemsets) \n__________________________________")
+
     filter!(itemset ->
         Base.count(i -> i > lthreshold,
+            # i-th element is the minimum i-th element across all world masks
             [bouncer[c] for c in combinations(itemset, k-1)] |> findmin |> first
         ) >= gthreshold,
         itemsets
     )
+
+    println("Post-mirage candidates are:\n $(itemsets) \n @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+
 end
