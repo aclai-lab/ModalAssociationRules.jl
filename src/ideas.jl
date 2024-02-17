@@ -71,25 +71,9 @@ function mirages!(
     itemsets::Vector{Itemset},
     bouncer::DefaultDict{Itemset,WorldsMask},
     lthreshold::Int64,
-    gthreshold::Int64,
-    miner::ARuleMiner
+    gthreshold::Int64
 )
     k = itemsets |> first |> length
-
-    # WARNING: this part should be removed
-    for itemset in itemsets
-        for c in combinations(itemset, k-1)
-            c = Itemset(c)
-            if !haskey(bouncer, c)
-                # let miner know on how many worlds itemset is true
-                gsupport(c, dataset(miner), getlocalthreshold(miner, gsupport); miner=miner)
-                # update bouncer
-                bouncer[c] = coalesce_contributors(c, miner)
-            end
-        end
-    end
-
-    println("Pre-mirage candidates are:\n $(itemsets) \n__________________________________")
 
     filter!(itemset ->
         Base.count(i -> i > lthreshold,
@@ -98,7 +82,5 @@ function mirages!(
         ) >= gthreshold,
         itemsets
     )
-
-    println("Post-mirage candidates are:\n $(itemsets) \n @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
 
 end

@@ -59,15 +59,14 @@ function prune(
     k::Integer,
     bouncer::DefaultDict{Itemset,WorldsMask},
     lthreshold::Int64,
-    gthreshold::Int64,
-    miner::ARuleMiner
+    gthreshold::Int64
 )
-    candidates = prune(candidates, frequents, k) |> collect
+    candidates = prune(candidates, frequents, k) |> collect |> unique
 
     # calling mirages! is proper of the modal case scenario
-    if !isempty(candidates)
-       mirages!(candidates, bouncer, lthreshold, gthreshold, miner)
-    end
+    # if !isempty(candidates)
+    #    mirages!(candidates, bouncer, lthreshold, gthreshold)
+    # end
 
     return candidates
 end

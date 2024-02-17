@@ -64,7 +64,7 @@ function apriori(;
             k = (candidates |> first |> length) + 1
             candidates = prune(
                 candidates, frequents, k, localbouncer,
-                lsupp_integer_threshold, gsupp_integer_threshold, miner)
+                lsupp_integer_threshold, gsupp_integer_threshold)
 
             if verbose
                 println("Starting new computational loop with $(length(candidates)) " *
