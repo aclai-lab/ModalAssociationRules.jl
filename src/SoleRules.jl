@@ -78,7 +78,7 @@ export islist, retrieveall
 export HeaderTable, items
 export link, link!, follow  # dispatches for both FPTree and HeaderTable
 export patternbase
-export fpgrowth, @modalminer
+export fpgrowth, @equip_contributors
 
 include("utils.jl")         # IDEA: move this in SoleData
 

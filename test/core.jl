@@ -28,7 +28,7 @@ manual_alphabet = Vector{Item}([manual_p, manual_q, manual_r,
 _item_meas = [(gsupport, 0.1, 0.1)]
 _rule_meas = [(gconfidence, 0.2, 0.2)]
 
-miner = @modalminer ARuleMiner(X, fpgrowth(), manual_alphabet, _item_meas, _rule_meas)
+miner = @equip_contributors ARuleMiner(X, fpgrowth(), manual_alphabet, _item_meas, _rule_meas)
 
 @testset "ARuleMiner" begin
     @test_nowarn ARuleMiner(X, apriori(), manual_alphabet)

@@ -462,17 +462,17 @@ info(miner::ARuleMiner)::NamedTuple = miner.info
 info(miner::ARuleMiner, key::Symbol) = getfield(miner.info, key)
 
 """
-    macro modalminer(ex)
+    macro equip_contributors(ex)
 
 Enable [`ARuleMiner`](@ref) contructor to handle [`fpgrowth`](@ref) efficiently by
 leveraging a [`Contributors`](@ref) structure.
 
 # Usage
-julia> miner = @modalminer ARuleMiner(X, apriori(), manual_alphabet, _item_meas, _rule_meas)
+julia> miner = @equip_contributors ARuleMiner(X, apriori(), manual_alphabet, _item_meas, _rule_meas)
 
 See also [`ARuleMiner`](@ref), [`Contributors`](@ref), [`fpgrowth`](@ref).
 """
-macro modalminer(ex)
+macro equip_contributors(ex)
     # Extracting function name and arguments
     func, args = ex.args[1], ex.args[2:end]
 
@@ -510,9 +510,9 @@ threshold is not overpassed, 1 otherwise.
 
 !!! warning
     This method requires the [`ARuleMiner`](@ref) to be declared using
-    [`@modalminer`](@ref).
+    [`@equip_contributors`](@ref).
 
-See also [`Item`](@ref), [`LmeasMemoKey`](@ref), [`lsupp`](@ref), [`@modalminer`](@ref),
+See also [`Item`](@ref), [`LmeasMemoKey`](@ref), [`lsupp`](@ref), [`@equip_contributors`](@ref),
 [`Threshold`](@ref), [`WorldsMask`](@ref).
 """
 function contributors(
@@ -523,7 +523,7 @@ function contributors(
         return info(miner, :contributors)[memokey]
     catch
         error("Error when getting contributors of $(measname) applied to  $(item) at " *
-        "instance $(ninstance). Please, use @modalminer or provide an " *
+        "instance $(ninstance). Please, use @equip_contributors or provide an " *
         "`info=(;contributors=Contributors([]))` when instanciating the miner.")
     end
 end
@@ -549,14 +549,14 @@ end
 
 Set a `miner`'s contributors entry.
 
-See also [`ARuleMiner`](@ref), [`LmeasMemoKey`](@ref), [`@modalminer`](@ref),
+See also [`ARuleMiner`](@ref), [`LmeasMemoKey`](@ref), [`@equip_contributors`](@ref),
 [`WorldsMask`](@ref).
 """
 function contributors!(miner::ARuleMiner, key::LmeasMemoKey, mask::WorldsMask)
     try
         info(miner, :contributors)[key] = mask
     catch
-        error("Please, use @modalminer or provide an " *
+        error("Please, use @equip_contributors or provide an " *
         "`info=(;contributors=Contributors([]))` when instanciating the miner.")
     end
 end
