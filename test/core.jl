@@ -40,7 +40,7 @@ mine(fpgrowth_miner)
     @test_nowarn ARuleMiner(X, apriori(), manual_alphabet)
     @test_nowarn algorithm(ARuleMiner(X, apriori(), manual_alphabet)) isa MiningAlgo
 
-    @test alphabet(ARuleMiner(X, apriori(), manual_alphabet)) == manual_alphabet
+    @test items(ARuleMiner(X, apriori(), manual_alphabet)) == manual_alphabet
 
     @test item_meas(miner) == _item_meas
     @test rule_meas(miner) == _rule_meas

@@ -33,10 +33,9 @@ Generic:
   ✔ move memoization accountability to ARuleMiner @done(24-02-07 23:58)
   ✔ call meaningfulness measures with ARuleMiner as optional argument @done(24-02-07 23:58)
   ✔ association rules generator (add and leverage ResumableFunction) @done(24-02-07 23:58)
-  ☐ think about alphabet parameter in apriori
   ☐ override Base.show for itemsets and association rules
   ☐ measures inside an ARuleMiner should be unique
-  ☐ miner.alphbaet should be renamed to represent a vector of item
+  ✔ miner.alphbaet should be renamed to represent a vector of item @done(24-02-18 23:40)
   ☐ Base.push!(fptree::FPTree etc...) dispatches for `Itemset` and `EnhancedItemset` are very similar... think about avoid repetitions
     # check push! docstrings
   ☐ make more macros like @equip_contributors (e.g., to handle mining timing). This is not trivial, as these macros can be chained
@@ -45,7 +44,7 @@ Generic:
   ☐ contributors array should not be in ARuleMiner.info, but rather a proper attribute 
 
 Optimizations:
-  ☐ miner.alphabet should be treated as a generator 
+  ☐ miner.items should be treated as a generator 
   ☐ global memoization should check if memoized treshold is larger than requested one
   ☐ check whether sum between two vectors in addcontributors!(fptree::FPTree, contribution::WorldsMask) is optimized
   ☐ give the possiblity to consider a dataset slice to extract rules without trivial items (see `EnhancedItemset`)
@@ -67,7 +66,7 @@ Global:
 
 To SoleModels or SoleData:
   ✔ consider feature when binning @done(24-02-02 15:52)
-  ✔ organize the alphabet generation system @done(24-02-05 23:52)
+  ✔ organize the items generation system @done(24-02-05 23:52)
   ☐ find out how to extract interesting literals from which mine association rules
 
 Testing:

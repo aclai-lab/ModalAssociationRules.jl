@@ -18,8 +18,8 @@ function apriori(;
         "global support threshold) to miner.item_constrained_measures field.\n" *
         "Local support is needed too, but it is already considered in the global case."
 
-        # candidates of length 1 are all the letters in our alphabet
-        candidates = Itemset.(alphabet(miner))
+        # candidates of length 1 are all the letters in our items
+        candidates = Itemset.(items(miner))
 
         while !isempty(candidates)
             # get the frequent itemsets from the first candidates set;

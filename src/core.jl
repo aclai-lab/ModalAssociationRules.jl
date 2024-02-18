@@ -446,7 +446,7 @@ algorithm(miner::ARuleMiner)::MiningAlgo = miner.algo
 """
     items(miner::ARuleMiner)
 
-Getter for the [`Item`](@ref)s loaded into `miner`.
+Getter for the items of [`Item`](@ref)s loaded into `miner`.
 
 See [`ARuleMiner`](@ref), [`Item`](@ref), [`MiningAlgo`](@ref).
 """

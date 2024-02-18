@@ -677,7 +677,7 @@ function fpgrowth(;
         # note that meaningfulness measure should leverage memoization when miner is given!
         frequents = [candidate
             for (gmeas_algo, lthreshold, gthreshold) in item_meas(miner)
-            for candidate in Itemset.(alphabet(miner))
+            for candidate in Itemset.(items(miner))
             if gmeas_algo(candidate, X, lthreshold, miner=miner) >= gthreshold
         ] |> unique
 
