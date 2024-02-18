@@ -76,7 +76,7 @@ export content!, parent!, children!, count!, addcount!, addcontributors!
 export islist, retrieveall
 
 export HeaderTable, items
-export link, link!, follow  # dispatches for both FPTree and HeaderTable
+export linkages, link!, follow  # dispatches for both FPTree and HeaderTable
 export patternbase
 export fpgrowth, @equip_contributors
 

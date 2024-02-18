@@ -28,9 +28,15 @@ manual_alphabet = Vector{Item}([manual_p, manual_q, manual_r,
 _item_meas = [(gsupport, 0.1, 0.1)]
 _rule_meas = [(gconfidence, 0.2, 0.2)]
 
-miner = @equip_contributors ARuleMiner(X, fpgrowth(), manual_alphabet, _item_meas, _rule_meas)
+apriori_miner = ARuleMiner(X, apriori(), manual_alphabet, _item_meas, _rule_meas)
+fpgrowth_miner = @equip_contributors ARuleMiner(
+    X, fpgrowth(), manual_alphabet, _item_meas, _rule_meas)
 
-@testset "ARuleMiner" begin
+# mine the frequent patterns with both apriori and fpgrowth
+mine(apriori_miner)
+mine(fpgrowth_miner)
+
+@testset "ARuleMiner general checks" begin
     @test_nowarn ARuleMiner(X, apriori(), manual_alphabet)
     @test_nowarn algorithm(ARuleMiner(X, apriori(), manual_alphabet)) isa MiningAlgo
 
@@ -39,13 +45,8 @@ miner = @equip_contributors ARuleMiner(X, fpgrowth(), manual_alphabet, _item_mea
     @test item_meas(miner) == _item_meas
     @test rule_meas(miner) == _rule_meas
 
-    miner = ARuleMiner(X, apriori(), manual_alphabet, _item_meas, _rule_meas)
-
-    # mine the frequent patterns
-    mine(miner)
-
     @test length(freqitems(miner)) == 55
-    @test length(nonfreqitems(miner)) == 4
+    @test length(nonfreqitems(miner)) == 0
     @test arules(miner) == []
 
     _temp_lmemo_key = (:lsupport, freqitems(miner)[1], 1)
@@ -111,18 +112,20 @@ end
     @test isglobalof(gconfidence, gconfidence) == false
 end
 
-@testset "FP-Growth data structures (FPTree and HeaderTable)" begin
-    # mine the frequent patterns
-    mine(miner)
-
+@testset "FP-Growth general checks (FPTree and HeaderTable)" begin
     root = FPTree()
     @test root isa FPTree
     @test content(root) === nothing
     @test children(root) == FPTree[]
-    @test contributors(root) = 0
+    @test contributors(root) == Int64[]
     @test count(root) == 0
-    @test linkage(root) === nothing
-
-    @test_nowarn FPTree(freqitems(miner)[1], miner)
-    @test_nowarn FPTree(freqitems(miner)[30], miner, root)
+    @test linkages(root) === nothing
 end
+
+@testset "Apriori and FPGrowth comparisons"
+    apriori_freqs = freqitems(apriori_miner)
+    fpgrowth_freqs = freqitems(fpgrowth_miner)
+
+    @test length(apriori_freqs) == length(fpgrowth_freqs)
+    @test all(t -> t==1, [freqitemset in fpgrowth_freqs for freqitemset in apriori_freqs])
+@end

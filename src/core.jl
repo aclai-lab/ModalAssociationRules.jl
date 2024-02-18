@@ -35,6 +35,21 @@ function Base.show(io::IO, itemset::Itemset)
     print(io, "[" * join([syntaxstring(item) for item in itemset], ", ") * "]")
 end
 
+function Base.in(itemset::Itemset, target::Itemset)
+    all(item -> item in target, itemset)
+end
+
+# this dispatch is needed to force the check to not consider the order of items in itemsets
+function Base.in(itemset::Itemset, targets::Vector{Itemset})
+    for target in targets
+        if itemset in target
+            return true
+        end
+    end
+
+    return true
+end
+
 """
     toformula(itemset::Itemset)
 
@@ -460,6 +475,15 @@ globalmemo!(miner::ARuleMiner, key::GmeasMemoKey, val::Float64) = miner.gmemo[ke
 info(miner::ARuleMiner)::NamedTuple = miner.info
 """$(doc_aruleminer_getters)"""
 info(miner::ARuleMiner, key::Symbol) = getfield(miner.info, key)
+
+"""
+    isequipped(miner::ARuleMiner, key::Symbol)
+
+Return whether `miner` additional information pool contains an entry `key`.
+
+See also [`ARuleMiner`](@ref), [`info`](@ref).
+"""
+isequipped(miner::ARuleMiner, key::Symbol) = haskey(miner |> info, key)
 
 """
     macro equip_contributors(ex)

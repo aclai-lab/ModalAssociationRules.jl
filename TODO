@@ -51,6 +51,7 @@ Optimizations:
   ☐ give the possiblity to consider a dataset slice to extract rules without trivial items (see `EnhancedItemset`)
 
   Utility:
+  ☐ Base.in between two itemsets
   ☐ build a macro to implement decorator pattern to build local and global measures, optionally exploiting ARuleMiner memoization
   ☐ better design how an ARuleMiner keeps track of local measures. Local and global measures CAN be indipendent. 
   ☐ Base.push!(fptree::FPTree, itemset::Itemset, miner::ARuleMiner) doesn't check if itemset is sorted by gsupport. Add a safe=false flag.
