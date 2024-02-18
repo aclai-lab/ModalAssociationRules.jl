@@ -41,7 +41,7 @@ function apriori(;
             push!(freqitems(miner), frequents...)
 
             k = (candidates |> first |> length) + 1
-            candidates = prune(candidates, frequents, k) |> collect |> unique
+            candidates = grow_prune(candidates, frequents, k) |> collect |> unique
 
             if verbose
                 println("Starting new computational loop with $(length(candidates)) " *

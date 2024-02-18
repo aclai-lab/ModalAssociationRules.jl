@@ -852,15 +852,16 @@ function fpgrowth(;
                 # itemsets whose items are paired with a contributors vector.
                 _patternbase = patternbase(item, htable, miner)
 
-                # A new FPTree is built starting from just the conditional pattern base;
-                # note that a header table is associated with the new fptree.
-                # `conditional_htable` internal state might be corrupted (no sorted items),
-                # but projection invokes a sanity checker inside.
+                # a new FPTree is projected, via the conditional pattern base retrieved
+                # starting from `fptree` nodes whose content is exactly `item`.
+                # A projection, is, essentialy, a slice/subset of the dataset
+                # rapresented by an FPTree.
+                # Also, the header table associated with the projection is returned.
                 conditional_fptree, conditional_htable =
                     projection(_patternbase; miner=miner)
 
-                # if the new fptree is not empty, call this recursively, considering `item`
-                # as a leftout item.
+                # if the new fptree is not empty, call this recursively,
+                # considering `item` as a leftout item.
                 if length(children(conditional_fptree)) > 0
                     _fpgrowth_kernel(conditional_fptree, conditional_htable, miner,
                         vcat(leftout_items, item))

@@ -33,14 +33,14 @@ function combine(variable::Vector{<:Item}, fixed::Vector{<:Item})
 end
 
 """
-    prune(candidates::Vector{Itemset}, frequents::Vector{Itemset}, k::Integer)
+    grow_prune(candidates::Vector{Itemset}, frequents::Vector{Itemset}, k::Integer)
 
 Return a generator, which yields only the `candidates` for which every (k-1)-length subset
 is in `frequents`.
 
 See also [`Itemset`](@ref).
 """
-function prune(candidates::Vector{Itemset}, frequents::Vector{Itemset}, k::Integer)
+function grow_prune(candidates::Vector{Itemset}, frequents::Vector{Itemset}, k::Integer)
     # if the frequents set does not contain the subset of a certain candidate,
     # that candidate is pruned out.
     return Iterators.filter(
@@ -49,21 +49,6 @@ function prune(candidates::Vector{Itemset}, frequents::Vector{Itemset}, k::Integ
             combo in frequents, combinations(itemset, k-1)),
         combine(candidates, k)
     )
-end
-
-# TODO: write docstring
-# TODO: make this prune!, avoiding returning candidates
-function prune(
-    candidates::Vector{Itemset},
-    frequents::Vector{Itemset},
-    k::Integer,
-    bouncer::DefaultDict{Itemset,WorldsMask},
-    lthreshold::Int64,
-    gthreshold::Int64
-)
-    candidates = prune(candidates, frequents, k) |> collect |> unique
-
-    return candidates
 end
 
 """
