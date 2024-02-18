@@ -63,12 +63,40 @@ function prune(
 )
     candidates = prune(candidates, frequents, k) |> collect |> unique
 
-    # calling mirages! is proper of the modal case scenario
-    # if !isempty(candidates)
-    #    mirages!(candidates, bouncer, lthreshold, gthreshold)
-    # end
-
     return candidates
+end
+
+"""
+    function coalesce_contributors(
+        itemset::Itemset,
+        miner::ARuleMiner;
+        lthreshold::Union{Nothing,Threshold}=nothing
+    )
+
+Consider all the [`contributors`](@ref) of an [`ARMSubject`](@ref) on all the instances.
+Return their sum and a boolean value, indicating whether the resulting contributors
+overpasses the local support threshold enough times.
+
+See also [`ARMSubject`](@ref), [`contributors`](@ref), [`Threshold`](@ref).
+"""
+function coalesce_contributors(
+    itemset::Itemset,
+    miner::ARuleMiner;
+    lmeas::Function=lsupport
+)
+    if isnothing(lmeas)
+        lmeas = lsupport
+    end
+
+    _ninstances = ninstances(dataset(miner))
+    _contributors = sum([contributors(:lsupport, itemset, i, miner) for i in 1:_ninstances])
+
+    lsupp_integer_threshold = convert(Int64, floor(
+        getlocalthreshold(miner, lmeas) * length(_contributors)
+    ))
+
+    return _contributors, Base.count(
+        x -> x > 0, _contributors) >= lsupp_integer_threshold
 end
 
 ############################################################################################
