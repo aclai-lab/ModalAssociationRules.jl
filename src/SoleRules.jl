@@ -49,7 +49,7 @@ export localmemo, localmemo!
 export globalmemo, globalmemo!
 
 export info
-export contributors, contributors!, coalesce_contributors
+export contributors, contributors!
 
 export mine, apply
 
@@ -61,7 +61,7 @@ export lconfidence, gconfidence
 include("arulemining-utils.jl")
 
 export combine, prune, prune!
-export contributors
+export coalesce_contributors
 export arules_generator
 
 include("algorithms/apriori.jl")

@@ -641,7 +641,7 @@ See also [`ARuleMiner`](@ref), [`info`](@ref).
 isequipped(miner::ARuleMiner, key::Symbol) = haskey(miner |> info, key)
 
 """
-    macro equip_contributors(ex)
+    @equip_contributors ex
 
 Enable [`ARuleMiner`](@ref) contructor to handle [`fpgrowth`](@ref) efficiently by
 leveraging a [`Contributors`](@ref) structure.
@@ -662,7 +662,7 @@ macro equip_contributors(ex)
 end
 
 doc_getcontributors = """
-    function contributors(
+    contributors(
         measname::Symbol,
         item::Item,
         ninstance::Int64,
@@ -724,7 +724,7 @@ function contributors(
 end
 
 """
-    function contributors!(miner::ARuleMiner, key::LmeasMemoKey, mask::WorldsMask)
+    contributors!(miner::ARuleMiner, key::LmeasMemoKey, mask::WorldsMask)
 
 Set a `miner`'s contributors entry.
 
@@ -741,7 +741,7 @@ function contributors!(miner::ARuleMiner, key::LmeasMemoKey, mask::WorldsMask)
 end
 
 """
-    function mine(miner::ARuleMiner)
+    mine(miner::ARuleMiner)
 
 Synonym for `SoleRules.apply(miner, dataset(miner))`.
 
@@ -752,7 +752,7 @@ function mine(miner::ARuleMiner)
 end
 
 """
-    function apply(miner::ARuleMiner, X::AbstractDataset)
+    apply(miner::ARuleMiner, X::AbstractDataset)
 
 Extract association rules in the dataset referenced by `miner`, saving the interesting
 [`Itemset`](@ref)s inside `miner`.

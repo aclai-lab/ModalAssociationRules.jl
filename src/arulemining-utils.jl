@@ -23,17 +23,17 @@ end
 """
     combine(variable::Vector{<:Item}, fixed::Vector{<:Item})
 
-Return a generator which iterates the combinations of [`Item`](@ref)s in `variable` and
-prepend them to `fixed` vector.
+Return a generator of [`Itemset`](@ref), which iterates the combinations of [`Item`](@ref)s
+in `variable` and prepend them to `fixed` vector.
 
-See also [`Item`](@ref).
+See also [`Item`](@ref), [`Itemset`](@ref).
 """
 function combine(variable::Vector{<:Item}, fixed::Vector{<:Item})
     return (Itemset(vcat(combo, fixed)) for combo in combinations(variable))
 end
 
 """
-    function prune(candidates::Vector{Itemset}, frequents::Vector{Itemset}, k::Integer)
+    prune(candidates::Vector{Itemset}, frequents::Vector{Itemset}, k::Integer)
 
 Return a generator, which yields only the `candidates` for which every (k-1)-length subset
 is in `frequents`.
@@ -67,7 +67,7 @@ function prune(
 end
 
 """
-    function coalesce_contributors(
+    coalesce_contributors(
         itemset::Itemset,
         miner::ARuleMiner;
         lthreshold::Union{Nothing,Threshold}=nothing
