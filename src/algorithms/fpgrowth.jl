@@ -210,7 +210,10 @@ See also [`follow`](@ref), [`FPTree`](@ref), [`HeaderTable`](@ref).
 function link!(from::FPTree, to::FPTree)
     # find the last FPTree by iteratively following the internal link
     from = follow(from)
-    from.linkages = to
+
+    if from.linkages === nothing && to.linkages === nothing
+        from.linkages = to
+    end
 end
 
 function Base.show(io::IO, fptree::FPTree; indentation::Int64=0)
@@ -283,16 +286,6 @@ linkages(htable::HeaderTable) = htable.linkages
 """$(doc_htable_getters)"""
 linkages(htable::HeaderTable, item::Item) = htable.linkages[item]
 
-"""$(doc_htable_setters)"""
-function link!(htable::HeaderTable, item::Item, fptree::FPTree)
-    htitems = items(htable)
-    if !(item in htitems)
-        push!(htitems, item)
-    end
-
-    htable.linkages[item] = fptree
-end
-
 """
     function follow(htable::HeaderTable, item::Item)::Union{Nothing,FPTree}
 
@@ -313,20 +306,28 @@ See also [`content`](@ref), [`FPTree`](@ref), [`HeaderTable`](@ref).
 """
 function link!(htable::HeaderTable, fptree::FPTree)
     _content = content(fptree)
-    arrival = follow(htable, _content)
 
     # the content of `fptree` was never seen before by this `htable`
+    hitems = items(htable)
+    if !(_content in hitems)
+        push!(hitems, _content)
+        htable.linkages[_content] = nothing
+    end
+
+    # the content of `fptree` was loaded into the header table, but never looked up
     if linkages(htable, _content) |> isnothing
-        link!(htable, _content, fptree)
+        htable.linkages[_content] = fptree
+        return
+    end
+
     # the arrival FPTree is linked to the new `fptree`
-    elseif arrival isa FPTree
+    arrival = follow(htable, _content)
+    if arrival isa FPTree && arrival != fptree
         link!(arrival, fptree)
-    # invalid option
-    else
-        error("Error trying to establish a linkages between HeaderTable and an object " *
-            "of type $(typeof(arrival)).")
+    # invalid optionì
     end
 end
+
 """
     function checksanity!(htable::HeaderTable, miner::ARuleMiner)::Bool
 
@@ -393,8 +394,9 @@ function Base.push!(
     # if an header table is provided, and its entry associated with the content of `fptree`
     # is still empty, then perform a linking.
     _fptree_content = content(fptree)
-    if !isnothing(htable) && _fptree_content !== nothing
-        link!(htable, _fptree_content, fptree)
+
+    if htable !== nothing && _fptree_content !== nothing && linkages(fptree) === nothing
+        link!(htable, fptree)
     end
 
     # end of push case
@@ -453,8 +455,9 @@ function Base.push!(
     # if an header table is provided, and its entry associated with the content of `fptree`
     # is still empty, then perform a linking.
     _fptree_content = content(fptree)
-    if !isnothing(htable) && _fptree_content !== nothing
-        link!(htable, _fptree_content, fptree)
+
+    if htable !== nothing && _fptree_content !== nothing && linkages(fptree) === nothing
+        link!(htable, fptree)
     end
 
     # end of push case
@@ -465,8 +468,8 @@ function Base.push!(
     # retrieve the item to grow the tree;
     # to grow a find pattern tree in the modal case scenario, each item has to be associated
     # with its global and local "counters" collected previously.
-    # You may ask: "why collected previously?". Well, this dispatch is specialized to
-    # grow conditional pattern base
+    # You may ask: why collected previously? Well, this dispatch is specialized to grow
+    # conditional pattern base.
     item, _count, _contributors = first(enhanceditemset)
 
     # check if a subtree whose content is the first item in `itemset` already exists
@@ -506,6 +509,13 @@ See also [`HeaderTable`](@ref), [`Item`](@ref), [`items`](@ref).
 """
 Base.reverse(htable::HeaderTable) = reverse(items(htable))
 
+function fpgrowth_filter(item::Item, rest::Itemset)
+    mask = ones(Int64, 360)
+    for _item in rest
+
+    end
+end
+
 """
     patternbase(item::Item, htable::HeaderTable, miner::ARuleMiner)::ConditionalPatternBase
 
@@ -539,29 +549,21 @@ function patternbase(
     # position, is the minimum between the value in reference's mask and the new node one.
     fptree = linkages(htable, item)
     fptcount = count(fptree)
-    fptcontributors = contributors(fptree)
 
-    # new variable to avoid calling length multiple times later
-    _fptcontributors_length = length(fptcontributors)
-
-    # needed to filter out new unfrequent items in the pattern base
-    lsupp_integer_threshold = convert(Int64, floor(
-        getlocalthreshold(miner, lsupport) * _fptcontributors_length
-    ))
-    gsupp_integer_threshold = convert(Int64, floor(
-        getglobalthreshold(miner, gsupport) * ninstances(dataset(miner))
-    ))
+    # just the contributors length; new variable to avoid calling this multiple times later
+    _fptcontributors_length = length(contributors(fptree))
 
     while !isnothing(fptree)
         enhanceditemset = EnhancedItemset([])
         ancestorfpt = parent(fptree)
+        fptcontributors = contributors(fptree)
 
         # IDEA: `content(ancestorfpt)` is repeated two times while one variable is enough
         while !isnothing(content(ancestorfpt))
             # prepend! instead of push! because we must keep the top-down order of items
             # in a path, but we are visiting a branch from bottom upwards.
             prepend!(enhanceditemset, [(content(ancestorfpt), fptcount,
-                min(fptcontributors, ancestorfpt |> contributors))])
+                map(min, fptcontributors, ancestorfpt |> contributors))])
             ancestorfpt = parent(ancestorfpt)
         end
 
@@ -576,29 +578,37 @@ function patternbase(
         fptree = linkages(fptree)
     end
 
-    # filter out unfrequent itemsets from a pattern base
-    # IDEA: allocating two dictionaries here, instead of a single Dict with `Pair` values,
-    # is a waste. Is there a way to obtain the same effect using no immutable structures?
+    # needed to filter out new unfrequent items in the pattern base
+    lsupp_integer_threshold = convert(Int64, floor(
+        getlocalthreshold(miner, lsupport) * _fptcontributors_length
+    ))
+    gsupp_integer_threshold = convert(Int64, floor(
+        getglobalthreshold(miner, gsupport) * ninstances(dataset(miner))
+    ))
+
+    # # filter out unfrequent itemsets from a pattern base
+    # # IDEA: allocating two dictionaries here, instead of a single Dict with `Pair` values,
+    # # is a waste. Is there a way to obtain the same effect using no immutable structures?
     globalbouncer = DefaultDict{Item,Int64}(0)   # record of respected global thresholds
     localbouncer = DefaultDict{Item,WorldsMask}( # record of respected local thresholds
-        zeros(Int64, _fptcontributors_length))
+        ones(Int64, _fptcontributors_length))
     ispromoted = Dict{Item,Bool}([])          # winner items, which will compose the pbase
 
-    # collection phase
+    # # collection phase
     for itemset in _patternbase         # for each Vector{Tuple{Item,Int64,WorldsMask}}
         for enhanceditem in itemset     # for each Tuple{Item,Int64,WorldsMask} in itemset
             item, _count, _contributors = enhanceditem
             globalbouncer[item] += _count
-            map!(sum, localbouncer[item], _contributors)
+            localbouncer[item] += _contributors
         end
     end
 
-    # now that dictionaries are filled, establish which are promoted and apply changes
-    # in the filtering phase.
+    # # now that dictionaries are filled, establish which are promoted and apply changes
+    # # in the filtering phase.
     for item in keys(globalbouncer)
         if globalbouncer[item] < gsupp_integer_threshold ||
             Base.count(x ->
-                x > 0, localbouncer[item]) < lsupp_integer_threshold
+               x > gsupp_integer_threshold, localbouncer[item]) < lsupp_integer_threshold
             ispromoted[item] = false
         else
             ispromoted[item] = true
@@ -606,7 +616,7 @@ function patternbase(
     end
 
     # filtering phase
-    map(itemset -> filter!(t -> ispromoted[first(t)], itemset), _patternbase)
+    _patternbase = map(itemset -> filter!(t -> ispromoted[first(t)], itemset), _patternbase)
 
     return _patternbase
 end
@@ -719,10 +729,8 @@ function fpgrowth(;
             survivor_items = retrieveall(fptree)
             push!(freqitems(miner), (combine(survivor_items, leftout_items)|>collect)...)
         else
-            # check header table internal state
-            checksanity!(htable,miner)
-
             for item in reverse(htable)
+
                 # a (conditional) pattern base is a vector of "enhanced" itemsets, that is,
                 # itemsets whose items are paired with a contributors vector.
                 _patternbase = patternbase(item, htable, miner)

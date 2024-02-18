@@ -68,7 +68,7 @@ associated to a counter and a specific [`WorldsMask`](@ref).
 
 See also [`Item`](@ref), [`Itemset`](@ref), [`WorldsMask`](@ref).
 """
-const EnhancedItemset = Vector{Tuple{Item,Integer,WorldsMask}} # TODO Item or <:Item?
+const EnhancedItemset = Vector{Tuple{Item,Integer,WorldsMask}}
 
 function Base.convert(::Type{Itemset}, enhanceditemset::EnhancedItemset)
     return [first(enhanceditem) for enhanceditem in enhanceditemset]
