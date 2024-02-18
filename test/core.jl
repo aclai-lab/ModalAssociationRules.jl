@@ -119,7 +119,7 @@ end
     @test children(root) == FPTree[]
     @test contributors(root) == Int64[]
     @test count(root) == 0
-    @test linkages(root) === nothing
+    @test link(root) === nothing
 end
 
 @testset "Apriori and FPGrowth comparisons"

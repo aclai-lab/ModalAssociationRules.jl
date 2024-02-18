@@ -82,8 +82,6 @@ See also [`Item`](@ref), [`Itemset`](@ref), [`SoleLogics.LeftmostConjunctiveForm
 """
 toformula(itemset::Itemset) = LeftmostConjunctiveForm(itemset)
 
-# See meaningfulness measures section.
-# A MeaningfulnessMeasure is a tuple shaped as (global measure, local threshold, global threshold)
 """
     const Threshold = Float64
 
@@ -647,7 +645,8 @@ Enable [`ARuleMiner`](@ref) contructor to handle [`fpgrowth`](@ref) efficiently 
 leveraging a [`Contributors`](@ref) structure.
 
 # Usage
-julia> miner = @equip_contributors ARuleMiner(X, apriori(), manual_alphabet, _item_meas, _rule_meas)
+julia> miner = @equip_contributors ARuleMiner(
+    X, apriori(), manual_alphabet, _item_meas, _rule_meas)
 
 See also [`ARuleMiner`](@ref), [`Contributors`](@ref), [`fpgrowth`](@ref).
 """
@@ -691,8 +690,8 @@ threshold is not overpassed, 1 otherwise.
     This method requires the [`ARuleMiner`](@ref) to be declared using
     [`@equip_contributors`](@ref).
 
-See also [`Item`](@ref), [`LmeasMemoKey`](@ref), [`lsupp`](@ref), [`@equip_contributors`](@ref),
-[`Threshold`](@ref), [`WorldsMask`](@ref).
+See also [`Item`](@ref), [`LmeasMemoKey`](@ref), [`lsupp`](@ref),
+[`@equip_contributors`](@ref), [`Threshold`](@ref), [`WorldsMask`](@ref).
 """
 function contributors(
     memokey::LmeasMemoKey,

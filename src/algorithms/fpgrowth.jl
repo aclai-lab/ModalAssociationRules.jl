@@ -3,6 +3,21 @@
 ############################################################################################
 
 """
+    mutable struct FPTree
+        content::Union{Nothing,Item}        # Item contained in this node (nothing if root)
+
+        parent::Union{Nothing,FPTree}       # parent node
+        const children::Vector{FPTree}      # children nodes
+
+        count::Int64                        # number of equal Items this node represents
+
+        # how many times lsupp(content) does overpass
+        # the corresponding threshold for each world
+        const contributors::WorldsMask
+
+        link::Union{Nothing,FPTree}     # link to another FPTree root
+    end
+
 Fundamental data structure used in FP-Growth algorithm.
 Essentialy, an [`FPTree`](@ref) is a prefix tree where a root-leaf path represent an
 [`Itemset`](@ref).
@@ -14,6 +29,15 @@ An [`FPTree`](@ref) is such that the common [`Item`](@ref)s-prefix shared by dif
 This implementation generalizes the propositional logic case scenario to modal logic;
 given two [`Itemset`](@ref)s sharing a [`Item`](@ref) prefix, the worlds in which they are
 true is accumulated.
+
+!!! info
+    Did you notice? One FPTree structure contains all the information needed to construct an
+    [`EnhancedItemset`](@ref). This is crucial to generate new FPTree during fpgrowth
+    algorithm, via building [`ConditionalPatternBase`](@ref) iteratively while avoiding
+    visiting the dataset over and over again.
+
+See also [`EnhancedItemset`](@ref), [`fpgrowth`](@ref), [`gsupport`](@ref), [`Item`](@ref),
+[`Itemset`](@ref), [`WorldsMask`](@ref).
 """
 mutable struct FPTree
     content::Union{Nothing,Item}        # Item contained in this node (nothing if root)
@@ -23,8 +47,11 @@ mutable struct FPTree
 
     count::Int64                        # number of equal Items this node represents
 
-    const contributors::WorldsMask      # worlds contributing to this node
-    linkages::Union{Nothing,FPTree}     # link to another FPTree root
+    # how many times lsupp(content) does overpass
+    # the corresponding threshold for each world
+    const contributors::WorldsMask
+
+    link::Union{Nothing,FPTree}     # link to another FPTree root
 
     # empty constructor
     function FPTree()
@@ -78,62 +105,140 @@ mutable struct FPTree
     end
 end
 
-doc_fptree_getters = """
+"""
     content(fptree::FPTree)::Union{Nothing,Item}
-    parent(fptree::FPTree)::Union{Nothing,FPTree}
-    children(fptree::FPTree)::Vector{FPTree}
-    count(fptree::FPTree)::Int64
-    contributors(fptree::FPTree)::WorldsMask
-    linkages(fptree::FPTree)::Union{Nothing,FPTree}
 
-[`FPTree`](@ref) getters.
+Getter for the [`Item`](@ref) (possibly empty) wrapped by `fptree`.
+
+See also [`content!`](@ref), [`FPTree`](@ref).
 """
-
-doc_fptree_setters = """
-    content!(fptree::FPTree)::Union{Nothing,Item}
-    parent!(fptree::FPTree)::Union{Nothing,FPTree}
-    children!(fptree::FPTree)::Vector{FPTree}
-    count!(fptree::FPTree)::Int64
-    addcount!(fptree::FPTree, deltacount::Int64)
-    contributors!(fptree::FPTree, contribution::WorldsMask)
-    addcontributors!(fptree::FPTree)::WorldsMask
-    link!(fptree::FPTree)::Union{Nothing,FPTree}
-
-[`FPTree`](@ref) setters.
-"""
-
-"""$(doc_fptree_getters)"""
 content(fptree::FPTree)::Union{Nothing,Item} = fptree.content
-"""$(doc_fptree_getters)"""
+
+"""
+    parent(fptree::FPTree)::Union{Nothing,FPTree}
+
+Getter for the parent [`FPTree`](@ref)s of `fptree`.
+
+See also [`FPTree`](@ref), [`parent!`](@ref).
+"""
 parent(fptree::FPTree)::Union{Nothing,FPTree} = fptree.parent
-"""$(doc_fptree_getters)"""
+
+"""
+    children(fptree::FPTree)::Vector{FPTree}
+
+Getter for the list of children [`FPTree`](@ref)s of `fptree`.
+
+See also [`children!`](@ref), [`FPTree`](@ref).
+"""
 children(fptree::FPTree)::Vector{FPTree} = fptree.children
 
-"""$(doc_fptree_getters)"""
+"""
+    Base.count(fptree::FPTree)::Int64
+
+Getter for the `fptree` internal counter.
+Essentially, it represents the number of overlappings [`Item`](@ref) which ended up in
+`fptree` node during the building process of the tree itself.
+
+See also [`count!`](@ref), [`FPTree`](@ref), [`Item`](@ref).
+"""
 Base.count(fptree::FPTree)::Int64 = fptree.count
-"""$(doc_fptree_getters)"""
+
+"""
+    contributors(fptree::FPTree)::WorldsMask
+
+Getter for the `fptree` contributors array.
+
+Consider the [`Contributors`](@ref) definition.
+In the specific case of an [`FPTree`](@ref), the contributors array is simply a vector of
+integers which answers the following question for each i-th world of a generic instance:
+given a local support threshold `t`, how many times is `lsupp(content) >= t` ?
+
+Essentially, it represents the number of overlappings [`Item`](@ref) which ended up in
+`fptree` node during the building process of the tree itself.
+
+See also [`Contributors`](@ref), [`contributors!`](@ref), [`FPTree`](@ref), [`Item`](@ref),
+[`lsupp`](@ref).
+"""
 contributors(fptree::FPTree)::WorldsMask = fptree.contributors
 
-"""$(doc_fptree_getters)"""
-linkages(fptree::FPTree)::Union{Nothing,FPTree} = fptree.linkages
+"""
+    link(fptree::FPTree)::Union{Nothing,FPTree}
 
-"""$(doc_fptree_setters)"""
+Getter for `fptree`'s next brother [`FPTree`](@ref).
+`fptree`'s brotherhood is the set of all the [`FPTree`](@ref) whose content is exactly
+`fptree.content`.
+
+See also [`content`](@ref), [`FPTree`](@ref).
+"""
+link(fptree::FPTree)::Union{Nothing,FPTree} = fptree.link
+
+"""
+    content!(fptree::FPTree, item::Union{Nothing,Item})
+
+Setter for `fptree`'s content (the wrapped item).
+
+See also [`content`](@ref), [`FPTree`](@ref).
+"""
 content!(fptree::FPTree, item::Union{Nothing,Item}) = fptree.content = item
-"""$(doc_fptree_setters)"""
+
+"""
+    parent!(fptree::FPTree, item::Union{Nothing,FPTree})
+
+Setter for `fptree`'s parent [`FPTree`](@ref).
+
+See also [`FPTree`](@ref), [`parent`](@ref).
+"""
 parent!(fptree::FPTree, parentfpt::Union{Nothing,FPTree}) = fptree.parent = parentfpt
-"""$(doc_fptree_setters)"""
+
+"""
+    children!(fptree::FPTree, child::FPTree)
+
+Add a new [`FPTree`](@ref) to `fptree`'s children vector.
+
+!!! note
+    This method already sets the new children parent to `fptree` itself.
+
+See also [`children`](@ref), [`FPTree`](@ref).
+"""
 children!(fptree::FPTree, child::FPTree) = begin
     push!(children(fptree), child)
     parent!(child, fptree)
 end
 
-"""$(doc_fptree_setters)"""
+"""
+    count!(fptree::FPTree, newcount::Int64)
+
+Setter for `fptree`'s internal counter to a fixed value `newcount`.
+
+See also [`count`](@ref), [`FPTree`](@ref).
+"""
 count!(fptree::FPTree, newcount::Int64) = fptree.count = newcount
-"""$(doc_fptree_setters)"""
+
+"""
+    addcount!(fptree::FPTree, newcount::Int64)
+
+Add `newcount` to `fptree`'s internal counter.
+
+See also [`count`](@ref), [`FPTree`](@ref).
+"""
 addcount!(fptree::FPTree, deltacount::Int64) = fptree.count += deltacount
-"""$(doc_fptree_setters)"""
+
+"""
+    contributors!(fptree::FPTree, contribution::WorldsMask)
+
+Setter for `fptree`'s internal contributors mask to `contribution` [`WorldsMask`](@ref).
+
+See also [`contributors`](@ref), [`FPTree`](@ref), [`WorldsMask`](@ref).
+"""
 contributors!(fptree::FPTree, contribution::WorldsMask) = fptree.contributors = contribution
-"""$(doc_fptree_setters)"""
+
+"""
+    addcontributors!(fptree::FPTree, contribution::WorldsMask) =
+
+Add the `contribution` [`WorldsMask`](@ref) to `fptree`'s internal contributors mask.
+
+See also [`contributors`](@ref), [`FPTree`](@ref), [`WorldsMask`](@ref).
+"""
 addcontributors!(fptree::FPTree, contribution::WorldsMask) =
     fptree.contributors .+= contribution
 
@@ -160,7 +265,7 @@ end
 """
     function retrieveall(fptree::FPTree)::Itemset
 
-Return all the [`Item`](@ref) contained in `fptree`.
+Return all the unique [`Item`](@ref)s appearing in `fptree`.
 
 See also [`FPTree`](@ref), [`Item`](@ref), [`Itemset`](@ref).
 """
@@ -189,20 +294,20 @@ end
 """
     function follow(fptree::FPTree)::Union{Nothing,FPTree}
 
-Follow `fptree` linkages to (an internal node of) another [`FPTree`](@ref).
+Follow `fptree` link to (an internal node of) another [`FPTree`](@ref).
 
 See also [`FPTree`](@ref), [`HeaderTable`](@ref).
 """
 function follow(fptree::FPTree)::Union{Nothing,FPTree}
-    arrival = linkages(fptree)
+    arrival = link(fptree)
     return isnothing(arrival) ? fptree : follow(arrival)
 end
 
 """
     function link!(from::FPTree, to::FPTree)
 
-Establish a linkages between two [`FPTree`](@ref)s.
-If the starting tree is already linked with something, the already existing linkages are
+Establish a link between two [`FPTree`](@ref)s.
+If the starting tree is already linked with something, the already existing link are
 followed until a new "empty-linked" [`FPTree`](@ref) is found.
 
 See also [`follow`](@ref), [`FPTree`](@ref), [`HeaderTable`](@ref).
@@ -211,8 +316,8 @@ function link!(from::FPTree, to::FPTree)
     # find the last FPTree by iteratively following the internal link
     from = follow(from)
 
-    if from.linkages === nothing && to.linkages === nothing
-        from.linkages = to
+    if from.link === nothing && to.link === nothing
+        from.link = to
     end
 end
 
@@ -229,14 +334,17 @@ end
 """
     struct HeaderTable
         items::Vector{Item}
-        linkages::Dict{Item,Union{Nothing,FPTree}}
+        link::Dict{Item,Union{Nothing,FPTree}}
     end
 
 Utility data structure used to fastly access [`FPTree`](@ref) internal nodes.
 """
 struct HeaderTable
-    items::Vector{Item} # vector of Items, sorted decreasingly by global support
-    linkages::Dict{Item,Union{Nothing,FPTree}} # Item -> FPTree internal node association
+    # vector of Items, sorted decreasingly by global support
+    items::Vector{Item}
+
+    # Item -> FPTree association
+    link::Dict{Item,Union{Nothing,FPTree}}
 
     function HeaderTable()
         new(Item[], Dict{Item,Union{Nothing,FPTree}}())
@@ -265,8 +373,8 @@ end
 doc_htable_getters = """
     items(htable::HeaderTable)
 
-    linkages(htable::HeaderTable)
-    linkages(htable::HeaderTable, item::Item)
+    link(htable::HeaderTable)
+    link(htable::HeaderTable, item::Item)
 
 [`HeaderTable`](@ref) getters.
 """
@@ -277,29 +385,46 @@ doc_htable_setters = """
 [`HeaderTable`](@ref) setters.
 """
 
-"""$(doc_htable_getters)"""
+"""
+    items(htable::HeaderTable)
+
+Getter for the [`Item`](@ref)s loaded inside `htable`.
+
+See also [`HeaderTable`](@ref), [`Item`](@ref).
+"""
 items(htable::HeaderTable) = htable.items
 
-"""$(doc_htable_getters)"""
-linkages(htable::HeaderTable) = htable.linkages
+"""
+    link(htable::HeaderTable)
+    link(htable::HeaderTable, item::Item)
 
-"""$(doc_htable_getters)"""
-linkages(htable::HeaderTable, item::Item) = htable.linkages[item]
+Getter for the link structure wrapped by `htable`, or one of its specific entry.
+
+The link structure is, essentially, a dictionary associating an [`Item`](@ref) to a
+specific [`FPTree`](@ref).
+
+See also [`FPTree`](@ref), [`HeaderTable`](@ref), [`Item`](@ref), [`link!`](@ref).
+"""
+link(htable::HeaderTable) = htable.link
+link(htable::HeaderTable, item::Item) = htable.link[item]
 
 """
     function follow(htable::HeaderTable, item::Item)::Union{Nothing,FPTree}
 
-Follow `htable` linkages to (an internal node of) a [`FPTree`](@ref).
+Follow `htable` link to (an internal node of) a [`FPTree`](@ref).
+
+See also [`FPTree`](@ref), [`HeaderTable`](@ref), [`Item`](@ref), [`link`](@ref),
+[`link!`](@ref).
 """
 function follow(htable::HeaderTable, item::Item)::Union{Nothing,FPTree}
-    arrival = linkages(htable, item)
+    arrival = link(htable, item)
     return isnothing(arrival) ? arrival : follow(arrival)
 end
 
 """
     function link!(htable::HeaderTable, fptree::FPTree)
 
-Establish a linkages between the entry in `htable` corresponding to the [`content`](@ref)
+Establish a link between the entry in `htable` corresponding to the [`content`](@ref)
 of `fptree`.
 
 See also [`content`](@ref), [`FPTree`](@ref), [`HeaderTable`](@ref).
@@ -311,12 +436,12 @@ function link!(htable::HeaderTable, fptree::FPTree)
     hitems = items(htable)
     if !(_content in hitems)
         push!(hitems, _content)
-        htable.linkages[_content] = nothing
+        htable.link[_content] = nothing
     end
 
     # the content of `fptree` was loaded into the header table, but never looked up
-    if linkages(htable, _content) |> isnothing
-        htable.linkages[_content] = fptree
+    if link(htable, _content) |> isnothing
+        htable.link[_content] = fptree
         return
     end
 
@@ -364,12 +489,12 @@ doc_fptree_push = """
         htable::Union{Nothing,HeaderTable}=nothing
     )
 
-    function Base.push!(
+    Base.push!(
         fptree::FPTree,
-        itemsets::Vector{T},
+        enhanceditemsets::ConditionalPatternBase,
         miner::ARuleMiner;
-        htable::HeaderTable
-    ) where {T <: Union{Itemset, EnhancedItemset}}
+        htable::Union{Nothing,HeaderTable}=nothing
+    )
 
 Push one or more [`Itemset`](@ref)s/[`EnhancedItemset`](@ref) to an [`FPTree`](@ref).
 If an [`HeaderTable`](@ref) is provided, it is leveraged to develop internal links.
@@ -383,6 +508,14 @@ See also [`EnhancedItemset`](@ref), [`FPTree`](@ref), [`gsupport`](@ref),
 [`HeaderTable`](@ref), [`Itemset`](@ref).
 """
 
+# # IDEA: write uniquely the following dispatch, merging Itemset and EnhancedItemset cases
+# function Base.push!(
+#     fptree::FPTree,
+#     itemsets::Vector{T},
+#     miner::ARuleMiner;
+#     htable::HeaderTable
+# ) where {T <: Union{Itemset, EnhancedItemset}}
+
 """$(doc_fptree_push)"""
 function Base.push!(
     fptree::FPTree,
@@ -395,7 +528,7 @@ function Base.push!(
     # is still empty, then perform a linking.
     _fptree_content = content(fptree)
 
-    if htable !== nothing && _fptree_content !== nothing && linkages(fptree) === nothing
+    if htable !== nothing && _fptree_content !== nothing && link(fptree) === nothing
         link!(htable, fptree)
     end
 
@@ -429,7 +562,6 @@ function Base.push!(
     push!(subfptree, itemset[2:end], ninstance, miner; htable=htable)
 end
 
-
 Base.push!(
     fptree::FPTree,
     itemsets::Vector{Itemset},
@@ -439,13 +571,6 @@ Base.push!(
 ) = [push!(fptree, itemsets[ninstance], ninstance, miner; htable=htable)
         for ninstance in 1:ninstances]
 
-# TODO: the following is almost identical to the dispatch for `Itemset`s;
-# just change
-# - how contributors is computed (in one chase, using `contributors` and in this
-#   case by accessing the `EnhancedItemset`).
-# - make ninstance facultative (it is not needed when using enhanced itemsets)
-# The dispatch that takes a collection instead of a single (enhanced) itemset, should
-# consider itemsets::Vector{T} where {T <: Union{EnhancedItemset,Itemset}}
 function Base.push!(
     fptree::FPTree,
     enhanceditemset::EnhancedItemset,
@@ -456,7 +581,7 @@ function Base.push!(
     # is still empty, then perform a linking.
     _fptree_content = content(fptree)
 
-    if htable !== nothing && _fptree_content !== nothing && linkages(fptree) === nothing
+    if htable !== nothing && _fptree_content !== nothing && link(fptree) === nothing
         link!(htable, fptree)
     end
 
@@ -492,7 +617,6 @@ function Base.push!(
     push!(subfptree, enhanceditemset[2:end], miner; htable=htable)
 end
 
-"""$(doc_fptree_push)"""
 Base.push!(
     fptree::FPTree,
     enhanceditemsets::ConditionalPatternBase,
@@ -503,16 +627,16 @@ Base.push!(
 """
     Base.reverse(htable::HeaderTable)
 
-Iterator on `htable` [`items`](@ref).
+Iterator on `htable` wrapped [`Item`](@ref)s, in reverse order.
 
-See also [`HeaderTable`](@ref), [`Item`](@ref), [`items`](@ref).
+See also [`HeaderTable`](@ref), [`Item`](@ref).
 """
 Base.reverse(htable::HeaderTable) = reverse(items(htable))
 
 """
     patternbase(item::Item, htable::HeaderTable, miner::ARuleMiner)::ConditionalPatternBase
 
-Retrieve the conditional pattern base of `fptree` based on `item`.
+Retrieve the [`ConditionalPatternBase`](@ref) of `fptree` based on `item`.
 
 The conditional pattern based on a [`FPTree`](@ref) is the set of all the paths from the
 tree root to nodes containing `item` (not included). Each of these paths is represented
@@ -521,7 +645,7 @@ by an [`EnhancedItemset`](@ref), where each [`Item`](@ref) is associated with a
 `item`.
 
 The [`EnhancedItemset`](@ref)s in the returned [`ConditionalPatternBase`](@ref) are sorted
-decreasingly by [`gsupport`](@ref), as memoized in `miner`.
+decreasingly by [`gsupport`](@ref).
 
 See also [`ARuleMiner`](@ref), [`ConditionalPatternBase`](@ref), [`contributors`](@ref),
 [`EnhancedItemset`](@ref), [`fpgrowth`](@ref), [`FPTree`](@ref), [`Item`](@ref),
@@ -540,7 +664,7 @@ function patternbase(
     # follow horizontal references starting from `htable`;
     # for each reference, collect all the ancestors keeping a WorldsMask which, at each
     # position, is the minimum between the value in reference's mask and the new node one.
-    fptree = linkages(htable, item)
+    fptree = link(htable, item)
     fptcount = count(fptree)
 
     # just the contributors length; new variable to avoid calling this multiple times later
@@ -560,7 +684,7 @@ function patternbase(
             ancestorfpt = parent(ancestorfpt)
         end
 
-        # before following the linkages, push the collected enhanced itemset;
+        # before following the link, push the collected enhanced itemset;
         # items inside the itemset are sorted decreasingly by global support.
         # Note that, although we are working with enhanced itemsets, the sorting only
         # requires to consider the items inside them (so, the "non-enhanced" part).
@@ -568,7 +692,7 @@ function patternbase(
             by=t -> globalmemo(miner, (:gsupport, Itemset([t |> first]) )), rev=true)
 
         push!(_patternbase, enhanceditemset)
-        fptree = linkages(fptree)
+        fptree = link(fptree)
     end
 
     # needed to filter out new unfrequent items in the pattern base
