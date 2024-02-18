@@ -307,7 +307,7 @@ const GmeasMemo = Dict{GmeasMemoKey,Threshold} # global measure of an itemset/ar
         X::AbstractDataset              # target dataset
         algo::MiningAlgo                # algorithm used to perform extraction
 
-        alphabet::Vector{Item}
+        items::Vector{Item}
 
         # global meaningfulness measures and their thresholds (both local and global)
         item_constrained_measures::Vector{<:MeaningfulnessMeasure}
@@ -374,7 +374,7 @@ struct ARuleMiner
     X::AbstractDataset
     # algorithm used to perform extraction
     algo::FunctionWrapper{Nothing,Tuple{ARuleMiner,AbstractDataset}}
-    alphabet::Vector{Item}
+    items::Vector{Item}
 
     # meaningfulness measures
     item_constrained_measures::Vector{<:MeaningfulnessMeasure}
@@ -391,12 +391,12 @@ struct ARuleMiner
     function ARuleMiner(
         X::AbstractDataset,
         algo::Function,
-        alphabet::Vector{<:Item},
+        items::Vector{<:Item},
         item_constrained_measures::Vector{<:MeaningfulnessMeasure},
         rule_constrained_measures::Vector{<:MeaningfulnessMeasure};
         info::NamedTuple = (;)
     )
-        new(X, MiningAlgo(algo), unique(alphabet),
+        new(X, MiningAlgo(algo), unique(items),
             item_constrained_measures, rule_constrained_measures,
             Vector{Itemset}([]), Vector{Itemset}([]), Vector{ARule}([]),
             LmeasMemo(), GmeasMemo(), info
@@ -406,9 +406,9 @@ struct ARuleMiner
     function ARuleMiner(
         X::AbstractDataset,
         algo::Function,
-        alphabet::Vector{<:Item}
+        items::Vector{<:Item}
     )
-        ARuleMiner(X, MiningAlgo(algo), alphabet,
+        ARuleMiner(X, MiningAlgo(algo), items,
             [(gsupport, 0.1, 0.1)], [(gconfidence, 0.2, 0.2)]
         )
     end
@@ -444,13 +444,13 @@ See [`ARuleMiner`](@ref), [`MiningAlgo`](@ref).
 algorithm(miner::ARuleMiner)::MiningAlgo = miner.algo
 
 """
-    alphabet(miner::ARuleMiner)
+    items(miner::ARuleMiner)
 
-Getter for the alphabet of [`Item`](@ref)s loaded into `miner`.
+Getter for the [`Item`](@ref)s loaded into `miner`.
 
 See [`ARuleMiner`](@ref), [`Item`](@ref), [`MiningAlgo`](@ref).
 """
-alphabet(miner::ARuleMiner) = miner.alphabet
+items(miner::ARuleMiner) = miner.items
 
 """
     item_meas(miner::ARuleMiner)::Vector{<:MeaningfulnessMeasure}
@@ -769,7 +769,7 @@ end
 function Base.show(io::IO, miner::ARuleMiner)
     println(io, "$(dataset(miner))")
 
-    println(io, "Alphabet: $(alphabet(miner))\n")
+    println(io, "Alphabet: $(items(miner))\n")
     println(io, "Items measures: $(item_meas(miner))")
     println(io, "Rules measures: $(rule_meas(miner))\n")
 
