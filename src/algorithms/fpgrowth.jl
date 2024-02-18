@@ -509,13 +509,6 @@ See also [`HeaderTable`](@ref), [`Item`](@ref), [`items`](@ref).
 """
 Base.reverse(htable::HeaderTable) = reverse(items(htable))
 
-function fpgrowth_filter(item::Item, rest::Itemset)
-    mask = ones(Int64, 360)
-    for _item in rest
-
-    end
-end
-
 """
     patternbase(item::Item, htable::HeaderTable, miner::ARuleMiner)::ConditionalPatternBase
 
@@ -586,15 +579,15 @@ function patternbase(
         getglobalthreshold(miner, gsupport) * ninstances(dataset(miner))
     ))
 
-    # # filter out unfrequent itemsets from a pattern base
-    # # IDEA: allocating two dictionaries here, instead of a single Dict with `Pair` values,
-    # # is a waste. Is there a way to obtain the same effect using no immutable structures?
+    # filter out unfrequent itemsets from a pattern base
+    # IDEA: allocating two dictionaries here, instead of a single Dict with `Pair` values,
+    # is a waste. Is there a way to obtain the same effect using no immutable structures?
     globalbouncer = DefaultDict{Item,Int64}(0)   # record of respected global thresholds
     localbouncer = DefaultDict{Item,WorldsMask}( # record of respected local thresholds
         ones(Int64, _fptcontributors_length))
     ispromoted = Dict{Item,Bool}([])          # winner items, which will compose the pbase
 
-    # # collection phase
+    # collection phase
     for itemset in _patternbase         # for each Vector{Tuple{Item,Int64,WorldsMask}}
         for enhanceditem in itemset     # for each Tuple{Item,Int64,WorldsMask} in itemset
             item, _count, _contributors = enhanceditem
@@ -603,8 +596,8 @@ function patternbase(
         end
     end
 
-    # # now that dictionaries are filled, establish which are promoted and apply changes
-    # # in the filtering phase.
+    # now that dictionaries are filled, establish which are promoted and apply changes
+    # in the filtering phase.
     for item in keys(globalbouncer)
         if globalbouncer[item] < gsupp_integer_threshold ||
             Base.count(x ->
