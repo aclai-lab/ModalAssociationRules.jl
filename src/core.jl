@@ -130,12 +130,17 @@ See also [`fpgrowth`](@ref), [`Item`](@ref), [`Itemset`](@ref), [`WorldMask`](@r
 """
 const EnhancedItemset = Vector{Tuple{Item,Int64,WorldMask}}
 
-function Base.convert(::Type{EnhancedItemset}, itemset::Itemset, nworlds::Int64)
-    return [(item, zeros(Int64, nworlds)) for item in itemset]
+function Base.convert(
+    ::Type{EnhancedItemset},
+    itemset::Itemset,
+    count::Int64,
+    nworlds::Int64
+)
+    return EnhancedItemset([(item, count, zeros(Int64, nworlds)) for item in itemset])
 end
 
 function Base.convert(::Type{Itemset}, enhanceditemset::EnhancedItemset)
-    return [first(enhanceditem) for enhanceditem in enhanceditemset]
+    return Itemset([first(enhanceditem) for enhanceditem in enhanceditemset])
 end
 
 """

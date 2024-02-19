@@ -38,6 +38,49 @@ fpgrowth_miner = @equip_contributors ARuleMiner(
 mine(apriori_miner)
 mine(fpgrowth_miner)
 
+@testset "core.jl tests"
+    pq = Itemset([manual_p, manual_q])
+    pqr = Itemset([manual_p, manual_q, manual_r])
+    qr = Itemset([manual_q, manual_r])
+
+    @test Item <: Formula
+    @test Itemset <: Vector{<:Item}
+    @test Itemset(manual_p) == [manual_p]
+    @test pq == [manual_p, manual_q]
+
+    @test convert(Item, Itemset([manual_p])) == manual_p
+
+    @test_throws MethodError convert(Item, [manual_p])
+    @test_throws MethodError convert(Item, [manual_p, manual_q])
+    @test_throws AssertionError convert(Item, pq)
+
+    @test syntaxstring(manual_p) == "min[V1] > -0.5"
+    @test syntaxstring(pq) == "[min[V1] > -0.5, min[V2] ≤ -2.2]"
+
+    @test manual_p in pq
+    @test pq in pqr
+    @test !(pq in [manual_p, manual_q, manual_r])
+    @test pq in [pq, pqr, qr]
+
+    @test toformula(pq) isa LeftmostConjunctiveForm
+    @test toformula(pq).children |> first == manual_p
+
+    @test Threshold isa Float64
+    @test WorldMask <: Vector{Int64}
+
+    @test EnhancedItemset <: Vector{Tuple{Item,Int64,WorldMask}}
+    enhanceditemset = convert(EnhancedItemset, pq, 42, 5)
+    @test length(enhanceditemset) == 2
+    @test enhanceditemset[1] isa Tuple
+    @test enhanceditemset[1] |> first isa Item
+    @test enhanceditemset[1][2] == 42
+    @test enhanceditemset[1] |> last |> length == 5
+    @test convert(Itemset, enhanceditemset) isa Itemset
+
+    @test ConditionalPatternBase <: Vector{EnhancedItemset}
+    @test ARule <: Tuple
+@end
+
 @testset "ARuleMiner general checks" begin
     @test_nowarn ARuleMiner(X1, apriori(), manual_alphabet)
     @test_nowarn algorithm(ARuleMiner(X1, apriori(), manual_alphabet)) isa MiningAlgo
