@@ -14,8 +14,9 @@ using Reexport
 @reexport using SoleBase
 @reexport using SoleLogics
 @reexport using MultiData
-@reexport using SoleModels
 @reexport using SoleData
+using SoleModels
+# export SoleModels.evaluate
 
 using SoleLogics: AbstractInterpretation, getinstance, LogicalInstance, nworlds
 using SoleData: SupportedLogiset
