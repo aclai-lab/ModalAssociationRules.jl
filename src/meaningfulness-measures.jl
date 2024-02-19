@@ -35,7 +35,7 @@ function lsupport(
     end
 
     # keep track of which worlds contributes to compute local support, then compute it
-    _contributors = WorldsMask([
+    _contributors = WorldMask([
         check(toformula(itemset), X, i_instance, w)
         for w in allworlds(X, i_instance)
     ])

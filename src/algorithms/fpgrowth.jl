@@ -13,9 +13,9 @@
 
         # how many times lsupp(content) does overpass
         # the corresponding threshold for each world
-        const contributors::WorldsMask
+        const contributors::WorldMask
 
-        link::Union{Nothing,FPTree}     # link to another FPTree root
+        link::Union{Nothing,FPTree}         # link to another FPTree root
     end
 
 Fundamental data structure used in FP-Growth algorithm.
@@ -37,7 +37,7 @@ true is accumulated.
     visiting the dataset over and over again.
 
 See also [`EnhancedItemset`](@ref), [`fpgrowth`](@ref), [`gsupport`](@ref), [`Item`](@ref),
-[`Itemset`](@ref), [`WorldsMask`](@ref).
+[`Itemset`](@ref), [`WorldMask`](@ref).
 """
 mutable struct FPTree
     content::Union{Nothing,Item}        # Item contained in this node (nothing if root)
@@ -49,9 +49,9 @@ mutable struct FPTree
 
     # how many times lsupp(content) does overpass
     # the corresponding threshold for each world
-    const contributors::WorldsMask
+    const contributors::WorldMask
 
-    link::Union{Nothing,FPTree}     # link to another FPTree root
+    link::Union{Nothing,FPTree}         # link to another FPTree root
 
     # empty constructor
     function FPTree()
@@ -144,7 +144,7 @@ See also [`count!`](@ref), [`FPTree`](@ref), [`Item`](@ref).
 Base.count(fptree::FPTree)::Int64 = fptree.count
 
 """
-    contributors(fptree::FPTree)::WorldsMask
+    contributors(fptree::FPTree)::WorldMask
 
 Getter for the `fptree` contributors array.
 
@@ -159,7 +159,7 @@ Essentially, it represents the number of overlappings [`Item`](@ref) which ended
 See also [`Contributors`](@ref), [`contributors!`](@ref), [`FPTree`](@ref), [`Item`](@ref),
 [`lsupp`](@ref).
 """
-contributors(fptree::FPTree)::WorldsMask = fptree.contributors
+contributors(fptree::FPTree)::WorldMask = fptree.contributors
 
 """
     link(fptree::FPTree)::Union{Nothing,FPTree}
@@ -224,22 +224,22 @@ See also [`count`](@ref), [`FPTree`](@ref).
 addcount!(fptree::FPTree, deltacount::Int64) = fptree.count += deltacount
 
 """
-    contributors!(fptree::FPTree, contribution::WorldsMask)
+    contributors!(fptree::FPTree, contribution::WorldMask)
 
-Setter for `fptree`'s internal contributors mask to `contribution` [`WorldsMask`](@ref).
+Setter for `fptree`'s internal contributors mask to `contribution` [`WorldMask`](@ref).
 
-See also [`contributors`](@ref), [`FPTree`](@ref), [`WorldsMask`](@ref).
+See also [`contributors`](@ref), [`FPTree`](@ref), [`WorldMask`](@ref).
 """
-contributors!(fptree::FPTree, contribution::WorldsMask) = fptree.contributors = contribution
+contributors!(fptree::FPTree, contribution::WorldMask) = fptree.contributors = contribution
 
 """
-    addcontributors!(fptree::FPTree, contribution::WorldsMask) =
+    addcontributors!(fptree::FPTree, contribution::WorldMask) =
 
-Add the `contribution` [`WorldsMask`](@ref) to `fptree`'s internal contributors mask.
+Add the `contribution` [`WorldMask`](@ref) to `fptree`'s internal contributors mask.
 
-See also [`contributors`](@ref), [`FPTree`](@ref), [`WorldsMask`](@ref).
+See also [`contributors`](@ref), [`FPTree`](@ref), [`WorldMask`](@ref).
 """
-addcontributors!(fptree::FPTree, contribution::WorldsMask) =
+addcontributors!(fptree::FPTree, contribution::WorldMask) =
     fptree.contributors .+= contribution
 
 """
@@ -539,7 +539,7 @@ function Base.push!(
 
     # retrieve the item to grow the tree;
     # to grow a find pattern tree in the modal case scenario, each item has to be associated
-    # with its global counter (always 1!) and its contributors array (see [`WorldsMask`]).
+    # with its global counter (always 1!) and its contributors array (see [`WorldMask`]).
     item = first(itemset)
     _contributors = contributors(:lsupport, item, ninstance, miner)
 
@@ -641,7 +641,7 @@ Retrieve the [`ConditionalPatternBase`](@ref) of `fptree` based on `item`.
 The conditional pattern based on a [`FPTree`](@ref) is the set of all the paths from the
 tree root to nodes containing `item` (not included). Each of these paths is represented
 by an [`EnhancedItemset`](@ref), where each [`Item`](@ref) is associated with a
-[`WorldsMask`](@ref), given by the minimum of its [`contributors`](@ref) and the ones of
+[`WorldMask`](@ref), given by the minimum of its [`contributors`](@ref) and the ones of
 `item`.
 
 The [`EnhancedItemset`](@ref)s in the returned [`ConditionalPatternBase`](@ref) are sorted
@@ -649,7 +649,7 @@ decreasingly by [`gsupport`](@ref).
 
 See also [`ARuleMiner`](@ref), [`ConditionalPatternBase`](@ref), [`contributors`](@ref),
 [`EnhancedItemset`](@ref), [`fpgrowth`](@ref), [`FPTree`](@ref), [`Item`](@ref),
-[`Itemset`](@ref), [`WorldsMask`](@ref).
+[`Itemset`](@ref), [`WorldMask`](@ref).
 """
 function patternbase(
     item::Item,
@@ -658,11 +658,11 @@ function patternbase(
 )::ConditionalPatternBase
     # think a pattern base as a vector of vector of itemsets (a vector of vector of items);
     # the reason why the type is explicited differently here, is that every item must be
-    # associated with a specific WorldsMask to guarantee correctness.
+    # associated with a specific WorldMask to guarantee correctness.
     _patternbase = ConditionalPatternBase([])
 
     # follow horizontal references starting from `htable`;
-    # for each reference, collect all the ancestors keeping a WorldsMask which, at each
+    # for each reference, collect all the ancestors keeping a WorldMask which, at each
     # position, is the minimum between the value in reference's mask and the new node one.
     fptree = link(htable, item)
     fptcount = count(fptree)
@@ -707,13 +707,13 @@ function patternbase(
     # IDEA: allocating two dictionaries here, instead of a single Dict with `Pair` values,
     # is a waste. Is there a way to obtain the same effect using no immutable structures?
     globalbouncer = DefaultDict{Item,Int64}(0)   # record of respected global thresholds
-    localbouncer = DefaultDict{Item,WorldsMask}( # record of respected local thresholds
+    localbouncer = DefaultDict{Item,WorldMask}( # record of respected local thresholds
         ones(Int64, _fptcontributors_length))
     ispromoted = Dict{Item,Bool}([])          # winner items, which will compose the pbase
 
     # collection phase
-    for itemset in _patternbase         # for each Vector{Tuple{Item,Int64,WorldsMask}}
-        for enhanceditem in itemset     # for each Tuple{Item,Int64,WorldsMask} in itemset
+    for itemset in _patternbase         # for each Vector{Tuple{Item,Int64,WorldMask}}
+        for enhanceditem in itemset     # for each Tuple{Item,Int64,WorldMask} in itemset
             item, _count, _contributors = enhanceditem
             globalbouncer[item] += _count
             localbouncer[item] += _contributors

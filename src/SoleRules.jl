@@ -28,12 +28,12 @@ export Item
 export Itemset, toformula
 
 export Threshold
-export WorldsMask, EnhancedItemset, ConditionalPatternBase
+export WorldMask, EnhancedItemset, ConditionalPatternBase
 
 export ARule
 export antecedent, consequent
 
-export ConstrainedMeasure, islocalof, isglobalof
+export MeaningfulnessMeasure, islocalof, isglobalof
 export ARMSubject
 export LmeasMemoKey, LmeasMemo, Contributors
 export GmeasMemoKey, GmeasMemo
