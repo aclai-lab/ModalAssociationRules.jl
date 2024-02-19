@@ -777,9 +777,11 @@ end
     fpgrowth(; fulldump::Bool=true, verbose::Bool=true)::Function
 
 Wrapper function for the FP-Growth algorithm over a modal dataset.
-Returns a `function f(miner::ARuleMiner, X::AbstractDataset)::Nothing` that runs the main
+Returns a [`MiningAlgo`](@ref) that runs the main
 FP-Growth algorithm logic,
 [as described here](https://www.cs.sfu.ca/~jpei/publications/sigmod00.pdf).
+
+See also [`MiningAlgo`](@ref).
 """
 function fpgrowth(;
     fulldump::Bool=true,   # mostly for testing purposes
