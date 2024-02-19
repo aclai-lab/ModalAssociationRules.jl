@@ -8,7 +8,7 @@ Fundamental type in the context of
 [association rule mining](https://en.wikipedia.org/wiki/Association_rule_learning).
 An [`Item`](@ref) is a logical formula, which can be [`SoleLogics.check`](@ref)ed on models.
 
-The purpose of association rule mining is to discover interesting relations between
+The purpose of association rule mining (ARM) is to discover interesting relations between
 [`Item`](@ref)s, regrouped in [`Itemset`](@ref)s, to generate association rules
 ([`ARule`](@ref)).
 
@@ -21,15 +21,13 @@ const Item = SoleLogics.Formula
 
 """
     const Itemset = Vector{Item}
-    function Itemset(item::Item)
-    function Itemset(itemsets::Vector{Itemset})
 
 Collection of *unique* [`Item`](@ref)s.
 
 Given a [`MeaningfulnessMeasure`](@ref) `meas` and a threshold to be overpassed, `t`,
-then an itemset `itemset` is said to be meaningfull with respect to `meas` if and only if
+then an itemset `itemset` is said to be meaningful with respect to `meas` if and only if
 `meas(itemset) > t`.
-Alternatively, it is said to be *frequent*.
+Alternatively to meaningful, it is said to be *frequent*.
 
 Generally speaking, meaningfulness (or interestingness) of an itemset is directly
 correlated to its frequency in the data: intuitively, when a pattern is recurrent in data,

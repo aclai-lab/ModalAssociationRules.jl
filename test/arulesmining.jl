@@ -5,42 +5,44 @@ using SoleRules
 using SoleData
 using StatsBase
 
-# preamble
-
 # load NATOPS dataset and convert it to a Logiset
 X_df, y = SoleData.load_arff_dataset("NATOPS");
-X = scalarlogiset(X_df)
+X1 = scalarlogiset(X_df)
 
+# different tested algorithms will use different Logiset's copies
+X2 = deepcopy(X1)
+
+# make a vector of item, that will be the initial state of the mining machine
 manual_p = Atom(ScalarCondition(UnivariateMin(1), >, -0.5))
 manual_q = Atom(ScalarCondition(UnivariateMin(2), <=, -2.2))
 manual_r = Atom(ScalarCondition(UnivariateMin(3), >, -3.6))
 
-boxlater = box(IA_L)
-diamondlater = diamond(IA_L)
+manual_lp = box(IA_L)(manual_p)
+manual_lq = diamond(IA_L)(manual_q)
+manual_lr = box(IA_L)(manual_r)
 
-manual_lp = boxlater(manual_p)
-manual_lq = diamondlater(manual_q)
-manual_lr = boxlater(manual_r)
+manual_alphabet = Vector{Item}([
+    manual_p, manual_q, manual_r, manual_lp, manual_lq, manual_lr])
 
-manual_alphabet = Vector{Item}([manual_p, manual_q, manual_r,
-    manual_lp, manual_lq, manual_lr])
-
+# set meaningfulness measures, for both mining frequent itemsets and establish which
+# combinations of them are association rules.
 _item_meas = [(gsupport, 0.1, 0.1)]
 _rule_meas = [(gconfidence, 0.2, 0.2)]
 
-apriori_miner = ARuleMiner(X, apriori(), manual_alphabet, _item_meas, _rule_meas)
+# make two miners: the first digs the search space using aprior, the second uses fpgrowth
+apriori_miner = ARuleMiner(X1, apriori(), manual_alphabet, _item_meas, _rule_meas)
 fpgrowth_miner = @equip_contributors ARuleMiner(
-    X, fpgrowth(), manual_alphabet, _item_meas, _rule_meas)
+    X2, fpgrowth(), manual_alphabet, _item_meas, _rule_meas)
 
 # mine the frequent patterns with both apriori and fpgrowth
 mine(apriori_miner)
 mine(fpgrowth_miner)
 
 @testset "ARuleMiner general checks" begin
-    @test_nowarn ARuleMiner(X, apriori(), manual_alphabet)
-    @test_nowarn algorithm(ARuleMiner(X, apriori(), manual_alphabet)) isa MiningAlgo
+    @test_nowarn ARuleMiner(X1, apriori(), manual_alphabet)
+    @test_nowarn algorithm(ARuleMiner(X1, apriori(), manual_alphabet)) isa MiningAlgo
 
-    @test items(ARuleMiner(X, apriori(), manual_alphabet)) == manual_alphabet
+    @test items(ARuleMiner(X1, apriori(), manual_alphabet)) == manual_alphabet
 
     @test item_meas(miner) == _item_meas
     @test rule_meas(miner) == _rule_meas

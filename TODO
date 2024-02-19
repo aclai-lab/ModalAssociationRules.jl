@@ -44,6 +44,9 @@ Generic:
   ☐ show for Item, Itemset, EnhancedItemset, ARuleMiner, FPTree, HeaderTable
   ☐ sort/issort by globalmemo, managing correct casting from Item, Itemset and EnhancedItemset
   ☐ contributors array should not be in ARuleMiner.info, but rather a proper attribute 
+    # or maybe not?
+  ☐ enrich info field inside ARuleMiner
+  ☐ remove nonfreqitems from ARuleMiner (this could be an optional info field?)
 
 Optimizations:
   ☐ miner.items should be treated as a generator 
@@ -52,7 +55,7 @@ Optimizations:
   ☐ give the possiblity to consider a dataset slice to extract rules without trivial items (see `EnhancedItemset`)
 
   Utility:
-  ☐ Base.in between two itemsets
+  ✔ Base.in between two itemsets @done(24-02-19 14:18)
   ☐ build a macro to implement decorator pattern to build local and global measures, optionally exploiting ARuleMiner memoization
   ☐ better design how an ARuleMiner keeps track of local measures. Local and global measures CAN be indipendent. 
   ☐ Base.push!(fptree::FPTree, itemset::Itemset, miner::ARuleMiner) doesn't check if itemset is sorted by gsupport. Add a safe=false flag.
