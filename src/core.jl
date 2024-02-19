@@ -170,7 +170,7 @@ designed to capture how "reliable" a rule is.
 See also [`gconfidence`](@ref), [`Itemset`](@ref), [`lconfidence`](@ref),
 [`MeaningfulnessMeasure`](@ref).
 """
-const ARule = Tuple{Itemset,Itemset} # NOTE: see SoleLogics.Rule
+const ARule = Tuple{Itemset,Itemset}
 antecedent(rule::ARule) = first(rule)
 consequent(rule::ARule) = last(rule)
 
