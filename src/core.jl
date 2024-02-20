@@ -195,6 +195,10 @@ content(rule::ARule) = (rule.antecedent, rule.consequent)
 antecedent(rule::ARule) = rule.antecedent
 consequent(rule::ARule) = rule.consequent
 
+function Base.convert(::Type{Itemset}, arule::ARule)::Itemset
+    return Itemset(vcat(antecedent(arule), consequent(arule)))
+end
+
 """
     const MeaningfulnessMeasure = Tuple{Function, Threshold, Threshold}
 

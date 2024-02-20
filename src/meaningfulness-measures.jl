@@ -133,15 +133,12 @@ function lconfidence(
 
     # leverage memoization if a miner is provided, and it already computed the measure
     if !isnothing(miner)
-        memoized = globalmemo(miner, memokey)
+        memoized = localmemo(miner, memokey)
         if !isnothing(memoized) return memoized end
     end
 
-    _antecedent = antecedent(rule)
-    _consequent = consequent(rule)
-
-    ans = lsupport(SoleRules.merge(_antecedent, _consequent), logi_instance; miner=miner) /
-        lsupport(_antecedent, logi_instance; miner=miner)
+    ans = lsupport(convert(Itemset, rule), logi_instance; miner=miner) /
+        lsupport(antecedent(rule), logi_instance; miner=miner)
 
     if !isnothing(miner)
         localmemo!(miner, memokey, ans)

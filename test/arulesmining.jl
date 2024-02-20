@@ -143,6 +143,14 @@ mine(fpgrowth_miner)
     @test _temp_lsupport > 0.0 && _temp_lsupport < 1.0
     @test gsupport(pq, dataset(apriori_miner), 0.1; miner=fpgrowth_miner) == 0.025
 
+    lsupport(Itemset(manual_p), SoleLogics.getinstance(X2, 7); miner=fpgrowth_miner)
+    lsupport(Itemset(manual_lr), SoleLogics.getinstance(X2, 7); miner=fpgrowth_miner)
+    @test lconfidence(
+        _temp_arule, SoleLogics.getinstance(X2,7); miner=fpgrowth_miner) == 1.0
+
+    _temp_arule = arules_generator(freqitems(fpgrowth_miner), fpgrowth_miner) |> first
+    @test gconfidence(
+        _temp_arule, dataset(fpgrowth_miner), 0.1; miner=fpgrowth_miner) == 1.0
 end
 
 @testset "core.jl - ARuleMiner" begin
