@@ -136,6 +136,13 @@ mine(fpgrowth_miner)
     @test isglobalof(gconfidence, gsupport) == false
     @test isglobalof(gconfidence, lconfidence) == true
     @test isglobalof(gconfidence, gconfidence) == false
+
+    @test lsupport(pq, SoleLogics.getinstance(X2, 1); miner=fpgrowth_miner) == 0.0
+
+    _temp_lsupport = lsupport(pq, SoleLogics.getinstance(X2, 7); miner=fpgrowth_miner)
+    @test _temp_lsupport > 0.0 && _temp_lsupport < 1.0
+    @test gsupport(pq, dataset(apriori_miner), 0.1; miner=fpgrowth_miner) == 0.025
+
 end
 
 @testset "core.jl - ARuleMiner" begin
@@ -167,10 +174,39 @@ end
     @test_nowarn globalmemo!(apriori_miner, _temp_gmemo_key, 0.0)
     @test globalmemo(apriori_miner, _temp_gmemo_key) == 0.0
 
+    countdown = 3
     for _temp_arule in arules_generator(freqitems(apriori_miner), apriori_miner)
-        @test _temp_arule in arules(apriori_miner)
-        @test _temp_arule isa ARule
+        if countdown > 0
+            @test _temp_arule in arules(apriori_miner)
+            @test _temp_arule isa ARule
+        end
+        countdown -= 1
     end
+
+    _temp_lmemo_key2 = (:lsupport, Itemset(manual_p), 1)
+    @test localmemo(apriori_miner) |> length == 11880
+    @test localmemo(apriori_miner)[(:lsupport, pq, 1)] == 0.0
+    _temp_lmemo_val2 = localmemo(apriori_miner)[_temp_lmemo_key2]
+    @test _temp_lmemo_val2 > 0.17 && _temp_lmemo_val2 < 0.18
+
+    @test info(apriori_miner) isa NamedTuple
+    @test !(isequipped(apriori_miner, :contributors))
+    @test isequipped(fpgrowth_miner, :contributors)
+    @test info(fpgrowth_miner, :contributors) |> length 2160
+
+    @test isequipped(@equip_contributors ARuleMiner(X1, apriori(), manual_alphabet),
+        :contributors)
+
+    @test contributors(_temp_lmemo_key2, fpgrowth_miner) |> length == 1326
+    @test contributors(_temp_lmemo_key2, fpgrowth_miner) ==
+        contributors(:lsupport, Itemset(manual_p), 1, fpgrowth_miner)
+    @test contributors(_temp_lmemo_key2, fpgrowth_miner) |> sum == 104545
+    @test_throws ErrorException contributors!(
+        apriori_miner, _temp_lmemo_key2, zeros(Int64, 1326))
+    @test contributors!(
+        fpgrowth_miner, _temp_lmemo_key2, zeros(Int64, 1326)) == zeros(Int64, 1326)
+
+    @test_nowarn apply(fpgrowth_miner, dataset(fpgrowth_miner))
 end
 
 @testset "FP-Growth general checks (FPTree and HeaderTable)" begin

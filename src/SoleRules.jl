@@ -47,7 +47,7 @@ export getlocalthreshold, setlocalthreshold
 export getglobalthreshold, setglobalthreshold
 export localmemo, localmemo!
 export globalmemo, globalmemo!
-export info
+export info, isequipped
 
 export MiningAlgo
 
