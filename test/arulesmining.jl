@@ -96,63 +96,6 @@ mine(fpgrowth_miner)
     @test MiningAlgo <: FunctionWrapper{Nothing,Tuple{ARuleMiner,AbstractDataset}}
 @end
 
-@testset "core.jl - meaningfulness measures" begin
-    @test islocalof(lsupport, lsupport) == false
-    @test islocalof(lsupport, gsupport) == true
-    @test islocalof(lsupport, lconfidence) == false
-    @test islocalof(lsupport, gconfidence) == false
-
-    @test islocalof(gsupport, lsupport) == false
-    @test islocalof(gsupport, gsupport) == false
-    @test islocalof(gsupport, lconfidence) == false
-    @test islocalof(gsupport, gconfidence) == false
-
-    @test islocalof(lconfidence, lsupport) == false
-    @test islocalof(lconfidence, gsupport) == false
-    @test islocalof(lconfidence, lconfidence) == false
-    @test islocalof(lconfidence, gconfidence) == true
-
-    @test islocalof(gconfidence, lsupport) == false
-    @test islocalof(gconfidence, gsupport) == false
-    @test islocalof(gconfidence, lconfidence) == false
-    @test islocalof(gconfidence, gconfidence) == false
-
-    @test isglobalof(lsupport, lsupport) == false
-    @test isglobalof(lsupport, gsupport) == false
-    @test isglobalof(lsupport, lconfidence) == false
-    @test isglobalof(lsupport, gconfidence) == false
-
-    @test isglobalof(gsupport, lsupport) == true
-    @test isglobalof(gsupport, gsupport) == false
-    @test isglobalof(gsupport, lconfidence) == false
-    @test isglobalof(gsupport, gconfidence) == false
-
-    @test isglobalof(lconfidence, lsupport) == false
-    @test isglobalof(lconfidence, gsupport) == false
-    @test isglobalof(lconfidence, lconfidence) == false
-    @test isglobalof(lconfidence, gconfidence) == false
-
-    @test isglobalof(gconfidence, lsupport) == false
-    @test isglobalof(gconfidence, gsupport) == false
-    @test isglobalof(gconfidence, lconfidence) == true
-    @test isglobalof(gconfidence, gconfidence) == false
-
-    @test lsupport(pq, SoleLogics.getinstance(X2, 1); miner=fpgrowth_miner) == 0.0
-
-    _temp_lsupport = lsupport(pq, SoleLogics.getinstance(X2, 7); miner=fpgrowth_miner)
-    @test _temp_lsupport > 0.0 && _temp_lsupport < 1.0
-    @test gsupport(pq, dataset(apriori_miner), 0.1; miner=fpgrowth_miner) == 0.025
-
-    lsupport(Itemset(manual_p), SoleLogics.getinstance(X2, 7); miner=fpgrowth_miner)
-    lsupport(Itemset(manual_lr), SoleLogics.getinstance(X2, 7); miner=fpgrowth_miner)
-    @test lconfidence(
-        _temp_arule, SoleLogics.getinstance(X2,7); miner=fpgrowth_miner) == 1.0
-
-    _temp_arule = arules_generator(freqitems(fpgrowth_miner), fpgrowth_miner) |> first
-    @test gconfidence(
-        _temp_arule, dataset(fpgrowth_miner), 0.1; miner=fpgrowth_miner) == 1.0
-end
-
 @testset "core.jl - ARuleMiner" begin
     @test_nowarn ARuleMiner(X1, apriori(), manual_alphabet)
     @test_nowarn algorithm(ARuleMiner(X1, apriori(), manual_alphabet)) isa MiningAlgo
@@ -215,6 +158,70 @@ end
         fpgrowth_miner, _temp_lmemo_key2, zeros(Int64, 1326)) == zeros(Int64, 1326)
 
     @test_nowarn apply(fpgrowth_miner, dataset(fpgrowth_miner))
+end
+
+@testset "meaningfulness-measures.jl" begin
+    @test islocalof(lsupport, lsupport) == false
+    @test islocalof(lsupport, gsupport) == true
+    @test islocalof(lsupport, lconfidence) == false
+    @test islocalof(lsupport, gconfidence) == false
+
+    @test islocalof(gsupport, lsupport) == false
+    @test islocalof(gsupport, gsupport) == false
+    @test islocalof(gsupport, lconfidence) == false
+    @test islocalof(gsupport, gconfidence) == false
+
+    @test islocalof(lconfidence, lsupport) == false
+    @test islocalof(lconfidence, gsupport) == false
+    @test islocalof(lconfidence, lconfidence) == false
+    @test islocalof(lconfidence, gconfidence) == true
+
+    @test islocalof(gconfidence, lsupport) == false
+    @test islocalof(gconfidence, gsupport) == false
+    @test islocalof(gconfidence, lconfidence) == false
+    @test islocalof(gconfidence, gconfidence) == false
+
+    @test isglobalof(lsupport, lsupport) == false
+    @test isglobalof(lsupport, gsupport) == false
+    @test isglobalof(lsupport, lconfidence) == false
+    @test isglobalof(lsupport, gconfidence) == false
+
+    @test isglobalof(gsupport, lsupport) == true
+    @test isglobalof(gsupport, gsupport) == false
+    @test isglobalof(gsupport, lconfidence) == false
+    @test isglobalof(gsupport, gconfidence) == false
+
+    @test isglobalof(lconfidence, lsupport) == false
+    @test isglobalof(lconfidence, gsupport) == false
+    @test isglobalof(lconfidence, lconfidence) == false
+    @test isglobalof(lconfidence, gconfidence) == false
+
+    @test isglobalof(gconfidence, lsupport) == false
+    @test isglobalof(gconfidence, gsupport) == false
+    @test isglobalof(gconfidence, lconfidence) == true
+    @test isglobalof(gconfidence, gconfidence) == false
+
+    @test lsupport(pq, SoleLogics.getinstance(X2, 1); miner=fpgrowth_miner) == 0.0
+
+    _temp_lsupport = lsupport(pq, SoleLogics.getinstance(X2, 7); miner=fpgrowth_miner)
+    @test _temp_lsupport > 0.0 && _temp_lsupport < 1.0
+    @test gsupport(pq, dataset(apriori_miner), 0.1; miner=fpgrowth_miner) == 0.025
+
+    lsupport(Itemset(manual_p), SoleLogics.getinstance(X2, 7); miner=fpgrowth_miner)
+    lsupport(Itemset(manual_lr), SoleLogics.getinstance(X2, 7); miner=fpgrowth_miner)
+    @test lconfidence(
+        _temp_arule, SoleLogics.getinstance(X2,7); miner=fpgrowth_miner) == 1.0
+
+    _temp_arule = arules_generator(freqitems(fpgrowth_miner), fpgrowth_miner) |> first
+    @test gconfidence(
+        _temp_arule, dataset(fpgrowth_miner), 0.1; miner=fpgrowth_miner) == 1.0
+end
+
+@testset "arulemining-utils.jl" begin
+    @test combine([pq, qr], 3) |> first == pqr
+    @test combine([manual_p, manual_q], [manual_r]) |> collect |> length == 3
+    @test combine(
+        [manual_p, manual_q], [manual_r]) |> collect |> first == Itemset([manual_p, manual_r])
 end
 
 @testset "FP-Growth general checks (FPTree and HeaderTable)" begin
