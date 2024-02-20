@@ -38,7 +38,7 @@ fpgrowth_miner = @equip_contributors ARuleMiner(
 mine(apriori_miner)
 mine(fpgrowth_miner)
 
-@testset "core.jl tests"
+@testset "core.jl - fundamental types"
     pq = Itemset([manual_p, manual_q])
     pqr = Itemset([manual_p, manual_q, manual_r])
     qr = Itemset([manual_q, manual_r])
@@ -65,7 +65,7 @@ mine(fpgrowth_miner)
     @test toformula(pq) isa LeftmostConjunctiveForm
     @test toformula(pq).children |> first == manual_p
 
-    @test Threshold isa Float64
+    @test Threshold <: Float64
     @test WorldMask <: Vector{Int64}
 
     @test EnhancedItemset <: Vector{Tuple{Item,Int64,WorldMask}}
@@ -78,44 +78,25 @@ mine(fpgrowth_miner)
     @test convert(Itemset, enhanceditemset) isa Itemset
 
     @test ConditionalPatternBase <: Vector{EnhancedItemset}
-    @test ARule <: Tuple
+
+    @test_nowarn ARule(pq, Itemset(manual_r))
+    arule = ARule(pq, Itemset(manual_r))
+    @test content(arule) |> first == antecedent(arule)
+    @test content(arule) |> last == consequent(arule)
+
+    @test MeaningfulnessMeasure <: Tuple{Function,Threshold,Threshold}
+    # see MeaningfulnessMeasure section for tests about islocalof and isglobalof
+
+    @test ARMSubject <: Union{ARule,Itemset}
+    @test LmeasMemoKey <: Tuple{Symbol,ARMSubject,Int64}
+    @test LmeasMemo <: Dict{LmeasMemoKey,Threshold}
+    @test Contributors <: Dict{LmeasMemoKey, WorldMask}
+    @test GmeasMemoKey <: Tuple{Symbol,ARMSubject}
+    @test GmeasMemo <: Dict{GmeasMemoKey,Threshold}
+    @test MiningAlgo <: FunctionWrapper{Nothing,Tuple{ARuleMiner,AbstractDataset}}
 @end
 
-@testset "ARuleMiner general checks" begin
-    @test_nowarn ARuleMiner(X1, apriori(), manual_alphabet)
-    @test_nowarn algorithm(ARuleMiner(X1, apriori(), manual_alphabet)) isa MiningAlgo
-
-    @test items(ARuleMiner(X1, apriori(), manual_alphabet)) == manual_alphabet
-
-    @test item_meas(miner) == _item_meas
-    @test rule_meas(miner) == _rule_meas
-
-    @test length(freqitems(miner)) == 55
-    @test length(nonfreqitems(miner)) == 0
-    @test arules(miner) == []
-
-    _temp_lmemo_key = (:lsupport, freqitems(miner)[1], 1)
-    _temp_lmemo_val = localmemo(miner, _temp_lmemo_key)
-    @test  _temp_lmemo_val >= 0.74 && _temp_lmemo_val <= 0.75
-    @test localmemo(miner, (:lsupport, freqitems(miner)[1], 2)) == 1.0
-    @test localmemo(miner, (:lsupport, freqitems(miner)[1], 4)) == 0.0
-
-    @test_nowarn localmemo!(miner, _temp_lmemo_key, 0.5)
-    @test localmemo(miner, _temp_lmemo_key) == 0.5
-
-    _temp_gmemo_key = (:gsupport, freqitems(miner)[3])
-    @test globalmemo(miner, _temp_gmemo_key) == 1.0
-
-    @test_nowarn globalmemo!(miner, _temp_gmemo_key, 0.0)
-    @test globalmemo(miner, _temp_gmemo_key) == 0.0
-
-    for _temp_arule in arules_generator(freqitems(miner), miner)
-        @test _temp_arule in arules(miner)
-        @test _temp_arule isa ARule
-    end
-end
-
-@testset "Meaningfulness measures" begin
+@testset "core.jl - meaningfulness measures" begin
     @test islocalof(lsupport, lsupport) == false
     @test islocalof(lsupport, gsupport) == true
     @test islocalof(lsupport, lconfidence) == false
@@ -155,6 +136,41 @@ end
     @test isglobalof(gconfidence, gsupport) == false
     @test isglobalof(gconfidence, lconfidence) == true
     @test isglobalof(gconfidence, gconfidence) == false
+end
+
+@testset "core.jl - ARuleMiner" begin
+    @test_nowarn ARuleMiner(X1, apriori(), manual_alphabet)
+    @test_nowarn algorithm(ARuleMiner(X1, apriori(), manual_alphabet)) isa MiningAlgo
+
+    @test dataset(apriori_miner) == X1
+    @test algorithm(apriori_miner) isa MiningAlgo
+    @test items(ARuleMiner(X1, apriori(), manual_alphabet)) == manual_alphabet
+
+    @test item_meas(apriori_miner) == _item_meas
+    @test rule_meas(apriori_miner) == _rule_meas
+
+    @test length(freqitems(apriori_miner)) == 27
+    @test arules(apriori_miner) == []
+
+    _temp_lmemo_key = (:lsupport, freqitems(apriori_miner)[1], 1)
+    _temp_lmemo_val = localmemo(apriori_miner, _temp_lmemo_key)
+    @test  _temp_lmemo_val >= 0.74 && _temp_lmemo_val <= 0.75
+    @test localmemo(apriori_miner, (:lsupport, freqitems(apriori_miner)[1], 2)) == 1.0
+    @test localmemo(apriori_miner, (:lsupport, freqitems(apriori_miner)[1], 4)) == 0.0
+
+    @test_nowarn localmemo!(apriori_miner, _temp_lmemo_key, 0.5)
+    @test localmemo(apriori_miner, _temp_lmemo_key) == 0.5
+
+    _temp_gmemo_key = (:gsupport, freqitems(apriori_miner)[3])
+    @test globalmemo(apriori_miner, _temp_gmemo_key) == 1.0
+
+    @test_nowarn globalmemo!(apriori_miner, _temp_gmemo_key, 0.0)
+    @test globalmemo(apriori_miner, _temp_gmemo_key) == 0.0
+
+    for _temp_arule in arules_generator(freqitems(apriori_miner), apriori_miner)
+        @test _temp_arule in arules(apriori_miner)
+        @test _temp_arule isa ARule
+    end
 end
 
 @testset "FP-Growth general checks (FPTree and HeaderTable)" begin

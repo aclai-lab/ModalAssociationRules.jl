@@ -42,13 +42,15 @@ export Contributors
 export ARuleMiner
 export dataset, algorithm
 export item_meas, rule_meas
-export freqitems, nonfreqitems, arules
+export freqitems, arules
 export getlocalthreshold, setlocalthreshold
 export getglobalthreshold, setglobalthreshold
 export localmemo, localmemo!
 export globalmemo, globalmemo!
-
 export info
+
+export MiningAlgo
+
 export contributors, contributors!
 
 export mine, apply

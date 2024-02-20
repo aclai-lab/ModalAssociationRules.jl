@@ -175,9 +175,25 @@ designed to capture how "reliable" a rule is.
 See also [`gconfidence`](@ref), [`Itemset`](@ref), [`lconfidence`](@ref),
 [`MeaningfulnessMeasure`](@ref).
 """
-const ARule = Tuple{Itemset,Itemset}
-antecedent(rule::ARule) = first(rule)
-consequent(rule::ARule) = last(rule)
+struct ARule
+    antecedent::Itemset
+    consequent::Itemset
+
+    function ARule(antecedent::Itemset, consequent::Itemset)
+        intersection = intersect(antecedent, consequent)
+        @assert  intersection |> length == 0 "Invalid rule. " *
+        "Antecedent and consequent share the following items: $(intersection)."
+
+        new(antecedent, consequent)
+    end
+
+    function ARule(doublet::Tuple{Itemset,Itemset})
+        ARule(first(doublet), last(doublet))
+    end
+end
+content(rule::ARule) = (rule.antecedent, rule.consequent)
+antecedent(rule::ARule) = rule.antecedent
+consequent(rule::ARule) = rule.consequent
 
 """
     const MeaningfulnessMeasure = Tuple{Function, Threshold, Threshold}
@@ -206,7 +222,7 @@ measure, a local threshold and a global threshold.
 See also [`gconfidence`](@ref), [`gsupport`](@ref), [`lconfidence`](@ref),
 [`lsupport`](@ref).
 """
-const MeaningfulnessMeasure = Tuple{Function, Threshold, Threshold}
+const MeaningfulnessMeasure = Tuple{Function,Threshold,Threshold}
 
 doc_islocalof = doc_isglobalof = """
     islocalof(::Function, ::Function)::Bool
@@ -314,7 +330,6 @@ const GmeasMemo = Dict{GmeasMemoKey,Threshold} # global measure of an itemset/ar
         item_constrained_measures::Vector{<:MeaningfulnessMeasure}
         rule_constrained_measures::Vector{<:MeaningfulnessMeasure}
 
-        nonfreqitems::Vector{Itemset}   # non-frequent itemsets dump
         freqitems::Vector{Itemset}      # collected frequent itemsets
         arules::Vector{ARule}           # collected association rules
 
@@ -370,7 +385,12 @@ end
 See also  [`ARule`](@ref), [`apriori`](@ref), [`MeaningfulnessMeasure`](@ref),
 [`Itemset`](@ref), [`GmeasMemo`](@ref), [`LmeasMemo`](@ref), [`MiningAlgo`](@ref).
 """
-struct ARuleMiner{D<:AbstractDataset,I<:Item,M<:MeaningfulnessMeasure}
+struct ARuleMiner{
+    D<:AbstractDataset,
+    I<:Item,
+    IM<:MeaningfulnessMeasure,
+    RM<:MeaningfulnessMeasure
+}
     # target dataset
     X::D
     # algorithm used to perform extraction
@@ -378,10 +398,9 @@ struct ARuleMiner{D<:AbstractDataset,I<:Item,M<:MeaningfulnessMeasure}
     items::Vector{I}
 
     # meaningfulness measures
-    item_constrained_measures::Vector{M}
-    rule_constrained_measures::Vector{M}
+    item_constrained_measures::Vector{IM}
+    rule_constrained_measures::Vector{RM}
 
-    nonfreqitems::Vector{Itemset}   # non-frequent itemsets dump
     freqitems::Vector{Itemset}      # collected frequent itemsets
     arules::Vector{ARule}           # collected association rules
 
@@ -393,10 +412,10 @@ struct ARuleMiner{D<:AbstractDataset,I<:Item,M<:MeaningfulnessMeasure}
         X::D,
         algo::Function,
         items::Vector{I},
-        item_constrained_measures::Vector{M},
-        rule_constrained_measures::Vector{M};
+        item_constrained_measures::Vector{IM},
+        rule_constrained_measures::Vector{RM};
         info::NamedTuple = (;)
-    ) where {D<:AbstractDataset,I<:Item,M<:MeaningfulnessMeasure}
+    ) where {D<:AbstractDataset,I<:Item,IM<:MeaningfulnessMeasure,RM<:MeaningfulnessMeasure}
         # dataset frames must be equal
         @assert allequal([SoleLogics.frame(X, i_instance)
             for i_instance in 1:ninstances(X)]) "Instances frame is shaped differently. " *
@@ -411,9 +430,9 @@ struct ARuleMiner{D<:AbstractDataset,I<:Item,M<:MeaningfulnessMeasure}
             "Local support (lsupport) is needed too, but it is already considered " *
             "internally by gsupport."
 
-        new{D,I,M}(X, MiningAlgo(algo), unique(items),
+        new{D,I,IM,RM}(X, MiningAlgo(algo), unique(items),
             item_constrained_measures, rule_constrained_measures,
-            Vector{Itemset}([]), Vector{Itemset}([]), Vector{ARule}([]),
+            Vector{Itemset}([]), Vector{ARule}([]),
             LmeasMemo(), GmeasMemo(), info
         )
     end
@@ -423,7 +442,7 @@ struct ARuleMiner{D<:AbstractDataset,I<:Item,M<:MeaningfulnessMeasure}
         algo::Function,
         items::Vector{I}
     ) where {D<:AbstractDataset,I<:Item}
-        ARuleMiner(X, MiningAlgo(algo), items,
+        ARuleMiner(X, algo, items,
             [(gsupport, 0.1, 0.1)], [(gconfidence, 0.2, 0.2)]
         )
     end
@@ -567,16 +586,6 @@ Return all frequent [`Itemset`](@ref)s mined by `miner`.
 See also [`ARuleMiner`](@ref), [`Itemset`](@ref).
 """
 freqitems(miner::ARuleMiner) = miner.freqitems
-
-
-"""
-    nonfreqitems(miner::ARuleMiner)
-
-Return all non-frequent [`Itemset`](@ref)s mined by `miner`.
-
-See also [`ARuleMiner`](@ref), [`Itemset`](@ref).
-"""
-nonfreqitems(miner::ARuleMiner) = miner.nonfreqitems
 
 """
     arules(miner::ARuleMiner)
