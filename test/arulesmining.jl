@@ -38,11 +38,12 @@ fpgrowth_miner = @equip_contributors ARuleMiner(
 mine(apriori_miner)
 mine(fpgrowth_miner)
 
-@testset "core.jl - fundamental types"
-    pq = Itemset([manual_p, manual_q])
-    pqr = Itemset([manual_p, manual_q, manual_r])
-    qr = Itemset([manual_q, manual_r])
+pq = Itemset([manual_p, manual_q])
+qr = Itemset([manual_q, manual_r])
+pr = Itemset([manual_p, manual_r])
+pqr = Itemset([manual_p, manual_q, manual_r])
 
+@testset "core.jl - fundamental types"
     @test Item <: Formula
     @test Itemset <: Vector{<:Item}
     @test Itemset(manual_p) == [manual_p]
@@ -83,6 +84,13 @@ mine(fpgrowth_miner)
     arule = ARule(pq, Itemset(manual_r))
     @test content(arule) |> first == antecedent(arule)
     @test content(arule) |> last == consequent(arule)
+    arule2 = ARule(qr, Itemset(manual_p))
+    arule3 = ARule(Itemset([manual_q, manual_p]), Itemset(manual_r))
+
+    @test arule != arule2
+    @test arule == arule3
+
+    @test_throws AssertionError ARule(qr, Itemset(manual_q))
 
     @test MeaningfulnessMeasure <: Tuple{Function,Threshold,Threshold}
     # see MeaningfulnessMeasure section for tests about islocalof and isglobalof
@@ -220,8 +228,13 @@ end
 @testset "arulemining-utils.jl" begin
     @test combine([pq, qr], 3) |> first == pqr
     @test combine([manual_p, manual_q], [manual_r]) |> collect |> length == 3
-    @test combine(
-        [manual_p, manual_q], [manual_r]) |> collect |> first == Itemset([manual_p, manual_r])
+    @test combine([manual_p, manual_q], [manual_r]) |>
+        collect |> first == Itemset([manual_p, manual_r])
+
+    @test grow_prune([pq,qr,pr], [pq,qr,pr], 3) |> collect |> unique == [pqr]
+    @test coalesce_contributors(Itemset(manual_p), fpgrowth_miner) |> first |> sum == 214118
+    @test arules_generator(freqitems(fpgrowth_miner), fpgrowth_miner) |> first ==
+        ARule(Itemset(manual_r), Itemset(manual_lr))
 end
 
 @testset "FP-Growth general checks (FPTree and HeaderTable)" begin

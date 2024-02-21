@@ -195,6 +195,10 @@ content(rule::ARule) = (rule.antecedent, rule.consequent)
 antecedent(rule::ARule) = rule.antecedent
 consequent(rule::ARule) = rule.consequent
 
+function Base.:(==)(rule1::ARule, rule2::ARule)
+    return antecedent(rule1) in antecedent(rule2) && consequent(rule1) in consequent(rule2)
+end
+
 function Base.convert(::Type{Itemset}, arule::ARule)::Itemset
     return Itemset(vcat(antecedent(arule), consequent(arule)))
 end
@@ -730,8 +734,9 @@ function contributors(
     try
         return info(miner, :contributors)[memokey]
     catch
-        error("Error when getting contributors of $(measname) applied to  $(item) at " *
-        "instance $(ninstance). Please, use @equip_contributors or provide an " *
+        _fsym, _subject, _ninstance = memokey
+        error("Error when getting contributors of $(_fsym) applied to $(_subject) " *
+        "item and instance $(_ninstance). Please, use @equip_contributors or provide an " *
         "`info=(;contributors=Contributors([]))` when instanciating the miner.")
     end
 end

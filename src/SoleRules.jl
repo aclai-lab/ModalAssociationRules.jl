@@ -63,7 +63,7 @@ export lconfidence, gconfidence
 include("arulemining-utils.jl")
 
 export combine, prune, prune!
-export coalesce_contributors
+export grow_prune, coalesce_contributors
 export arules_generator
 
 include("algorithms/apriori.jl")

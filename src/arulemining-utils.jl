@@ -38,24 +38,27 @@ end
 Return a generator, which yields only the `candidates` for which every (k-1)-length subset
 is in `frequents`.
 
+!!!warning
+    Generated [`Itemset`](@ref)s could contain repetitions.
+
 See also [`Itemset`](@ref).
 """
 function grow_prune(candidates::Vector{Itemset}, frequents::Vector{Itemset}, k::Integer)
     # if the frequents set does not contain the subset of a certain candidate,
     # that candidate is pruned out.
     return Iterators.filter(
-        # the iterator yields only itemsets for which every combo is in frequents
-        itemset -> all(combo ->
-            combo in frequents, combinations(itemset, k-1)),
-        combine(candidates, k)
-    )
+            # the iterator yields only itemsets for which every combo is in frequents
+            itemset -> all(combo ->
+                combo in frequents, combinations(itemset, k-1)),
+            combine(candidates, k)
+        )
 end
 
 """
     coalesce_contributors(
         itemset::Itemset,
         miner::ARuleMiner;
-        lthreshold::Union{Nothing,Threshold}=nothing
+        lmeas::Function=lsupport
     )
 
 Consider all the [`contributors`](@ref) of an [`ARMSubject`](@ref) on all the instances.
@@ -69,12 +72,9 @@ function coalesce_contributors(
     miner::ARuleMiner;
     lmeas::Function=lsupport
 )
-    if isnothing(lmeas)
-        lmeas = lsupport
-    end
-
     _ninstances = ninstances(dataset(miner))
-    _contributors = sum([contributors(:lsupport, itemset, i, miner) for i in 1:_ninstances])
+    _contributors = sum([
+        contributors(Symbol(lmeas), itemset, i, miner) for i in 1:_ninstances])
 
     lsupp_integer_threshold = convert(Int64, floor(
         getlocalthreshold(miner, lmeas) * length(_contributors)
