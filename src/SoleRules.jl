@@ -80,6 +80,7 @@ export islist, retrieveall
 
 export HeaderTable, items
 export link, link!, follow  # dispatches for both FPTree and HeaderTable
+export checksanity!
 export patternbase
 export fpgrowth, @equip_contributors
 

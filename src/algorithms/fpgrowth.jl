@@ -378,6 +378,14 @@ struct HeaderTable
     end
 
     function HeaderTable(items::Vector{<:Item}, fptseed::FPTree)
+        @assert content(fptseed) === nothing "`fptseed` is not a seeder " *
+        "FPTree, that is, its root content is $(content(fptseed)) instead of " *
+        "nothing."
+
+        @assert islist(fptseed) "`fptseed` is not a simple list FPTree. " *
+        "Currently, only simple list FPTree are supported to automatically " *
+        "build and HeaderTable. Please, make sure islist(fptseed) is true."
+
         # make an empty htable, whose entries are `Item` objects, in `items`
         htable = new(items, Dict{Item,Union{Nothing,FPTree}}([
             item => nothing for item in items]))
@@ -385,8 +393,9 @@ struct HeaderTable
         # iteratively fill htable
         child = children(fptseed)
         while !isempty(child)
-            link!(htable, fptseed)
-            child = children(child)
+            childfpt = first(child)
+            link!(htable, childfpt)
+            child = children(childfpt)
         end
 
         return htable
@@ -397,29 +406,14 @@ struct HeaderTable
     end
 end
 
-doc_htable_getters = """
-    items(htable::HeaderTable)
-
-    link(htable::HeaderTable)
-    link(htable::HeaderTable, item::Item)
-
-[`HeaderTable`](@ref) getters.
 """
-
-doc_htable_setters = """
-    link!(htable::HeaderTable, item::Item, fptree::FPTree)
-
-[`HeaderTable`](@ref) setters.
-"""
-
-"""
-    items(htable::HeaderTable)
+    items(htable::HeaderTable)::Vector{Item}
 
 Getter for the [`Item`](@ref)s loaded inside `htable`.
 
 See also [`HeaderTable`](@ref), [`Item`](@ref).
 """
-items(htable::HeaderTable) = htable.items
+items(htable::HeaderTable)::Vector{Item} = htable.items
 
 """
     link(htable::HeaderTable)
@@ -451,8 +445,8 @@ end
 """
     function link!(htable::HeaderTable, fptree::FPTree)
 
-Establish a link between the entry in `htable` corresponding to the [`content`](@ref)
-of `fptree`.
+Establish a link towards `fptree`, [`follow`](@ref)ing the entry in `htable` corresponding
+to the [`content`](@ref) of `fptree`.
 
 See also [`content`](@ref), [`FPTree`](@ref), [`HeaderTable`](@ref).
 """
@@ -485,6 +479,7 @@ end
 
 Check if `htable` internal state is correct, that is, its `items` are sorted decreasingly
 by global support.
+If `items` are already sorted, return `true`; otherwise, sort them and return `false`.
 
 See also [`ARuleMiner`](@ref), [`gsupport`](@ref), [`HeaderTable`](@ref), [`items`](@ref).
 """
@@ -595,8 +590,8 @@ Base.push!(
     ninstances::Int64,
     miner::ARuleMiner;
     htable::Union{Nothing,HeaderTable}=nothing
-) = [push!(fptree, itemsets[ninstance], ninstance, miner; htable=htable)
-        for ninstance in 1:ninstances]
+) = map(ninstance ->
+    push!(fptree, itemsets[ninstance], ninstance, miner; htable=htable), 1:ninstances)
 
 function Base.push!(
     fptree::FPTree,

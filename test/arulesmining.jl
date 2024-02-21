@@ -279,6 +279,40 @@ end
 end
 
 @testset "fpgrowth.jl - HeaderTable"
+    @test HeaderTable() isa HeaderTable
+
+    fpt = FPTree(pqr)
+    @test_throws AssertionError htable = HeaderTable([pqr], fpt)
+    @test HeaderTable([Itemset(manual_p),
+        Itemset(manual_q), Itemset(manual_r)], fpt) isa HeaderTable
+    @test_nowarn @eval htable = HeaderTable([manual_p, manual_q, manual_r], fpt)
+
+    @test items(htable) == pqr
+
+    fpt_c1 = children(fpt)[1]
+    @test link(htable)[manual_p] == fpt_c1
+    @test link(htable)[manual_q] == children(fpt_c1)[1]
+    @test link(htable)[manual_r] == children(children(fpt_c1)[1])[1]
+
+    @test follow(htable, manual_p) == link(htable)[manual_p]
+    @test follow(htable, manual_q) == link(htable)[manual_q]
+    @test follow(htable, manual_r) == link(htable)[manual_r]
+
+    fpt2 = FPTree(pqr)
+    fpt2_c1 = children(fpt2)[1]
+    @test_nowarn link!(htable, fpt2_c1)
+    @test link(htable)[manual_p] == fpt_c1
+    @test link(htable)[manual_p] |> content == fpt_c1 |> content
+    @test follow(htable, manual_p) == fpt2_c1
+
+    @test checksanity!(htable, fpgrowth_miner) == false
+    @test checksanity!(htable, fpgrowth_miner) == true
+
+    root = FPTree()
+    @test_nowarn push!(root, pqr, 1, fpgrowth_miner; htable=htable)
+    @test root |> children |> first |> count == 2 # not 1, since htable was already loaded
+
+    @test_nowarn push!(root, [pqr, qr], 2, fpgrowth_miner; htable=htable)
 @end
 
 @testset "Apriori and FPGrowth comparisons"
