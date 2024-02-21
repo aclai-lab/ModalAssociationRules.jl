@@ -61,32 +61,46 @@ mutable struct FPTree
     # choose root or new subtree constructor;
     # ninstance is needed to start defining `contributors` for each node,
     # as this is not a standard, propositional FPTree but a more general modal one.
-    function FPTree(itemset::Itemset, ninstance::Int64, miner::ARuleMiner; isroot=true)
-        FPTree(itemset, ninstance, miner, Val(isroot)) # singleton design pattern
+    function FPTree(
+        itemset::Itemset,
+        ninstance::Int64;
+        isroot=true,
+        miner::Union{Nothing,ARuleMiner}=nothing
+    )
+        FPTree(itemset, ninstance, Val(isroot); miner=miner) # singleton design pattern
     end
 
-    # root constructor;
-    # notice that ninstance here is useless, but it is needed as second argument when
-    # this same function signature is called with Val{false}.
-    function FPTree(itemset::Itemset, ninstance::Int64, miner::ARuleMiner, ::Val{true})
+    # root constructor
+    function FPTree(
+        itemset::Itemset,
+        ninstance::Int64,
+        ::Val{true};
+        miner::Union{Nothing,ARuleMiner}=nothing
+    )
         # make FPTree empty root
         fptree = FPTree()
 
         # start growing a path
-        children!(fptree, FPTree(itemset, miner; isroot=false))
+        children!(fptree, FPTree(itemset; isroot=false, miner=miner))
 
         return fptree
     end
 
     # internal tree constructor
-    function FPTree(itemset::Itemset, ninstance::Int64, miner::ARuleMiner, ::Val{false})
+    function FPTree(
+        itemset::Itemset,
+        ninstance::Int64,
+        ::Val{false};
+        miner::Union{Nothing,ARuleMiner}=nothing
+    )
         item = itemset[1]
-        _contributors = SoleRules.contributors(:lsupport, item, ninstance, miner)
+        _contributors = isnothing(miner) ?
+            zeros(Int64,1) : SoleRules.contributors(:lsupport, item, ninstance, miner)
 
         fptree = length(itemset) == 1 ?
             new(item, nothing, FPTree[], 1, _contributors, nothing) :
             new(item, nothing,
-                FPTree[FPTree(itemset[2:end], ninstance, miner; isroot=false)],
+                FPTree[FPTree(itemset[2:end], ninstance; isroot=false, miner=miner)],
                 1, _contributors, nothing)
 
         map(child -> parent!(child, fptree), children(fptree))
@@ -94,11 +108,11 @@ mutable struct FPTree
         return fptree
     end
 
-    function FPTree(enhanceditemset::EnhancedItemset, miner::ARuleMiner)
+    function FPTree(enhanceditemset::EnhancedItemset)
         item, _count, _contributors = first(enhanceditemset)
         fptree = length(enhanceditemset) == 1 ?
             new(item, nothing, FPTree[], _count, _contributors, nothing) :
-            new(item, nothing, FPTree[FPTree(enhanceditemset[2:end], miner)],
+            new(item, nothing, FPTree[FPTree(enhanceditemset[2:end])],
                 _count, _contributors, nothing)
 
         map(child -> parent!(child, fptree), children(fptree))
@@ -552,7 +566,7 @@ function Base.push!(
         subfptree = _children[_children_idx]
     # if it does not, then create a new children FPTree, and set this as its parent
     else
-        subfptree = FPTree(itemset, ninstance, miner; isroot=false)
+        subfptree = FPTree(itemset, ninstance; isroot=false, miner=miner)
         children!(fptree, subfptree)
     end
 
@@ -606,7 +620,7 @@ function Base.push!(
         subfptree = _children[_children_idx]
     # if it does not, then create a new children FPTree, and set this as its parent
     else
-        subfptree = FPTree(enhanceditemset, miner) # IDEA: see IDEA below
+        subfptree = FPTree(enhanceditemset) # IDEA: see IDEA below
         children!(fptree, subfptree)
     end
 
