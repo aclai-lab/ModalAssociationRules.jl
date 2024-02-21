@@ -241,10 +241,16 @@ end
     root = FPTree()
     @test root isa FPTree
     @test content(root) === nothing
+    @test SoleRules.parent(root) === nothing
     @test children(root) == FPTree[]
     @test contributors(root) == Int64[]
     @test count(root) == 0
     @test link(root) === nothing
+
+    @test content!(root, manual_p) == manual_p
+    newroot = FPTree()
+    @test_nowarn @eval SoleRules.parent!(root) = newroot
+    @test content(SoleRules.parent(root)) === nothing
 end
 
 @testset "Apriori and FPGrowth comparisons"

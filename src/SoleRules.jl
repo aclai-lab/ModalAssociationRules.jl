@@ -74,7 +74,8 @@ include("algorithms/fpgrowth.jl")
 
 export FPTree
 export content, parent, children, count
-export content!, parent!, children!, count!, addcount!, addcontributors!
+export content!, parent!, children!
+export count!, addcount!, addcontributors!
 export islist, retrieveall
 
 export HeaderTable, items

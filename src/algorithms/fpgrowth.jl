@@ -65,7 +65,9 @@ mutable struct FPTree
         FPTree(itemset, ninstance, miner, Val(isroot)) # singleton design pattern
     end
 
-    # root constructor
+    # root constructor;
+    # notice that ninstance here is useless, but it is needed as second argument when
+    # this same function signature is called with Val{false}.
     function FPTree(itemset::Itemset, ninstance::Int64, miner::ARuleMiner, ::Val{true})
         # make FPTree empty root
         fptree = FPTree()
