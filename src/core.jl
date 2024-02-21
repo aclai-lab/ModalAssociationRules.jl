@@ -52,10 +52,6 @@ function Base.convert(::Type{Item}, itemset::Itemset)::Item
     return first(itemset)
 end
 
-function Base.show(io::IO, itemset::Itemset)
-    print(io, "[" * join([syntaxstring(item) for item in itemset], ", ") * "]")
-end
-
 function Base.in(itemset::Itemset, target::Itemset)
     all(item -> item in target, itemset)
 end
@@ -69,6 +65,14 @@ function Base.in(itemset::Itemset, targets::Vector{Itemset})
     end
 
     return true
+end
+
+function Base.:(==)(itemset1::Itemset, itemset2::Itemset)
+    return itemset1 in itemset2
+end
+
+function Base.show(io::IO, itemset::Itemset)
+    print(io, "[" * join([syntaxstring(item) for item in itemset], ", ") * "]")
 end
 
 """

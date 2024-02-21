@@ -237,7 +237,7 @@ end
         ARule(Itemset(manual_r), Itemset(manual_lr))
 end
 
-@testset "FP-Growth general checks (FPTree and HeaderTable)" begin
+@testset "fpgrowth.jl - FPTree" begin
     root = FPTree()
     @test root isa FPTree
     @test content(root) === nothing
@@ -249,9 +249,37 @@ end
 
     @test content!(root, manual_p) == manual_p
     newroot = FPTree()
-    @test_nowarn @eval SoleRules.parent!(root) = newroot
+    @test_nowarn SoleRules.parent!(root, newroot) === newroot
     @test content(SoleRules.parent(root)) === nothing
+
+    @test_nowarn @eval fpt = FPTree(pqr)
+    fpt_c1 = fpt |> children |> first
+    @test count(fpt_c1) == 1
+    @test SoleRules.count!(fpt_c1, 5) == 5
+    @test addcount!(fpt_c1, 2) == 7
+    @test link(fpt) === nothing
+    @test_nowarn @eval content!(fpt, manual_lp)
+
+    # children! does not perform any check!
+    map(_ -> children!(root, fpt), 1:3)
+    @test children(root) |> length == 3
+
+    @test addcontributors!(fpt_c1, [12]) == [12]
+    @test_throws DimensionMismatch addcontributors!(fpt_c1, [4,2,0])
+
+    @test !(islist(root)) # because of children! behaviour, se above
+    @test islist(fpt_c1)
+    @test retrieveall(fpt_c1) == pqr
+
+    # structure itself is returned, since internal link is empty
+    @test follow(fpt_c1) == fpt_c1
+
+    fpt_linked = FPTree()
+    @test link!(fpt_c1, fpt_linked) == fpt_linked
 end
+
+@testset "fpgrowth.jl - HeaderTable"
+@end
 
 @testset "Apriori and FPGrowth comparisons"
     apriori_freqs = freqitems(apriori_miner)

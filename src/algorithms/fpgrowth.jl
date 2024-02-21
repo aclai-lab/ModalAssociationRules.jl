@@ -62,26 +62,27 @@ mutable struct FPTree
     # ninstance is needed to start defining `contributors` for each node,
     # as this is not a standard, propositional FPTree but a more general modal one.
     function FPTree(
-        itemset::Itemset,
-        ninstance::Int64;
+        itemset::Itemset;
+        ninstance::Union{Nothing,Int64}=nothing,
         isroot=true,
         miner::Union{Nothing,ARuleMiner}=nothing
     )
-        FPTree(itemset, ninstance, Val(isroot); miner=miner) # singleton design pattern
+        # singleton design pattern
+        FPTree(itemset, Val(isroot); miner=miner, ninstance=ninstance)
     end
 
     # root constructor
     function FPTree(
         itemset::Itemset,
-        ninstance::Int64,
         ::Val{true};
+        ninstance::Union{Nothing,Int64},
         miner::Union{Nothing,ARuleMiner}=nothing
     )
         # make FPTree empty root
         fptree = FPTree()
 
         # start growing a path
-        children!(fptree, FPTree(itemset; isroot=false, miner=miner))
+        children!(fptree, FPTree(itemset; isroot=false, miner=miner, ninstance=ninstance))
 
         return fptree
     end
@@ -89,18 +90,23 @@ mutable struct FPTree
     # internal tree constructor
     function FPTree(
         itemset::Itemset,
-        ninstance::Int64,
         ::Val{false};
+        ninstance::Union{Nothing,Int64},
         miner::Union{Nothing,ARuleMiner}=nothing
     )
         item = itemset[1]
+
+        @assert !xor(isnothing(miner), isnothing(ninstance)) "Miner and instance number " *
+            "associated with the FPTree creation must be given simultaneously as kwargs."
+
         _contributors = isnothing(miner) ?
             zeros(Int64,1) : SoleRules.contributors(:lsupport, item, ninstance, miner)
 
         fptree = length(itemset) == 1 ?
             new(item, nothing, FPTree[], 1, _contributors, nothing) :
             new(item, nothing,
-                FPTree[FPTree(itemset[2:end], ninstance; isroot=false, miner=miner)],
+                FPTree[
+                    FPTree(itemset[2:end]; isroot=false, miner=miner, ninstance=ninstance)],
                 1, _contributors, nothing)
 
         map(child -> parent!(child, fptree), children(fptree))
@@ -211,10 +217,15 @@ parent!(fptree::FPTree, parentfpt::Union{Nothing,FPTree}) = fptree.parent = pare
 
 Add a new [`FPTree`](@ref) to `fptree`'s children vector.
 
+!!! warning
+    This method forces the new children to be added: it is a caller's responsability to
+    check whether `child` is not already a children of `fptree` and, if so, handle the case.
+    This check is performed, for example, in [`Base.push!`](@ref).
+
 !!! note
     This method already sets the new children parent to `fptree` itself.
 
-See also [`children`](@ref), [`FPTree`](@ref).
+See also [`Base.push!`](@ref), [`children`](@ref), [`FPTree`](@ref).
 """
 children!(fptree::FPTree, child::FPTree) = begin
     push!(children(fptree), child)
@@ -566,7 +577,7 @@ function Base.push!(
         subfptree = _children[_children_idx]
     # if it does not, then create a new children FPTree, and set this as its parent
     else
-        subfptree = FPTree(itemset, ninstance; isroot=false, miner=miner)
+        subfptree = FPTree(itemset; isroot=false, miner=miner, ninstance=ninstance)
         children!(fptree, subfptree)
     end
 
