@@ -29,12 +29,12 @@ export Item
 export Itemset, toformula
 
 export Threshold
-export WorldsMask, EnhancedItemset, ConditionalPatternBase
+export WorldMask, EnhancedItemset, ConditionalPatternBase
 
 export ARule
 export antecedent, consequent
 
-export ConstrainedMeasure, islocalof, isglobalof
+export MeaningfulnessMeasure, islocalof, isglobalof
 export ARMSubject
 export LmeasMemoKey, LmeasMemo, Contributors
 export GmeasMemoKey, GmeasMemo
@@ -43,13 +43,15 @@ export Contributors
 export ARuleMiner
 export dataset, algorithm
 export item_meas, rule_meas
-export freqitems, nonfreqitems, arules
+export freqitems, arules
 export getlocalthreshold, setlocalthreshold
 export getglobalthreshold, setglobalthreshold
 export localmemo, localmemo!
 export globalmemo, globalmemo!
+export info, isequipped
 
-export info
+export MiningAlgo
+
 export contributors, contributors!
 
 export mine, apply
@@ -62,7 +64,7 @@ export lconfidence, gconfidence
 include("arulemining-utils.jl")
 
 export combine, prune, prune!
-export coalesce_contributors
+export grow_prune, coalesce_contributors
 export arules_generator
 
 include("algorithms/apriori.jl")
@@ -73,11 +75,13 @@ include("algorithms/fpgrowth.jl")
 
 export FPTree
 export content, parent, children, count
-export content!, parent!, children!, count!, addcount!, addcontributors!
+export content!, parent!, children!
+export count!, addcount!, addcontributors!
 export islist, retrieveall
 
 export HeaderTable, items
 export link, link!, follow  # dispatches for both FPTree and HeaderTable
+export checksanity!
 export patternbase
 export fpgrowth, @equip_contributors
 

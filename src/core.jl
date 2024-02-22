@@ -8,7 +8,7 @@ Fundamental type in the context of
 [association rule mining](https://en.wikipedia.org/wiki/Association_rule_learning).
 An [`Item`](@ref) is a logical formula, which can be [`SoleLogics.check`](@ref)ed on models.
 
-The purpose of association rule mining is to discover interesting relations between
+The purpose of association rule mining (ARM) is to discover interesting relations between
 [`Item`](@ref)s, regrouped in [`Itemset`](@ref)s, to generate association rules
 ([`ARule`](@ref)).
 
@@ -21,15 +21,13 @@ const Item = SoleLogics.Formula
 
 """
     const Itemset = Vector{Item}
-    function Itemset(item::Item)
-    function Itemset(itemsets::Vector{Itemset})
 
 Collection of *unique* [`Item`](@ref)s.
 
 Given a [`MeaningfulnessMeasure`](@ref) `meas` and a threshold to be overpassed, `t`,
-then an itemset `itemset` is said to be meaningfull with respect to `meas` if and only if
+then an itemset `itemset` is said to be meaningful with respect to `meas` if and only if
 `meas(itemset) > t`.
-Alternatively, it is said to be *frequent*.
+Alternatively to meaningful, it is said to be *frequent*.
 
 Generally speaking, meaningfulness (or interestingness) of an itemset is directly
 correlated to its frequency in the data: intuitively, when a pattern is recurrent in data,
@@ -54,10 +52,6 @@ function Base.convert(::Type{Item}, itemset::Itemset)::Item
     return first(itemset)
 end
 
-function Base.show(io::IO, itemset::Itemset)
-    print(io, "[" * join([syntaxstring(item) for item in itemset], ", ") * "]")
-end
-
 function Base.in(itemset::Itemset, target::Itemset)
     all(item -> item in target, itemset)
 end
@@ -71,6 +65,14 @@ function Base.in(itemset::Itemset, targets::Vector{Itemset})
     end
 
     return true
+end
+
+function Base.:(==)(itemset1::Itemset, itemset2::Itemset)
+    return itemset1 in itemset2
+end
+
+function Base.show(io::IO, itemset::Itemset)
+    print(io, "[" * join([syntaxstring(item) for item in itemset], ", ") * "]")
 end
 
 """
@@ -93,7 +95,7 @@ See also [`gconfidence`](@ref), [`gsupport`](@ref), [`lconfidence`](@ref),
 const Threshold = Float64
 
 """
-    const WorldsMask = Vector{Int64}
+    const WorldMask = Vector{Int64}
 
 Vector whose i-th position stores how many times a certain [`MeaningfulnessMeasure`](@ref)
 applied on a specific [`Itemset`](@ref)s is true on the i-th world of multiple instances.
@@ -107,37 +109,42 @@ only on two instances. If we consider the third world, then the itemset is never
 
 See also [`Contributors`](@ref), [`Itemset`](@ref), [`MeaningfulnessMeasure`](@ref).
 """
-const WorldsMask = Vector{Int64}
+const WorldMask = Vector{Int64}
 
 """
-    const EnhancedItemset = Vector{Tuple{Item,Int64,WorldsMask}}
+    const EnhancedItemset = Vector{Tuple{Item,Int64,WorldMask}}
 
 "Enhanced" representation of an [`Itemset`](@ref), in which each [`Item`](@ref) is
-associated to a counter and a specific [`WorldsMask`](@ref).
+associated to a counter and a specific [`WorldMask`](@ref).
 
 Consider an [`Item`](@ref) called `item`.
 The first counter keeps the value of [`gsupport`](@ref) applied on `item` itself.
-The second counter counts on which worlds [`Item`](@ref) is true.
+The second counter counts on which worlds `item` is true.
 
 Intuitively, this type is useful to represent and manipulate collections of items when we
 want to avoid iterating an entire dataset multiple times when extracting frequent
-[`Itemset`](@ref). This type is widely used to
+[`Itemset`](@ref).
 
 !!! info
     To give you a better insight into where this type of data is used, this is widely used
-    behind the scenes in the implementation of [`fpgrowth`](@ref) algorithm, which is the
+    behind the scenes in the implementation of [`fpgrowth`](@ref), which is the
     state of art algorithm to perform ARM.
 
-See also [`fpgrowth`](@ref), [`Item`](@ref), [`Itemset`](@ref), [`WorldsMask`](@ref).
+See also [`fpgrowth`](@ref), [`Item`](@ref), [`Itemset`](@ref), [`WorldMask`](@ref).
 """
-const EnhancedItemset = Vector{Tuple{Item,Int64,WorldsMask}}
+const EnhancedItemset = Vector{Tuple{Item,Int64,WorldMask}}
 
-function Base.convert(::Type{EnhancedItemset}, itemset::Itemset, nworlds::Int64)
-    return [(item, zeros(Int64, nworlds)) for item in itemset]
+function Base.convert(
+    ::Type{EnhancedItemset},
+    itemset::Itemset,
+    count::Int64,
+    nworlds::Int64
+)
+    return EnhancedItemset([(item, count, zeros(Int64, nworlds)) for item in itemset])
 end
 
 function Base.convert(::Type{Itemset}, enhanceditemset::EnhancedItemset)
-    return [first(enhanceditem) for enhanceditem in enhanceditemset]
+    return Itemset([first(enhanceditem) for enhanceditem in enhanceditemset])
 end
 
 """
@@ -172,9 +179,33 @@ designed to capture how "reliable" a rule is.
 See also [`gconfidence`](@ref), [`Itemset`](@ref), [`lconfidence`](@ref),
 [`MeaningfulnessMeasure`](@ref).
 """
-const ARule = Tuple{Itemset,Itemset} # NOTE: see SoleLogics.Rule
-antecedent(rule::ARule) = first(rule)
-consequent(rule::ARule) = last(rule)
+struct ARule
+    antecedent::Itemset
+    consequent::Itemset
+
+    function ARule(antecedent::Itemset, consequent::Itemset)
+        intersection = intersect(antecedent, consequent)
+        @assert  intersection |> length == 0 "Invalid rule. " *
+        "Antecedent and consequent share the following items: $(intersection)."
+
+        new(antecedent, consequent)
+    end
+
+    function ARule(doublet::Tuple{Itemset,Itemset})
+        ARule(first(doublet), last(doublet))
+    end
+end
+content(rule::ARule) = (rule.antecedent, rule.consequent)
+antecedent(rule::ARule) = rule.antecedent
+consequent(rule::ARule) = rule.consequent
+
+function Base.:(==)(rule1::ARule, rule2::ARule)
+    return antecedent(rule1) in antecedent(rule2) && consequent(rule1) in consequent(rule2)
+end
+
+function Base.convert(::Type{Itemset}, arule::ARule)::Itemset
+    return Itemset(vcat(antecedent(arule), consequent(arule)))
+end
 
 """
     const MeaningfulnessMeasure = Tuple{Function, Threshold, Threshold}
@@ -203,7 +234,7 @@ measure, a local threshold and a global threshold.
 See also [`gconfidence`](@ref), [`gsupport`](@ref), [`lconfidence`](@ref),
 [`lsupport`](@ref).
 """
-const MeaningfulnessMeasure = Tuple{Function, Threshold, Threshold}
+const MeaningfulnessMeasure = Tuple{Function,Threshold,Threshold}
 
 doc_islocalof = doc_isglobalof = """
     islocalof(::Function, ::Function)::Bool
@@ -270,7 +301,7 @@ support the execution of, for example, [`fpgrowth`](@ref) algorthm.
 
 See also [`LmeasMemoKey`](@ref), [`WorldMask`](@ref)
 """
-const Contributors = Dict{LmeasMemoKey, WorldsMask}
+const Contributors = Dict{LmeasMemoKey, WorldMask}
 
 """
     const GmeasMemoKey = Tuple{Symbol,ARMSubject}
@@ -311,7 +342,6 @@ const GmeasMemo = Dict{GmeasMemoKey,Threshold} # global measure of an itemset/ar
         item_constrained_measures::Vector{<:MeaningfulnessMeasure}
         rule_constrained_measures::Vector{<:MeaningfulnessMeasure}
 
-        nonfreqitems::Vector{Itemset}   # non-frequent itemsets dump
         freqitems::Vector{Itemset}      # collected frequent itemsets
         arules::Vector{ARule}           # collected association rules
 
@@ -367,18 +397,22 @@ end
 See also  [`ARule`](@ref), [`apriori`](@ref), [`MeaningfulnessMeasure`](@ref),
 [`Itemset`](@ref), [`GmeasMemo`](@ref), [`LmeasMemo`](@ref), [`MiningAlgo`](@ref).
 """
-struct ARuleMiner
+struct ARuleMiner{
+    D<:AbstractDataset,
+    I<:Item,
+    IM<:MeaningfulnessMeasure,
+    RM<:MeaningfulnessMeasure
+}
     # target dataset
-    X::AbstractDataset
+    X::D
     # algorithm used to perform extraction
-    algo::FunctionWrapper{Nothing,Tuple{ARuleMiner,AbstractDataset}}
-    items::Vector{Item}
+    algo::FunctionWrapper{Nothing,Tuple{ARuleMiner,D}}
+    items::Vector{I}
 
     # meaningfulness measures
-    item_constrained_measures::Vector{<:MeaningfulnessMeasure}
-    rule_constrained_measures::Vector{<:MeaningfulnessMeasure}
+    item_constrained_measures::Vector{IM}
+    rule_constrained_measures::Vector{RM}
 
-    nonfreqitems::Vector{Itemset}   # non-frequent itemsets dump
     freqitems::Vector{Itemset}      # collected frequent itemsets
     arules::Vector{ARule}           # collected association rules
 
@@ -387,26 +421,40 @@ struct ARuleMiner
     info::NamedTuple                # general informations
 
     function ARuleMiner(
-        X::AbstractDataset,
+        X::D,
         algo::Function,
-        items::Vector{<:Item},
-        item_constrained_measures::Vector{<:MeaningfulnessMeasure},
-        rule_constrained_measures::Vector{<:MeaningfulnessMeasure};
+        items::Vector{I},
+        item_constrained_measures::Vector{IM},
+        rule_constrained_measures::Vector{RM};
         info::NamedTuple = (;)
-    )
-        new(X, MiningAlgo(algo), unique(items),
+    ) where {D<:AbstractDataset,I<:Item,IM<:MeaningfulnessMeasure,RM<:MeaningfulnessMeasure}
+        # dataset frames must be equal
+        @assert allequal([SoleLogics.frame(X, i_instance)
+            for i_instance in 1:ninstances(X)]) "Instances frame is shaped differently. " *
+            "Please, provide an uniform dataset to guarantee mining correctness."
+
+        # gsupport is indispensable to mine association rule
+        @assert SoleRules.gsupport in reduce(
+            vcat, item_constrained_measures) "ARuleMiner requires global support " *
+            "(gsupport) as meaningfulness measure in order to work properly. " *
+            "Please, add a tuple (gsupport, local support threshold, global support " *
+            "threshold) to item_constrained_measures field.\n" *
+            "Local support (lsupport) is needed too, but it is already considered " *
+            "internally by gsupport."
+
+        new{D,I,IM,RM}(X, MiningAlgo(algo), unique(items),
             item_constrained_measures, rule_constrained_measures,
-            Vector{Itemset}([]), Vector{Itemset}([]), Vector{ARule}([]),
+            Vector{Itemset}([]), Vector{ARule}([]),
             LmeasMemo(), GmeasMemo(), info
         )
     end
 
     function ARuleMiner(
-        X::AbstractDataset,
+        X::D,
         algo::Function,
-        items::Vector{<:Item}
-    )
-        ARuleMiner(X, MiningAlgo(algo), items,
+        items::Vector{I}
+    ) where {D<:AbstractDataset,I<:Item}
+        ARuleMiner(X, algo, items,
             [(gsupport, 0.1, 0.1)], [(gconfidence, 0.2, 0.2)]
         )
     end
@@ -551,16 +599,6 @@ See also [`ARuleMiner`](@ref), [`Itemset`](@ref).
 """
 freqitems(miner::ARuleMiner) = miner.freqitems
 
-
-"""
-    nonfreqitems(miner::ARuleMiner)
-
-Return all non-frequent [`Itemset`](@ref)s mined by `miner`.
-
-See also [`ARuleMiner`](@ref), [`Itemset`](@ref).
-"""
-nonfreqitems(miner::ARuleMiner) = miner.nonfreqitems
-
 """
     arules(miner::ARuleMiner)
 
@@ -666,19 +704,19 @@ doc_getcontributors = """
         item::Item,
         ninstance::Int64,
         miner::ARuleMiner
-    )::WorldsMask
+    )::WorldMask
 
     function contributors(
         measname::Symbol,
         itemset::Itemset,
         ninstance::Int64,
         miner::ARuleMiner
-    )::WorldsMask
+    )::WorldMask
 
     function contributors(
         memokey::LmeasMemoKey,
         miner::ARuleMiner
-    )::WorldsMask
+    )::WorldMask
 
 Consider all the contributors of an [`Item`](@ref), that is, all the worlds for which the
 [`lsupp`](@ref) is greater than a certain [`Threshold`](@ref).
@@ -691,17 +729,18 @@ threshold is not overpassed, 1 otherwise.
     [`@equip_contributors`](@ref).
 
 See also [`Item`](@ref), [`LmeasMemoKey`](@ref), [`lsupp`](@ref),
-[`@equip_contributors`](@ref), [`Threshold`](@ref), [`WorldsMask`](@ref).
+[`@equip_contributors`](@ref), [`Threshold`](@ref), [`WorldMask`](@ref).
 """
 function contributors(
     memokey::LmeasMemoKey,
     miner::ARuleMiner
-)::WorldsMask
+)::WorldMask
     try
         return info(miner, :contributors)[memokey]
     catch
-        error("Error when getting contributors of $(measname) applied to  $(item) at " *
-        "instance $(ninstance). Please, use @equip_contributors or provide an " *
+        _fsym, _subject, _ninstance = memokey
+        error("Error when getting contributors of $(_fsym) applied to $(_subject) " *
+        "item and instance $(_ninstance). Please, use @equip_contributors or provide an " *
         "`info=(;contributors=Contributors([]))` when instanciating the miner.")
     end
 end
@@ -710,7 +749,7 @@ function contributors(
     itemset::Itemset,
     ninstance::Int64,
     miner::ARuleMiner
-)::WorldsMask
+)::WorldMask
     return contributors((measname, itemset, ninstance), miner)
 end
 function contributors(
@@ -718,19 +757,19 @@ function contributors(
     item::Item,
     ninstance::Int64,
     miner::ARuleMiner
-)::WorldsMask
+)::WorldMask
     return contributors(measname, Itemset(item), ninstance, miner)
 end
 
 """
-    contributors!(miner::ARuleMiner, key::LmeasMemoKey, mask::WorldsMask)
+    contributors!(miner::ARuleMiner, key::LmeasMemoKey, mask::WorldMask)
 
 Set a `miner`'s contributors entry.
 
 See also [`ARuleMiner`](@ref), [`LmeasMemoKey`](@ref), [`@equip_contributors`](@ref),
-[`WorldsMask`](@ref).
+[`WorldMask`](@ref).
 """
-function contributors!(miner::ARuleMiner, key::LmeasMemoKey, mask::WorldsMask)
+function contributors!(miner::ARuleMiner, key::LmeasMemoKey, mask::WorldMask)
     try
         info(miner, :contributors)[key] = mask
     catch

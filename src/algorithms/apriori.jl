@@ -2,7 +2,7 @@
     apriori(; fulldump::Bool=true, verbose::Bool=true)::Function
 
 Wrapper function for the Apriori algorithm over a modal dataset.
-Returns a `function f(miner::ARuleMiner, X::AbstractDataset)::Nothing` that runs the main
+Returns a [`MininigAlgo`](@ref) that runs the main
 Apriori algorithm logic, [as described here](https://ceur-ws.org/Vol-3284/492.pdf).
 
 See also [`ARuleMiner`](@ref), [`MiningAlgo`](@ref).
@@ -14,12 +14,6 @@ function apriori(;
 
     # modal apriori main logic, as in https://ceur-ws.org/Vol-3284/492.pdf
     function _apriori(miner::ARuleMiner, X::AbstractDataset)::Nothing
-        @assert SoleRules.gsupport in reduce(vcat, item_meas(miner)) "Apriori requires " *
-        "global support (gsupport) as meaningfulness measure in order to " *
-        "work. Please, add a tuple (gsupport, local support threshold, " *
-        "global support threshold) to miner.item_constrained_measures field.\n" *
-        "Local support is needed too, but it is already considered in the global case."
-
         # candidates of length 1 are all the letters in our items
         candidates = Itemset.(items(miner))
 

@@ -27,9 +27,10 @@ Main:
       # maybe the counting overhead is the same and this todo is useless?
     ✔ pack `patternbase` inside `projection` @done(24-02-19 00:44)
     ✔ `patternbase` must filter out the items inside the conditional pattern base which are not enough frequents @done(24-02-19 00:44)
-    ☐ avoid instantiating two dictionaries in `patternbase`. Dict{Item,Pair{Int64,WorldsMask}} could be an idea, but updating immutable structures is a bad idea, since WorldsMask is very long.
+    ☐ avoid instantiating two dictionaries in `patternbase`. Dict{Item,Pair{Int64,WorldMask}} could be an idea, but updating immutable structures is a bad idea, since WorldMask is very long.
     ☐ save the FPTree associated with the entire dataset in the info section
       # this might be useful? maybe a @debug macro enabling these savings could be an idea
+    ☐ memoize gsupport and lsupport: infer it by projection WorldMasks
 
 Generic:
   ✔ move memoization accountability to ARuleMiner @done(24-02-07 23:58)
@@ -44,17 +45,21 @@ Generic:
   ☐ show for Item, Itemset, EnhancedItemset, ARuleMiner, FPTree, HeaderTable
   ☐ sort/issort by globalmemo, managing correct casting from Item, Itemset and EnhancedItemset
   ☐ contributors array should not be in ARuleMiner.info, but rather a proper attribute 
+    # or maybe not?
+  ☐ enrich info field inside ARuleMiner
+  ☐ remove nonfreqitems from ARuleMiner (this could be an optional info field?)
 
 Optimizations:
-  ☐ miner.items should be treated as a generator 
+  ☐ miner.items should be treated as a generator
   ☐ global memoization should check if memoized treshold is larger than requested one
-  ☐ check whether sum between two vectors in addcontributors!(fptree::FPTree, contribution::WorldsMask) is optimized
+  ☐ check whether sum between two vectors in addcontributors!(fptree::FPTree, contribution::WorldMask) is optimized
   ☐ give the possiblity to consider a dataset slice to extract rules without trivial items (see `EnhancedItemset`)
 
   Utility:
-  ☐ Base.in between two itemsets
+  ✔ Base.in between two itemsets @done(24-02-19 14:18)
   ☐ build a macro to implement decorator pattern to build local and global measures, optionally exploiting ARuleMiner memoization
-  ☐ better design how an ARuleMiner keeps track of local measures. Local and global measures CAN be indipendent. 
+  ☐ better design how an ARuleMiner keeps track of local measures. Local and global measures CAN be independent. 
+    # maybe this is something we don't want to permit! Find one example of useful local measure independent from a global one
   ☐ Base.push!(fptree::FPTree, itemset::Itemset, miner::ARuleMiner) doesn't check if itemset is sorted by gsupport. Add a safe=false flag.
   ✔ expose a simple-to-understand pool of utility methods to perform combinatorics over itemsets @done(24-02-08 20:30)
     ✔ # (Itemset changed to Vector type from custom) @done(24-02-08 20:28)
@@ -62,7 +67,7 @@ Optimizations:
     ✔ prune @done(24-02-08 20:30)
     ✔ arules generation with powerset @done(24-02-08 20:30)
   ✔ contributors-related consts, contributors getter and addcontributors! setter (to implement modal FPTree) @done(24-02-12 02:31)
-
+  
 Global:
   ☐ make association rule mining a SoleRules submodule
 
@@ -81,6 +86,9 @@ Future:
 
 Documentation:
   ☐ write a v0.1 documentation
+  ✔ WorldsMask to WorldMask @done(24-02-19 17:21)
+  ✔ remove algorithm after algorithms name @done(24-02-19 17:21)
+  ✔ ARuleMiner fix parametric types (isconcretetype) @done(24-02-19 17:21)
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Notes

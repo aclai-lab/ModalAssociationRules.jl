@@ -13,8 +13,7 @@ end
 println("Julia version: ", VERSION)
 
 test_suites = [
-    ("Extraction", ["extraction.jl",]),
-    ("Letters", ["letters.jl",]),
+    ("Association rule mining", ["arulesmining.jl",]),
 ]
 
 @testset "SoleLogics.jl" begin
