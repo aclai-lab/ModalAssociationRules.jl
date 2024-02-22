@@ -179,7 +179,7 @@ Essentially, it represents the number of overlappings [`Item`](@ref) which ended
 `fptree` node during the building process of the tree itself.
 
 See also [`Contributors`](@ref), [`contributors!`](@ref), [`FPTree`](@ref), [`Item`](@ref),
-[`lsupp`](@ref).
+[`lsupport`](@ref).
 """
 contributors(fptree::FPTree)::WorldMask = fptree.contributors
 

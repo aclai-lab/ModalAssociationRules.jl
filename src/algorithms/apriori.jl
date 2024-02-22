@@ -2,7 +2,7 @@
     apriori(; fulldump::Bool=true, verbose::Bool=true)::Function
 
 Wrapper function for the Apriori algorithm over a modal dataset.
-Returns a [`MininigAlgo`](@ref) that runs the main
+Returns a [`MiningAlgo`](@ref) that runs the main
 Apriori algorithm logic, [as described here](https://ceur-ws.org/Vol-3284/492.pdf).
 
 See also [`ARuleMiner`](@ref), [`MiningAlgo`](@ref).

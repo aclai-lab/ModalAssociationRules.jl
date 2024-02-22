@@ -5,7 +5,7 @@ DocMeta.setdocmeta!(SoleRules, :DocTestSetup, :(using SoleRules); recursive = tr
 
 makedocs(;
     modules = [SoleRules],
-    authors = ["Mauro Milella", "Giovanni Pagliarini", "Edoardo Ponsanesi"]
+    authors = "Mauro Milella Giovanni Pagliarini Edoardo Ponsanesi",
     repo=Documenter.Remotes.GitHub("aclai-lab", "SoleRules.jl"),
     sitename = "SoleRules.jl",
     format = Documenter.HTML(;
@@ -17,6 +17,11 @@ makedocs(;
     pages = [
         "Home" => "index.md",
         "Getting started" => "getting-started.md",
+        "Baking mining with modal logic" => "modal-generalization.md",
+        "Available algorithms" => "algorithms.md",
+        "Built-in data structures" => "data-structures.md",
+        "Utilities" => "utilities.md",
+        "Hands on" => "hands-on.md",
     ],
     # NOTE: warning
     warnonly = :true,

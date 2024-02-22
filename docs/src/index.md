@@ -6,7 +6,7 @@ CurrentModule = SoleRules
 
 ## Introduction
 
-Welcome to the documentation for [SoleRules](https://github.com/aclai-lab/SoleRules.jl), a Julia package for manage rule-based models in SoleRules.jl. 
+Welcome to the documentation for [SoleRules](https://github.com/aclai-lab/SoleRules.jl), a Julia package for mining (modal) association rules in SoleRules.jl. 
 
 ## Installation
 

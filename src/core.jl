@@ -195,9 +195,34 @@ struct ARule
         ARule(first(doublet), last(doublet))
     end
 end
-content(rule::ARule) = (rule.antecedent, rule.consequent)
-antecedent(rule::ARule) = rule.antecedent
-consequent(rule::ARule) = rule.consequent
+
+"""
+    content(rule::ARule)::Tuple{Itemset,Itemset}
+
+Getter for the content of an [`ARule`](@ref), that is, both its [`antecedent`](@ref) and
+its [`consequent`](@ref).
+
+See also [`antecedent`](@ref), [`ARule`](@ref), [`consequent`](@ref), [`Itemset`](@ref).
+"""
+content(rule::ARule)::Tuple{Itemset,Itemset} = (rule.antecedent, rule.consequent)
+
+"""
+    antecedent(rule::ARule)::Itemset
+
+Getter for `rule`'s antecedent.
+
+See also [`antecedent`](@ref), [`ARule`](@ref), [`Itemset`](@ref).
+"""
+antecedent(rule::ARule)::Itemset = rule.antecedent
+
+"""
+    consequent(rule::ARule)::Itemset
+
+Getter for `rule`'s consequent.
+
+See also [`consequent`](@ref), [`ARule`](@ref), [`Itemset`](@ref).
+"""
+consequent(rule::ARule)::Itemset = rule.consequent
 
 function Base.:(==)(rule1::ARule, rule2::ARule)
     return antecedent(rule1) in antecedent(rule2) && consequent(rule1) in consequent(rule2)
@@ -236,27 +261,36 @@ See also [`gconfidence`](@ref), [`gsupport`](@ref), [`lconfidence`](@ref),
 """
 const MeaningfulnessMeasure = Tuple{Function,Threshold,Threshold}
 
-doc_islocalof = doc_isglobalof = """
+
+"""
     islocalof(::Function, ::Function)::Bool
-    isglobalof(::Function, ::Function)::Bool
+
+Twin method of [`isglobalof`](@ref).
 
 Trait to indicate that a local meaningfulness measure is used as subroutine in a global
-measure, or, vice versa, a global measure contains a local measure.
+measure.
 
 For example, `islocalof(lsupport, gsupport)` is `true`, and `isglobalof(gsupport, lsupport)`
 is `false`.
 
 !!! warning
-    When implementing a custom meaningfulness measure, make sure to implement both
-    traits if necessary. This is fundamental to guarantee the correct behavior of some
-    methods, such as [`getlocalthreshold`](@ref).
+    When implementing a custom meaningfulness measure, make sure to implement both traits
+    if necessary. This is fundamental to guarantee the correct behavior of some methods,
+    such as [`getlocalthreshold`](@ref).
 
-See also [`getlocalthreshold`](@ref), [`gsupport`](@ref), [`lsupport`](@ref).
+See also [`getlocalthreshold`](@ref), [`gsupport`](@ref), [`isglobalof`](@ref),
+[`lsupport`](@ref).
 """
-
-"""$(doc_islocalof)"""
 islocalof(::Function, ::Function)::Bool = false
-"""$(doc_isglobalof)"""
+
+"""
+    isglobalof(::Function, ::Function)::Bool
+
+Twin trait of [`islocalof`](@ref).
+
+See also [`getlocalthreshold`](@ref), [`gsupport`](@ref), [`islocalof`](@ref),
+[`lsupport`](@ref).
+"""
 isglobalof(::Function, ::Function)::Bool = false
 
 """
@@ -578,7 +612,7 @@ getglobalthreshold(miner::ARuleMiner, meas::Function)::Threshold = begin
 end
 
 """
-    setlocalthreshold(miner::ARuleMiner, meas::Function, threshold::Threshold)
+    setglobalthreshold(miner::ARuleMiner, meas::Function, threshold::Threshold)
 
 Setter for the [`Threshold`](@ref) associated with the function wrapped by some
 [`MeaningfulnessMeasure`](@ref) tailored to work globally (that is, measuring the behavior
@@ -719,7 +753,7 @@ doc_getcontributors = """
     )::WorldMask
 
 Consider all the contributors of an [`Item`](@ref), that is, all the worlds for which the
-[`lsupp`](@ref) is greater than a certain [`Threshold`](@ref).
+[`lsupport`](@ref) is greater than a certain [`Threshold`](@ref).
 
 Return a vector whose size is the number of worlds, and the content is 0 if the local
 threshold is not overpassed, 1 otherwise.
@@ -728,7 +762,7 @@ threshold is not overpassed, 1 otherwise.
     This method requires the [`ARuleMiner`](@ref) to be declared using
     [`@equip_contributors`](@ref).
 
-See also [`Item`](@ref), [`LmeasMemoKey`](@ref), [`lsupp`](@ref),
+See also [`Item`](@ref), [`LmeasMemoKey`](@ref), [`lsupport`](@ref),
 [`@equip_contributors`](@ref), [`Threshold`](@ref), [`WorldMask`](@ref).
 """
 function contributors(

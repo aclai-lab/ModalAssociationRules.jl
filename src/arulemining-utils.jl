@@ -38,7 +38,7 @@ end
 Return a generator, which yields only the `candidates` for which every (k-1)-length subset
 is in `frequents`.
 
-!!!warning
+!!! warning
     Generated [`Itemset`](@ref)s could contain repetitions.
 
 See also [`Itemset`](@ref).
