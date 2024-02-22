@@ -5,7 +5,7 @@ DocMeta.setdocmeta!(SoleRules, :DocTestSetup, :(using SoleRules); recursive = tr
 
 makedocs(;
     modules = [SoleRules],
-    authors = "Mauro Milella Giovanni Pagliarini Edoardo Ponsanesi",
+    authors = "Mauro Milella, Giovanni Pagliarini, Edoardo Ponsanesi",
     repo=Documenter.Remotes.GitHub("aclai-lab", "SoleRules.jl"),
     sitename = "SoleRules.jl",
     format = Documenter.HTML(;
