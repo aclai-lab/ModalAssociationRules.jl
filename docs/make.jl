@@ -17,7 +17,7 @@ makedocs(;
     pages = [
         "Home" => "index.md",
         "Getting started" => "getting-started.md",
-        "Baking mining with modal logic" => "modal-generalization.md",
+        "Mining with modal logic" => "modal-generalization.md",
         "Available algorithms" => "algorithms.md",
         "Built-in data structures" => "data-structures.md",
         "Utilities" => "utilities.md",

@@ -6,7 +6,7 @@ CurrentModule = SoleRules
 Pages = ["modal-generalization.md"]
 ```
 
-# [Baking assocition rule mining with modal logic](@id man-modal-generalization)
+# [Assocition rule mining with modal logic](@id man-modal-generalization)
 
 ## New building blocks
 
@@ -16,7 +16,7 @@ EnhancedItemset
 ConditionalPatternBase
 ```
 
-## Modal-logic powerup in action
+## Modal logic powerup in action
 ```@docs
 Contributors
 @equip_contributors
