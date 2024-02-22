@@ -313,6 +313,19 @@ end
     @test root |> children |> first |> count == 2 # not 1, since htable was already loaded
 
     @test_nowarn push!(root, [pqr, qr], 2, fpgrowth_miner; htable=htable)
+
+    enhanceditemset = EnhancedItemset([(manual_p, 1, [1])])
+    enhanceditemset2 = EnhancedItemset([(manual_q, 1, [1])])
+    @test_nowarn push!(root, enhanceditemset, fpgrowth_miner; htable=htable)
+
+    @test_nowarn push!(root, [enhanceditemset, enhanceditemset2], fpgrowth_miner;
+        htable=htable)
+
+    @test Base.reverse(htable) == htable |> items |> reverse
+@end
+
+@testset "fpgrowth.jl - patternbase and projection"
+    @test_nowarn mine(fpgrowth_miner) # just to let @test see also internal calls
 @end
 
 @testset "Apriori and FPGrowth comparisons"

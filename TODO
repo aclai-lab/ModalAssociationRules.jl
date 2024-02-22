@@ -30,7 +30,7 @@ Main:
     ☐ avoid instantiating two dictionaries in `patternbase`. Dict{Item,Pair{Int64,WorldMask}} could be an idea, but updating immutable structures is a bad idea, since WorldMask is very long.
     ☐ save the FPTree associated with the entire dataset in the info section
       # this might be useful? maybe a @debug macro enabling these savings could be an idea
-    ☐ memoize gsupport: infer it by projection WorldMasks
+    ☐ memoize gsupport and lsupport: infer it by projection WorldMasks
 
 Generic:
   ✔ move memoization accountability to ARuleMiner @done(24-02-07 23:58)
