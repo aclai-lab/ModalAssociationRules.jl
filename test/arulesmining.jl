@@ -21,7 +21,7 @@ manual_lp = box(IA_L)(manual_p)
 manual_lq = diamond(IA_L)(manual_q)
 manual_lr = box(IA_L)(manual_r)
 
-manual_alphabet = Vector{Item}([
+manual_items = Vector{Item}([
     manual_p, manual_q, manual_r, manual_lp, manual_lq, manual_lr])
 
 # set meaningfulness measures, for both mining frequent itemsets and establish which
@@ -30,9 +30,9 @@ _item_meas = [(gsupport, 0.1, 0.1)]
 _rule_meas = [(gconfidence, 0.2, 0.2)]
 
 # make two miners: the first digs the search space using aprior, the second uses fpgrowth
-apriori_miner = ARuleMiner(X1, apriori(), manual_alphabet, _item_meas, _rule_meas)
+apriori_miner = ARuleMiner(X1, apriori(), manual_items, _item_meas, _rule_meas)
 fpgrowth_miner = @equip_contributors ARuleMiner(
-    X2, fpgrowth(), manual_alphabet, _item_meas, _rule_meas)
+    X2, fpgrowth(), manual_items, _item_meas, _rule_meas)
 
 # mine the frequent patterns with both apriori and fpgrowth
 mine(apriori_miner)
@@ -105,12 +105,12 @@ pqr = Itemset([manual_p, manual_q, manual_r])
 @end
 
 @testset "core.jl - ARuleMiner" begin
-    @test_nowarn ARuleMiner(X1, apriori(), manual_alphabet)
-    @test_nowarn algorithm(ARuleMiner(X1, apriori(), manual_alphabet)) isa MiningAlgo
+    @test_nowarn ARuleMiner(X1, apriori(), manual_items)
+    @test_nowarn algorithm(ARuleMiner(X1, apriori(), manual_items)) isa MiningAlgo
 
     @test dataset(apriori_miner) == X1
     @test algorithm(apriori_miner) isa MiningAlgo
-    @test items(ARuleMiner(X1, apriori(), manual_alphabet)) == manual_alphabet
+    @test items(ARuleMiner(X1, apriori(), manual_items)) == manual_items
 
     @test item_meas(apriori_miner) == _item_meas
     @test rule_meas(apriori_miner) == _rule_meas
@@ -153,7 +153,7 @@ pqr = Itemset([manual_p, manual_q, manual_r])
     @test isequipped(fpgrowth_miner, :contributors)
     @test info(fpgrowth_miner, :contributors) |> length 2160
 
-    @test isequipped(@equip_contributors ARuleMiner(X1, apriori(), manual_alphabet),
+    @test isequipped(@equip_contributors ARuleMiner(X1, apriori(), manual_items),
         :contributors)
 
     @test contributors(_temp_lmemo_key2, fpgrowth_miner) |> length == 1326
