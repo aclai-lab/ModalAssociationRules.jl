@@ -368,7 +368,7 @@ const GmeasMemo = Dict{GmeasMemoKey,Threshold} # global measure of an itemset/ar
 """
     struct ARuleMiner
         X::AbstractDataset              # target dataset
-        algo::MiningAlgo                # algorithm used to perform extraction
+        algo::Function                  # algorithm used to perform extraction
 
         items::Vector{Item}
 
@@ -429,10 +429,11 @@ end
 ```
 
 See also  [`ARule`](@ref), [`apriori`](@ref), [`MeaningfulnessMeasure`](@ref),
-[`Itemset`](@ref), [`GmeasMemo`](@ref), [`LmeasMemo`](@ref), [`MiningAlgo`](@ref).
+[`Itemset`](@ref), [`GmeasMemo`](@ref), [`LmeasMemo`](@ref).
 """
 struct ARuleMiner{
     D<:AbstractDataset,
+    F <:Function,
     I<:Item,
     IM<:MeaningfulnessMeasure,
     RM<:MeaningfulnessMeasure
@@ -440,7 +441,7 @@ struct ARuleMiner{
     # target dataset
     X::D
     # algorithm used to perform extraction
-    algo::FunctionWrapper{Nothing,Tuple{ARuleMiner,D}}
+    algo::F
     items::Vector{I}
 
     # meaningfulness measures
@@ -452,16 +453,24 @@ struct ARuleMiner{
 
     lmemo::LmeasMemo                # local memoization structure
     gmemo::GmeasMemo                # global memoization structure
+
+    powerups::NamedTuple            # mining algorithm powerups (see documentation)
     info::NamedTuple                # general informations
 
     function ARuleMiner(
         X::D,
-        algo::Function,
+        algo::F,
         items::Vector{I},
-        item_constrained_measures::Vector{IM},
-        rule_constrained_measures::Vector{RM};
-        info::NamedTuple = (;)
-    ) where {D<:AbstractDataset,I<:Item,IM<:MeaningfulnessMeasure,RM<:MeaningfulnessMeasure}
+        item_constrained_measures::Vector{IM} = [(gsupport, 0.1, 0.1)],
+        rule_constrained_measures::Vector{RM} = [(gconfidence, 0.2, 0.2)];
+        info::NamedTuple = (; istrained=false)
+    ) where {
+        D<:AbstractDataset,
+        F<:Function,
+        I<:Item,
+        IM<:MeaningfulnessMeasure,
+        RM<:MeaningfulnessMeasure
+    }
         # dataset frames must be equal
         @assert allequal([SoleLogics.frame(X, i_instance)
             for i_instance in 1:ninstances(X)]) "Instances frame is shaped differently. " *
@@ -476,25 +485,19 @@ struct ARuleMiner{
             "Local support (lsupport) is needed too, but it is already considered " *
             "internally by gsupport."
 
-        new{D,I,IM,RM}(X, MiningAlgo(algo), unique(items),
+        powerups = initpowerups(algo, X)
+
+        new{D,F,I,IM,RM}(X, algo, unique(items),
             item_constrained_measures, rule_constrained_measures,
             Vector{Itemset}([]), Vector{ARule}([]),
-            LmeasMemo(), GmeasMemo(), info
-        )
-    end
-
-    function ARuleMiner(
-        X::D,
-        algo::Function,
-        items::Vector{I}
-    ) where {D<:AbstractDataset,I<:Item}
-        ARuleMiner(X, algo, items,
-            [(gsupport, 0.1, 0.1)], [(gconfidence, 0.2, 0.2)]
+            LmeasMemo(), GmeasMemo(), powerups, info
         )
     end
 end
 
 """
+#WARNING: deprecated
+
     const MiningAlgo = FunctionWrapper{Nothing,Tuple{ARuleMiner,AbstractDataset}}
 
 [Function wrapper](https://github.com/yuyichao/FunctionWrappers.jl) representing a function
@@ -515,13 +518,13 @@ See [`SoleBase.AbstractDataset`](@ref), [`ARuleMiner`](@ref).
 dataset(miner::ARuleMiner)::AbstractDataset = miner.X
 
 """
-    algorithm(miner::ARuleMiner)::MiningAlgo
+    algorithm(miner::ARuleMiner)::Function
 
 Getter for the mining algorithm loaded into `miner`.
 
-See [`ARuleMiner`](@ref), [`MiningAlgo`](@ref).
+See [`ARuleMiner`](@ref).
 """
-algorithm(miner::ARuleMiner)::MiningAlgo = miner.algo
+algorithm(miner::ARuleMiner)::Function = miner.algo
 
 """
     items(miner::ARuleMiner)
@@ -690,6 +693,26 @@ globalmemo!(miner::ARuleMiner, key::GmeasMemoKey, val::Threshold) = miner.gmemo[
 ############################################################################################
 
 """
+    TODO: add documentation
+"""
+powerups(miner::ARuleMiner) = miner.powerups
+
+"""
+    TODO: add documentation
+"""
+powerup(miner::ARuleMiner, key::Symbol) = getfield(miner |> powerups, key)
+
+"""
+    TODO: add documentation
+"""
+haspowerup(miner::ARuleMiner, key::Symbol) = hasproperty(miner |> powerups, key)
+
+"""
+    TODO: add documentation
+"""
+initpowerups(::Function, ::AbstractDataset)::NamedTuple = (;)
+
+"""
     info(miner::ARuleMiner)::NamedTuple
     info(miner::ARuleMiner, key::Symbol)
 
@@ -699,7 +722,12 @@ entries.
 See also [`ARuleMiner`](@ref), [`NamedTuple`](@ref).
 """
 info(miner::ARuleMiner)::NamedTuple = miner.info
-info(miner::ARuleMiner, key::Symbol) = getfield(miner.info, key)
+info(miner::ARuleMiner, key::Symbol) = getfield(miner |> info, key)
+
+"""
+    TODO: add documentation
+"""
+hasinfo(miner::ARuleMiner, key::Symbol) = hasproperty(miner |> info, key)
 
 """
     isequipped(miner::ARuleMiner, key::Symbol)
@@ -709,28 +737,6 @@ Return whether `miner` additional information field contains an entry `key`.
 See also [`ARuleMiner`](@ref), [`info`](@ref).
 """
 isequipped(miner::ARuleMiner, key::Symbol) = haskey(miner |> info, key)
-
-"""
-    @equip_contributors ex
-
-Enable [`ARuleMiner`](@ref) contructor to handle [`fpgrowth`](@ref) efficiently by
-leveraging a [`Contributors`](@ref) structure.
-
-# Usage
-julia> miner = @equip_contributors ARuleMiner(
-    X, apriori(), manual_alphabet, _item_meas, _rule_meas)
-
-See also [`ARuleMiner`](@ref), [`Contributors`](@ref), [`fpgrowth`](@ref).
-"""
-macro equip_contributors(ex)
-    # Extracting function name and arguments
-    func, args = ex.args[1], ex.args[2:end]
-
-    # Constructing the modified expression with kwargs
-    return esc(:($(func)($(args...); info=(; contributors=Contributors([])))))
-
-    return new_ex
-end
 
 doc_getcontributors = """
     contributors(
@@ -769,13 +775,13 @@ function contributors(
     memokey::LmeasMemoKey,
     miner::ARuleMiner
 )::WorldMask
-    try
-        return info(miner, :contributors)[memokey]
-    catch
+    if !haspowerup(miner, :contributors)
         _fsym, _subject, _ninstance = memokey
         error("Error when getting contributors of $(_fsym) applied to $(_subject) " *
-        "item and instance $(_ninstance). Please, use @equip_contributors or provide an " *
-        "`info=(;contributors=Contributors([]))` when instanciating the miner.")
+        "item and instance $(_ninstance). This functionality is not supported by " *
+        "the mining algorithm provided ($(algorithm(miner)))")
+    else
+        return powerup(miner, :contributors)[memokey]
     end
 end
 function contributors(
@@ -804,11 +810,10 @@ See also [`ARuleMiner`](@ref), [`LmeasMemoKey`](@ref), [`@equip_contributors`](@
 [`WorldMask`](@ref).
 """
 function contributors!(miner::ARuleMiner, key::LmeasMemoKey, mask::WorldMask)
-    try
-        info(miner, :contributors)[key] = mask
-    catch
-        error("Please, use @equip_contributors or provide an " *
-        "`info=(;contributors=Contributors([]))` when instanciating the miner.")
+    if !haspowerup(miner, :contributors)
+        error("Contributors is not supported by $(algorithm(miner)).")
+    else
+        powerup(miner, :contributors)[key] = mask
     end
 end
 
@@ -819,8 +824,8 @@ Synonym for `SoleRules.apply(miner, dataset(miner))`.
 
 See also [`ARule`](@ref), [`Itemset`](@ref), [`SoleRules.apply`](@ref).
 """
-function mine(miner::ARuleMiner)
-    return apply(miner, dataset(miner))
+function mine(miner::ARuleMiner; kwargs...)
+    return apply(miner, dataset(miner); kwargs...)
 end
 
 """
@@ -832,9 +837,9 @@ Then, return a generator of [`ARule`](@ref)s.
 
 See also [`ARule`](@ref), [`Itemset`](@ref).
 """
-function apply(miner::ARuleMiner, X::AbstractDataset)
+function apply(miner::ARuleMiner, X::AbstractDataset; kwargs...)
     # extract frequent itemsets
-    miner.algo(miner, X)
+    miner.algo(miner, X; kwargs...)
     return arules_generator(freqitems(miner), miner)
 end
 

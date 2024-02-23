@@ -49,6 +49,11 @@ Generic:
     # or maybe not?
   ☐ enrich info field inside ARuleMiner
   ☐ remove nonfreqitems from ARuleMiner (this could be an optional info field?)
+  ☐ copmress islocalof/isglobalof in just one trait 
+  ☐ miner.algo and algorithm(miner) should coincide
+  ☐ change mine(miner) to mine(miner; verbose=true/false)
+  ☐ ARuleMiner to Miner
+  ☐ test on iris dataset
 
 Optimizations:
   ☐ miner.items should be treated as a generator
