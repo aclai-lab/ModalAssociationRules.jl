@@ -892,25 +892,30 @@ function fpgrowth(;
             # we know that all the combinations of `survivor_items` are frequent with
             # `leftout_items`, but we need to save (inside miner) the exact local support
             # and global support for each new itemset: those measures are computed below.
-            _n_worlds = contributors(fptree) |> length
-            _n_instances = dataset(miner) |> ninstances
+            _nworlds = SoleLogics.nworlds(dataset(miner), 1)
+            _ninstances = dataset(miner) |> ninstances
+
+            lsupp_integer_threshold = convert(Int64, floor(
+                getlocalthreshold(miner, lsupport) * _nworlds
+            ))
 
             for combo in combine(survivor_items, leftout_items) |> collect
-                _supp_mask = findmin([
+                occurrences = findmin([
                     sum([
                         contributors(:lsupport, itemset, i, miner)
-                        for i in 1:ninstances(dataset(miner))
+                        for i in 1:_ninstances
                     ])
                     for itemset in combo
-                ])
+                ]) |> first
 
                 # updating local supports
-                map(i -> localmemo!(miner, (:lsupport, combo, i), _supp_mask[i]),
-                    1:ninstances(dataset(miner)))
+                map(i -> localmemo!(miner, (:lsupport, combo, i),
+                    occurrences[i] / _nworlds), 1:_nworlds)
 
                 # updating global support
-                #TODO:
-                globalmemo!(miner, (:gsupport, combo), count(... > g integer threshold))
+                # WARNING: denominator not correct
+                globalmemo!(miner, (:gsupport, combo),
+                    count(i -> i > lsupp_integer_threshold, occurrences) / _ninstances)
 
                 push!(freqitems(miner), combo)
             end
