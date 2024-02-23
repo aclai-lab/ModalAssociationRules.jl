@@ -6,7 +6,7 @@ CurrentModule = SoleRules
 Pages = ["modal-generalization.md"]
 ```
 
-# [Assocition rule mining with modal logic](@id man-modal-generalization)
+# [Association rule mining with modal logic](@id man-modal-generalization)
 
 ## New building blocks
 
