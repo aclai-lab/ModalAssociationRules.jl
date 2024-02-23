@@ -729,7 +729,7 @@ function patternbase(
     # IDEA: allocating two dictionaries here, instead of a single Dict with `Pair` values,
     # is a waste. Is there a way to obtain the same effect using no immutable structures?
     globalbouncer = DefaultDict{Item,Int64}(0)   # record of respected global thresholds
-    localbouncer = DefaultDict{Item,WorldMask}( # record of respected local thresholds
+    localbouncer = DefaultDict{Item,WorldMask}(  # record of respected local thresholds
         ones(Int64, _fptcontributors_length))
     ispromoted = Dict{Item,Bool}([])          # winner items, which will compose the pbase
 
@@ -806,7 +806,6 @@ FP-Growth algorithm logic,
 See also [`MiningAlgo`](@ref).
 """
 function fpgrowth(;
-    fulldump::Bool=true,   # mostly for testing purposes
     verbose::Bool=true,
 )::Function
 
@@ -821,6 +820,10 @@ function fpgrowth(;
         # frequent items are meaningful on each instance.
         lsupport_threshold = getlocalthreshold(miner, SoleRules.gsupport)
 
+        if verbose
+            printstyled("Generating frequent itemsets of length 1...\n", color=:green)
+        end
+
         # get the frequent itemsets from the first candidates set;
         # note that meaningfulness measure should leverage memoization when miner is given!
         frequents = [candidate
@@ -829,8 +832,16 @@ function fpgrowth(;
             if gmeas_algo(candidate, X, lthreshold, miner=miner) >= gthreshold
         ] |> unique
 
+        if verbose
+            printstyled("Saving computed metrics into miner...\n", color=:green)
+        end
+
         # update miner with the frequent itemsets just computed
         push!(freqitems(miner), frequents...)
+
+        if verbose
+            printstyled("Initializing data structures...\n", color=:green)
+        end
 
         # associate each instance in the dataset with its frequent itemsets
         _ninstances = ninstances(X)
@@ -854,6 +865,10 @@ function fpgrowth(;
         SoleRules.push!(fptree, ninstance_toitemsets_sorted, _ninstances, miner;
             htable=htable)
 
+        if verbose
+            printstyled("Mining longer frequent itemsets...\n", color=:green)
+        end
+
         # call main logic
         _fpgrowth_kernel(fptree, htable, miner, Itemset())
     end
@@ -868,7 +883,37 @@ function fpgrowth(;
         # then combine all the Itemsets collected from previous step with the remained ones.
         if islist(fptree)
             survivor_items = retrieveall(fptree)
-            push!(freqitems(miner), (combine(survivor_items, leftout_items)|>collect)...)
+
+            if verbose
+                printstyled("Merging $(leftout_items |> length) leftout items with " *
+                "a single-list FPTree of length $(survivor_items |> length)\n", color=:blue)
+            end
+
+            # we know that all the combinations of `survivor_items` are frequent with
+            # `leftout_items`, but we need to save (inside miner) the exact local support
+            # and global support for each new itemset: those measures are computed below.
+            _n_worlds = contributors(fptree) |> length
+            _n_instances = dataset(miner) |> ninstances
+
+            for combo in combine(survivor_items, leftout_items) |> collect
+                _supp_mask = findmin([
+                    sum([
+                        contributors(:lsupport, itemset, i, miner)
+                        for i in 1:ninstances(dataset(miner))
+                    ])
+                    for itemset in combo
+                ])
+
+                # updating local supports
+                map(i -> localmemo!(miner, (:lsupport, combo, i), _supp_mask[i]),
+                    1:ninstances(dataset(miner)))
+
+                # updating global support
+                #TODO:
+                globalmemo!(miner, (:gsupport, combo), count(... > g integer threshold))
+
+                push!(freqitems(miner), combo)
+            end
         else
             for item in reverse(htable)
 

@@ -31,6 +31,7 @@ Main:
     ☐ save the FPTree associated with the entire dataset in the info section
       # this might be useful? maybe a @debug macro enabling these savings could be an idea
     ☐ memoize gsupport and lsupport: infer it by projection WorldMasks
+    ☐ currently, this works only for local and global support. Add a for cycle to also consider user custom item measure.
 
 Generic:
   ✔ move memoization accountability to ARuleMiner @done(24-02-07 23:58)
@@ -85,10 +86,11 @@ Future:
   ☐ instead of just (gmeas, lthreshold, gthreshold), may a collection of indipendent (lmeas, lthreshold) be useful?
 
 Documentation:
-  ☐ write a v0.1 documentation
+  ✔ write a v0.1 documentation @done(24-02-23 15:11)
   ✔ WorldsMask to WorldMask @done(24-02-19 17:21)
   ✔ remove algorithm after algorithms name @done(24-02-19 17:21)
   ✔ ARuleMiner fix parametric types (isconcretetype) @done(24-02-19 17:21)
+  ☐ write a v0.2 documentation, including hands on section
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Notes
