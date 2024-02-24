@@ -30,9 +30,8 @@ _item_meas = [(gsupport, 0.1, 0.1)]
 _rule_meas = [(gconfidence, 0.2, 0.2)]
 
 # make two miners: the first digs the search space using aprior, the second uses fpgrowth
-apriori_miner = ARuleMiner(X1, apriori(), manual_items, _item_meas, _rule_meas)
-fpgrowth_miner = @equip_contributors ARuleMiner(
-    X2, fpgrowth(), manual_items, _item_meas, _rule_meas)
+apriori_miner = ARuleMiner(X1, apriori, manual_items, _item_meas, _rule_meas)
+fpgrowth_miner = ARuleMiner(X2, fpgrowth, manual_items, _item_meas, _rule_meas)
 
 # mine the frequent patterns with both apriori and fpgrowth
 mine(apriori_miner)
@@ -105,12 +104,12 @@ arule3 = ARule(Itemset([manual_q, manual_p]), Itemset(manual_r))
 
 
 # "core.jl - ARuleMiner" begin
-@test_nowarn ARuleMiner(X1, apriori(), manual_items)
-@test_nowarn algorithm(ARuleMiner(X1, apriori(), manual_items)) isa MiningAlgo
+@test_nowarn ARuleMiner(X1, apriori, manual_items)
+@test_nowarn algorithm(ARuleMiner(X1, apriori, manual_items)) isa Function
 
 @test dataset(apriori_miner) == X1
-@test algorithm(apriori_miner) isa MiningAlgo
-@test items(ARuleMiner(X1, apriori(), manual_items)) == manual_items
+@test algorithm(apriori_miner) isa Function
+@test items(ARuleMiner(X1, apriori, manual_items)) == manual_items
 
 @test item_meas(apriori_miner) == _item_meas
 @test rule_meas(apriori_miner) == _rule_meas
@@ -153,8 +152,7 @@ _temp_lmemo_val2 = localmemo(apriori_miner)[_temp_lmemo_key2]
 @test isequipped(fpgrowth_miner, :contributors)
 @test info(fpgrowth_miner, :contributors) |> length 2160
 
-@test isequipped(@equip_contributors ARuleMiner(X1, apriori(), manual_items),
-    :contributors)
+@test isequipped(ARuleMiner(X1, apriori, manual_items), :contributors)
 
 @test contributors(_temp_lmemo_key2, fpgrowth_miner) |> length == 1326
 @test contributors(_temp_lmemo_key2, fpgrowth_miner) ==

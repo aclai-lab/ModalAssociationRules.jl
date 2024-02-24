@@ -796,83 +796,17 @@ end
 ############################################################################################
 
 """
+TODO: renew
+
     fpgrowth(; fulldump::Bool=true, verbose::Bool=true)::Function
 
 Wrapper function for the FP-Growth algorithm over a modal dataset.
-Returns a [`MiningAlgo`](@ref) that runs the main
 FP-Growth algorithm logic,
 [as described here](https://www.cs.sfu.ca/~jpei/publications/sigmod00.pdf).
-
-See also [`MiningAlgo`](@ref).
 """
-function fpgrowth(;
-    verbose::Bool=true,
-)::Function
+function fpgrowth(miner::ARuleMiner, X::AbstractDataset; verbose::Bool=true)::Nothing
 
-    function _fpgrowth_preamble(miner::ARuleMiner, X::AbstractDataset)::Nothing
-        @assert SoleRules.gsupport in reduce(vcat, item_meas(miner)) "FP-Growth requires " *
-            "global support (gsupport) as meaningfulness measure in order to " *
-            "work. Please, add a tuple (gsupport, local support threshold, " *
-            "global support threshold) to miner.item_constrained_measures field.\n" *
-            "Local support is needed too, but it is already considered in the global case."
-
-        # retrieve local support threshold, as this is necessary later to filter which
-        # frequent items are meaningful on each instance.
-        lsupport_threshold = getlocalthreshold(miner, SoleRules.gsupport)
-
-        if verbose
-            printstyled("Generating frequent itemsets of length 1...\n", color=:green)
-        end
-
-        # get the frequent itemsets from the first candidates set;
-        # note that meaningfulness measure should leverage memoization when miner is given!
-        frequents = [candidate
-            for (gmeas_algo, lthreshold, gthreshold) in item_meas(miner)
-            for candidate in Itemset.(items(miner))
-            if gmeas_algo(candidate, X, lthreshold, miner=miner) >= gthreshold
-        ] |> unique
-
-        if verbose
-            printstyled("Saving computed metrics into miner...\n", color=:green)
-        end
-
-        # update miner with the frequent itemsets just computed
-        push!(freqitems(miner), frequents...)
-
-        if verbose
-            printstyled("Initializing data structures...\n", color=:green)
-        end
-
-        # associate each instance in the dataset with its frequent itemsets
-        _ninstances = ninstances(X)
-        ninstance_toitemsets_sorted = [Itemset() for _ in 1:_ninstances] # Vector{Itemset}
-
-        # for each instance, sort its frequent itemsets by global support
-        for i in 1:_ninstances
-            ninstance_toitemsets_sorted[i] = reduce(vcat, sort([
-                    itemset
-                    for itemset in frequents
-                    if localmemo(miner, (:lsupport, itemset, i)) > lsupport_threshold
-                ], by=t -> globalmemo(miner, (:gsupport, t)), rev=true)
-            )
-        end
-
-        # create an initial fptree
-        fptree = FPTree()
-
-        # create and fill an header table, necessary to traverse FPTrees horizontally
-        htable = HeaderTable(frequents, fptree)
-        SoleRules.push!(fptree, ninstance_toitemsets_sorted, _ninstances, miner;
-            htable=htable)
-
-        if verbose
-            printstyled("Mining longer frequent itemsets...\n", color=:green)
-        end
-
-        # call main logic
-        _fpgrowth_kernel(fptree, htable, miner, Itemset())
-    end
-
+    # main `fpgrowth` logic
     function _fpgrowth_kernel(
         fptree::FPTree,
         htable::HeaderTable,
@@ -884,33 +818,37 @@ function fpgrowth(;
         if islist(fptree)
             survivor_items = retrieveall(fptree)
 
-            if verbose
+            verbose &&
                 printstyled("Merging $(leftout_items |> length) leftout items with " *
                 "a single-list FPTree of length $(survivor_items |> length)\n", color=:blue)
-            end
 
             # we know that all the combinations of `survivor_items` are frequent with
             # `leftout_items`, but we need to save (inside miner) the exact local support
             # and global support for each new itemset: those measures are computed below.
-            _n_worlds = contributors(fptree) |> length
-            _n_instances = dataset(miner) |> ninstances
+            _nworlds = SoleLogics.nworlds(dataset(miner), 1)
+            _ninstances = dataset(miner) |> ninstances
+
+            lsupp_integer_threshold = convert(Int64, floor(
+                getlocalthreshold(miner, lsupport) * _nworlds
+            ))
 
             for combo in combine(survivor_items, leftout_items) |> collect
-                _supp_mask = findmin([
+                occurrences = findmin([
                     sum([
                         contributors(:lsupport, itemset, i, miner)
-                        for i in 1:ninstances(dataset(miner))
+                        for i in 1:_ninstances
                     ])
                     for itemset in combo
-                ])
+                ]) |> first
 
                 # updating local supports
-                map(i -> localmemo!(miner, (:lsupport, combo, i), _supp_mask[i]),
-                    1:ninstances(dataset(miner)))
+                map(i -> localmemo!(miner, (:lsupport, combo, i),
+                    occurrences[i] / _nworlds), 1:_nworlds)
 
                 # updating global support
-                #TODO:
-                globalmemo!(miner, (:gsupport, combo), count(... > g integer threshold))
+                # WARNING: denominator not correct
+                globalmemo!(miner, (:gsupport, combo),
+                    count(i -> i > lsupp_integer_threshold, occurrences) / _ninstances)
 
                 push!(freqitems(miner), combo)
             end
@@ -939,5 +877,66 @@ function fpgrowth(;
         end
     end
 
-    return _fpgrowth_preamble
+    # initialization logic
+    @assert SoleRules.gsupport in reduce(vcat, item_meas(miner)) "FP-Growth requires " *
+        "global support (gsupport) as meaningfulness measure in order to " *
+        "work. Please, add a tuple (gsupport, local support threshold, " *
+        "global support threshold) to miner.item_constrained_measures field.\n" *
+        "Local support is needed too, but it is already considered in the global case."
+
+    # retrieve local support threshold, as this is necessary later to filter which
+    # frequent items are meaningful on each instance.
+    lsupport_threshold = getlocalthreshold(miner, SoleRules.gsupport)
+
+    verbose && printstyled("Generating frequent itemsets of length 1...\n", color=:green)
+
+    # get the frequent itemsets from the first candidates set;
+    # note that meaningfulness measure should leverage memoization when miner is given!
+    frequents = [candidate
+        for (gmeas_algo, lthreshold, gthreshold) in item_meas(miner)
+        for candidate in Itemset.(items(miner))
+        if gmeas_algo(candidate, X, lthreshold, miner=miner) >= gthreshold
+    ] |> unique
+
+    verbose && printstyled("Saving computed metrics into miner...\n", color=:green)
+
+    # update miner with the frequent itemsets just computed
+    push!(freqitems(miner), frequents...)
+
+    verbose && printstyled("Initializing data structures...\n", color=:green)
+
+    # associate each instance in the dataset with its frequent itemsets
+    _ninstances = ninstances(X)
+    ninstance_toitemsets_sorted = [Itemset() for _ in 1:_ninstances] # Vector{Itemset}
+
+    # for each instance, sort its frequent itemsets by global support
+    for i in 1:_ninstances
+        ninstance_toitemsets_sorted[i] = reduce(vcat, sort([
+                itemset
+                for itemset in frequents
+                if localmemo(miner, (:lsupport, itemset, i)) > lsupport_threshold
+            ], by=t -> globalmemo(miner, (:gsupport, t)), rev=true)
+        )
+    end
+
+    # create an initial fptree
+    fptree = FPTree()
+
+    # create and fill an header table, necessary to traverse FPTrees horizontally
+    htable = HeaderTable(frequents, fptree)
+
+    SoleRules.push!(fptree, ninstance_toitemsets_sorted, _ninstances, miner;
+        htable=htable)
+
+    verbose && printstyled("Mining longer frequent itemsets...\n", color=:green)
+
+    # call main logic
+    _fpgrowth_kernel(fptree, htable, miner, Itemset())
+end
+
+"""
+    TODO: add documentation
+"""
+function initpowerups(::typeof(fpgrowth), ::AbstractDataset)::NamedTuple
+    return (; contributors=Contributors([]))
 end
