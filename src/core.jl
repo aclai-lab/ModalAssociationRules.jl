@@ -380,21 +380,28 @@ const Powerup = NamedTuple
 ############################################################################################
 
 """
-    struct Miner
-        X::AbstractDataset              # target dataset
-        algorithm::Function                  # algorithm used to perform extraction
+    struct Miner{
+        D<:AbstractDataset,
+        F <:Function,
+        I<:Item,
+        IM<:MeaningfulnessMeasure,
+        RM<:MeaningfulnessMeasure
+    }
+        X::D                            # target dataset
+        algorithm::F                    # algorithm used to perform extraction
+        items::Vector{I}
 
-        items::Vector{Item}
-
-        # global meaningfulness measures and their thresholds (both local and global)
-        item_constrained_measures::Vector{<:MeaningfulnessMeasure}
-        rule_constrained_measures::Vector{<:MeaningfulnessMeasure}
+                                        # meaningfulness measures
+        item_constrained_measures::Vector{IM}
+        rule_constrained_measures::Vector{RM}
 
         freqitems::Vector{Itemset}      # collected frequent itemsets
         arules::Vector{ARule}           # collected association rules
 
         lmemo::LmeasMemo                # local memoization structure
         gmemo::GmeasMemo                # global memoization structure
+
+        powerups::Powerup               # mining algorithm powerups (see documentation)
         info::NamedTuple                # general informations
     end
 
@@ -532,7 +539,7 @@ algorithm(miner::Miner)::Function = miner.algorithm
 
 Getter for the items of [`Item`](@ref)s loaded into `miner`.
 
-See [`Miner`](@ref), [`Item`](@ref).
+See [`Item`](@ref), [`Miner`](@ref).
 """
 items(miner::Miner) = miner.items
 
@@ -542,7 +549,7 @@ items(miner::Miner) = miner.items
 Return the [`MeaningfulnessMeasure`](@ref)s tailored to work with [`Itemset`](@ref)s,
 loaded inside `miner`.
 
-See [`Miner`](@ref), [`Itemset`](@ref), [`MeaningfulnessMeasure`](@ref)
+See  [`Itemset`](@ref), [`MeaningfulnessMeasure`](@ref), [`Miner`](@ref).
 """
 item_meas(miner::Miner)::Vector{<:MeaningfulnessMeasure} =
     miner.item_constrained_measures
@@ -633,7 +640,7 @@ end
 
 Return all frequent [`Itemset`](@ref)s mined by `miner`.
 
-See also [`Miner`](@ref), [`Itemset`](@ref).
+See also [`Itemset`](@ref), [`Miner`](@ref).
 """
 freqitems(miner::Miner) = miner.freqitems
 
@@ -695,23 +702,20 @@ globalmemo!(miner::Miner, key::GmeasMemoKey, val::Threshold) = miner.gmemo[key] 
 
 """
     powerups(miner::Miner)
+    powerupsminer::Miner, key::Symbol)
 
-Return the powerups currently loaded in `miner`.
-Powerups are additional functionalities that can be plugged into an `Miner` instance
-to augment its capabilities.
+Return the entire powerups `NamedTuple` currently loaded in `miner`, or a specific powerup.
 
-See also [`Miner`](@ref), [`haspowerup`](@ref), [`initpowerups`](@ref),
-[`powerup`](@ref).
+See also [`haspowerup`](@ref), [`initpowerups`](@ref), [`Miner`](@ref), [`Powerup`](@ref).
 """
 powerups(miner::Miner) = miner.powerups
 
 """
-    TODO: add documentation
-"""
-powerup(miner::Miner, key::Symbol) = getfield(miner |> powerups, key)
+    haspowerup(miner::Miner, key::Symbol)
 
-"""
-    TODO: add documentation
+Return whether `miner` powerups field contains an entry `key`.
+
+See also [`Miner`](@ref), [`Powerup`](@ref), [`powerups`](@ref).
 """
 haspowerup(miner::Miner, key::Symbol) = hasproperty(miner |> powerups, key)
 
@@ -791,7 +795,7 @@ function contributors(
         "item and instance $(_ninstance). This functionality is not supported by " *
         "the mining algorithm provided ($(algorithm(miner)))")
     else
-        return powerup(miner, :contributors)[memokey]
+        return powerupsminer, :contributors)[memokey]
     end
 end
 function contributors(
@@ -823,7 +827,7 @@ function contributors!(miner::Miner, key::LmeasMemoKey, mask::WorldMask)
     if !haspowerup(miner, :contributors)
         error("Contributors is not supported by $(algorithm(miner)).")
     else
-        powerup(miner, :contributors)[key] = mask
+        powerupsminer, :contributors)[key] = mask
     end
 end
 
