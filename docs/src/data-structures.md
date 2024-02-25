@@ -36,7 +36,7 @@ follow(fptree::FPTree)
 islist(fptree::FPTree)
 retrieveall(fptree::FPTree)
 
-Base.push!(fptree::FPTree, itemset::Itemset, ninstance::Int64, miner::ARuleMiner; htable::Union{Nothing,HeaderTable}=nothing)
+Base.push!(fptree::FPTree, itemset::Itemset, ninstance::Int64, miner::Miner; htable::Union{Nothing,HeaderTable}=nothing)
 
 ```
 
@@ -51,6 +51,6 @@ link(htable::HeaderTable)
 follow(htable::HeaderTable, item::Item)
 link!(htable::HeaderTable, fptree::FPTree)
 
-checksanity!(htable::HeaderTable, miner::ARuleMiner)
+checksanity!(htable::HeaderTable, miner::Miner)
 Base.reverse(htable::HeaderTable)
 ```

@@ -15,10 +15,10 @@ The following utilities often involve performing some combinatoric trick between
 ```@docs
 combine
 grow_prune
-coalesce_contributors(itemset::Itemset, miner::ARuleMiner; lmeas::Function=lsupport)
+coalesce_contributors(itemset::Itemset, miner::Miner; lmeas::Function=lsupport)
 ```
 
 ## Association rules
 ```@docs
-arules_generator(itemsets::Vector{Itemset}, miner::ARuleMiner)
+arules_generator(itemsets::Vector{Itemset}, miner::Miner)
 ```

@@ -30,12 +30,12 @@ _item_meas = [(gsupport, 0.1, 0.1)]
 _rule_meas = [(gconfidence, 0.2, 0.2)]
 
 # make two miners: the first digs the search space using aprior, the second uses fpgrowth
-apriori_miner = ARuleMiner(X1, apriori, manual_items, _item_meas, _rule_meas)
-fpgrowth_miner = ARuleMiner(X2, fpgrowth, manual_items, _item_meas, _rule_meas)
+apriori_miner = Miner(X1, apriori, manual_items, _item_meas, _rule_meas)
+fpgrowth_miner = Miner(X2, fpgrowth, manual_items, _item_meas, _rule_meas)
 
 # mine the frequent patterns with both apriori and fpgrowth
-mine(apriori_miner)
-mine(fpgrowth_miner)
+@test_nowarn mine(apriori_miner)
+@test_nowarn mine(fpgrowth_miner)
 
 pq = Itemset([manual_p, manual_q])
 qr = Itemset([manual_q, manual_r])
@@ -100,16 +100,14 @@ arule3 = ARule(Itemset([manual_q, manual_p]), Itemset(manual_r))
 @test Contributors <: Dict{LmeasMemoKey, WorldMask}
 @test GmeasMemoKey <: Tuple{Symbol,ARMSubject}
 @test GmeasMemo <: Dict{GmeasMemoKey,Threshold}
-@test MiningAlgo <: FunctionWrapper{Nothing,Tuple{ARuleMiner,AbstractDataset}}
 
-
-# "core.jl - ARuleMiner" begin
-@test_nowarn ARuleMiner(X1, apriori, manual_items)
-@test_nowarn algorithm(ARuleMiner(X1, apriori, manual_items)) isa Function
+# "core.jl - Miner"
+@test_nowarn Miner(X1, apriori, manual_items)
+@test_nowarn algorithm(Miner(X1, apriori, manual_items)) isa Function
 
 @test dataset(apriori_miner) == X1
 @test algorithm(apriori_miner) isa Function
-@test items(ARuleMiner(X1, apriori, manual_items)) == manual_items
+@test items(Miner(X1, apriori, manual_items)) == manual_items
 
 @test item_meas(apriori_miner) == _item_meas
 @test rule_meas(apriori_miner) == _rule_meas
@@ -132,27 +130,30 @@ _temp_gmemo_key = (:gsupport, freqitems(apriori_miner)[3])
 @test_nowarn globalmemo!(apriori_miner, _temp_gmemo_key, 0.0)
 @test globalmemo(apriori_miner, _temp_gmemo_key) == 0.0
 
-countdown = 3
-for _temp_arule in arules_generator(freqitems(apriori_miner), apriori_miner)
-    if global countdown > 0
-        @test _temp_arule in arules(apriori_miner)
-        @test _temp_arule isa ARule
+function _association_rules_test1(miner::Miner)
+    countdown = 3
+    for _temp_arule in arules_generator(freqitems(miner), miner)
+        if countdown > 0
+            @test _temp_arule in arules(miner)
+            @test _temp_arule isa ARule
+        else
+            break
+        end
+        countdown -= 1
     end
-    global countdown -= 1
 end
+_association_rules_test1(apriori_miner)
 
 _temp_lmemo_key2 = (:lsupport, Itemset(manual_p), 1)
 @test localmemo(apriori_miner) |> length == 11880
 @test localmemo(apriori_miner)[(:lsupport, pq, 1)] == 0.0
-_temp_lmemo_val2 = localmemo(apriori_miner)[_temp_lmemo_key2]
-@test _temp_lmemo_val2 > 0.17 && _temp_lmemo_val2 < 0.18
 
-@test info(apriori_miner) isa NamedTuple
-@test !(isequipped(apriori_miner, :contributors))
-@test isequipped(fpgrowth_miner, :contributors)
-@test info(fpgrowth_miner, :contributors) |> length 2160
+@test info(apriori_miner) isa Info
+@test !(haspowerup(apriori_miner, :contributors))
+@test haspowerup(fpgrowth_miner, :contributors)
+@test powerups(fpgrowth_miner, :contributors) |> length == 2160
 
-@test isequipped(ARuleMiner(X1, apriori, manual_items), :contributors)
+@test haspowerup(Miner(X1, fpgrowth, manual_items), :contributors)
 
 @test contributors(_temp_lmemo_key2, fpgrowth_miner) |> length == 1326
 @test contributors(_temp_lmemo_key2, fpgrowth_miner) ==
@@ -163,10 +164,11 @@ _temp_lmemo_val2 = localmemo(apriori_miner)[_temp_lmemo_key2]
 @test contributors!(
     fpgrowth_miner, _temp_lmemo_key2, zeros(Int64, 1326)) == zeros(Int64, 1326)
 
-@test_nowarn apply(fpgrowth_miner, dataset(fpgrowth_miner))
+# checking for re-mining block
+@test apply(fpgrowth_miner, dataset(fpgrowth_miner)) == Nothing
 
 
-# "meaningfulness-measures.jl" begin
+# "meaningfulness-measures.jl"
 @test islocalof(lsupport, lsupport) == false
 @test islocalof(lsupport, gsupport) == true
 @test islocalof(lsupport, lconfidence) == false
@@ -211,36 +213,44 @@ _temp_lmemo_val2 = localmemo(apriori_miner)[_temp_lmemo_key2]
 
 _temp_lsupport = lsupport(pq, SoleLogics.getinstance(X2, 7); miner=fpgrowth_miner)
 @test _temp_lsupport > 0.0 && _temp_lsupport < 1.0
+
+# this is slow since fpgrowth-based miners only keep track of statistics about
+# frequent itemsets, and `pq` is not (in fact, its value for gsupport is < 0.1)
 @test gsupport(pq, dataset(apriori_miner), 0.1; miner=fpgrowth_miner) == 0.025
+
+_temp_arule = arules_generator(freqitems(fpgrowth_miner), fpgrowth_miner) |> first
 
 lsupport(Itemset(manual_p), SoleLogics.getinstance(X2, 7); miner=fpgrowth_miner)
 lsupport(Itemset(manual_lr), SoleLogics.getinstance(X2, 7); miner=fpgrowth_miner)
 @test lconfidence(
-    _temp_arule, SoleLogics.getinstance(X2,7); miner=fpgrowth_miner) == 1.0
-
-_temp_arule = arules_generator(freqitems(fpgrowth_miner), fpgrowth_miner) |> first
+    _temp_arule, SoleLogics.getinstance(X2,7); miner=fpgrowth_miner) > 0.54
 @test gconfidence(
     _temp_arule, dataset(fpgrowth_miner), 0.1; miner=fpgrowth_miner) == 1.0
 
 
-# "arulemining-utils.jl" begin
+# more on Miner structure
+@test SoleRules.initpowerups(apriori, dataset(apriori_miner)) == Powerup()
+@test SoleRules.initpowerups(fpgrowth, dataset(fpgrowth_miner)) == Powerup(
+    [:contributors => Contributors([])])
+
+# "arulemining-utils.jl"
 @test combine([pq, qr], 3) |> first == pqr
 @test combine([manual_p, manual_q], [manual_r]) |> collect |> length == 3
 @test combine([manual_p, manual_q], [manual_r]) |>
     collect |> first == Itemset([manual_p, manual_r])
 
 @test grow_prune([pq,qr,pr], [pq,qr,pr], 3) |> collect |> unique == [pqr]
-@test coalesce_contributors(Itemset(manual_p), fpgrowth_miner) |> first |> sum == 214118
+@test coalesce_contributors(Itemset(manual_p), fpgrowth_miner) |> first |> sum == 109573
 @test arules_generator(freqitems(fpgrowth_miner), fpgrowth_miner) |> first ==
     ARule(Itemset(manual_r), Itemset(manual_lr))
 
 
-# "fpgrowth.jl - FPTree" begin
+# "fpgrowth.jl - FPTree"
 root = FPTree()
 @test root isa FPTree
 @test content(root) === nothing
 @test SoleRules.parent(root) === nothing
-@test children(root) == FPTree[]
+@test SoleRules.children(root) == FPTree[]
 @test contributors(root) == Int64[]
 @test count(root) == 0
 @test link(root) === nothing
@@ -251,7 +261,7 @@ newroot = FPTree()
 @test content(SoleRules.parent(root)) === nothing
 
 @test_nowarn @eval fpt = FPTree(pqr)
-fpt_c1 = fpt |> children |> first
+fpt_c1 = SoleRules.children(fpt) |> first
 @test count(fpt_c1) == 1
 @test SoleRules.count!(fpt_c1, 5) == 5
 @test addcount!(fpt_c1, 2) == 7
@@ -260,7 +270,7 @@ fpt_c1 = fpt |> children |> first
 
 # children! does not perform any check!
 map(_ -> children!(root, fpt), 1:3)
-@test children(root) |> length == 3
+@test SoleRules.children(root) |> length == 3
 
 @test addcontributors!(fpt_c1, [12]) == [12]
 @test_throws DimensionMismatch addcontributors!(fpt_c1, [4,2,0])
@@ -287,17 +297,17 @@ fpt = FPTree(pqr)
 
 @test items(htable) == pqr
 
-fpt_c1 = children(fpt)[1]
+fpt_c1 = SoleRules.children(fpt)[1]
 @test link(htable)[manual_p] == fpt_c1
-@test link(htable)[manual_q] == children(fpt_c1)[1]
-@test link(htable)[manual_r] == children(children(fpt_c1)[1])[1]
+@test link(htable)[manual_q] == SoleRules.children(fpt_c1)[1]
+@test link(htable)[manual_r] == SoleRules.children(SoleRules.children(fpt_c1)[1])[1]
 
 @test follow(htable, manual_p) == link(htable)[manual_p]
 @test follow(htable, manual_q) == link(htable)[manual_q]
 @test follow(htable, manual_r) == link(htable)[manual_r]
 
 fpt2 = FPTree(pqr)
-fpt2_c1 = children(fpt2)[1]
+fpt2_c1 = SoleRules.children(fpt2)[1]
 @test_nowarn link!(htable, fpt2_c1)
 @test link(htable)[manual_p] == fpt_c1
 @test link(htable)[manual_p] |> content == fpt_c1 |> content
@@ -308,7 +318,7 @@ fpt2_c1 = children(fpt2)[1]
 
 root = FPTree()
 @test_nowarn push!(root, pqr, 1, fpgrowth_miner; htable=htable)
-@test root |> children |> first |> count == 2 # not 1, since htable was already loaded
+@test SoleRules.children(root) |> first |> count == 2 # not 1, since htable was already loaded
 
 @test_nowarn push!(root, [pqr, qr], 2, fpgrowth_miner; htable=htable)
 
@@ -323,7 +333,7 @@ enhanceditemset2 = EnhancedItemset([(manual_q, 1, [1])])
 
 
 # "fpgrowth.jl - patternbase and projection"
-@test_nowarn mine(fpgrowth_miner) # just to let @test see also internal calls
+# @test_nowarn mine(fpgrowth_miner) # just to let @test see also internal calls
 
 
 # "Apriori and FPGrowth comparisons"

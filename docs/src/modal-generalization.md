@@ -16,7 +16,7 @@ EnhancedItemset
 ConditionalPatternBase
 ```
 
-## Modal logic powerup in action
+## Modal logic in action
 ```@docs
 Contributors
 @equip_contributors

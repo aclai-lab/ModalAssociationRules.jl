@@ -7,7 +7,7 @@ function _lmeas_decorator(
     itemset::Itemset,
     X::AbstractDataset,
     i_instance::Integer,
-    miner::ARuleMiner,
+    miner::Miner,
     measlogic::Function
 )
     # this is needed to access memoization structures
@@ -29,7 +29,7 @@ end
 function _gmeas_decorator(
     itemset::Itemset,
     X::AbstractDataset,
-    miner::ARuleMiner,
+    miner::Miner,
     measlogic::Function
 )
     # this is needed to access memoization structures
