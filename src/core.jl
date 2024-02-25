@@ -795,7 +795,7 @@ function contributors(
         "item and instance $(_ninstance). This functionality is not supported by " *
         "the mining algorithm provided ($(algorithm(miner)))")
     else
-        return powerupsminer, :contributors)[memokey]
+        return powerups(miner, :contributors)[memokey]
     end
 end
 function contributors(
@@ -827,7 +827,7 @@ function contributors!(miner::Miner, key::LmeasMemoKey, mask::WorldMask)
     if !haspowerup(miner, :contributors)
         error("Contributors is not supported by $(algorithm(miner)).")
     else
-        powerupsminer, :contributors)[key] = mask
+        powerup(sminer, :contributors)[key] = mask
     end
 end
 
