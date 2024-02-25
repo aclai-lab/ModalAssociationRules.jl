@@ -949,5 +949,5 @@ how miner's `powerup` field is filled to optimize the mining.
 See also [`haspowerup`](@ref), [`powerup`](@ref).
 """
 function initpowerups(::typeof(fpgrowth), ::AbstractDataset)::NamedTuple
-    return (; contributors=Contributors([]))
+    return Powerup([:contributors => Contributors([])])
 end

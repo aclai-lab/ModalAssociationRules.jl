@@ -29,7 +29,8 @@ function apriori(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothing
         k = (candidates |> first |> length) + 1
         candidates = grow_prune(candidates, frequents, k) |> collect |> unique
 
-        verbose && println("Starting new computational loop with $(length(candidates)) " *
-            "candidates.")
+
+        verbose && printstyled("Starting new computational loop with " *
+        "$(length(candidates)) candidates...\n", color=:green)
     end
 end

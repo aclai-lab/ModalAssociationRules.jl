@@ -47,8 +47,8 @@ export getlocalthreshold, setlocalthreshold
 export getglobalthreshold, setglobalthreshold
 export localmemo, localmemo!
 export globalmemo, globalmemo!
-export info, hasinfo
-export powerups, haspowerup, initpowerups
+export powerups, powerups!, haspowerup, initpowerups
+export info, info!, hasinfo
 
 export contributors, contributors!
 

@@ -368,12 +368,22 @@ const GmeasMemo = Dict{GmeasMemoKey,Threshold} # global measure of an itemset/ar
 """
     const Powerup = NamedTuple
 
-Tuple of additional information associated with an [`ARMSubject`](@ref) that can be used to
+Additional informations associated with an [`ARMSubject`](@ref) that can be used to
 specialize an [`Miner`](@ref), augmenting its capabilities.
 
-To understand how to specialize an [`Miner`](@ref), see [`initpowerups`](@ref).
+To understand how to specialize an [`Miner`](@ref), see [`haspowerup`](@ref),
+[`initpowerups`](@ref), ['powerups`](@ref), [`powerups!`](@ref).
 """
-const Powerup = NamedTuple
+const Powerup = Dict{Symbol,Any}
+
+"""
+    const Info = Dict{Symbol,Any}
+
+Generic setting storage inside [`Miner`](@ref) structures.
+
+See also [`info`](@ref), [`info!`](@ref), [`hasinfo`](@ref), [`Miner`](@ref).
+"""
+const Info = Dict{Symbol,Any}
 
 ############################################################################################
 #### Association rule miner machines #######################################################
@@ -402,7 +412,7 @@ const Powerup = NamedTuple
         gmemo::GmeasMemo                # global memoization structure
 
         powerups::Powerup               # mining algorithm powerups (see documentation)
-        info::NamedTuple                # general informations
+        info::Info                      # general informations
     end
 
 Machine learning model interface to perform association rules extraction.
@@ -476,7 +486,7 @@ struct Miner{
     gmemo::GmeasMemo                # global memoization structure
 
     powerups::Powerup               # mining algorithm powerups (see documentation)
-    info::NamedTuple                # general informations
+    info::Info                      # general informations
 
     function Miner(
         X::D,
@@ -484,7 +494,7 @@ struct Miner{
         items::Vector{I},
         item_constrained_measures::Vector{IM} = [(gsupport, 0.1, 0.1)],
         rule_constrained_measures::Vector{RM} = [(gconfidence, 0.2, 0.2)];
-        info::NamedTuple = (; istrained=false)
+        info::Info = Info(:istrained => false)
     ) where {
         D<:AbstractDataset,
         F<:Function,
@@ -704,12 +714,22 @@ globalmemo!(miner::Miner, key::GmeasMemoKey, val::Threshold) = miner.gmemo[key] 
     powerups(miner::Miner)
     powerups(miner::Miner, key::Symbol)
 
-Return the entire powerups `NamedTuple` currently loaded in `miner`, or a specific powerup.
+Getter for the entire powerups `NamedTuple` currently loaded in `miner`,
+or a specific powerup.
 
 See also [`haspowerup`](@ref), [`initpowerups`](@ref), [`Miner`](@ref), [`Powerup`](@ref).
 """
 powerups(miner::Miner) = miner.powerups
 powerups(miner::Miner, key::Symbol) = miner.powerups[key]
+
+"""
+    powerups!(miner::Miner, key::Symbol, val)
+
+Setter for the content of a specific field of `miner`'s [`powerups`](@ref).
+
+See also [`haspowerup`](@ref), [`initpowerups`](@ref), [`Miner`](@ref), [`Powerup`](@ref).
+"""
+powerups!(miner::Miner, key::Symbol, val) = miner.powerups[key] = val
 
 """
     haspowerup(miner::Miner, key::Symbol)
@@ -718,26 +738,35 @@ Return whether `miner` powerups field contains an entry `key`.
 
 See also [`Miner`](@ref), [`Powerup`](@ref), [`powerups`](@ref).
 """
-haspowerup(miner::Miner, key::Symbol) = hasproperty(miner |> powerups, key)
+haspowerup(miner::Miner, key::Symbol) = haskey(miner |> powerups, key)
 
 """
     initpowerups(::Function, ::AbstractDataset)
 
 This defines how [`Miner`](@ref)'s `powerup` field is filled to optimize the mining.
 """
-initpowerups(::Function, ::AbstractDataset)::NamedTuple = (;)
+initpowerups(::Function, ::AbstractDataset)::Powerup = Powerup()
 
 """
-    info(miner::Miner)::NamedTuple
+    info(miner::Miner)::Powerup
     info(miner::Miner, key::Symbol)
 
 Getter for the entire additional informations field inside a `miner`, or one of its specific
 entries.
 
-See also [`Miner`](@ref), [`NamedTuple`](@ref).
+See also [`Miner`](@ref), [`Powerup`](@ref).
 """
 info(miner::Miner)::NamedTuple = miner.info
-info(miner::Miner, key::Symbol) = getfield(miner |> info, key)
+info(miner::Miner, key::Symbol) = miner.info[key]
+
+"""
+    info!(miner::Miner, key::Symbol, val)
+
+Setter for the content of a specific field of `miner`'s [`info`](@ref).
+
+See also [`hasinfo`](@ref), [`info`](@ref), [`Miner`](@ref).
+"""
+info!(miner::Miner, key::Symbol, val) = miner.info[key] = val
 
 """
     hasinfo(miner::Miner, key::Symbol)
@@ -746,7 +775,7 @@ Return whether `miner` additional informations field contains an entry `key`.
 
 See also [`Miner`](@ref).
 """
-hasinfo(miner::Miner, key::Symbol) = hasproperty(miner |> info, key)
+hasinfo(miner::Miner, key::Symbol) = haskey(miner |> info, key)
 
 doc_getcontributors = """
     contributors(
@@ -847,9 +876,25 @@ Then, return a generator of [`ARule`](@ref)s.
 
 See also [`ARule`](@ref), [`Itemset`](@ref).
 """
-function apply(miner::Miner, X::AbstractDataset; kwargs...)
-    # extract frequent itemsets
+function apply(miner::Miner, X::AbstractDataset; forcemining::Bool=false, kwargs...)
+
+    if !info(miner, :istrained)
+        info!(miner, :istrained, true)
+    elseif forcemining == true
+        @warn "Miner has already been trained. To ignore this warning, " *
+            "set `forcemining=true`."
+    end
+
     miner.algorithm(miner, X; kwargs...)
+
+    return arules_generator(freqitems(miner), miner)
+end
+
+function generaterules(miner::Miner; kwargs...)
+    if !info(miner, :istrained)
+        error("Miner should be trained before generating rules. Please, invoke `mine`.")
+    end
+
     return arules_generator(freqitems(miner), miner)
 end
 
