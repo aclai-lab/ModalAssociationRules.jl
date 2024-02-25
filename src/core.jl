@@ -869,4 +869,5 @@ function Base.show(io::IO, miner::Miner)
         "$(length(miner.gmemo |> keys))\n")
 
     print(io, "Additional infos: $(info(miner) |> keys)")
+    print(io, "Specialization fields: $(powerups(miner) |> keys)")
 end
