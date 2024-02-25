@@ -796,13 +796,14 @@ end
 ############################################################################################
 
 """
-TODO: renew
+    fpgrowth(miner::ARuleMiner, X::AbstractDataset; verbose::Bool=true)::Nothing
 
-    fpgrowth(; fulldump::Bool=true, verbose::Bool=true)::Function
+FP-Growth algorithm,
+[as described here](https://www.cs.sfu.ca/~jpei/publications/sigmod00.pdf) but generalized
+to also work with modal logic.
 
-Wrapper function for the FP-Growth algorithm over a modal dataset.
-FP-Growth algorithm logic,
-[as described here](https://www.cs.sfu.ca/~jpei/publications/sigmod00.pdf).
+See also [`ARuleMiner`](@ref), [`FPTree`](@ref), [`HeaderTable`](@ref),
+[`SoleBase.AbstractDataset`](@ref)
 """
 function fpgrowth(miner::ARuleMiner, X::AbstractDataset; verbose::Bool=true)::Nothing
 
@@ -938,7 +939,14 @@ function fpgrowth(miner::ARuleMiner, X::AbstractDataset; verbose::Bool=true)::No
 end
 
 """
-    TODO: add documentation
+    initpowerups(::typeof(fpgrowth), ::AbstractDataset)::NamedTuple
+
+Powerups suite for FP-Growth algorithm.
+
+When initializing an [`ARuleMiner`](@ref) with [`fpgrowth`](@ref) algorithm, this defines
+how [`powerup`](@ref) field is filled to optimize the mining.
+
+See also [`haspowerup`](@ref), [`powerup`](@ref).
 """
 function initpowerups(::typeof(fpgrowth), ::AbstractDataset)::NamedTuple
     return (; contributors=Contributors([]))

@@ -1,11 +1,9 @@
 """
-TODO: renew
-
-    apriori(; fulldump::Bool=true, verbose::Bool=true)::Function
+    apriori(miner::ARuleMiner, X::AbstractDataset; verbose::Bool=true)::Nothing
 
 Apriori algorithm, [as described here](https://ceur-ws.org/Vol-3284/492.pdf).
 
-See also [`ARuleMiner`](@ref).
+See also [`ARuleMiner`](@ref), [`SoleBase.AbstractDataset`](@ref).
 """
 function apriori(miner::ARuleMiner, X::AbstractDataset; verbose::Bool=true)::Nothing
     # candidates of length 1 are all the letters in our items

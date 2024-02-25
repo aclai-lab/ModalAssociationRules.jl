@@ -304,6 +304,10 @@ See also [`GmeasMemo`](@ref), [`GmeasMemoKey`](@ref), [`LmeasMemo`](@ref),
 """
 const ARMSubject = Union{ARule,Itemset} # memoizable association-rule-mining types
 
+############################################################################################
+#### Utility structures ####################################################################
+############################################################################################
+
 """
     const LmeasMemoKey = Tuple{Symbol,ARMSubject,Int64}
 
@@ -360,6 +364,16 @@ with.
 See also [`GmeasMemoKey`](@ref), [`ARMSubject`](@ref).
 """
 const GmeasMemo = Dict{GmeasMemoKey,Threshold} # global measure of an itemset/arule => value
+
+"""
+    const Powerup = NamedTuple
+
+Tuple of additional information associated with an [`ARMSubject`](@ref) that can be used to
+specialize an [`ARuleMiner`](@ref), augmenting its capabilities.
+
+To understand how to specialize an [`ARuleMiner`](@ref), see [`initpowerups`](@ref).
+"""
+const Powerup = NamedTuple
 
 ############################################################################################
 #### Association rule miner machines #######################################################
@@ -454,7 +468,7 @@ struct ARuleMiner{
     lmemo::LmeasMemo                # local memoization structure
     gmemo::GmeasMemo                # global memoization structure
 
-    powerups::NamedTuple            # mining algorithm powerups (see documentation)
+    powerups::Powerup               # mining algorithm powerups (see documentation)
     info::NamedTuple                # general informations
 
     function ARuleMiner(
@@ -693,7 +707,14 @@ globalmemo!(miner::ARuleMiner, key::GmeasMemoKey, val::Threshold) = miner.gmemo[
 ############################################################################################
 
 """
-    TODO: add documentation
+    powerups(miner::ARuleMiner)
+
+Return the powerups currently loaded in `miner`.
+Powerups are additional functionalities that can be plugged into an `ARuleMiner` instance
+to augment its capabilities.
+
+See also [`ARuleMiner`](@ref), [`haspowerup`](@ref), [`initpowerups`](@ref),
+[`powerup`](@ref).
 """
 powerups(miner::ARuleMiner) = miner.powerups
 
