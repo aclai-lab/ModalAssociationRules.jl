@@ -382,7 +382,7 @@ const Powerup = NamedTuple
 """
     struct Miner
         X::AbstractDataset              # target dataset
-        algo::Function                  # algorithm used to perform extraction
+        algorithm::Function                  # algorithm used to perform extraction
 
         items::Vector{Item}
 
@@ -455,7 +455,7 @@ struct Miner{
     # target dataset
     X::D
     # algorithm used to perform extraction
-    algo::F
+    algorithm::F
     items::Vector{I}
 
     # meaningfulness measures
@@ -473,7 +473,7 @@ struct Miner{
 
     function Miner(
         X::D,
-        algo::F,
+        algorithm::F,
         items::Vector{I},
         item_constrained_measures::Vector{IM} = [(gsupport, 0.1, 0.1)],
         rule_constrained_measures::Vector{RM} = [(gconfidence, 0.2, 0.2)];
@@ -499,9 +499,9 @@ struct Miner{
             "Local support (lsupport) is needed too, but it is already considered " *
             "internally by gsupport."
 
-        powerups = initpowerups(algo, X)
+        powerups = initpowerups(algorithm, X)
 
-        new{D,F,I,IM,RM}(X, algo, unique(items),
+        new{D,F,I,IM,RM}(X, algorithm, unique(items),
             item_constrained_measures, rule_constrained_measures,
             Vector{Itemset}([]), Vector{ARule}([]),
             LmeasMemo(), GmeasMemo(), powerups, info
@@ -525,7 +525,7 @@ Getter for the mining algorithm loaded into `miner`.
 
 See [`Miner`](@ref).
 """
-algorithm(miner::Miner)::Function = miner.algo
+algorithm(miner::Miner)::Function = miner.algorithm
 
 """
     items(miner::Miner)
@@ -849,7 +849,7 @@ See also [`ARule`](@ref), [`Itemset`](@ref).
 """
 function apply(miner::Miner, X::AbstractDataset; kwargs...)
     # extract frequent itemsets
-    miner.algo(miner, X; kwargs...)
+    miner.algorithm(miner, X; kwargs...)
     return arules_generator(freqitems(miner), miner)
 end
 

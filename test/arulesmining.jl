@@ -34,8 +34,8 @@ apriori_miner = Miner(X1, apriori, manual_items, _item_meas, _rule_meas)
 fpgrowth_miner = Miner(X2, fpgrowth, manual_items, _item_meas, _rule_meas)
 
 # mine the frequent patterns with both apriori and fpgrowth
-mine(apriori_miner)
-mine(fpgrowth_miner)
+@test_nowarn mine(apriori_miner)
+@test_nowarn mine(fpgrowth_miner)
 
 pq = Itemset([manual_p, manual_q])
 qr = Itemset([manual_q, manual_r])
@@ -101,7 +101,7 @@ arule3 = ARule(Itemset([manual_q, manual_p]), Itemset(manual_r))
 @test GmeasMemoKey <: Tuple{Symbol,ARMSubject}
 @test GmeasMemo <: Dict{GmeasMemoKey,Threshold}
 
-# "core.jl - Miner" begin
+# "core.jl - Miner"
 @test_nowarn Miner(X1, apriori, manual_items)
 @test_nowarn algorithm(Miner(X1, apriori, manual_items)) isa Function
 
@@ -148,7 +148,7 @@ _temp_lmemo_val2 = localmemo(apriori_miner)[_temp_lmemo_key2]
 @test info(apriori_miner) isa NamedTuple
 @test !(haspowerup(apriori_miner, :contributors))
 @test haspowerup(fpgrowth_miner, :contributors)
-@test powerup(fpgrowth_miner, :contributors) |> length 2160
+@test powerup(fpgrowth_miner, :contributors) |> length == 2160
 
 @test haspowerup(Miner(X1, apriori, manual_items), :contributors)
 
@@ -164,7 +164,7 @@ _temp_lmemo_val2 = localmemo(apriori_miner)[_temp_lmemo_key2]
 @test_nowarn apply(fpgrowth_miner, dataset(fpgrowth_miner))
 
 
-# "meaningfulness-measures.jl" begin
+# "meaningfulness-measures.jl"
 @test islocalof(lsupport, lsupport) == false
 @test islocalof(lsupport, gsupport) == true
 @test islocalof(lsupport, lconfidence) == false
@@ -209,6 +209,9 @@ _temp_lmemo_val2 = localmemo(apriori_miner)[_temp_lmemo_key2]
 
 _temp_lsupport = lsupport(pq, SoleLogics.getinstance(X2, 7); miner=fpgrowth_miner)
 @test _temp_lsupport > 0.0 && _temp_lsupport < 1.0
+
+# this is slow since fpgrowth-based miners only keep track of statistics about
+# frequent itemsets, and `pq` is not (in fact, its value for gsupport is < 0.1)
 @test gsupport(pq, dataset(apriori_miner), 0.1; miner=fpgrowth_miner) == 0.025
 
 lsupport(Itemset(manual_p), SoleLogics.getinstance(X2, 7); miner=fpgrowth_miner)
@@ -221,7 +224,11 @@ _temp_arule = arules_generator(freqitems(fpgrowth_miner), fpgrowth_miner) |> fir
     _temp_arule, dataset(fpgrowth_miner), 0.1; miner=fpgrowth_miner) == 1.0
 
 
-# "arulemining-utils.jl" begin
+# more on Miner structure
+
+
+
+# "arulemining-utils.jl"
 @test combine([pq, qr], 3) |> first == pqr
 @test combine([manual_p, manual_q], [manual_r]) |> collect |> length == 3
 @test combine([manual_p, manual_q], [manual_r]) |>
@@ -233,7 +240,7 @@ _temp_arule = arules_generator(freqitems(fpgrowth_miner), fpgrowth_miner) |> fir
     ARule(Itemset(manual_r), Itemset(manual_lr))
 
 
-# "fpgrowth.jl - FPTree" begin
+# "fpgrowth.jl - FPTree"
 root = FPTree()
 @test root isa FPTree
 @test content(root) === nothing
@@ -321,7 +328,7 @@ enhanceditemset2 = EnhancedItemset([(manual_q, 1, [1])])
 
 
 # "fpgrowth.jl - patternbase and projection"
-@test_nowarn mine(fpgrowth_miner) # just to let @test see also internal calls
+# @test_nowarn mine(fpgrowth_miner) # just to let @test see also internal calls
 
 
 # "Apriori and FPGrowth comparisons"
