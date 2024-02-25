@@ -38,6 +38,7 @@ export ARMSubject
 export LmeasMemoKey, LmeasMemo, Contributors
 export GmeasMemoKey, GmeasMemo
 export Contributors
+export Info, Powerup
 
 export Miner
 export dataset, algorithm

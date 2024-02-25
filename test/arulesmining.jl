@@ -147,7 +147,7 @@ _temp_lmemo_key2 = (:lsupport, Itemset(manual_p), 1)
 _temp_lmemo_val2 = localmemo(apriori_miner)[_temp_lmemo_key2]
 @test _temp_lmemo_val2 > 0.17 && _temp_lmemo_val2 < 0.18
 
-@test info(apriori_miner) isa NamedTuple
+@test info(apriori_miner) isa Info
 @test !(haspowerup(apriori_miner, :contributors))
 @test haspowerup(fpgrowth_miner, :contributors)
 @test powerups(fpgrowth_miner, :contributors) |> length == 2160
