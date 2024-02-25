@@ -66,54 +66,53 @@ What follows is a list of the already built-in meaningfulness measures.
 In the [`hands-on`](@ref) section you will learn how to implement your own measure.
 
 ```@docs
-lsupport(itemset::Itemset, logi_instance::LogicalInstance; miner::Union{Nothing,ARuleMiner}=nothing)
-gsupport(itemset::Itemset, X::SupportedLogiset, threshold::Threshold; miner::Union{Nothing,ARuleMiner} = nothing)
-lconfidence(rule::ARule, logi_instance::LogicalInstance; miner::Union{Nothing,ARuleMiner} = nothing)
-gconfidence(rule::ARule, X::SupportedLogiset, threshold::Threshold; miner::Union{Nothing,ARuleMiner} = nothing)
+lsupport(itemset::Itemset, logi_instance::LogicalInstance; miner::Union{Nothing,Miner}=nothing)
+gsupport(itemset::Itemset, X::SupportedLogiset, threshold::Threshold; miner::Union{Nothing,Miner} = nothing)
+lconfidence(rule::ARule, logi_instance::LogicalInstance; miner::Union{Nothing,Miner} = nothing)
+gconfidence(rule::ARule, X::SupportedLogiset, threshold::Threshold; miner::Union{Nothing,Miner} = nothing)
 ```
 
 ## Mining structures
 
-Finally, we are ready to start mining. To do so, we need to create an [`ARuleMiner`](@ref) object.
-We just need to specify which dataset we are working with, a [`MiningAlgo`](@ref), a vector of initial [`Item`](@ref), and the [`MeaningfulnessMeasure](@ref)s to establish [`ARMSubject`](@ref) interestingness.
+Finally, we are ready to start mining. To do so, we need to create an [`Miner`](@ref) object.
+We just need to specify which dataset we are working with, together with a mining function, a vector of initial [`Item`](@ref)s, and the [`MeaningfulnessMeasure](@ref)s to establish [`ARMSubject`](@ref) interestingness.
 
 ```@docs
-ARuleMiner
-MiningAlgo
+Miner
 
-dataset(miner::ARuleMiner)
-algorithm(miner::ARuleMiner)
-items(miner::ARuleMiner)
+dataset(miner::Miner)
+algorithm(miner::Miner)
+items(miner::Miner)
 
-item_meas(miner::ARuleMiner)
-rule_meas(miner::ARuleMiner)
-getlocalthreshold(miner::ARuleMiner, meas::Function)
-setlocalthreshold(miner::ARuleMiner, meas::Function, threshold::Threshold)
-getglobalthreshold(miner::ARuleMiner, meas::Function)
-setglobalthreshold(miner::ARuleMiner, meas::Function, threshold::Threshold)
+item_meas(miner::Miner)
+rule_meas(miner::Miner)
+getlocalthreshold(miner::Miner, meas::Function)
+setlocalthreshold(miner::Miner, meas::Function, threshold::Threshold)
+getglobalthreshold(miner::Miner, meas::Function)
+setglobalthreshold(miner::Miner, meas::Function, threshold::Threshold)
 ```
 
-After an [`ARuleMiner`](@ref) ends mining, frequent [`Itemset`](@ref)s and [`ARule`](@ref) are accessibles through the getters below.
+After an [`Miner`](@ref) ends mining, frequent [`Itemset`](@ref)s and [`ARule`](@ref) are accessibles through the getters below.
 ```@docs
-freqitems(miner::ARuleMiner)
-arules(miner::ARuleMiner)
+freqitems(miner::Miner)
+arules(miner::Miner)
 ```
 
 ```@docs
-localmemo(miner::ARuleMiner)
-localmemo!(miner::ARuleMiner, key::LmeasMemoKey, val::Threshold)
-globalmemo(miner::ARuleMiner)
-globalmemo!(miner::ARuleMiner, key::GmeasMemoKey, val::Threshold)
+localmemo(miner::Miner)
+localmemo!(miner::Miner, key::LmeasMemoKey, val::Threshold)
+globalmemo(miner::Miner)
+globalmemo!(miner::Miner, key::GmeasMemoKey, val::Threshold)
 ```
 
-To customize and specialize an [`ARuleMiner`](@ref), [`info`](@ref) comes in our help.
+To customize and specialize an [`Miner`](@ref), [`info`](@ref) comes in our help.
 We will see this aspect later in the documentation.
 ```@docs
-info(miner::ARuleMiner)
+info(miner::Miner)
 ```
 
 To conclude this section, this is how to start mining.
 ```@docs
-mine(miner::ARuleMiner)
-apply(miner::ARuleMiner, X::AbstractDataset)
+mine(miner::Miner)
+apply(miner::Miner, X::AbstractDataset)
 ```

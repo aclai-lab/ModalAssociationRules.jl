@@ -334,7 +334,7 @@ Structure for storing association between a local measure, applied on a certain
 [`ARMSubject`](@ref) on a certain [`LogicalInstance`](@ref), and a vector of integers
 representing the worlds for which the measure is greater than a certain threshold.
 
-This type is intended to be used inside an [`ARuleMiner`](@ref) `info` named tuple, to
+This type is intended to be used inside an [`Miner`](@ref) `info` named tuple, to
 support the execution of, for example, [`fpgrowth`](@ref) algorthm.
 
 See also [`LmeasMemoKey`](@ref), [`WorldMask`](@ref)
@@ -358,7 +358,7 @@ Association between a global measure of a [`ARMSubject`](@ref) on a dataset, and
 
 The reference to the dataset is not explicited here, since [`GmeasMemo`](@ref) is intended
 to be used as a [memoization](https://en.wikipedia.org/wiki/Memoization) structure inside
-[`ARuleMiner`](@ref) objects, and the latter already knows the dataset they are working
+[`Miner`](@ref) objects, and the latter already knows the dataset they are working
 with.
 
 See also [`GmeasMemoKey`](@ref), [`ARMSubject`](@ref).
@@ -369,9 +369,9 @@ const GmeasMemo = Dict{GmeasMemoKey,Threshold} # global measure of an itemset/ar
     const Powerup = NamedTuple
 
 Tuple of additional information associated with an [`ARMSubject`](@ref) that can be used to
-specialize an [`ARuleMiner`](@ref), augmenting its capabilities.
+specialize an [`Miner`](@ref), augmenting its capabilities.
 
-To understand how to specialize an [`ARuleMiner`](@ref), see [`initpowerups`](@ref).
+To understand how to specialize an [`Miner`](@ref), see [`initpowerups`](@ref).
 """
 const Powerup = NamedTuple
 
@@ -380,7 +380,7 @@ const Powerup = NamedTuple
 ############################################################################################
 
 """
-    struct ARuleMiner
+    struct Miner
         X::AbstractDataset              # target dataset
         algo::Function                  # algorithm used to perform extraction
 
@@ -427,11 +427,11 @@ julia> manual_alphabet = Vector{Item}([p, q, r, lp, lq, lr])
 # Create an association rule miner wrapping `apriori` algorithm - see [`apriori`](@ref);
 # note that meaningfulness measures are not explicited and, thus, are defaulted as in the
 # call below.
-julia> miner = ARuleMiner(X, apriori(), manual_alphabet)
+julia> miner = Miner(X, apriori(), manual_alphabet)
 
 # Create an association rule miner, expliciting global meaningfulness measures with their
 # local and global thresholds, both for [`Itemset`](@ref)s and [`ARule`](@ref).
-julia> miner = ARuleMiner(X, apriori(), manual_alphabet,
+julia> miner = Miner(X, apriori(), manual_alphabet,
     [(gsupport, 0.1, 0.1)], [(gconfidence, 0.2, 0.2)])
 
 # Consider the dataset and learning algorithm wrapped by `miner` (resp., `X` and `apriori`)
@@ -445,7 +445,7 @@ end
 See also  [`ARule`](@ref), [`apriori`](@ref), [`MeaningfulnessMeasure`](@ref),
 [`Itemset`](@ref), [`GmeasMemo`](@ref), [`LmeasMemo`](@ref).
 """
-struct ARuleMiner{
+struct Miner{
     D<:AbstractDataset,
     F <:Function,
     I<:Item,
@@ -471,7 +471,7 @@ struct ARuleMiner{
     powerups::Powerup               # mining algorithm powerups (see documentation)
     info::NamedTuple                # general informations
 
-    function ARuleMiner(
+    function Miner(
         X::D,
         algo::F,
         items::Vector{I},
@@ -492,7 +492,7 @@ struct ARuleMiner{
 
         # gsupport is indispensable to mine association rule
         @assert SoleRules.gsupport in reduce(
-            vcat, item_constrained_measures) "ARuleMiner requires global support " *
+            vcat, item_constrained_measures) "Miner requires global support " *
             "(gsupport) as meaningfulness measure in order to work properly. " *
             "Please, add a tuple (gsupport, local support threshold, global support " *
             "threshold) to item_constrained_measures field.\n" *
@@ -510,77 +510,64 @@ struct ARuleMiner{
 end
 
 """
-#WARNING: deprecated
-
-    const MiningAlgo = FunctionWrapper{Nothing,Tuple{ARuleMiner,AbstractDataset}}
-
-[Function wrapper](https://github.com/yuyichao/FunctionWrappers.jl) representing a function
-which performs mining of frequent [`Itemset`](@ref)s in a [`ARuleMiner`](@ref).
-
-See also [`SoleLogics.AbstractDataset`](@ref), [`ARuleMiner`](@ref), [`apriori`](@ref),
-[`fpgrowth`](@ref).
-"""
-const MiningAlgo = FunctionWrapper{Nothing,Tuple{ARuleMiner,AbstractDataset}}
-
-"""
-    dataset(miner::ARuleMiner)::AbstractDataset
+    dataset(miner::Miner)::AbstractDataset
 
 Getter for the dataset wrapped by `miner`s.
 
-See [`SoleBase.AbstractDataset`](@ref), [`ARuleMiner`](@ref).
+See [`SoleBase.AbstractDataset`](@ref), [`Miner`](@ref).
 """
-dataset(miner::ARuleMiner)::AbstractDataset = miner.X
+dataset(miner::Miner)::AbstractDataset = miner.X
 
 """
-    algorithm(miner::ARuleMiner)::Function
+    algorithm(miner::Miner)::Function
 
 Getter for the mining algorithm loaded into `miner`.
 
-See [`ARuleMiner`](@ref).
+See [`Miner`](@ref).
 """
-algorithm(miner::ARuleMiner)::Function = miner.algo
+algorithm(miner::Miner)::Function = miner.algo
 
 """
-    items(miner::ARuleMiner)
+    items(miner::Miner)
 
 Getter for the items of [`Item`](@ref)s loaded into `miner`.
 
-See [`ARuleMiner`](@ref), [`Item`](@ref), [`MiningAlgo`](@ref).
+See [`Miner`](@ref), [`Item`](@ref).
 """
-items(miner::ARuleMiner) = miner.items
+items(miner::Miner) = miner.items
 
 """
-    item_meas(miner::ARuleMiner)::Vector{<:MeaningfulnessMeasure}
+    item_meas(miner::Miner)::Vector{<:MeaningfulnessMeasure}
 
 Return the [`MeaningfulnessMeasure`](@ref)s tailored to work with [`Itemset`](@ref)s,
 loaded inside `miner`.
 
-See [`ARuleMiner`](@ref), [`Itemset`](@ref), [`MeaningfulnessMeasure`](@ref)
+See [`Miner`](@ref), [`Itemset`](@ref), [`MeaningfulnessMeasure`](@ref)
 """
-item_meas(miner::ARuleMiner)::Vector{<:MeaningfulnessMeasure} =
+item_meas(miner::Miner)::Vector{<:MeaningfulnessMeasure} =
     miner.item_constrained_measures
 
 """
-    rule_meas(miner::ARuleMiner)::Vector{<:MeaningfulnessMeasure}
+    rule_meas(miner::Miner)::Vector{<:MeaningfulnessMeasure}
 
 Return the [`MeaningfulnessMeasure`](@ref)s tailored to work with [`ARule`](@ref)s, loaded
 inside `miner`.
 
-See [`ARuleMiner`](@ref), [`ARule`](@ref), [`MeaningfulnessMeasure`](@ref).
+See [`Miner`](@ref), [`ARule`](@ref), [`MeaningfulnessMeasure`](@ref).
 """
-rule_meas(miner::ARuleMiner)::Vector{<:MeaningfulnessMeasure} =
+rule_meas(miner::Miner)::Vector{<:MeaningfulnessMeasure} =
     miner.rule_constrained_measures
 
 """
-    getlocalthreshold(miner::ARuleMiner, meas::Function)::Threshold
+    getlocalthreshold(miner::Miner, meas::Function)::Threshold
 
 Getter for the [`Threshold`](@ref) associated with the function wrapped by some
 [`MeaningfulnessMeasure`](@ref) tailored to work locally (that is, analyzing "the inside"
 of a dataset's instances) in `miner`.
 
-See [`ARuleMiner`](@ref), [`MeaningfulnessMeasure`](@ref), [`Threshold`](@ref).
+See [`Miner`](@ref), [`MeaningfulnessMeasure`](@ref), [`Threshold`](@ref).
 """
-getlocalthreshold(miner::ARuleMiner, meas::Function)::Threshold = begin
+getlocalthreshold(miner::Miner, meas::Function)::Threshold = begin
     for (gmeas, _, lthreshold) in item_meas(miner)
         if gmeas == meas || islocalof(meas, gmeas)
             return lthreshold
@@ -594,28 +581,28 @@ getlocalthreshold(miner::ARuleMiner, meas::Function)::Threshold = begin
 end
 
 """
-    setlocalthreshold(miner::ARuleMiner, meas::Function, threshold::Threshold)
+    setlocalthreshold(miner::Miner, meas::Function, threshold::Threshold)
 
 Setter for the [`Threshold`](@ref) associated with the function wrapped by some
 [`MeaningfulnessMeasure`](@ref) tailored to work locally (that is, analyzing "the inside"
 of a dataset's instances) in `miner`.
 
-See [`ARuleMiner`](@ref), [`MeaningfulnessMeasure`](@ref), [`Threshold`](@ref).
+See [`Miner`](@ref), [`MeaningfulnessMeasure`](@ref), [`Threshold`](@ref).
 """
-setlocalthreshold(miner::ARuleMiner, meas::Function, threshold::Threshold) = begin
+setlocalthreshold(miner::Miner, meas::Function, threshold::Threshold) = begin
     error("TODO: This method is not implemented yet.")
 end
 
 """
-    getglobalthreshold(miner::ARuleMiner, meas::Function)::Threshold
+    getglobalthreshold(miner::Miner, meas::Function)::Threshold
 
 Getter for the [`Threshold`](@ref) associated with the function wrapped by some
 [`MeaningfulnessMeasure`](@ref) tailored to work globally (that is, measuring the behavior
 of a specific local-measure across all dataset's instances) in `miner`.
 
-See [`ARuleMiner`](@ref), [`MeaningfulnessMeasure`](@ref), [`Threshold`](@ref).
+See [`Miner`](@ref), [`MeaningfulnessMeasure`](@ref), [`Threshold`](@ref).
 """
-getglobalthreshold(miner::ARuleMiner, meas::Function)::Threshold = begin
+getglobalthreshold(miner::Miner, meas::Function)::Threshold = begin
     for (gmeas, gthreshold, _) in item_meas(miner)
         if gmeas == meas
             return gthreshold
@@ -629,104 +616,104 @@ getglobalthreshold(miner::ARuleMiner, meas::Function)::Threshold = begin
 end
 
 """
-    setglobalthreshold(miner::ARuleMiner, meas::Function, threshold::Threshold)
+    setglobalthreshold(miner::Miner, meas::Function, threshold::Threshold)
 
 Setter for the [`Threshold`](@ref) associated with the function wrapped by some
 [`MeaningfulnessMeasure`](@ref) tailored to work globally (that is, measuring the behavior
 of a specific local-measure across all dataset's instances) in `miner`.
 
-See [`ARuleMiner`](@ref), [`MeaningfulnessMeasure`](@ref), [`Threshold`](@ref).
+See [`Miner`](@ref), [`MeaningfulnessMeasure`](@ref), [`Threshold`](@ref).
 """
-setglobalthreshold(miner::ARuleMiner, meas::Function, threshold::Threshold) = begin
+setglobalthreshold(miner::Miner, meas::Function, threshold::Threshold) = begin
     error("TODO: This method is not implemented yet.")
 end
 
 """
-    freqitems(miner::ARuleMiner)
+    freqitems(miner::Miner)
 
 Return all frequent [`Itemset`](@ref)s mined by `miner`.
 
-See also [`ARuleMiner`](@ref), [`Itemset`](@ref).
+See also [`Miner`](@ref), [`Itemset`](@ref).
 """
-freqitems(miner::ARuleMiner) = miner.freqitems
+freqitems(miner::Miner) = miner.freqitems
 
 """
-    arules(miner::ARuleMiner)
+    arules(miner::Miner)
 
 Return all the [`ARule`](@ref)s mined by `miner`.
 
-See also [`ARule`](@ref), [`ARuleMiner`](@ref).
+See also [`ARule`](@ref), [`Miner`](@ref).
 """
-arules(miner::ARuleMiner) = miner.arules
+arules(miner::Miner) = miner.arules
 
 """
-    localmemo(miner::ARuleMiner)::LmeasMemo
-    localmemo(miner::ARuleMiner, key::LmeasMemoKey)
+    localmemo(miner::Miner)::LmeasMemo
+    localmemo(miner::Miner, key::LmeasMemoKey)
 
 Return the local memoization structure inside `miner`, or a specific entry if a
 [`LmeasMemoKey`](@ref) is provided.
 
-See also [`ARuleMiner`](@ref), [`LmeasMemo`](@ref), [`LmeasMemoKey`](@ref).
+See also [`Miner`](@ref), [`LmeasMemo`](@ref), [`LmeasMemoKey`](@ref).
 """
-localmemo(miner::ARuleMiner)::LmeasMemo = miner.lmemo
-localmemo(miner::ARuleMiner, key::LmeasMemoKey) = get(miner.lmemo, key, nothing)
+localmemo(miner::Miner)::LmeasMemo = miner.lmemo
+localmemo(miner::Miner, key::LmeasMemoKey) = get(miner.lmemo, key, nothing)
 
 """
-    localmemo!(miner::ARuleMiner, key::LmeasMemoKey, val::Threshold)
+    localmemo!(miner::Miner, key::LmeasMemoKey, val::Threshold)
 
 Setter for a specific entry `key` inside the local memoization structure wrapped by `miner`.
 
-See also [`ARuleMiner`](@ref), [`LmeasMemo`](@ref), [`LmeasMemoKey`](@ref).
+See also [`Miner`](@ref), [`LmeasMemo`](@ref), [`LmeasMemoKey`](@ref).
 """
-localmemo!(miner::ARuleMiner, key::LmeasMemoKey, val::Threshold) = miner.lmemo[key] = val
+localmemo!(miner::Miner, key::LmeasMemoKey, val::Threshold) = miner.lmemo[key] = val
 
 """
-    globalmemo(miner::ARuleMiner)::GmeasMemo
-    globalmemo(miner::ARuleMiner, key::GmeasMemoKey)
+    globalmemo(miner::Miner)::GmeasMemo
+    globalmemo(miner::Miner, key::GmeasMemoKey)
 
 Return the global memoization structure inside `miner`, or a specific entry if a
 [`GmeasMemoKey`](@ref) is provided.
 
-See also [`ARuleMiner`](@ref), [`GmeasMemo`](@ref), [`GmeasMemoKey`](@ref).
+See also [`Miner`](@ref), [`GmeasMemo`](@ref), [`GmeasMemoKey`](@ref).
 """
-globalmemo(miner::ARuleMiner)::GmeasMemo = miner.gmemo
-globalmemo(miner::ARuleMiner, key::GmeasMemoKey) = get(miner.gmemo, key, nothing)
+globalmemo(miner::Miner)::GmeasMemo = miner.gmemo
+globalmemo(miner::Miner, key::GmeasMemoKey) = get(miner.gmemo, key, nothing)
 
 """
-    globalmemo!(miner::ARuleMiner, key::GmeasMemoKey, val::Threshold)
+    globalmemo!(miner::Miner, key::GmeasMemoKey, val::Threshold)
 
 Setter for a specific entry `key` inside the global memoization structure wrapped by
 `miner`.
 
-See also [`ARuleMiner`](@ref), [`GmeasMemo`](@ref), [`GmeasMemoKey`](@ref).
+See also [`Miner`](@ref), [`GmeasMemo`](@ref), [`GmeasMemoKey`](@ref).
 """
-globalmemo!(miner::ARuleMiner, key::GmeasMemoKey, val::Threshold) = miner.gmemo[key] = val
+globalmemo!(miner::Miner, key::GmeasMemoKey, val::Threshold) = miner.gmemo[key] = val
 
 ############################################################################################
-#### ARuleMiner machines specializations ###################################################
+#### Miner machines specializations ###################################################
 ############################################################################################
 
 """
-    powerups(miner::ARuleMiner)
+    powerups(miner::Miner)
 
 Return the powerups currently loaded in `miner`.
-Powerups are additional functionalities that can be plugged into an `ARuleMiner` instance
+Powerups are additional functionalities that can be plugged into an `Miner` instance
 to augment its capabilities.
 
-See also [`ARuleMiner`](@ref), [`haspowerup`](@ref), [`initpowerups`](@ref),
+See also [`Miner`](@ref), [`haspowerup`](@ref), [`initpowerups`](@ref),
 [`powerup`](@ref).
 """
-powerups(miner::ARuleMiner) = miner.powerups
+powerups(miner::Miner) = miner.powerups
 
 """
     TODO: add documentation
 """
-powerup(miner::ARuleMiner, key::Symbol) = getfield(miner |> powerups, key)
+powerup(miner::Miner, key::Symbol) = getfield(miner |> powerups, key)
 
 """
     TODO: add documentation
 """
-haspowerup(miner::ARuleMiner, key::Symbol) = hasproperty(miner |> powerups, key)
+haspowerup(miner::Miner, key::Symbol) = hasproperty(miner |> powerups, key)
 
 """
     TODO: add documentation
@@ -734,51 +721,51 @@ haspowerup(miner::ARuleMiner, key::Symbol) = hasproperty(miner |> powerups, key)
 initpowerups(::Function, ::AbstractDataset)::NamedTuple = (;)
 
 """
-    info(miner::ARuleMiner)::NamedTuple
-    info(miner::ARuleMiner, key::Symbol)
+    info(miner::Miner)::NamedTuple
+    info(miner::Miner, key::Symbol)
 
 Getter for the entire additional informations field inside a `miner`, or one of its specific
 entries.
 
-See also [`ARuleMiner`](@ref), [`NamedTuple`](@ref).
+See also [`Miner`](@ref), [`NamedTuple`](@ref).
 """
-info(miner::ARuleMiner)::NamedTuple = miner.info
-info(miner::ARuleMiner, key::Symbol) = getfield(miner |> info, key)
+info(miner::Miner)::NamedTuple = miner.info
+info(miner::Miner, key::Symbol) = getfield(miner |> info, key)
 
 """
     TODO: add documentation
 """
-hasinfo(miner::ARuleMiner, key::Symbol) = hasproperty(miner |> info, key)
+hasinfo(miner::Miner, key::Symbol) = hasproperty(miner |> info, key)
 
 """
 TODO: remove this
 
-    isequipped(miner::ARuleMiner, key::Symbol)
+    isequipped(miner::Miner, key::Symbol)
 
 Return whether `miner` additional information field contains an entry `key`.
 
-See also [`ARuleMiner`](@ref), [`info`](@ref).
+See also [`Miner`](@ref), [`info`](@ref).
 """
-isequipped(miner::ARuleMiner, key::Symbol) = haskey(miner |> info, key)
+isequipped(miner::Miner, key::Symbol) = haskey(miner |> info, key)
 
 doc_getcontributors = """
     contributors(
         measname::Symbol,
         item::Item,
         ninstance::Int64,
-        miner::ARuleMiner
+        miner::Miner
     )::WorldMask
 
     function contributors(
         measname::Symbol,
         itemset::Itemset,
         ninstance::Int64,
-        miner::ARuleMiner
+        miner::Miner
     )::WorldMask
 
     function contributors(
         memokey::LmeasMemoKey,
-        miner::ARuleMiner
+        miner::Miner
     )::WorldMask
 
 Consider all the contributors of an [`Item`](@ref), that is, all the worlds for which the
@@ -788,7 +775,7 @@ Return a vector whose size is the number of worlds, and the content is 0 if the 
 threshold is not overpassed, 1 otherwise.
 
 !!! warning
-    This method requires the [`ARuleMiner`](@ref) to be declared using
+    This method requires the [`Miner`](@ref) to be declared using
     [`@equip_contributors`](@ref).
 
 See also [`Item`](@ref), [`LmeasMemoKey`](@ref), [`lsupport`](@ref),
@@ -796,7 +783,7 @@ See also [`Item`](@ref), [`LmeasMemoKey`](@ref), [`lsupport`](@ref),
 """
 function contributors(
     memokey::LmeasMemoKey,
-    miner::ARuleMiner
+    miner::Miner
 )::WorldMask
     if !haspowerup(miner, :contributors)
         _fsym, _subject, _ninstance = memokey
@@ -811,7 +798,7 @@ function contributors(
     measname::Symbol,
     itemset::Itemset,
     ninstance::Int64,
-    miner::ARuleMiner
+    miner::Miner
 )::WorldMask
     return contributors((measname, itemset, ninstance), miner)
 end
@@ -819,20 +806,20 @@ function contributors(
     measname::Symbol,
     item::Item,
     ninstance::Int64,
-    miner::ARuleMiner
+    miner::Miner
 )::WorldMask
     return contributors(measname, Itemset(item), ninstance, miner)
 end
 
 """
-    contributors!(miner::ARuleMiner, key::LmeasMemoKey, mask::WorldMask)
+    contributors!(miner::Miner, key::LmeasMemoKey, mask::WorldMask)
 
 Set a `miner`'s contributors entry.
 
-See also [`ARuleMiner`](@ref), [`LmeasMemoKey`](@ref), [`@equip_contributors`](@ref),
+See also [`Miner`](@ref), [`LmeasMemoKey`](@ref), [`@equip_contributors`](@ref),
 [`WorldMask`](@ref).
 """
-function contributors!(miner::ARuleMiner, key::LmeasMemoKey, mask::WorldMask)
+function contributors!(miner::Miner, key::LmeasMemoKey, mask::WorldMask)
     if !haspowerup(miner, :contributors)
         error("Contributors is not supported by $(algorithm(miner)).")
     else
@@ -841,18 +828,18 @@ function contributors!(miner::ARuleMiner, key::LmeasMemoKey, mask::WorldMask)
 end
 
 """
-    mine(miner::ARuleMiner)
+    mine(miner::Miner)
 
 Synonym for `SoleRules.apply(miner, dataset(miner))`.
 
 See also [`ARule`](@ref), [`Itemset`](@ref), [`SoleRules.apply`](@ref).
 """
-function mine(miner::ARuleMiner; kwargs...)
+function mine(miner::Miner; kwargs...)
     return apply(miner, dataset(miner); kwargs...)
 end
 
 """
-    apply(miner::ARuleMiner, X::AbstractDataset)
+    apply(miner::Miner, X::AbstractDataset)
 
 Extract association rules in the dataset referenced by `miner`, saving the interesting
 [`Itemset`](@ref)s inside `miner`.
@@ -860,13 +847,13 @@ Then, return a generator of [`ARule`](@ref)s.
 
 See also [`ARule`](@ref), [`Itemset`](@ref).
 """
-function apply(miner::ARuleMiner, X::AbstractDataset; kwargs...)
+function apply(miner::Miner, X::AbstractDataset; kwargs...)
     # extract frequent itemsets
     miner.algo(miner, X; kwargs...)
     return arules_generator(freqitems(miner), miner)
 end
 
-function Base.show(io::IO, miner::ARuleMiner)
+function Base.show(io::IO, miner::Miner)
     println(io, "$(dataset(miner))")
 
     println(io, "Alphabet: $(items(miner))\n")

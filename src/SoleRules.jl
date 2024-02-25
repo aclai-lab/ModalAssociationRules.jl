@@ -40,7 +40,7 @@ export LmeasMemoKey, LmeasMemo, Contributors
 export GmeasMemoKey, GmeasMemo
 export Contributors
 
-export ARuleMiner
+export Miner
 export dataset, algorithm
 export item_meas, rule_meas
 export freqitems, arules
@@ -50,8 +50,6 @@ export localmemo, localmemo!
 export globalmemo, globalmemo!
 export powerups, powerup, haspowerup
 export info, hasinfo
-
-export MiningAlgo
 
 export contributors, contributors!
 

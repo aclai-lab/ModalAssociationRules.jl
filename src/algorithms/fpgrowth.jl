@@ -65,7 +65,7 @@ mutable struct FPTree
         itemset::Itemset;
         ninstance::Union{Nothing,Int64}=nothing,
         isroot=true,
-        miner::Union{Nothing,ARuleMiner}=nothing
+        miner::Union{Nothing,Miner}=nothing
     )
         # singleton design pattern
         FPTree(itemset, Val(isroot); miner=miner, ninstance=ninstance)
@@ -76,7 +76,7 @@ mutable struct FPTree
         itemset::Itemset,
         ::Val{true};
         ninstance::Union{Nothing,Int64},
-        miner::Union{Nothing,ARuleMiner}=nothing
+        miner::Union{Nothing,Miner}=nothing
     )
         # make FPTree empty root
         fptree = FPTree()
@@ -92,7 +92,7 @@ mutable struct FPTree
         itemset::Itemset,
         ::Val{false};
         ninstance::Union{Nothing,Int64},
-        miner::Union{Nothing,ARuleMiner}=nothing
+        miner::Union{Nothing,Miner}=nothing
     )
         item = itemset[1]
 
@@ -475,15 +475,15 @@ function link!(htable::HeaderTable, fptree::FPTree)
 end
 
 """
-    function checksanity!(htable::HeaderTable, miner::ARuleMiner)::Bool
+    function checksanity!(htable::HeaderTable, miner::Miner)::Bool
 
 Check if `htable` internal state is correct, that is, its `items` are sorted decreasingly
 by global support.
 If `items` are already sorted, return `true`; otherwise, sort them and return `false`.
 
-See also [`ARuleMiner`](@ref), [`gsupport`](@ref), [`HeaderTable`](@ref), [`items`](@ref).
+See also [`Miner`](@ref), [`gsupport`](@ref), [`HeaderTable`](@ref), [`items`](@ref).
 """
-function checksanity!(htable::HeaderTable, miner::ARuleMiner)::Bool
+function checksanity!(htable::HeaderTable, miner::Miner)::Bool
     _issorted = issorted(items(htable),
         by=t -> globalmemo(miner, (:gsupport, Itemset(t))), rev=true)
 
@@ -499,7 +499,7 @@ doc_fptree_push = """
         fptree::FPTree,
         itemset::Itemset,
         ninstance::Int64,
-        miner::ARuleMiner;
+        miner::Miner;
         htable::Union{Nothing,HeaderTable}=nothing
     )
 
@@ -507,14 +507,14 @@ doc_fptree_push = """
         fptree::FPTree,
         itemset::EnhancedItemset,
         ninstance::Int64,
-        miner::ARuleMiner;
+        miner::Miner;
         htable::Union{Nothing,HeaderTable}=nothing
     )
 
     Base.push!(
         fptree::FPTree,
         enhanceditemsets::ConditionalPatternBase,
-        miner::ARuleMiner;
+        miner::Miner;
         htable::Union{Nothing,HeaderTable}=nothing
     )
 
@@ -534,7 +534,7 @@ See also [`EnhancedItemset`](@ref), [`FPTree`](@ref), [`gsupport`](@ref),
 # function Base.push!(
 #     fptree::FPTree,
 #     itemsets::Vector{T},
-#     miner::ARuleMiner;
+#     miner::Miner;
 #     htable::HeaderTable
 # ) where {T <: Union{Itemset, EnhancedItemset}}
 
@@ -543,7 +543,7 @@ function Base.push!(
     fptree::FPTree,
     itemset::Itemset,
     ninstance::Int64,
-    miner::ARuleMiner;
+    miner::Miner;
     htable::Union{Nothing,HeaderTable}=nothing,
 )
     # if an header table is provided, and its entry associated with the content of `fptree`
@@ -588,7 +588,7 @@ Base.push!(
     fptree::FPTree,
     itemsets::Vector{Itemset},
     ninstances::Int64,
-    miner::ARuleMiner;
+    miner::Miner;
     htable::Union{Nothing,HeaderTable}=nothing
 ) = map(ninstance ->
     push!(fptree, itemsets[ninstance], ninstance, miner; htable=htable), 1:ninstances)
@@ -596,7 +596,7 @@ Base.push!(
 function Base.push!(
     fptree::FPTree,
     enhanceditemset::EnhancedItemset,
-    miner::ARuleMiner;
+    miner::Miner;
     htable::Union{Nothing,HeaderTable}=nothing,
 )
     # if an header table is provided, and its entry associated with the content of `fptree`
@@ -642,7 +642,7 @@ end
 Base.push!(
     fptree::FPTree,
     enhanceditemsets::ConditionalPatternBase,
-    miner::ARuleMiner;
+    miner::Miner;
     htable::Union{Nothing,HeaderTable}=nothing
 ) = [push!(fptree, itemset, miner; htable=htable) for itemset in enhanceditemsets]
 
@@ -656,7 +656,7 @@ See also [`HeaderTable`](@ref), [`Item`](@ref).
 Base.reverse(htable::HeaderTable) = reverse(items(htable))
 
 """
-    patternbase(item::Item, htable::HeaderTable, miner::ARuleMiner)::ConditionalPatternBase
+    patternbase(item::Item, htable::HeaderTable, miner::Miner)::ConditionalPatternBase
 
 Retrieve the [`ConditionalPatternBase`](@ref) of `fptree` based on `item`.
 
@@ -669,14 +669,14 @@ by an [`EnhancedItemset`](@ref), where each [`Item`](@ref) is associated with a
 The [`EnhancedItemset`](@ref)s in the returned [`ConditionalPatternBase`](@ref) are sorted
 decreasingly by [`gsupport`](@ref).
 
-See also [`ARuleMiner`](@ref), [`ConditionalPatternBase`](@ref), [`contributors`](@ref),
+See also [`Miner`](@ref), [`ConditionalPatternBase`](@ref), [`contributors`](@ref),
 [`EnhancedItemset`](@ref), [`fpgrowth`](@ref), [`FPTree`](@ref), [`Item`](@ref),
 [`Itemset`](@ref), [`WorldMask`](@ref).
 """
 function patternbase(
     item::Item,
     htable::HeaderTable,
-    miner::ARuleMiner
+    miner::Miner
 )::ConditionalPatternBase
     # think a pattern base as a vector of vector of itemsets (a vector of vector of items);
     # the reason why the type is explicited differently here, is that every item must be
@@ -763,11 +763,11 @@ end
 """
     function projection(
         pbase::ConditionalPatternBase;
-        miner::Union{Nothing,ARuleMiner}=nothing
+        miner::Union{Nothing,Miner}=nothing
     )
 
 Return respectively a [`FPTree`](@ref) and a [`HeaderTable`](@ref) starting from `pbase`.
-It is reccomended to also provide an [`ARuleMiner`](@ref) to guarantee the generated
+It is reccomended to also provide an [`Miner`](@ref) to guarantee the generated
 header table internal state is OK, that is, its items are sorted decreasingly by
 [`gsupport`](@ref).
 
@@ -776,7 +776,7 @@ See also [`ConditionalPatternBase`](@ref), [`FPTree`](@ref), [`gsupport`](@ref),
 """
 function projection(
     pbase::ConditionalPatternBase;
-    miner::Union{Nothing,ARuleMiner}=nothing
+    miner::Union{Nothing,Miner}=nothing
 )
     fptree = FPTree()
     htable = HeaderTable()
@@ -796,16 +796,16 @@ end
 ############################################################################################
 
 """
-    fpgrowth(miner::ARuleMiner, X::AbstractDataset; verbose::Bool=true)::Nothing
+    fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=true)::Nothing
 
 FP-Growth algorithm,
-[as described here](https://www.cs.sfu.ca/~jpei/publications/sigmod00.pdf) but generalized
-to also work with modal logic.
+[as described here](https://www.cs.sfu.ca/~jpei/publications/sigmod00.pdf)
+but generalized to also work with modal logic.
 
-See also [`ARuleMiner`](@ref), [`FPTree`](@ref), [`HeaderTable`](@ref),
+See also [`Miner`](@ref), [`FPTree`](@ref), [`HeaderTable`](@ref),
 [`SoleBase.AbstractDataset`](@ref)
 """
-function fpgrowth(miner::ARuleMiner, X::AbstractDataset; verbose::Bool=true)::Nothing
+function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothing
 
     # initialization logic
     @assert SoleRules.gsupport in reduce(vcat, item_meas(miner)) "FP-Growth requires " *
@@ -868,7 +868,7 @@ function fpgrowth(miner::ARuleMiner, X::AbstractDataset; verbose::Bool=true)::No
     function _fpgrowth_kernel(
         fptree::FPTree,
         htable::HeaderTable,
-        miner::ARuleMiner,
+        miner::Miner,
         leftout_items::Itemset
     )
         # if `fptree` contains only one path (hence, it can be considered a linked list),
@@ -943,7 +943,7 @@ end
 
 Powerups suite for FP-Growth algorithm.
 
-When initializing an [`ARuleMiner`](@ref) with [`fpgrowth`](@ref) algorithm, this defines
+When initializing an [`Miner`](@ref) with [`fpgrowth`](@ref) algorithm, this defines
 how [`powerup`](@ref) field is filled to optimize the mining.
 
 See also [`haspowerup`](@ref), [`powerup`](@ref).

@@ -30,8 +30,8 @@ _item_meas = [(gsupport, 0.1, 0.1)]
 _rule_meas = [(gconfidence, 0.2, 0.2)]
 
 # make two miners: the first digs the search space using aprior, the second uses fpgrowth
-apriori_miner = ARuleMiner(X1, apriori, manual_items, _item_meas, _rule_meas)
-fpgrowth_miner = ARuleMiner(X2, fpgrowth, manual_items, _item_meas, _rule_meas)
+apriori_miner = Miner(X1, apriori, manual_items, _item_meas, _rule_meas)
+fpgrowth_miner = Miner(X2, fpgrowth, manual_items, _item_meas, _rule_meas)
 
 # mine the frequent patterns with both apriori and fpgrowth
 mine(apriori_miner)
@@ -100,16 +100,14 @@ arule3 = ARule(Itemset([manual_q, manual_p]), Itemset(manual_r))
 @test Contributors <: Dict{LmeasMemoKey, WorldMask}
 @test GmeasMemoKey <: Tuple{Symbol,ARMSubject}
 @test GmeasMemo <: Dict{GmeasMemoKey,Threshold}
-@test MiningAlgo <: FunctionWrapper{Nothing,Tuple{ARuleMiner,AbstractDataset}}
 
-
-# "core.jl - ARuleMiner" begin
-@test_nowarn ARuleMiner(X1, apriori, manual_items)
-@test_nowarn algorithm(ARuleMiner(X1, apriori, manual_items)) isa Function
+# "core.jl - Miner" begin
+@test_nowarn Miner(X1, apriori, manual_items)
+@test_nowarn algorithm(Miner(X1, apriori, manual_items)) isa Function
 
 @test dataset(apriori_miner) == X1
 @test algorithm(apriori_miner) isa Function
-@test items(ARuleMiner(X1, apriori, manual_items)) == manual_items
+@test items(Miner(X1, apriori, manual_items)) == manual_items
 
 @test item_meas(apriori_miner) == _item_meas
 @test rule_meas(apriori_miner) == _rule_meas
@@ -150,9 +148,9 @@ _temp_lmemo_val2 = localmemo(apriori_miner)[_temp_lmemo_key2]
 @test info(apriori_miner) isa NamedTuple
 @test !(haspowerup(apriori_miner, :contributors))
 @test haspowerup(fpgrowth_miner, :contributors)
-@test info(fpgrowth_miner, :contributors) |> length 2160
+@test powerup(fpgrowth_miner, :contributors) |> length 2160
 
-@test haspowerup(ARuleMiner(X1, apriori, manual_items), :contributors)
+@test haspowerup(Miner(X1, apriori, manual_items), :contributors)
 
 @test contributors(_temp_lmemo_key2, fpgrowth_miner) |> length == 1326
 @test contributors(_temp_lmemo_key2, fpgrowth_miner) ==

@@ -28,6 +28,6 @@ To know more about them and their, please refer to the documentation here [data-
 FPGrowth algorithm relies on the following two routines.
 
 ```@docs
-patternbase(item::Item, htable::HeaderTable, miner::ARuleMiner)
-projection(pbase::ConditionalPatternBase; miner::Union{Nothing,ARuleMiner}=nothing)
+patternbase(item::Item, htable::HeaderTable, miner::Miner)
+projection(pbase::ConditionalPatternBase; miner::Union{Nothing,Miner}=nothing)
 ```

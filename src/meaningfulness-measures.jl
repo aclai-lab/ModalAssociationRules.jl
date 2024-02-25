@@ -3,7 +3,7 @@
     function lsupport(
         itemset::Itemset,
         logi_instance::LogicalInstance;
-        miner::Union{Nothing,ARuleMiner}=nothing
+        miner::Union{Nothing,Miner}=nothing
     )::Float64
 
 Compute the local support for the given `itemset` in the given `logi_instance`.
@@ -13,12 +13,12 @@ and [`Itemset`](@ref) is true and the total number of worlds in the same instanc
 
 If a miner is provided, then its internal state is updated and used to leverage memoization.
 
-See also [`ARuleMiner`](@ref), [`LogicalInstance`](@ref), [`Itemset`](@ref).
+See also [`Miner`](@ref), [`LogicalInstance`](@ref), [`Itemset`](@ref).
 """
 function lsupport(
     itemset::Itemset,
     logi_instance::LogicalInstance;
-    miner::Union{Nothing,ARuleMiner}=nothing
+    miner::Union{Nothing,Miner}=nothing
 )::Float64
     # retrieve logiset, and the specific instance
     X, i_instance = logi_instance.s, logi_instance.i_instance
@@ -61,7 +61,7 @@ end
         itemset::Itemset,
         X::SupportedLogiset,
         threshold::Threshold;
-        miner::Union{Nothing,ARuleMiner} = nothing
+        miner::Union{Nothing,Miner} = nothing
     )::Float64
 
 Compute the global support for the given `itemset` on a logiset `X`, considering `threshold`
@@ -73,14 +73,14 @@ and the total number of instances in the same logiset.
 
 If a miner is provided, then its internal state is updated and used to leverage memoization.
 
-See also [`ARuleMiner`](@ref), [`LogicalInstance`](@ref), [`Itemset`](@ref),
+See also [`Miner`](@ref), [`LogicalInstance`](@ref), [`Itemset`](@ref),
 [`SupportedLogiset`](@ref), [`Threshold`](@ref).
 """
 function gsupport(
     itemset::Itemset,
     X::SupportedLogiset,
     threshold::Threshold;
-    miner::Union{Nothing,ARuleMiner} = nothing
+    miner::Union{Nothing,Miner} = nothing
 )::Float64
     # this is needed to access memoization structures
     memokey = GmeasMemoKey((Symbol(gsupport), itemset))
@@ -109,7 +109,7 @@ isglobalof(::typeof(gsupport), ::typeof(lsupport)) = true
     function lconfidence(
         rule::ARule,
         logi_instance::LogicalInstance;
-        miner::Union{Nothing,ARuleMiner} = nothing
+        miner::Union{Nothing,Miner} = nothing
     )::Float64
 
 Compute the local confidence for the given `rule` in the given `logi_instance`.
@@ -120,13 +120,13 @@ same rule.
 
 If a miner is provided, then its internal state is updated and used to leverage memoization.
 
-See also [`antecedent`](@ref), [`ARule`](@ref), [`ARuleMiner`](@ref),
+See also [`antecedent`](@ref), [`ARule`](@ref), [`Miner`](@ref),
 [`LogicalInstance`](@ref), [`lsupport`](@ref).
 """
 function lconfidence(
     rule::ARule,
     logi_instance::LogicalInstance;
-    miner::Union{Nothing,ARuleMiner} = nothing
+    miner::Union{Nothing,Miner} = nothing
 )::Float64
     # this is needed to access memoization structures
     memokey = LmeasMemoKey((Symbol(lconfidence), rule, logi_instance.i_instance))
@@ -152,7 +152,7 @@ end
         rule::ARule,
         X::SupportedLogiset,
         threshold::Threshold;
-        miner::Union{Nothing,ARuleMiner} = nothing
+        miner::Union{Nothing,Miner} = nothing
     )::Float64
 
 Compute the global confidence for the given `rule` on a logiset `X`, considering `threshold`
@@ -164,14 +164,14 @@ same rule.
 
 If a miner is provided, then its internal state is updated and used to leverage memoization.
 
-See also [`antecedent`](@ref), [`ARule`](@ref), [`ARuleMiner`](@ref),
+See also [`antecedent`](@ref), [`ARule`](@ref), [`Miner`](@ref),
 [`gsupport`](@ref), [`SupportedLogiset`](@ref).
 """
 function gconfidence(
     rule::ARule,
     X::SupportedLogiset,
     threshold::Threshold;
-    miner::Union{Nothing,ARuleMiner} = nothing
+    miner::Union{Nothing,Miner} = nothing
 )::Float64
     # this is needed to access memoization structures
     memokey = GmeasMemoKey((Symbol(gconfidence), rule))

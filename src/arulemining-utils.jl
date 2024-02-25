@@ -57,7 +57,7 @@ end
 """
     coalesce_contributors(
         itemset::Itemset,
-        miner::ARuleMiner;
+        miner::Miner;
         lmeas::Function=lsupport
     )
 
@@ -69,7 +69,7 @@ See also [`ARMSubject`](@ref), [`contributors`](@ref), [`Threshold`](@ref).
 """
 function coalesce_contributors(
     itemset::Itemset,
-    miner::ARuleMiner;
+    miner::Miner;
     lmeas::Function=lsupport
 )
     _ninstances = ninstances(dataset(miner))
@@ -89,7 +89,7 @@ end
 ############################################################################################
 
 """
-    arules_generator(itemsets::Vector{Itemset}, miner::ARuleMiner)
+    arules_generator(itemsets::Vector{Itemset}, miner::Miner)
 
 Generates association rules from the given collection of `itemsets` and `miner`.
 Iterates through the powerset of each itemset to generate meaningful [`ARule`](@ref).
@@ -97,11 +97,11 @@ Iterates through the powerset of each itemset to generate meaningful [`ARule`](@
 To establish the meaningfulness of each association rule, check if it meets the global
 constraints specified in `rule_meas(miner)`, and yields the rule if so.
 
-See also [`ARule`](@ref), [`ARuleMiner`](@ref), [`Itemset`](@ref), [`rule_meas`](@ref).
+See also [`ARule`](@ref), [`Miner`](@ref), [`Itemset`](@ref), [`rule_meas`](@ref).
 """
 @resumable function arules_generator(
     itemsets::Vector{Itemset},
-    miner::ARuleMiner
+    miner::Miner
 )
     for itemset in itemsets
         subsets = powerset(itemset)
