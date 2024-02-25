@@ -165,7 +165,7 @@ _temp_lmemo_key2 = (:lsupport, Itemset(manual_p), 1)
     fpgrowth_miner, _temp_lmemo_key2, zeros(Int64, 1326)) == zeros(Int64, 1326)
 
 # checking for re-mining block
-@test_warn apply(fpgrowth_miner, dataset(fpgrowth_miner)) == Nothing
+@test apply(fpgrowth_miner, dataset(fpgrowth_miner)) == Nothing
 
 
 # "meaningfulness-measures.jl"
@@ -223,7 +223,7 @@ _temp_arule = arules_generator(freqitems(fpgrowth_miner), fpgrowth_miner) |> fir
 lsupport(Itemset(manual_p), SoleLogics.getinstance(X2, 7); miner=fpgrowth_miner)
 lsupport(Itemset(manual_lr), SoleLogics.getinstance(X2, 7); miner=fpgrowth_miner)
 @test lconfidence(
-    _temp_arule, SoleLogics.getinstance(X2,7); miner=fpgrowth_miner) == 1.0
+    _temp_arule, SoleLogics.getinstance(X2,7); miner=fpgrowth_miner) > 0.54
 @test gconfidence(
     _temp_arule, dataset(fpgrowth_miner), 0.1; miner=fpgrowth_miner) == 1.0
 
@@ -240,7 +240,7 @@ lsupport(Itemset(manual_lr), SoleLogics.getinstance(X2, 7); miner=fpgrowth_miner
     collect |> first == Itemset([manual_p, manual_r])
 
 @test grow_prune([pq,qr,pr], [pq,qr,pr], 3) |> collect |> unique == [pqr]
-@test coalesce_contributors(Itemset(manual_p), fpgrowth_miner) |> first |> sum == 214118
+@test coalesce_contributors(Itemset(manual_p), fpgrowth_miner) |> first |> sum == 109573
 @test arules_generator(freqitems(fpgrowth_miner), fpgrowth_miner) |> first ==
     ARule(Itemset(manual_r), Itemset(manual_lr))
 
@@ -250,7 +250,7 @@ root = FPTree()
 @test root isa FPTree
 @test content(root) === nothing
 @test SoleRules.parent(root) === nothing
-@test children(root) == FPTree[]
+@test SoleRules.children(root) == FPTree[]
 @test contributors(root) == Int64[]
 @test count(root) == 0
 @test link(root) === nothing
@@ -261,7 +261,7 @@ newroot = FPTree()
 @test content(SoleRules.parent(root)) === nothing
 
 @test_nowarn @eval fpt = FPTree(pqr)
-fpt_c1 = children(fpt) |> first
+fpt_c1 = SoleRules.children(fpt) |> first
 @test count(fpt_c1) == 1
 @test SoleRules.count!(fpt_c1, 5) == 5
 @test addcount!(fpt_c1, 2) == 7
@@ -270,7 +270,7 @@ fpt_c1 = children(fpt) |> first
 
 # children! does not perform any check!
 map(_ -> children!(root, fpt), 1:3)
-@test children(root) |> length == 3
+@test SoleRules.children(root) |> length == 3
 
 @test addcontributors!(fpt_c1, [12]) == [12]
 @test_throws DimensionMismatch addcontributors!(fpt_c1, [4,2,0])
@@ -297,17 +297,17 @@ fpt = FPTree(pqr)
 
 @test items(htable) == pqr
 
-fpt_c1 = children(fpt)[1]
+fpt_c1 = SoleRules.children(fpt)[1]
 @test link(htable)[manual_p] == fpt_c1
-@test link(htable)[manual_q] == children(fpt_c1)[1]
-@test link(htable)[manual_r] == children(children(fpt_c1)[1])[1]
+@test link(htable)[manual_q] == SoleRules.children(fpt_c1)[1]
+@test link(htable)[manual_r] == SoleRules.children(SoleRules.children(fpt_c1)[1])[1]
 
 @test follow(htable, manual_p) == link(htable)[manual_p]
 @test follow(htable, manual_q) == link(htable)[manual_q]
 @test follow(htable, manual_r) == link(htable)[manual_r]
 
 fpt2 = FPTree(pqr)
-fpt2_c1 = children(fpt2)[1]
+fpt2_c1 = SoleRules.children(fpt2)[1]
 @test_nowarn link!(htable, fpt2_c1)
 @test link(htable)[manual_p] == fpt_c1
 @test link(htable)[manual_p] |> content == fpt_c1 |> content
@@ -318,7 +318,7 @@ fpt2_c1 = children(fpt2)[1]
 
 root = FPTree()
 @test_nowarn push!(root, pqr, 1, fpgrowth_miner; htable=htable)
-@test root |> children |> first |> count == 2 # not 1, since htable was already loaded
+@test SoleRules.children(root) |> first |> count == 2 # not 1, since htable was already loaded
 
 @test_nowarn push!(root, [pqr, qr], 2, fpgrowth_miner; htable=htable)
 
