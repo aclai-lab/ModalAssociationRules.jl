@@ -334,7 +334,7 @@ Structure for storing association between a local measure, applied on a certain
 [`ARMSubject`](@ref) on a certain [`LogicalInstance`](@ref), and a vector of integers
 representing the worlds for which the measure is greater than a certain threshold.
 
-This type is intended to be used inside an [`Miner`](@ref) `info` named tuple, to
+This type is intended to be used inside a [`Miner`](@ref) `info` named tuple, to
 support the execution of, for example, [`fpgrowth`](@ref) algorthm.
 
 See also [`LmeasMemoKey`](@ref), [`WorldMask`](@ref)
@@ -366,12 +366,12 @@ See also [`GmeasMemoKey`](@ref), [`ARMSubject`](@ref).
 const GmeasMemo = Dict{GmeasMemoKey,Threshold} # global measure of an itemset/arule => value
 
 """
-    const Powerup = NamedTuple
+    const Powerup = Dict{Symbol,Any}
 
 Additional informations associated with an [`ARMSubject`](@ref) that can be used to
-specialize an [`Miner`](@ref), augmenting its capabilities.
+specialize a [`Miner`](@ref), augmenting its capabilities.
 
-To understand how to specialize an [`Miner`](@ref), see [`haspowerup`](@ref),
+To understand how to specialize a [`Miner`](@ref), see [`haspowerup`](@ref),
 [`initpowerups`](@ref), ['powerups`](@ref), [`powerups!`](@ref).
 """
 const Powerup = Dict{Symbol,Any}
@@ -441,17 +441,17 @@ julia> lr = boxlater(r)
 # Compose a vector of items, regrouping the atoms defined before
 julia> manual_alphabet = Vector{Item}([p, q, r, lp, lq, lr])
 
-# Create an association rule miner wrapping `apriori` algorithm - see [`apriori`](@ref);
+# Create an association rule miner wrapping `fpgrowth` algorithm - see [`fpgrowth`](@ref);
 # note that meaningfulness measures are not explicited and, thus, are defaulted as in the
 # call below.
-julia> miner = Miner(X, apriori(), manual_alphabet)
+julia> miner = Miner(X, fpgrowth(), manual_alphabet)
 
 # Create an association rule miner, expliciting global meaningfulness measures with their
 # local and global thresholds, both for [`Itemset`](@ref)s and [`ARule`](@ref).
-julia> miner = Miner(X, apriori(), manual_alphabet,
+julia> miner = Miner(X, fpgrowth(), manual_alphabet,
     [(gsupport, 0.1, 0.1)], [(gconfidence, 0.2, 0.2)])
 
-# Consider the dataset and learning algorithm wrapped by `miner` (resp., `X` and `apriori`)
+# Consider the dataset and learning algorithm wrapped by `miner` (resp., `X` and `fpgrowth`)
 # Mine the frequent itemsets, that is, those for which item measures are large enough.
 # Then iterate the generator returned by [`mine`](@ref) to enumerate association rules.
 julia> for arule in SoleRules.mine(miner)
@@ -711,15 +711,14 @@ globalmemo!(miner::Miner, key::GmeasMemoKey, val::Threshold) = miner.gmemo[key] 
 ############################################################################################
 
 """
-    powerups(miner::Miner)
+    powerups(miner::Miner)::Powerup
     powerups(miner::Miner, key::Symbol)
 
-Getter for the entire powerups `NamedTuple` currently loaded in `miner`,
-or a specific powerup.
+Getter for the entire powerups structure currently loaded in `miner`, or a specific powerup.
 
 See also [`haspowerup`](@ref), [`initpowerups`](@ref), [`Miner`](@ref), [`Powerup`](@ref).
 """
-powerups(miner::Miner) = miner.powerups
+powerups(miner::Miner)::Powerup = miner.powerups
 powerups(miner::Miner, key::Symbol) = miner.powerups[key]
 
 """
@@ -756,7 +755,7 @@ entries.
 
 See also [`Miner`](@ref), [`Powerup`](@ref).
 """
-info(miner::Miner)::NamedTuple = miner.info
+info(miner::Miner)::Powerup = miner.info
 info(miner::Miner, key::Symbol) = miner.info[key]
 
 """
@@ -880,9 +879,9 @@ function apply(miner::Miner, X::AbstractDataset; forcemining::Bool=false, kwargs
 
     if !info(miner, :istrained)
         info!(miner, :istrained, true)
-    elseif forcemining == true
-        @warn "Miner has already been trained. To ignore this warning, " *
-            "set `forcemining=true`."
+    elseif !forcemining
+        @warn "Miner has already been trained. To force mining, set `forcemining=true`."
+        return Nothing
     end
 
     miner.algorithm(miner, X; kwargs...)

@@ -767,7 +767,7 @@ end
     )
 
 Return respectively a [`FPTree`](@ref) and a [`HeaderTable`](@ref) starting from `pbase`.
-It is reccomended to also provide an [`Miner`](@ref) to guarantee the generated
+It is reccomended to also provide a [`Miner`](@ref) to guarantee the generated
 header table internal state is OK, that is, its items are sorted decreasingly by
 [`gsupport`](@ref).
 
@@ -943,7 +943,7 @@ end
 
 Powerups suite for FP-Growth algorithm.
 
-When initializing an [`Miner`](@ref) with [`fpgrowth`](@ref) algorithm, this defines
+When initializing a [`Miner`](@ref) with [`fpgrowth`](@ref) algorithm, this defines
 how miner's `powerup` field is filled to optimize the mining.
 
 See also [`haspowerup`](@ref), [`powerup`](@ref).

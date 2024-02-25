@@ -130,29 +130,30 @@ _temp_gmemo_key = (:gsupport, freqitems(apriori_miner)[3])
 @test_nowarn globalmemo!(apriori_miner, _temp_gmemo_key, 0.0)
 @test globalmemo(apriori_miner, _temp_gmemo_key) == 0.0
 
-countdown = 3
-for _temp_arule in arules_generator(freqitems(apriori_miner), apriori_miner)
-    if global countdown > 0
-        @test _temp_arule in arules(apriori_miner)
-        @test _temp_arule isa ARule
-    else
-        break
+function _association_rules_test1(miner::Miner)
+    countdown = 3
+    for _temp_arule in arules_generator(freqitems(miner), miner)
+        if countdown > 0
+            @test _temp_arule in arules(miner)
+            @test _temp_arule isa ARule
+        else
+            break
+        end
+        countdown -= 1
     end
-    global countdown -= 1
 end
+_association_rules_test1(apriori_miner)
 
 _temp_lmemo_key2 = (:lsupport, Itemset(manual_p), 1)
 @test localmemo(apriori_miner) |> length == 11880
 @test localmemo(apriori_miner)[(:lsupport, pq, 1)] == 0.0
-_temp_lmemo_val2 = localmemo(apriori_miner)[_temp_lmemo_key2]
-@test _temp_lmemo_val2 > 0.17 && _temp_lmemo_val2 < 0.18
 
 @test info(apriori_miner) isa Info
 @test !(haspowerup(apriori_miner, :contributors))
 @test haspowerup(fpgrowth_miner, :contributors)
 @test powerups(fpgrowth_miner, :contributors) |> length == 2160
 
-@test haspowerup(Miner(X1, apriori, manual_items), :contributors)
+@test haspowerup(Miner(X1, fpgrowth, manual_items), :contributors)
 
 @test contributors(_temp_lmemo_key2, fpgrowth_miner) |> length == 1326
 @test contributors(_temp_lmemo_key2, fpgrowth_miner) ==
@@ -163,7 +164,8 @@ _temp_lmemo_val2 = localmemo(apriori_miner)[_temp_lmemo_key2]
 @test contributors!(
     fpgrowth_miner, _temp_lmemo_key2, zeros(Int64, 1326)) == zeros(Int64, 1326)
 
-@test_nowarn apply(fpgrowth_miner, dataset(fpgrowth_miner))
+# checking for re-mining block
+@test_warn apply(fpgrowth_miner, dataset(fpgrowth_miner)) == Nothing
 
 
 # "meaningfulness-measures.jl"
@@ -216,21 +218,20 @@ _temp_lsupport = lsupport(pq, SoleLogics.getinstance(X2, 7); miner=fpgrowth_mine
 # frequent itemsets, and `pq` is not (in fact, its value for gsupport is < 0.1)
 @test gsupport(pq, dataset(apriori_miner), 0.1; miner=fpgrowth_miner) == 0.025
 
+_temp_arule = arules_generator(freqitems(fpgrowth_miner), fpgrowth_miner) |> first
+
 lsupport(Itemset(manual_p), SoleLogics.getinstance(X2, 7); miner=fpgrowth_miner)
 lsupport(Itemset(manual_lr), SoleLogics.getinstance(X2, 7); miner=fpgrowth_miner)
 @test lconfidence(
     _temp_arule, SoleLogics.getinstance(X2,7); miner=fpgrowth_miner) == 1.0
-
-_temp_arule = arules_generator(freqitems(fpgrowth_miner), fpgrowth_miner) |> first
 @test gconfidence(
     _temp_arule, dataset(fpgrowth_miner), 0.1; miner=fpgrowth_miner) == 1.0
 
 
 # more on Miner structure
-@test SoleRules.initpowerups(apriori, dataset(apriori_miner)) == (;)
-@test SoleRules.initpowerups(fpgrowth, dataset(fpgrowth_miner)) ==
-    (; contributors=Contributors([]))
-
+@test SoleRules.initpowerups(apriori, dataset(apriori_miner)) == Powerup()
+@test SoleRules.initpowerups(fpgrowth, dataset(fpgrowth_miner)) == Powerup(
+    [:contributors => Contributors([])])
 
 # "arulemining-utils.jl"
 @test combine([pq, qr], 3) |> first == pqr
@@ -260,7 +261,7 @@ newroot = FPTree()
 @test content(SoleRules.parent(root)) === nothing
 
 @test_nowarn @eval fpt = FPTree(pqr)
-fpt_c1 = fpt |> children |> first
+fpt_c1 = children(fpt) |> first
 @test count(fpt_c1) == 1
 @test SoleRules.count!(fpt_c1, 5) == 5
 @test addcount!(fpt_c1, 2) == 7

@@ -74,7 +74,7 @@ gconfidence(rule::ARule, X::SupportedLogiset, threshold::Threshold; miner::Union
 
 ## Mining structures
 
-Finally, we are ready to start mining. To do so, we need to create an [`Miner`](@ref) object.
+Finally, we are ready to start mining. To do so, we need to create a [`Miner`](@ref) object.
 We just need to specify which dataset we are working with, together with a mining function, a vector of initial [`Item`](@ref)s, and the [`MeaningfulnessMeasure](@ref)s to establish [`ARMSubject`](@ref) interestingness.
 
 ```@docs
@@ -92,7 +92,7 @@ getglobalthreshold(miner::Miner, meas::Function)
 setglobalthreshold(miner::Miner, meas::Function, threshold::Threshold)
 ```
 
-After an [`Miner`](@ref) ends mining, frequent [`Itemset`](@ref)s and [`ARule`](@ref) are accessibles through the getters below.
+After a [`Miner`](@ref) ends mining, frequent [`Itemset`](@ref)s and [`ARule`](@ref) are accessibles through the getters below.
 ```@docs
 freqitems(miner::Miner)
 arules(miner::Miner)
@@ -105,10 +105,21 @@ globalmemo(miner::Miner)
 globalmemo!(miner::Miner, key::GmeasMemoKey, val::Threshold)
 ```
 
-To customize and specialize an [`Miner`](@ref), [`info`](@ref) comes in our help.
-We will see this aspect later in the documentation.
+The [`info`](@ref) field in [`Miner`](@ref) is a dictionary used to store extra informations about the miner, such as statistics about mining. Currently, since the package is still being developed, the `info` field only contains a flag indicating whether the `miner` has been used for mining or no.
 ```@docs
 info(miner::Miner)
+info!(miner::Miner, key::Symbol, val)
+hasinfo(miner::Miner, key::Symbol)
+```
+
+When writing your own mining algorithm, or when mining with a particular kind of dataset, you might need to specialize the [`Miner`](@ref), keeping, for example, custom meta data and data structures. To specialize a [`Miner`](@ref), you can fill a [`Powerup`](@ref) structure to fit your needs.
+
+```@docs
+Powerup
+powerups(miner::Miner)
+powerups!(miner::Miner)
+haspowerup(miner::Miner, key::Symbol)
+initpowerups(::Function, ::AbstractDataset)
 ```
 
 To conclude this section, this is how to start mining.
