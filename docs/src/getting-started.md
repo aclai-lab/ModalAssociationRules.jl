@@ -117,7 +117,7 @@ When writing your own mining algorithm, or when mining with a particular kind of
 ```@docs
 Powerup
 powerups(miner::Miner)
-powerups!(miner::Miner)
+powerups!(miner::Miner, key::Symbol, val)
 haspowerup(miner::Miner, key::Symbol)
 initpowerups(::Function, ::AbstractDataset)
 ```
