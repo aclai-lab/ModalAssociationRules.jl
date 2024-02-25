@@ -225,7 +225,8 @@ _temp_arule = arules_generator(freqitems(fpgrowth_miner), fpgrowth_miner) |> fir
 
 
 # more on Miner structure
-
+@test initpowerups(apriori, dataset(apriori_miner)) == (;)
+@test initpowerups(fpgrowth, dataset(fpgrowth_miner)) == (; contributors=Contributors([]))
 
 
 # "arulemining-utils.jl"

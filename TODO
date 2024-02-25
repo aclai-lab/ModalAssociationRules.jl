@@ -42,7 +42,8 @@ Generic:
   ✔ miner.alphbaet should be renamed to represent a vector of item @done(24-02-18 23:40)
   ☐ Base.push!(fptree::FPTree etc...) dispatches for `Itemset` and `EnhancedItemset` are very similar... think about avoid repetitions
     # check push! docstrings
-  ☐ make more macros like @equip_contributors (e.g., to handle mining timing). This is not trivial, as these macros can be chained
+  ✔ make more macros like @equip_contributors (e.g., to handle mining timing). This is not trivial, as these macros can be chained @done(24-02-25 16:40)
+    # changed in powerup and @initpowerup
   ☐ show for Item, Itemset, EnhancedItemset, Miner, FPTree, HeaderTable
   ☐ sort/issort by globalmemo, managing correct casting from Item, Itemset and EnhancedItemset
   ☐ contributors array should not be in Miner.info, but rather a proper attribute 
