@@ -730,6 +730,8 @@ info(miner::ARuleMiner, key::Symbol) = getfield(miner |> info, key)
 hasinfo(miner::ARuleMiner, key::Symbol) = hasproperty(miner |> info, key)
 
 """
+TODO: remove this
+
     isequipped(miner::ARuleMiner, key::Symbol)
 
 Return whether `miner` additional information field contains an entry `key`.

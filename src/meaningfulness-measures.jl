@@ -48,8 +48,8 @@ function lsupport(
         # IDEA: call two methods here. One is built-in in Solo, and checks every equippable
         # attribute that `miner` can have in its info named tuple.
         # The other dispatch is empty, but customizable by the user to check his things.
-        if isequipped(miner, :contributors)
-            info(miner, :contributors)[memokey] = _contributors
+        if haspowerup(miner, :contributors)
+            contributors!(miner, memokey, _contributors)
         end
     end
 
