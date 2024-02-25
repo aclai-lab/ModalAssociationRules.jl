@@ -944,7 +944,7 @@ end
 Powerups suite for FP-Growth algorithm.
 
 When initializing an [`Miner`](@ref) with [`fpgrowth`](@ref) algorithm, this defines
-how [`powerup`](@ref) field is filled to optimize the mining.
+how miner's `powerup` field is filled to optimize the mining.
 
 See also [`haspowerup`](@ref), [`powerup`](@ref).
 """

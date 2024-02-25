@@ -702,13 +702,14 @@ globalmemo!(miner::Miner, key::GmeasMemoKey, val::Threshold) = miner.gmemo[key] 
 
 """
     powerups(miner::Miner)
-    powerupsminer::Miner, key::Symbol)
+    powerups(miner::Miner, key::Symbol)
 
 Return the entire powerups `NamedTuple` currently loaded in `miner`, or a specific powerup.
 
 See also [`haspowerup`](@ref), [`initpowerups`](@ref), [`Miner`](@ref), [`Powerup`](@ref).
 """
 powerups(miner::Miner) = miner.powerups
+powerups(miner::Miner, key::Symbol) = miner.powerups[key]
 
 """
     haspowerup(miner::Miner, key::Symbol)
@@ -720,7 +721,9 @@ See also [`Miner`](@ref), [`Powerup`](@ref), [`powerups`](@ref).
 haspowerup(miner::Miner, key::Symbol) = hasproperty(miner |> powerups, key)
 
 """
-    TODO: add documentation
+    initpowerups(::Function, ::AbstractDataset)
+
+This defines how [`Miner`](@ref)'s `powerup` field is filled to optimize the mining.
 """
 initpowerups(::Function, ::AbstractDataset)::NamedTuple = (;)
 
@@ -737,20 +740,13 @@ info(miner::Miner)::NamedTuple = miner.info
 info(miner::Miner, key::Symbol) = getfield(miner |> info, key)
 
 """
-    TODO: add documentation
+    hasinfo(miner::Miner, key::Symbol)
+
+Return whether `miner` additional informations field contains an entry `key`.
+
+See also [`Miner`](@ref).
 """
 hasinfo(miner::Miner, key::Symbol) = hasproperty(miner |> info, key)
-
-"""
-TODO: remove this
-
-    isequipped(miner::Miner, key::Symbol)
-
-Return whether `miner` additional information field contains an entry `key`.
-
-See also [`Miner`](@ref), [`info`](@ref).
-"""
-isequipped(miner::Miner, key::Symbol) = haskey(miner |> info, key)
 
 doc_getcontributors = """
     contributors(
@@ -827,7 +823,7 @@ function contributors!(miner::Miner, key::LmeasMemoKey, mask::WorldMask)
     if !haspowerup(miner, :contributors)
         error("Contributors is not supported by $(algorithm(miner)).")
     else
-        powerup(sminer, :contributors)[key] = mask
+        powerups(miner, :contributors)[key] = mask
     end
 end
 

@@ -135,6 +135,8 @@ for _temp_arule in arules_generator(freqitems(apriori_miner), apriori_miner)
     if global countdown > 0
         @test _temp_arule in arules(apriori_miner)
         @test _temp_arule isa ARule
+    else
+        break
     end
     global countdown -= 1
 end
@@ -148,7 +150,7 @@ _temp_lmemo_val2 = localmemo(apriori_miner)[_temp_lmemo_key2]
 @test info(apriori_miner) isa NamedTuple
 @test !(haspowerup(apriori_miner, :contributors))
 @test haspowerup(fpgrowth_miner, :contributors)
-@test powerupsfpgrowth_miner, :contributors) |> length == 2160
+@test powerups(fpgrowth_miner, :contributors) |> length == 2160
 
 @test haspowerup(Miner(X1, apriori, manual_items), :contributors)
 
@@ -225,8 +227,9 @@ _temp_arule = arules_generator(freqitems(fpgrowth_miner), fpgrowth_miner) |> fir
 
 
 # more on Miner structure
-@test initpowerups(apriori, dataset(apriori_miner)) == (;)
-@test initpowerups(fpgrowth, dataset(fpgrowth_miner)) == (; contributors=Contributors([]))
+@test SoleRules.initpowerups(apriori, dataset(apriori_miner)) == (;)
+@test SoleRules.initpowerups(fpgrowth, dataset(fpgrowth_miner)) ==
+    (; contributors=Contributors([]))
 
 
 # "arulemining-utils.jl"
