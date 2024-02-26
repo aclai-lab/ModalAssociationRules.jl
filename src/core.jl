@@ -64,7 +64,7 @@ function Base.in(itemset::Itemset, targets::Vector{Itemset})
         end
     end
 
-    return true
+    return false
 end
 
 function Base.:(==)(itemset1::Itemset, itemset2::Itemset)
@@ -585,7 +585,7 @@ of a dataset's instances) in `miner`.
 See [`Miner`](@ref), [`MeaningfulnessMeasure`](@ref), [`Threshold`](@ref).
 """
 getlocalthreshold(miner::Miner, meas::Function)::Threshold = begin
-    for (gmeas, _, lthreshold) in item_meas(miner)
+    for (gmeas, _, lthreshold) in vcat(item_meas(miner), rule_meas(miner))
         if gmeas == meas || islocalof(meas, gmeas)
             return lthreshold
         end
@@ -620,7 +620,7 @@ of a specific local-measure across all dataset's instances) in `miner`.
 See [`Miner`](@ref), [`MeaningfulnessMeasure`](@ref), [`Threshold`](@ref).
 """
 getglobalthreshold(miner::Miner, meas::Function)::Threshold = begin
-    for (gmeas, gthreshold, _) in item_meas(miner)
+    for (gmeas, gthreshold, _) in vcat(item_meas(miner), rule_meas(miner))
         if gmeas == meas
             return gthreshold
         end
@@ -912,6 +912,6 @@ function Base.show(io::IO, miner::Miner)
     println(io, "Global measures memoization structure entries: " *
         "$(length(miner.gmemo |> keys))\n")
 
-    print(io, "Additional infos: $(info(miner) |> keys)")
+    print(io, "Additional infos: $(info(miner) |> keys)\n")
     print(io, "Specialization fields: $(powerups(miner) |> keys)")
 end

@@ -53,7 +53,7 @@ export info, info!, hasinfo
 
 export contributors, contributors!
 
-export mine, apply
+export mine, apply, generaterules
 
 include("meaningfulness-measures.jl")
 
@@ -64,7 +64,7 @@ include("arulemining-utils.jl")
 
 export combine, prune, prune!
 export grow_prune, coalesce_contributors
-export arules_generator
+export arules_generator # wrapped by generaterules
 
 include("algorithms/apriori.jl")
 

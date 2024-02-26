@@ -41,6 +41,9 @@ pq = Itemset([manual_p, manual_q])
 qr = Itemset([manual_q, manual_r])
 pr = Itemset([manual_p, manual_r])
 pqr = Itemset([manual_p, manual_q, manual_r])
+@test pq in pq
+@test qr in pqr
+@test (pqr in [pq,qr]) == false
 
 # "core.jl - fundamental types"
 @test Item <: Formula
@@ -167,6 +170,32 @@ _temp_lmemo_key2 = (:lsupport, Itemset(manual_p), 1)
 # checking for re-mining block
 @test apply(fpgrowth_miner, dataset(fpgrowth_miner)) == Nothing
 
+function _dummy_gsupport(
+    itemset::Itemset,
+    X::SupportedLogiset,
+    threshold::Threshold;
+    miner::Union{Nothing,Miner} = nothing
+)::Float64
+    return 1.0
+end
+
+_temp_miner = Miner(X2, fpgrowth, manual_items, [(gsupport, 0.1, 0.1)], _rule_meas)
+@test_throws ErrorException getlocalthreshold(_temp_miner, _dummy_gsupport)
+@test_throws ErrorException getglobalthreshold(_temp_miner, _dummy_gsupport)
+@test _temp_miner.gmemo == GmeasMemo()
+
+_temp_contributors = Contributors([(:lsupport, pq, 1) => zeros(Int64,42)])
+@test powerups!(_temp_miner, :contributors, _temp_contributors) == _temp_contributors
+@test hasinfo(_temp_miner, :istrained) == true
+@test hasinfo(_temp_miner, :istraineeeeeed) == false
+
+_temp_apriori_miner = Miner(X1, apriori, manual_items, _item_meas, _rule_meas)
+@test_throws ErrorException contributors((:lsupport, pqr, 1), _temp_apriori_miner)
+
+@test_throws ErrorException generaterules(_temp_miner)
+
+@test_nowarn repr("text/plain", _temp_miner)
+
 
 # "meaningfulness-measures.jl"
 @test islocalof(lsupport, lsupport) == false
@@ -275,6 +304,8 @@ map(_ -> children!(root, fpt), 1:3)
 @test addcontributors!(fpt_c1, [12]) == [12]
 @test_throws DimensionMismatch addcontributors!(fpt_c1, [4,2,0])
 
+@test contributors!(fpt_c1, [42]) == [42]
+
 @test !(islist(root)) # because of children! behaviour, se above
 @test islist(fpt_c1)
 @test retrieveall(fpt_c1) == pqr
@@ -285,6 +316,7 @@ map(_ -> children!(root, fpt), 1:3)
 fpt_linked = FPTree()
 @test link!(fpt_c1, fpt_linked) == fpt_linked
 
+@test_nowarn repr("text/plain", fpt_c1)
 
 # "fpgrowth.jl - HeaderTable"
 @test HeaderTable() isa HeaderTable
@@ -342,3 +374,4 @@ fpgrowth_freqs = freqitems(fpgrowth_miner)
 
 @test length(apriori_freqs) == length(fpgrowth_freqs)
 @test all(t -> t==1, [freqitemset in fpgrowth_freqs for freqitemset in apriori_freqs])
+@test generaterules(fpgrowth_miner) |> first == ARule(Itemset(manual_r), Itemset(manual_lr))

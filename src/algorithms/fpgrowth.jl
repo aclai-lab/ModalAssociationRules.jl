@@ -257,7 +257,13 @@ Setter for `fptree`'s internal contributors mask to `contribution` [`WorldMask`]
 
 See also [`contributors`](@ref), [`FPTree`](@ref), [`WorldMask`](@ref).
 """
-contributors!(fptree::FPTree, contribution::WorldMask) = fptree.contributors = contribution
+function contributors!(fptree::FPTree, contribution::WorldMask)
+    @assert length(contributors(fptree)) == length(contribution) "Masks length mismatch. " *
+        "FPTree contributors mask length is $(length(contributors(fptree))), while the " *
+        "provided mask length is $(length(contribution))."
+
+    map!(x -> x, contributors(fptree), contribution)
+end
 
 """
     addcontributors!(fptree::FPTree, contribution::WorldMask) =

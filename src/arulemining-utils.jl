@@ -129,8 +129,9 @@ See also [`ARule`](@ref), [`Miner`](@ref), [`Itemset`](@ref), [`rule_meas`](@ref
 
             if interesting
                 push!(arules(miner), currentrule)
-                @yield currentrule
             end
+
+            @yield currentrule
         end
     end
 end
