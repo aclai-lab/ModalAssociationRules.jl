@@ -607,7 +607,7 @@ of a dataset's instances) in `miner`.
 See [`Miner`](@ref), [`MeaningfulnessMeasure`](@ref), [`Threshold`](@ref).
 """
 setlocalthreshold(miner::Miner, meas::Function, threshold::Threshold) = begin
-    error("TODO: This method is not implemented yet.")
+    error("TODO: This method is not implemented yet.") # also, test this
 end
 
 """
@@ -642,7 +642,7 @@ of a specific local-measure across all dataset's instances) in `miner`.
 See [`Miner`](@ref), [`MeaningfulnessMeasure`](@ref), [`Threshold`](@ref).
 """
 setglobalthreshold(miner::Miner, meas::Function, threshold::Threshold) = begin
-    error("TODO: This method is not implemented yet.")
+    error("TODO: This method is not implemented yet.") # also, test this
 end
 
 """
