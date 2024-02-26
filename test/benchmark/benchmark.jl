@@ -10,7 +10,7 @@ The first one considers a new miner, with a fresh logiset.
 The second one considers a new miner, but the same old logiset, and, thus,
 its internal memoization.
 """
-function runtimes(miner::ARuleMiner, X::D, algoname::String) where {D<:AbstractDataset}
+function runtimes(miner::Miner, X::D, algoname::String) where {D<:AbstractDataset}
     X2 = deepcopy(X)
     miner2 = deepcopy(miner)
     miner2.dataset = X2
@@ -52,12 +52,12 @@ _rule_meas = [(gconfidence, 0.2, 0.2)]
 ############################################################################################
 
 # Apriori runtime with no optimizations and leveraging dataset memoization
-apriori_miner = ARuleMiner(X1, apriori(), manual_items, _item_meas, _rule_meas)
+apriori_miner = Miner(X1, apriori(), manual_items, _item_meas, _rule_meas)
 runtimes(apriori_miner, X1, "Apriori")
 
 ############################################################################################
 
 # FPGrowth runtime with no optimizations and leveraging dataset Memoization
-fpgrowth_miner = @equip_contributors ARuleMiner(
+fpgrowth_miner = @equip_contributors Miner(
     X2, fpgrowth(), manual_items, _item_meas, _rule_meas)
 runtimes(fpgrowth_miner, X2, "FPGrowth")

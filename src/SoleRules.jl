@@ -4,7 +4,6 @@ module SoleRules
 import Base.count, Base.push!, Base.show
 using Combinatorics
 using DataStructures
-using FunctionWrappers: FunctionWrapper
 using IterTools
 using Parameters
 using Random
@@ -39,8 +38,9 @@ export ARMSubject
 export LmeasMemoKey, LmeasMemo, Contributors
 export GmeasMemoKey, GmeasMemo
 export Contributors
+export Info, Powerup
 
-export ARuleMiner
+export Miner
 export dataset, algorithm
 export item_meas, rule_meas
 export freqitems, arules
@@ -48,14 +48,12 @@ export getlocalthreshold, setlocalthreshold
 export getglobalthreshold, setglobalthreshold
 export localmemo, localmemo!
 export globalmemo, globalmemo!
-export powerups, powerup, haspowerup
-export info, hasinfo
-
-export MiningAlgo
+export powerups, powerups!, haspowerup, initpowerups
+export info, info!, hasinfo
 
 export contributors, contributors!
 
-export mine, apply
+export mine, apply, generaterules
 
 include("meaningfulness-measures.jl")
 
@@ -66,7 +64,7 @@ include("arulemining-utils.jl")
 
 export combine, prune, prune!
 export grow_prune, coalesce_contributors
-export arules_generator
+export arules_generator # wrapped by generaterules
 
 include("algorithms/apriori.jl")
 

@@ -1,13 +1,11 @@
 """
-TODO: renew
-
-    apriori(; fulldump::Bool=true, verbose::Bool=true)::Function
+    apriori(miner::Miner, X::AbstractDataset; verbose::Bool=true)::Nothing
 
 Apriori algorithm, [as described here](https://ceur-ws.org/Vol-3284/492.pdf).
 
-See also [`ARuleMiner`](@ref).
+See also [`Miner`](@ref), [`SoleBase.AbstractDataset`](@ref).
 """
-function apriori(miner::ARuleMiner, X::AbstractDataset; verbose::Bool=true)::Nothing
+function apriori(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothing
     # candidates of length 1 are all the letters in our items
     candidates = Itemset.(items(miner))
 
@@ -31,9 +29,8 @@ function apriori(miner::ARuleMiner, X::AbstractDataset; verbose::Bool=true)::Not
         k = (candidates |> first |> length) + 1
         candidates = grow_prune(candidates, frequents, k) |> collect |> unique
 
-        if verbose
-            println("Starting new computational loop with $(length(candidates)) " *
-                    "candidates.")
-        end
+
+        verbose && printstyled("Starting new computational loop with " *
+        "$(length(candidates)) candidates...\n", color=:green)
     end
 end

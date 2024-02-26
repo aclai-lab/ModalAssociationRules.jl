@@ -28,6 +28,13 @@ To know more about them and their, please refer to the documentation here [data-
 FPGrowth algorithm relies on the following two routines.
 
 ```@docs
-patternbase(item::Item, htable::HeaderTable, miner::ARuleMiner)
-projection(pbase::ConditionalPatternBase; miner::Union{Nothing,ARuleMiner}=nothing)
+patternbase(item::Item, htable::HeaderTable, miner::Miner)
+projection(pbase::ConditionalPatternBase; miner::Union{Nothing,Miner}=nothing)
+```
+
+Also, FPGrowth requires the [`Miner`](@ref) to remember the [`Contributors`](@ref) associated with the extracted frequent itemsets.
+To add this functionality, we can define a new dispatch of [`initpowerups`](@ref): it is automatically considered to enrich the miner, while building it together with [`fpgrowth`](@ref) as mining algorithm.
+
+```@docs
+initpowerups(::typeof(fpgrowth), ::AbstractDataset)
 ```

@@ -66,54 +66,64 @@ What follows is a list of the already built-in meaningfulness measures.
 In the [`hands-on`](@ref) section you will learn how to implement your own measure.
 
 ```@docs
-lsupport(itemset::Itemset, logi_instance::LogicalInstance; miner::Union{Nothing,ARuleMiner}=nothing)
-gsupport(itemset::Itemset, X::SupportedLogiset, threshold::Threshold; miner::Union{Nothing,ARuleMiner} = nothing)
-lconfidence(rule::ARule, logi_instance::LogicalInstance; miner::Union{Nothing,ARuleMiner} = nothing)
-gconfidence(rule::ARule, X::SupportedLogiset, threshold::Threshold; miner::Union{Nothing,ARuleMiner} = nothing)
+lsupport(itemset::Itemset, logi_instance::LogicalInstance; miner::Union{Nothing,Miner}=nothing)
+gsupport(itemset::Itemset, X::SupportedLogiset, threshold::Threshold; miner::Union{Nothing,Miner} = nothing)
+lconfidence(rule::ARule, logi_instance::LogicalInstance; miner::Union{Nothing,Miner} = nothing)
+gconfidence(rule::ARule, X::SupportedLogiset, threshold::Threshold; miner::Union{Nothing,Miner} = nothing)
 ```
 
 ## Mining structures
 
-Finally, we are ready to start mining. To do so, we need to create an [`ARuleMiner`](@ref) object.
-We just need to specify which dataset we are working with, a [`MiningAlgo`](@ref), a vector of initial [`Item`](@ref), and the [`MeaningfulnessMeasure](@ref)s to establish [`ARMSubject`](@ref) interestingness.
+Finally, we are ready to start mining. To do so, we need to create a [`Miner`](@ref) object.
+We just need to specify which dataset we are working with, together with a mining function, a vector of initial [`Item`](@ref)s, and the [`MeaningfulnessMeasure](@ref)s to establish [`ARMSubject`](@ref) interestingness.
 
 ```@docs
-ARuleMiner
-MiningAlgo
+Miner
 
-dataset(miner::ARuleMiner)
-algorithm(miner::ARuleMiner)
-items(miner::ARuleMiner)
+dataset(miner::Miner)
+algorithm(miner::Miner)
+items(miner::Miner)
 
-item_meas(miner::ARuleMiner)
-rule_meas(miner::ARuleMiner)
-getlocalthreshold(miner::ARuleMiner, meas::Function)
-setlocalthreshold(miner::ARuleMiner, meas::Function, threshold::Threshold)
-getglobalthreshold(miner::ARuleMiner, meas::Function)
-setglobalthreshold(miner::ARuleMiner, meas::Function, threshold::Threshold)
+item_meas(miner::Miner)
+rule_meas(miner::Miner)
+getlocalthreshold(miner::Miner, meas::Function)
+setlocalthreshold(miner::Miner, meas::Function, threshold::Threshold)
+getglobalthreshold(miner::Miner, meas::Function)
+setglobalthreshold(miner::Miner, meas::Function, threshold::Threshold)
 ```
 
-After an [`ARuleMiner`](@ref) ends mining, frequent [`Itemset`](@ref)s and [`ARule`](@ref) are accessibles through the getters below.
+After a [`Miner`](@ref) ends mining, frequent [`Itemset`](@ref)s and [`ARule`](@ref) are accessibles through the getters below.
 ```@docs
-freqitems(miner::ARuleMiner)
-arules(miner::ARuleMiner)
+freqitems(miner::Miner)
+arules(miner::Miner)
 ```
 
 ```@docs
-localmemo(miner::ARuleMiner)
-localmemo!(miner::ARuleMiner, key::LmeasMemoKey, val::Threshold)
-globalmemo(miner::ARuleMiner)
-globalmemo!(miner::ARuleMiner, key::GmeasMemoKey, val::Threshold)
+localmemo(miner::Miner)
+localmemo!(miner::Miner, key::LmeasMemoKey, val::Threshold)
+globalmemo(miner::Miner)
+globalmemo!(miner::Miner, key::GmeasMemoKey, val::Threshold)
 ```
 
-To customize and specialize an [`ARuleMiner`](@ref), [`info`](@ref) comes in our help.
-We will see this aspect later in the documentation.
+The [`info`](@ref) field in [`Miner`](@ref) is a dictionary used to store extra informations about the miner, such as statistics about mining. Currently, since the package is still being developed, the `info` field only contains a flag indicating whether the `miner` has been used for mining or no.
 ```@docs
-info(miner::ARuleMiner)
+info(miner::Miner)
+info!(miner::Miner, key::Symbol, val)
+hasinfo(miner::Miner, key::Symbol)
+```
+
+When writing your own mining algorithm, or when mining with a particular kind of dataset, you might need to specialize the [`Miner`](@ref), keeping, for example, custom meta data and data structures. To specialize a [`Miner`](@ref), you can fill a [`Powerup`](@ref) structure to fit your needs.
+
+```@docs
+Powerup
+powerups(miner::Miner)
+powerups!(miner::Miner, key::Symbol, val)
+haspowerup(miner::Miner, key::Symbol)
+initpowerups(::Function, ::AbstractDataset)
 ```
 
 To conclude this section, this is how to start mining.
 ```@docs
-mine(miner::ARuleMiner)
-apply(miner::ARuleMiner, X::AbstractDataset)
+mine(miner::Miner)
+apply(miner::Miner, X::AbstractDataset)
 ```

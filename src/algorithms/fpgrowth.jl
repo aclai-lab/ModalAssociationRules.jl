@@ -65,7 +65,7 @@ mutable struct FPTree
         itemset::Itemset;
         ninstance::Union{Nothing,Int64}=nothing,
         isroot=true,
-        miner::Union{Nothing,ARuleMiner}=nothing
+        miner::Union{Nothing,Miner}=nothing
     )
         # singleton design pattern
         FPTree(itemset, Val(isroot); miner=miner, ninstance=ninstance)
@@ -76,7 +76,7 @@ mutable struct FPTree
         itemset::Itemset,
         ::Val{true};
         ninstance::Union{Nothing,Int64},
-        miner::Union{Nothing,ARuleMiner}=nothing
+        miner::Union{Nothing,Miner}=nothing
     )
         # make FPTree empty root
         fptree = FPTree()
@@ -92,7 +92,7 @@ mutable struct FPTree
         itemset::Itemset,
         ::Val{false};
         ninstance::Union{Nothing,Int64},
-        miner::Union{Nothing,ARuleMiner}=nothing
+        miner::Union{Nothing,Miner}=nothing
     )
         item = itemset[1]
 
@@ -257,7 +257,13 @@ Setter for `fptree`'s internal contributors mask to `contribution` [`WorldMask`]
 
 See also [`contributors`](@ref), [`FPTree`](@ref), [`WorldMask`](@ref).
 """
-contributors!(fptree::FPTree, contribution::WorldMask) = fptree.contributors = contribution
+function contributors!(fptree::FPTree, contribution::WorldMask)
+    @assert length(contributors(fptree)) == length(contribution) "Masks length mismatch. " *
+        "FPTree contributors mask length is $(length(contributors(fptree))), while the " *
+        "provided mask length is $(length(contribution))."
+
+    map!(x -> x, contributors(fptree), contribution)
+end
 
 """
     addcontributors!(fptree::FPTree, contribution::WorldMask) =
@@ -475,15 +481,15 @@ function link!(htable::HeaderTable, fptree::FPTree)
 end
 
 """
-    function checksanity!(htable::HeaderTable, miner::ARuleMiner)::Bool
+    function checksanity!(htable::HeaderTable, miner::Miner)::Bool
 
 Check if `htable` internal state is correct, that is, its `items` are sorted decreasingly
 by global support.
 If `items` are already sorted, return `true`; otherwise, sort them and return `false`.
 
-See also [`ARuleMiner`](@ref), [`gsupport`](@ref), [`HeaderTable`](@ref), [`items`](@ref).
+See also [`Miner`](@ref), [`gsupport`](@ref), [`HeaderTable`](@ref), [`items`](@ref).
 """
-function checksanity!(htable::HeaderTable, miner::ARuleMiner)::Bool
+function checksanity!(htable::HeaderTable, miner::Miner)::Bool
     _issorted = issorted(items(htable),
         by=t -> globalmemo(miner, (:gsupport, Itemset(t))), rev=true)
 
@@ -499,7 +505,7 @@ doc_fptree_push = """
         fptree::FPTree,
         itemset::Itemset,
         ninstance::Int64,
-        miner::ARuleMiner;
+        miner::Miner;
         htable::Union{Nothing,HeaderTable}=nothing
     )
 
@@ -507,14 +513,14 @@ doc_fptree_push = """
         fptree::FPTree,
         itemset::EnhancedItemset,
         ninstance::Int64,
-        miner::ARuleMiner;
+        miner::Miner;
         htable::Union{Nothing,HeaderTable}=nothing
     )
 
     Base.push!(
         fptree::FPTree,
         enhanceditemsets::ConditionalPatternBase,
-        miner::ARuleMiner;
+        miner::Miner;
         htable::Union{Nothing,HeaderTable}=nothing
     )
 
@@ -534,7 +540,7 @@ See also [`EnhancedItemset`](@ref), [`FPTree`](@ref), [`gsupport`](@ref),
 # function Base.push!(
 #     fptree::FPTree,
 #     itemsets::Vector{T},
-#     miner::ARuleMiner;
+#     miner::Miner;
 #     htable::HeaderTable
 # ) where {T <: Union{Itemset, EnhancedItemset}}
 
@@ -543,7 +549,7 @@ function Base.push!(
     fptree::FPTree,
     itemset::Itemset,
     ninstance::Int64,
-    miner::ARuleMiner;
+    miner::Miner;
     htable::Union{Nothing,HeaderTable}=nothing,
 )
     # if an header table is provided, and its entry associated with the content of `fptree`
@@ -588,7 +594,7 @@ Base.push!(
     fptree::FPTree,
     itemsets::Vector{Itemset},
     ninstances::Int64,
-    miner::ARuleMiner;
+    miner::Miner;
     htable::Union{Nothing,HeaderTable}=nothing
 ) = map(ninstance ->
     push!(fptree, itemsets[ninstance], ninstance, miner; htable=htable), 1:ninstances)
@@ -596,7 +602,7 @@ Base.push!(
 function Base.push!(
     fptree::FPTree,
     enhanceditemset::EnhancedItemset,
-    miner::ARuleMiner;
+    miner::Miner;
     htable::Union{Nothing,HeaderTable}=nothing,
 )
     # if an header table is provided, and its entry associated with the content of `fptree`
@@ -642,7 +648,7 @@ end
 Base.push!(
     fptree::FPTree,
     enhanceditemsets::ConditionalPatternBase,
-    miner::ARuleMiner;
+    miner::Miner;
     htable::Union{Nothing,HeaderTable}=nothing
 ) = [push!(fptree, itemset, miner; htable=htable) for itemset in enhanceditemsets]
 
@@ -656,7 +662,7 @@ See also [`HeaderTable`](@ref), [`Item`](@ref).
 Base.reverse(htable::HeaderTable) = reverse(items(htable))
 
 """
-    patternbase(item::Item, htable::HeaderTable, miner::ARuleMiner)::ConditionalPatternBase
+    patternbase(item::Item, htable::HeaderTable, miner::Miner)::ConditionalPatternBase
 
 Retrieve the [`ConditionalPatternBase`](@ref) of `fptree` based on `item`.
 
@@ -669,14 +675,14 @@ by an [`EnhancedItemset`](@ref), where each [`Item`](@ref) is associated with a
 The [`EnhancedItemset`](@ref)s in the returned [`ConditionalPatternBase`](@ref) are sorted
 decreasingly by [`gsupport`](@ref).
 
-See also [`ARuleMiner`](@ref), [`ConditionalPatternBase`](@ref), [`contributors`](@ref),
+See also [`Miner`](@ref), [`ConditionalPatternBase`](@ref), [`contributors`](@ref),
 [`EnhancedItemset`](@ref), [`fpgrowth`](@ref), [`FPTree`](@ref), [`Item`](@ref),
 [`Itemset`](@ref), [`WorldMask`](@ref).
 """
 function patternbase(
     item::Item,
     htable::HeaderTable,
-    miner::ARuleMiner
+    miner::Miner
 )::ConditionalPatternBase
     # think a pattern base as a vector of vector of itemsets (a vector of vector of items);
     # the reason why the type is explicited differently here, is that every item must be
@@ -763,11 +769,11 @@ end
 """
     function projection(
         pbase::ConditionalPatternBase;
-        miner::Union{Nothing,ARuleMiner}=nothing
+        miner::Union{Nothing,Miner}=nothing
     )
 
 Return respectively a [`FPTree`](@ref) and a [`HeaderTable`](@ref) starting from `pbase`.
-It is reccomended to also provide an [`ARuleMiner`](@ref) to guarantee the generated
+It is reccomended to also provide a [`Miner`](@ref) to guarantee the generated
 header table internal state is OK, that is, its items are sorted decreasingly by
 [`gsupport`](@ref).
 
@@ -776,7 +782,7 @@ See also [`ConditionalPatternBase`](@ref), [`FPTree`](@ref), [`gsupport`](@ref),
 """
 function projection(
     pbase::ConditionalPatternBase;
-    miner::Union{Nothing,ARuleMiner}=nothing
+    miner::Union{Nothing,Miner}=nothing
 )
     fptree = FPTree()
     htable = HeaderTable()
@@ -796,21 +802,79 @@ end
 ############################################################################################
 
 """
-TODO: renew
+    fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=true)::Nothing
 
-    fpgrowth(; fulldump::Bool=true, verbose::Bool=true)::Function
+FP-Growth algorithm,
+[as described here](https://www.cs.sfu.ca/~jpei/publications/sigmod00.pdf)
+but generalized to also work with modal logic.
 
-Wrapper function for the FP-Growth algorithm over a modal dataset.
-FP-Growth algorithm logic,
-[as described here](https://www.cs.sfu.ca/~jpei/publications/sigmod00.pdf).
+See also [`Miner`](@ref), [`FPTree`](@ref), [`HeaderTable`](@ref),
+[`SoleBase.AbstractDataset`](@ref)
 """
-function fpgrowth(miner::ARuleMiner, X::AbstractDataset; verbose::Bool=true)::Nothing
+function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothing
 
-    # main `fpgrowth` logic
+    # initialization logic
+    @assert SoleRules.gsupport in reduce(vcat, item_meas(miner)) "FP-Growth requires " *
+        "global support (gsupport) as meaningfulness measure in order to " *
+        "work. Please, add a tuple (gsupport, local support threshold, " *
+        "global support threshold) to miner.item_constrained_measures field.\n" *
+        "Local support is needed too, but it is already considered in the global case."
+
+    # retrieve local support threshold, as this is necessary later to filter which
+    # frequent items are meaningful on each instance.
+    lsupport_threshold = getlocalthreshold(miner, SoleRules.gsupport)
+
+    verbose && printstyled("Generating frequent itemsets of length 1...\n", color=:green)
+
+    # get the frequent itemsets from the first candidates set;
+    # note that meaningfulness measure should leverage memoization when miner is given!
+    frequents = [candidate
+        for (gmeas_algo, lthreshold, gthreshold) in item_meas(miner)
+        for candidate in Itemset.(items(miner))
+        if gmeas_algo(candidate, X, lthreshold, miner=miner) >= gthreshold
+    ] |> unique
+
+    verbose && printstyled("Saving computed metrics into miner...\n", color=:green)
+
+    # update miner with the frequent itemsets just computed
+    push!(freqitems(miner), frequents...)
+
+    verbose && printstyled("Preprocessing frequent itemsets...\n", color=:green)
+
+    # associate each instance in the dataset with its frequent itemsets
+    _ninstances = ninstances(X)
+    ninstance_toitemsets_sorted = [Itemset() for _ in 1:_ninstances] # Vector{Itemset}
+
+    # for each instance, sort its frequent itemsets by global support
+    for i in 1:_ninstances
+        ninstance_toitemsets_sorted[i] = reduce(vcat, sort([
+                itemset
+                for itemset in frequents
+                if localmemo(miner, (:lsupport, itemset, i)) > lsupport_threshold
+            ], by=t -> globalmemo(miner, (:gsupport, t)), rev=true)
+        )
+    end
+
+    verbose && printstyled("Initializing seed FPTree and Header table...\n", color=:green)
+
+    # create an initial fptree
+    fptree = FPTree()
+
+    # create and fill an header table, necessary to traverse FPTrees horizontally
+    htable = HeaderTable(frequents, fptree)
+
+    verbose && printstyled("Growing seed FPTree...\n", color=:green)
+
+    SoleRules.push!(fptree, ninstance_toitemsets_sorted, _ninstances, miner;
+        htable=htable)
+
+    verbose && printstyled("Mining longer frequent itemsets...\n", color=:green)
+
+    # `fpgrowth` recursive logic piece
     function _fpgrowth_kernel(
         fptree::FPTree,
         htable::HeaderTable,
-        miner::ARuleMiner,
+        miner::Miner,
         leftout_items::Itemset
     )
         # if `fptree` contains only one path (hence, it can be considered a linked list),
@@ -828,8 +892,8 @@ function fpgrowth(miner::ARuleMiner, X::AbstractDataset; verbose::Bool=true)::No
             _nworlds = SoleLogics.nworlds(dataset(miner), 1)
             _ninstances = dataset(miner) |> ninstances
 
-            lsupp_integer_threshold = convert(Int64, floor(
-                getlocalthreshold(miner, lsupport) * _nworlds
+            gsupp_integer_threshold = convert(Int64, floor(
+                getglobalthreshold(miner, gsupport) * _ninstances
             ))
 
             for combo in combine(survivor_items, leftout_items) |> collect
@@ -846,9 +910,8 @@ function fpgrowth(miner::ARuleMiner, X::AbstractDataset; verbose::Bool=true)::No
                     occurrences[i] / _nworlds), 1:_nworlds)
 
                 # updating global support
-                # WARNING: denominator not correct
                 globalmemo!(miner, (:gsupport, combo),
-                    count(i -> i > lsupp_integer_threshold, occurrences) / _ninstances)
+                    count(i -> i > gsupp_integer_threshold, occurrences) / _nworlds)
 
                 push!(freqitems(miner), combo)
             end
@@ -877,66 +940,20 @@ function fpgrowth(miner::ARuleMiner, X::AbstractDataset; verbose::Bool=true)::No
         end
     end
 
-    # initialization logic
-    @assert SoleRules.gsupport in reduce(vcat, item_meas(miner)) "FP-Growth requires " *
-        "global support (gsupport) as meaningfulness measure in order to " *
-        "work. Please, add a tuple (gsupport, local support threshold, " *
-        "global support threshold) to miner.item_constrained_measures field.\n" *
-        "Local support is needed too, but it is already considered in the global case."
-
-    # retrieve local support threshold, as this is necessary later to filter which
-    # frequent items are meaningful on each instance.
-    lsupport_threshold = getlocalthreshold(miner, SoleRules.gsupport)
-
-    verbose && printstyled("Generating frequent itemsets of length 1...\n", color=:green)
-
-    # get the frequent itemsets from the first candidates set;
-    # note that meaningfulness measure should leverage memoization when miner is given!
-    frequents = [candidate
-        for (gmeas_algo, lthreshold, gthreshold) in item_meas(miner)
-        for candidate in Itemset.(items(miner))
-        if gmeas_algo(candidate, X, lthreshold, miner=miner) >= gthreshold
-    ] |> unique
-
-    verbose && printstyled("Saving computed metrics into miner...\n", color=:green)
-
-    # update miner with the frequent itemsets just computed
-    push!(freqitems(miner), frequents...)
-
-    verbose && printstyled("Initializing data structures...\n", color=:green)
-
-    # associate each instance in the dataset with its frequent itemsets
-    _ninstances = ninstances(X)
-    ninstance_toitemsets_sorted = [Itemset() for _ in 1:_ninstances] # Vector{Itemset}
-
-    # for each instance, sort its frequent itemsets by global support
-    for i in 1:_ninstances
-        ninstance_toitemsets_sorted[i] = reduce(vcat, sort([
-                itemset
-                for itemset in frequents
-                if localmemo(miner, (:lsupport, itemset, i)) > lsupport_threshold
-            ], by=t -> globalmemo(miner, (:gsupport, t)), rev=true)
-        )
-    end
-
-    # create an initial fptree
-    fptree = FPTree()
-
-    # create and fill an header table, necessary to traverse FPTrees horizontally
-    htable = HeaderTable(frequents, fptree)
-
-    SoleRules.push!(fptree, ninstance_toitemsets_sorted, _ninstances, miner;
-        htable=htable)
-
-    verbose && printstyled("Mining longer frequent itemsets...\n", color=:green)
-
     # call main logic
     _fpgrowth_kernel(fptree, htable, miner, Itemset())
 end
 
 """
-    TODO: add documentation
+    initpowerups(::typeof(fpgrowth), ::AbstractDataset)::NamedTuple
+
+Powerups suite for FP-Growth algorithm.
+
+When initializing a [`Miner`](@ref) with [`fpgrowth`](@ref) algorithm, this defines
+how miner's `powerup` field is filled to optimize the mining.
+
+See also [`haspowerup`](@ref), [`powerup`](@ref).
 """
-function initpowerups(::typeof(fpgrowth), ::AbstractDataset)::NamedTuple
-    return (; contributors=Contributors([]))
+function initpowerups(::typeof(fpgrowth), ::AbstractDataset)::Powerup
+    return Powerup([:contributors => Contributors([])])
 end
