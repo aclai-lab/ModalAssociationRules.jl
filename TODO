@@ -86,7 +86,7 @@ To SoleModels or SoleData:
 Testing:
   ✔ measure apriori algorithms execution time, leveraging SupportedLogiset optimization capabilities @done(24-02-26 10:18)
   ✔ write unit tests @done(24-02-26 10:18)
-  ☐ codecov > 90%
+  ✔ codecov > 90% @done(24-02-26 11:41)
 
 Future:
   ☐ item_contrained_measures and rule_constrained_measures fields in Miner could be dictionaries
