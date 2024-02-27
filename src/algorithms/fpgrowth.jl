@@ -843,29 +843,31 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
 
     # associate each instance in the dataset with its frequent itemsets
     _ninstances = ninstances(X)
-    ninstance_toitemsets_sorted = [Itemset() for _ in 1:_ninstances] # Vector{Itemset}
+    ninstance_to_sorteditemset = [Itemset() for _ in 1:_ninstances] # Vector{Itemset}
 
     # for each instance, sort its frequent itemsets by global support
     for i in 1:_ninstances
-        ninstance_toitemsets_sorted[i] = reduce(vcat, sort([
+        _sorteditemsets = sort([
                 itemset
                 for itemset in frequents
                 if localmemo(miner, (:lsupport, itemset, i)) > lsupport_threshold
             ], by=t -> globalmemo(miner, (:gsupport, t)), rev=true)
-        )
+
+        ninstance_to_sorteditemset[i] = length(_sorteditemsets) > 0 ?
+            reduce(vcat, _sorteditemsets) : # single-item Itemsets are merged toghether
+            Itemset()                       # i-th instance has no itemsets
     end
 
     verbose && printstyled("Initializing seed FPTree and Header table...\n", color=:green)
 
     # create an initial fptree
     fptree = FPTree()
-
     # create and fill an header table, necessary to traverse FPTrees horizontally
     htable = HeaderTable(frequents, fptree)
 
     verbose && printstyled("Growing seed FPTree...\n", color=:green)
 
-    SoleRules.push!(fptree, ninstance_toitemsets_sorted, _ninstances, miner;
+    SoleRules.push!(fptree, ninstance_to_sorteditemset, _ninstances, miner;
         htable=htable)
 
     verbose && printstyled("Mining longer frequent itemsets...\n", color=:green)
@@ -881,6 +883,11 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
         # then combine all the Itemsets collected from previous step with the remained ones.
         if islist(fptree)
             survivor_items = retrieveall(fptree)
+
+            # single-itemset case is already handled by the first pass over the dataset
+            if length(leftout_items) + length(survivor_items) <= 1
+                return
+            end
 
             verbose &&
                 printstyled("Merging $(leftout_items |> length) leftout items with " *
@@ -917,7 +924,6 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
             end
         else
             for item in reverse(htable)
-
                 # a (conditional) pattern base is a vector of "enhanced" itemsets, that is,
                 # itemsets whose items are paired with a contributors vector.
                 _patternbase = patternbase(item, htable, miner)

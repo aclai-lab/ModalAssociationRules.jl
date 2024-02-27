@@ -876,15 +876,14 @@ Then, return a generator of [`ARule`](@ref)s.
 See also [`ARule`](@ref), [`Itemset`](@ref).
 """
 function apply(miner::Miner, X::AbstractDataset; forcemining::Bool=false, kwargs...)
-
-    if !info(miner, :istrained)
-        info!(miner, :istrained, true)
-    elseif !forcemining
+    istrained = info(miner, :istrained)
+    if istrained && !forcemining
         @warn "Miner has already been trained. To force mining, set `forcemining=true`."
         return Nothing
     end
 
     miner.algorithm(miner, X; kwargs...)
+    info!(miner, :istrained, true)
 
     return arules_generator(freqitems(miner), miner)
 end

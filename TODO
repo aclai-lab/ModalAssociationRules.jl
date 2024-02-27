@@ -46,15 +46,17 @@ Generic:
     # changed in powerup and @initpowerup
   ☐ show for Item, Itemset, EnhancedItemset, Miner, FPTree, HeaderTable
   ☐ sort/issort by globalmemo, managing correct casting from Item, Itemset and EnhancedItemset
-  ☐ contributors array should not be in Miner.info, but rather a proper attribute 
+  ✔ contributors array should not be in Miner.info, but rather a proper attribute @done(24-02-27 11:36)
     # or maybe not?
-  ☐ enrich info field inside Miner
-  ☐ remove nonfreqitems from Miner (this could be an optional info field?)
-  ☐ copmress islocalof/isglobalof in just one trait 
-  ☐ miner.algo and algorithm(miner) should coincide
+  ✔ enrich info field inside Miner @done(24-02-27 11:36)
+  ✔ remove nonfreqitems from Miner (this could be an optional info field?) @done(24-02-27 11:36)
+  ☐ compress islocalof/isglobalof in just one trait 
+  ✔ miner.algo and algorithm(miner) should coincide @done(24-02-27 11:37)
   ✔ change mine(miner) to mine(miner; verbose=true/false) @done(24-02-25 16:18)
   ✔ ARuleMiner to Miner @done(24-02-25 16:18)
   ☐ test on iris dataset
+  ☐ change mine to mine! and apply to apply!
+  ☐ make an Itemset struct instead of Vector{Item}
 
 Optimizations:
   ☐ miner.items should be treated as a generator
