@@ -611,10 +611,10 @@ function measures(miner::Miner)::Vector{<:MeaningfulnessMeasure}
 end
 
 """
-    getmeasure(
+    findmeasure(
         miner::Miner,
         meas::Function;
-        recognizer::Function=isglobalof
+        recognizer::Function=islocalof
     )::MeaningfulnessMeasure
 
 Retrieve the [`MeaningfulnessMeasure`](@ref) associated with `meas`.
@@ -622,15 +622,14 @@ Retrieve the [`MeaningfulnessMeasure`](@ref) associated with `meas`.
 See also [`isglobalof`](@ref), [`islocalof`](@ref), [`MeaningfulnessMeasure`](@ref),
 [`Miner`](@ref).
 """
-function getmeasure(
+function findmeasure(
     miner::Miner,
     meas::Function;
-    recognizer::Function=isglobalof
+    recognizer::Function=islocalof
 )::MeaningfulnessMeasure
     try
-        return first(
-            Iterators.filter(
-                m -> first(m)==meas || recognizer(meas, first(m)), measures(miner)))
+        return Iterators.filter(
+            m -> first(m)==meas || recognizer(meas, first(m)), measures(miner)) |> first
     catch e
         if isa(e, ArgumentError)
             error("The provided miner has no measure $meas. " *
@@ -644,24 +643,6 @@ function getmeasure(
 end
 
 """
-    measurebylocal(miner::Miner, meas::Function)::MeaningfulnessMeasure
-
-See [`getmeasure`](@ref), [`islocalof`](@ref).
-"""
-function measurebylocal(miner::Miner, meas::Function)::MeaningfulnessMeasure
-    return getmeasure(miner, meas; recognizer=islocalof)
-end
-
-"""
-    measurebyglobal(miner::Miner, meas::Function)::MeaningfulnessMeasure
-
-See [`getmeasure`](@ref), [`isglobalof`](@ref).
-"""
-function measurebyglobal(miner::Miner, meas::Function)::MeaningfulnessMeasure
-    return getmeasure(miner, meas; recognizer=isglobalof)
-end
-
-"""
     getlocalthreshold(miner::Miner, meas::Function)::Threshold
 
 Getter for the [`Threshold`](@ref) associated with the function wrapped by some
@@ -671,7 +652,7 @@ of a dataset's instances) in `miner`.
 See [`Miner`](@ref), [`MeaningfulnessMeasure`](@ref), [`Threshold`](@ref).
 """
 function getlocalthreshold(miner::Miner, meas::Function)::Threshold
-    return measurebyglobal(miner, meas) |> last
+    return findmeasure(miner, meas)[2]
 end
 
 """
@@ -684,7 +665,7 @@ of a specific local-measure across all dataset's instances) in `miner`.
 See [`Miner`](@ref), [`MeaningfulnessMeasure`](@ref), [`Threshold`](@ref).
 """
 function getglobalthreshold(miner::Miner, meas::Function)::Threshold
-    return measurebylocal(miner, meas) |> last
+    return findmeasure(miner, meas) |> last
 end
 
 """

@@ -192,9 +192,7 @@ _temp_miner = Miner(X2, fpgrowth, manual_items, [(gsupport, 0.1, 0.1)], _rulemea
 @test length(rulemeasures(_temp_miner)) == 2
 @test length(SoleRules.measures(_temp_miner)) == 4
 
-@test_nowarn getmeasure(_temp_miner, lsupport, recognizer=islocalof)
-@test_nowarn measurebylocal(_temp_miner, lsupport)
-@test_nowarn measurebyglobal(_temp_miner, gsupport)
+@test_nowarn findmeasure(_temp_miner, lsupport, recognizer=islocalof)
 
 _temp_contributors = Contributors([(:lsupport, pq, 1) => zeros(Int64,42)])
 @test powerups!(_temp_miner, :contributors, _temp_contributors) == _temp_contributors
@@ -286,7 +284,7 @@ lsupport(Itemset(manual_lr), SoleLogics.getinstance(X2, 7); miner=fpgrowth_miner
     ARule(Itemset(manual_r), Itemset(manual_lr))
 
 _rulemeasures_just_for_test = [(SoleRules.gconfidence, 1.1, 1.1)]
-_temp_fpgrowth_miner = a> fpgrowth_miner = Miner(
+_temp_fpgrowth_miner = Miner(
     X3, fpgrowth, [manual_p, manual_lp], _itemsetmeasures, _rulemeasures_just_for_test)
 @test mine(_temp_fpgrowth_miner) |> collect == ARule[]
 @test_nowarn globalmemo(_temp_fpgrowth_miner)

@@ -45,7 +45,7 @@ export dataset, algorithm
 export itemsetmeasures, additemmeas
 export rulemeasures, addrulemeas
 export freqitems, arules
-export measures, getmeasure, measurebylocal, measurebyglobal
+export measures, findmeasure
 export getlocalthreshold, getglobalthreshold
 export localmemo, localmemo!
 export globalmemo, globalmemo!
