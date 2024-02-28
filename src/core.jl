@@ -629,7 +629,8 @@ function getmeasure(
 )::MeaningfulnessMeasure
     try
         return first(
-            Iterators.filter(m -> first(m)==meas || recognizer(meas, m), measures(miner)))
+            Iterators.filter(
+                m -> first(m)==meas || recognizer(meas, first(m)), measures(miner)))
     catch e
         if isa(e, ArgumentError)
             error("The provided miner has no measure $meas. " *

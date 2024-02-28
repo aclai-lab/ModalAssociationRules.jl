@@ -49,11 +49,10 @@ export measures, getmeasure, measurebylocal, measurebyglobal
 export getlocalthreshold, getglobalthreshold
 export localmemo, localmemo!
 export globalmemo, globalmemo!
+
 export powerups, powerups!, haspowerup, initpowerups
 export info, info!, hasinfo
-
 export contributors, contributors!
-
 export mine, apply, generaterules
 
 include("meaningfulness-measures.jl")

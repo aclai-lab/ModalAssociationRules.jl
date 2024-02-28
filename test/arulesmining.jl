@@ -186,6 +186,16 @@ _temp_miner = Miner(X2, fpgrowth, manual_items, [(gsupport, 0.1, 0.1)], _rulemea
 @test_throws ErrorException getglobalthreshold(_temp_miner, _dummy_gsupport)
 @test _temp_miner.gmemo == GmeasMemo()
 
+@test_nowarn additemmeas(_temp_miner, (gsupport, 0.1, 0.1))
+@test length(itemsetmeasures(_temp_miner)) == 2
+@test_nowarn addrulemeas(_temp_miner, (gconfidence, 0.1, 0.1))
+@test length(rulemeasures(_temp_miner)) == 2
+@test length(SoleRules.measures(_temp_miner)) == 4
+
+@test_nowarn getmeasure(_temp_miner, lsupport, recognizer=islocalof)
+@test_nowarn measurebylocal(_temp_miner, lsupport)
+@test_nowarn measurebyglobal(_temp_miner, gsupport)
+
 _temp_contributors = Contributors([(:lsupport, pq, 1) => zeros(Int64,42)])
 @test powerups!(_temp_miner, :contributors, _temp_contributors) == _temp_contributors
 @test hasinfo(_temp_miner, :istrained) == true
