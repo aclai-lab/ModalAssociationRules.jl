@@ -95,9 +95,9 @@ Generates association rules from the given collection of `itemsets` and `miner`.
 Iterates through the powerset of each itemset to generate meaningful [`ARule`](@ref).
 
 To establish the meaningfulness of each association rule, check if it meets the global
-constraints specified in `rule_meas(miner)`, and yields the rule if so.
+constraints specified in `rulemeasures(miner)`, and yields the rule if so.
 
-See also [`ARule`](@ref), [`Miner`](@ref), [`Itemset`](@ref), [`rule_meas`](@ref).
+See also [`ARule`](@ref), [`Miner`](@ref), [`Itemset`](@ref), [`rulemeasures`](@ref).
 """
 @resumable function arules_generator(
     itemsets::Vector{Itemset},
@@ -116,7 +116,7 @@ See also [`ARule`](@ref), [`Miner`](@ref), [`Itemset`](@ref), [`rule_meas`](@ref
             interesting = true
             currentrule = ARule((_antecedent, _consequent))
 
-            for meas in rule_meas(miner)
+            for meas in rulemeasures(miner)
                 (gmeas_algo, lthreshold, gthreshold) = meas
                 gmeas_result = gmeas_algo(
                     currentrule, dataset(miner), lthreshold, miner=miner)
@@ -129,9 +129,8 @@ See also [`ARule`](@ref), [`Miner`](@ref), [`Itemset`](@ref), [`rule_meas`](@ref
 
             if interesting
                 push!(arules(miner), currentrule)
+                @yield currentrule
             end
-
-            @yield currentrule
         end
     end
 end

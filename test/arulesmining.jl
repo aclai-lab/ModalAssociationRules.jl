@@ -9,8 +9,10 @@ using StatsBase
 X_df, y = SoleData.load_arff_dataset("NATOPS");
 X1 = scalarlogiset(X_df)
 
-# different tested algorithms will use different Logiset's copies
+# different tested algorithms will use different Logiset's copies,
+# and deepcopies must be produced now.
 X2 = deepcopy(X1)
+X3 = deepcopy(X1)
 
 # make a vector of item, that will be the initial state of the mining machine
 manual_p = Atom(ScalarCondition(UnivariateMin(1), >, -0.5))
@@ -26,12 +28,12 @@ manual_items = Vector{Item}([
 
 # set meaningfulness measures, for both mining frequent itemsets and establish which
 # combinations of them are association rules.
-_item_meas = [(gsupport, 0.1, 0.1)]
-_rule_meas = [(gconfidence, 0.2, 0.2)]
+_itemsetmeasures = [(gsupport, 0.1, 0.1)]
+_rulemeasures = [(gconfidence, 0.2, 0.2)]
 
 # make two miners: the first digs the search space using aprior, the second uses fpgrowth
-apriori_miner = Miner(X1, apriori, manual_items, _item_meas, _rule_meas)
-fpgrowth_miner = Miner(X2, fpgrowth, manual_items, _item_meas, _rule_meas)
+apriori_miner = Miner(X1, apriori, manual_items, _itemsetmeasures, _rulemeasures)
+fpgrowth_miner = Miner(X2, fpgrowth, manual_items, _itemsetmeasures, _rulemeasures)
 
 # mine the frequent patterns with both apriori and fpgrowth
 @test_nowarn mine(apriori_miner)
@@ -112,8 +114,8 @@ arule3 = ARule(Itemset([manual_q, manual_p]), Itemset(manual_r))
 @test algorithm(apriori_miner) isa Function
 @test items(Miner(X1, apriori, manual_items)) == manual_items
 
-@test item_meas(apriori_miner) == _item_meas
-@test rule_meas(apriori_miner) == _rule_meas
+@test itemsetmeasures(apriori_miner) == _itemsetmeasures
+@test rulemeasures(apriori_miner) == _rulemeasures
 
 @test length(freqitems(apriori_miner)) == 27
 @test arules(apriori_miner) == []
@@ -179,7 +181,7 @@ function _dummy_gsupport(
     return 1.0
 end
 
-_temp_miner = Miner(X2, fpgrowth, manual_items, [(gsupport, 0.1, 0.1)], _rule_meas)
+_temp_miner = Miner(X2, fpgrowth, manual_items, [(gsupport, 0.1, 0.1)], _rulemeasures)
 @test_throws ErrorException getlocalthreshold(_temp_miner, _dummy_gsupport)
 @test_throws ErrorException getglobalthreshold(_temp_miner, _dummy_gsupport)
 @test _temp_miner.gmemo == GmeasMemo()
@@ -189,7 +191,7 @@ _temp_contributors = Contributors([(:lsupport, pq, 1) => zeros(Int64,42)])
 @test hasinfo(_temp_miner, :istrained) == true
 @test hasinfo(_temp_miner, :istraineeeeeed) == false
 
-_temp_apriori_miner = Miner(X1, apriori, manual_items, _item_meas, _rule_meas)
+_temp_apriori_miner = Miner(X1, apriori, manual_items, _itemsetmeasures, _rulemeasures)
 @test_throws ErrorException contributors((:lsupport, pqr, 1), _temp_apriori_miner)
 
 @test_throws ErrorException generaterules(_temp_miner)
@@ -273,6 +275,11 @@ lsupport(Itemset(manual_lr), SoleLogics.getinstance(X2, 7); miner=fpgrowth_miner
 @test arules_generator(freqitems(fpgrowth_miner), fpgrowth_miner) |> first ==
     ARule(Itemset(manual_r), Itemset(manual_lr))
 
+_rulemeasures_just_for_test = [(SoleRules.gconfidence, 1.1, 1.1)]
+_temp_fpgrowth_miner = a> fpgrowth_miner = Miner(
+    X3, fpgrowth, [manual_p, manual_lp], _itemsetmeasures, _rulemeasures_just_for_test)
+@test mine(_temp_fpgrowth_miner) |> collect == ARule[]
+@test_nowarn globalmemo(_temp_fpgrowth_miner)
 
 # "fpgrowth.jl - FPTree"
 root = FPTree()

@@ -554,26 +554,111 @@ See [`Item`](@ref), [`Miner`](@ref).
 items(miner::Miner) = miner.items
 
 """
-    item_meas(miner::Miner)::Vector{<:MeaningfulnessMeasure}
+    itemsetmeasures(miner::Miner)::Vector{<:MeaningfulnessMeasure}
 
 Return the [`MeaningfulnessMeasure`](@ref)s tailored to work with [`Itemset`](@ref)s,
 loaded inside `miner`.
 
 See  [`Itemset`](@ref), [`MeaningfulnessMeasure`](@ref), [`Miner`](@ref).
 """
-item_meas(miner::Miner)::Vector{<:MeaningfulnessMeasure} =
+itemsetmeasures(miner::Miner)::Vector{<:MeaningfulnessMeasure} =
     miner.item_constrained_measures
 
 """
-    rule_meas(miner::Miner)::Vector{<:MeaningfulnessMeasure}
+    additemmeas(miner::Miner, measure::MeaningfulnessMeasure)
+
+Add a new `measure` to `miner`'s [`itemsetmeasures`](@ref).
+
+See also [`addrulemeas`](@ref), [`Miner`](@ref), [`rulemeasures`](@ref).
+"""
+function additemmeas(miner::Miner, measure::MeaningfulnessMeasure)
+    # IDEA: maybe this should check whether measure already exists in miner
+    push!(itemsetmeasures(miner), measure)
+end
+
+"""
+    rulemeasures(miner::Miner)::Vector{<:MeaningfulnessMeasure}
 
 Return the [`MeaningfulnessMeasure`](@ref)s tailored to work with [`ARule`](@ref)s, loaded
 inside `miner`.
 
 See [`Miner`](@ref), [`ARule`](@ref), [`MeaningfulnessMeasure`](@ref).
 """
-rule_meas(miner::Miner)::Vector{<:MeaningfulnessMeasure} =
+rulemeasures(miner::Miner)::Vector{<:MeaningfulnessMeasure} =
     miner.rule_constrained_measures
+
+"""
+    addrulemeas(miner::Miner, measure::MeaningfulnessMeasure)
+
+Add a new `measure` to `miner`'s [`rulemeasures`](@ref).
+
+See also [`itemsetmeasures`](@ref), [`Miner`](@ref), [`rulemeasures`](@ref).
+"""
+function addrulemeas(miner::Miner, measure::MeaningfulnessMeasure)
+    # IDEA: maybe this should check whether measure already exists in miner
+    push!(rulemeasures(miner), measure)
+end
+
+"""
+    measures(miner::Miner)::Vector{<:MeaningfulnessMeasure}
+
+Return all the [`MeaningfulnessMeasures`](@ref) wrapped by `miner`.
+
+See also [`MeaningfulnessMeasure`](@ref), [`Miner`](@ref).
+"""
+function measures(miner::Miner)::Vector{<:MeaningfulnessMeasure}
+    return vcat(itemsetmeasures(miner), rulemeasures(miner))
+end
+
+"""
+    getmeasure(
+        miner::Miner,
+        meas::Function;
+        recognizer::Function=isglobalof
+    )::MeaningfulnessMeasure
+
+Retrieve the [`MeaningfulnessMeasure`](@ref) associated with `meas`.
+
+See also [`isglobalof`](@ref), [`islocalof`](@ref), [`MeaningfulnessMeasure`](@ref),
+[`Miner`](@ref).
+"""
+function getmeasure(
+    miner::Miner,
+    meas::Function;
+    recognizer::Function=isglobalof
+)::MeaningfulnessMeasure
+    try
+        return first(
+            Iterators.filter(m -> first(m)==meas || recognizer(meas, m), measures(miner)))
+    catch e
+        if isa(e, ArgumentError)
+            error("The provided miner has no measure $meas. " *
+            "Maybe the miner is not initialized properly, and $meas is omitted. " *
+            "Please use itemsetmeasures/rulemeasures to check which measures are available, " *
+            "and miner's setters to add a new measures and their thresholds.")
+        else
+            rethrow(e)
+        end
+    end
+end
+
+"""
+    measurebylocal(miner::Miner, meas::Function)::MeaningfulnessMeasure
+
+See [`getmeasure`](@ref), [`islocalof`](@ref).
+"""
+function measurebylocal(miner::Miner, meas::Function)::MeaningfulnessMeasure
+    return getmeasure(miner, meas; recognizer=islocalof)
+end
+
+"""
+    measurebyglobal(miner::Miner, meas::Function)::MeaningfulnessMeasure
+
+See [`getmeasure`](@ref), [`isglobalof`](@ref).
+"""
+function measurebyglobal(miner::Miner, meas::Function)::MeaningfulnessMeasure
+    return getmeasure(miner, meas; recognizer=isglobalof)
+end
 
 """
     getlocalthreshold(miner::Miner, meas::Function)::Threshold
@@ -584,30 +669,8 @@ of a dataset's instances) in `miner`.
 
 See [`Miner`](@ref), [`MeaningfulnessMeasure`](@ref), [`Threshold`](@ref).
 """
-getlocalthreshold(miner::Miner, meas::Function)::Threshold = begin
-    for (gmeas, _, lthreshold) in vcat(item_meas(miner), rule_meas(miner))
-        if gmeas == meas || islocalof(meas, gmeas)
-            return lthreshold
-        end
-    end
-
-    error("The provided miner has no local threshold for $meas. Maybe the miner is not " *
-        "initialized properly, and $meas is omitted. Please use item_meas/rule_meas " *
-        "to check which measures are available, and setlocalthreshold to add a new " *
-        "local measure, together with its local threshold.")
-end
-
-"""
-    setlocalthreshold(miner::Miner, meas::Function, threshold::Threshold)
-
-Setter for the [`Threshold`](@ref) associated with the function wrapped by some
-[`MeaningfulnessMeasure`](@ref) tailored to work locally (that is, analyzing "the inside"
-of a dataset's instances) in `miner`.
-
-See [`Miner`](@ref), [`MeaningfulnessMeasure`](@ref), [`Threshold`](@ref).
-"""
-setlocalthreshold(miner::Miner, meas::Function, threshold::Threshold) = begin
-    error("TODO: This method is not implemented yet.") # also, test this
+function getlocalthreshold(miner::Miner, meas::Function)::Threshold
+    return measurebyglobal(miner, meas) |> last
 end
 
 """
@@ -619,30 +682,8 @@ of a specific local-measure across all dataset's instances) in `miner`.
 
 See [`Miner`](@ref), [`MeaningfulnessMeasure`](@ref), [`Threshold`](@ref).
 """
-getglobalthreshold(miner::Miner, meas::Function)::Threshold = begin
-    for (gmeas, gthreshold, _) in vcat(item_meas(miner), rule_meas(miner))
-        if gmeas == meas
-            return gthreshold
-        end
-    end
-
-    error("The provided miner has no global threshold for $meas. Maybe the miner is not " *
-    "initialized properly, and $meas is omitted. Please use item_meas/rule_meas " *
-    "to check which measures are available, and setglobalthreshold to add a new " *
-    "global measure, together with local and global thresholds.")
-end
-
-"""
-    setglobalthreshold(miner::Miner, meas::Function, threshold::Threshold)
-
-Setter for the [`Threshold`](@ref) associated with the function wrapped by some
-[`MeaningfulnessMeasure`](@ref) tailored to work globally (that is, measuring the behavior
-of a specific local-measure across all dataset's instances) in `miner`.
-
-See [`Miner`](@ref), [`MeaningfulnessMeasure`](@ref), [`Threshold`](@ref).
-"""
-setglobalthreshold(miner::Miner, meas::Function, threshold::Threshold) = begin
-    error("TODO: This method is not implemented yet.") # also, test this
+function getglobalthreshold(miner::Miner, meas::Function)::Threshold
+    return measurebylocal(miner, meas) |> last
 end
 
 """
@@ -900,8 +941,8 @@ function Base.show(io::IO, miner::Miner)
     println(io, "$(dataset(miner))")
 
     println(io, "Alphabet: $(items(miner))\n")
-    println(io, "Items measures: $(item_meas(miner))")
-    println(io, "Rules measures: $(rule_meas(miner))\n")
+    println(io, "Items measures: $(itemsetmeasures(miner))")
+    println(io, "Rules measures: $(rulemeasures(miner))\n")
 
     println(io, "# of frequent patterns mined: $(length(freqitems(miner)))")
     println(io, "# of association rules mined: $(length(arules(miner)))\n")

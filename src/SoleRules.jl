@@ -42,10 +42,11 @@ export Info, Powerup
 
 export Miner
 export dataset, algorithm
-export item_meas, rule_meas
+export itemsetmeasures, additemmeas
+export rulemeasures, addrulemeas
 export freqitems, arules
-export getlocalthreshold, setlocalthreshold
-export getglobalthreshold, setglobalthreshold
+export measures, getmeasure, measurebylocal, measurebyglobal
+export getlocalthreshold, getglobalthreshold
 export localmemo, localmemo!
 export globalmemo, globalmemo!
 export powerups, powerups!, haspowerup, initpowerups

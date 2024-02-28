@@ -19,12 +19,12 @@ manual_items = Vector{Item}(Atom.([
     ScalarCondition(UnivariateMin(4), <=, 0.0)
 ]))
 
-_item_meas = [(gsupport, 0.1, 0.1)]
-_rule_meas = [(gconfidence, 0.2, 0.2)]
+_itemsetmeasures = [(gsupport, 0.1, 0.1)]
+_rulemeasures = [(gconfidence, 0.2, 0.2)]
 
 # could not find feature UnivariateMin: min[V1] in memoset of type
 # SoleData.DimensionalDatasets.UniformFullDimensionalLogiset ...
-fpgrowth_miner = Miner(X, fpgrowth, manual_items, _item_meas, _rule_meas)
+fpgrowth_miner = Miner(X, fpgrowth, manual_items, _itemsetmeasures, _rulemeasures)
 @test_broken mine(fpgrowth_miner)
 
 X = scalarlogiset(X1; relations = AbstractRelation[], conditions =
@@ -47,7 +47,7 @@ manual_items = Vector{Item}(Atom.([
     ScalarCondition(UnivariateMin(1), >,  5.84)
 ]))
 
-fpgrowth_miner = Miner(X, fpgrowth, manual_items, _item_meas, _rule_meas)
+fpgrowth_miner = Miner(X, fpgrowth, manual_items, _itemsetmeasures, _rulemeasures)
 mine(fpgrowth_miner)
 
 @test freqitems(fpgrowth_miner) |> length == 1

@@ -99,6 +99,7 @@ Documentation:
   ✔ WorldsMask to WorldMask @done(24-02-19 17:21)
   ✔ remove algorithm after algorithms name @done(24-02-19 17:21)
   ✔ Miner fix parametric types (isconcretetype) @done(24-02-19 17:21)
+  ☐ remove setlocalthreshold/setglobalthreshold, add measures, getmeasure, getlocalmeasure, getglobalmeasure
   ☐ write a v0.2 documentation, including hands on section
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

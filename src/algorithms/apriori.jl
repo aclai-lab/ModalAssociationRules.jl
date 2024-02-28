@@ -14,7 +14,7 @@ function apriori(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothing
         # note that meaningfulness measure should leverage memoization when
         # miner is given.
         frequents = [candidate
-            for (gmeas_algo, lthreshold, gthreshold) in item_meas(miner)
+            for (gmeas_algo, lthreshold, gthreshold) in itemsetmeasures(miner)
             for candidate in candidates
             # specifically, global support also calls local support and updates
             # contributors
