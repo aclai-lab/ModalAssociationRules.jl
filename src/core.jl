@@ -224,12 +224,12 @@ See also [`consequent`](@ref), [`ARule`](@ref), [`Itemset`](@ref).
 """
 consequent(rule::ARule)::Itemset = rule.consequent
 
-function Base.:(==)(rule1::ARule, rule2::ARule)
-    return antecedent(rule1) in antecedent(rule2) && consequent(rule1) in consequent(rule2)
-end
-
 function Base.convert(::Type{Itemset}, arule::ARule)::Itemset
     return Itemset(vcat(antecedent(arule), consequent(arule)))
+end
+
+function Base.:(==)(rule1::ARule, rule2::ARule)
+    return antecedent(rule1) in antecedent(rule2) && consequent(rule1) in consequent(rule2)
 end
 
 """
