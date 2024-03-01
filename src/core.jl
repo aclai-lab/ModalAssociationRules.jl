@@ -39,14 +39,17 @@ and [`gsupport`](@ref).
 
 Frequent itemsets are then used to generate association rules ([`ARule`](@ref)).
 
+!!! note
+    It is guaranteed that, if two [`Itemset`](@ref) are created with the same content,
+    regardless of the order, their hash is the same.
+
 See also [`ARule`](@ref), [`gsupport`](@ref), [`Item`](@ref), [`lsupport`](@ref),
 [`MeaningfulnessMeasure`](@ref).
 """
 const Itemset = Vector{Item}
 Itemset(item::Item) = Itemset([item])
-Itemset(itemsets::Vector{Itemset}) = begin
-    Itemset.([union(itemsets...)...])
-end
+Itemset(itemset::Vector{<:Item}) = unique(itemset)
+Itemset(itemsets::Vector{Itemset}) = Itemset.([union(itemsets...)...])
 
 function Base.convert(::Type{Item}, itemset::Itemset)::Item
     @assert length(itemset) == 1 "Cannot convert $(itemset) of length $(length(itemset)) " *
@@ -72,6 +75,8 @@ end
 function Base.:(==)(itemset1::Itemset, itemset2::Itemset)
     return itemset1 in itemset2
 end
+
+Base.hash(itemset::Vector{I}) where {I <: Item} = hash(Set(itemset))
 
 function Base.show(io::IO, itemset::Itemset)
     print(io, "[" * join([syntaxstring(item) for item in itemset], ", ") * "]")
