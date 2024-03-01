@@ -44,7 +44,9 @@ See also [`ARule`](@ref), [`gsupport`](@ref), [`Item`](@ref), [`lsupport`](@ref)
 """
 const Itemset = Vector{Item}
 Itemset(item::Item) = Itemset([item])
-Itemset(itemsets::Vector{Itemset}) = Itemset.([union(itemsets...)...])
+Itemset(itemsets::Vector{Itemset}) = begin
+    Itemset.([union(itemsets...)...])
+end
 
 function Base.convert(::Type{Item}, itemset::Itemset)::Item
     @assert length(itemset) == 1 "Cannot convert $(itemset) of length $(length(itemset)) " *
@@ -224,12 +226,12 @@ See also [`consequent`](@ref), [`ARule`](@ref), [`Itemset`](@ref).
 """
 consequent(rule::ARule)::Itemset = rule.consequent
 
-function Base.convert(::Type{Itemset}, arule::ARule)::Itemset
-    return Itemset(vcat(antecedent(arule), consequent(arule)))
-end
-
 function Base.:(==)(rule1::ARule, rule2::ARule)
     return antecedent(rule1) in antecedent(rule2) && consequent(rule1) in consequent(rule2)
+end
+
+function Base.convert(::Type{Itemset}, arule::ARule)::Itemset
+    return Itemset(vcat(antecedent(arule), consequent(arule)))
 end
 
 """
@@ -572,7 +574,7 @@ Add a new `measure` to `miner`'s [`itemsetmeasures`](@ref).
 See also [`addrulemeas`](@ref), [`Miner`](@ref), [`rulemeasures`](@ref).
 """
 function additemmeas(miner::Miner, measure::MeaningfulnessMeasure)
-    # IDEA: maybe this should check whether measure already exists in miner
+    @assert measure in first.(itemsetmeasures(miner)) "Miner already contains $(measure)."
     push!(itemsetmeasures(miner), measure)
 end
 
@@ -595,7 +597,7 @@ Add a new `measure` to `miner`'s [`rulemeasures`](@ref).
 See also [`itemsetmeasures`](@ref), [`Miner`](@ref), [`rulemeasures`](@ref).
 """
 function addrulemeas(miner::Miner, measure::MeaningfulnessMeasure)
-    # IDEA: maybe this should check whether measure already exists in miner
+    @assert measure in first.(rulemeasures(miner)) "Miner already contains $(measure)."
     push!(rulemeasures(miner), measure)
 end
 

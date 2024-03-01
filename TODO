@@ -32,6 +32,7 @@ Main:
       # this might be useful? maybe a @debug macro enabling these savings could be an idea
     ✔ memoize gsupport and lsupport: infer it by projection WorldMasks @done(24-02-25 16:15)
     ☐ currently, this works only for local and global support. Add a for cycle to also consider user custom item measure.
+    ☐ threshold must be considered when memoizing
 
 Generic:
   ✔ move memoization accountability to Miner @done(24-02-07 23:58)

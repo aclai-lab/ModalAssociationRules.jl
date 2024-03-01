@@ -45,7 +45,7 @@ function lsupport(
     if !isnothing(miner)
         localmemo!(miner, memokey, ans)
 
-        # IDEA: call two methods here. One is built-in in Solo, and checks every equippable
+        # IDEA: call two methods here. One is built-in in Sole, and checks every equippable
         # attribute that `miner` can have in its info named tuple.
         # The other dispatch is empty, but customizable by the user to check his things.
         if haspowerup(miner, :contributors)
@@ -188,12 +188,10 @@ function gconfidence(
         end
     end
 
-    _antecedent = antecedent(rule)
-    _consequent = consequent(rule)
+    ans = sum([lconfidence(rule, getinstance(X, i_instance); miner=miner) >= threshold
+        for i_instance in 1:ninstances(X)]) / ninstances(X)
 
-    # TODO: is this computed correctly? local confidence is not called here
-    ans = gsupport(union(_antecedent, _consequent), X, threshold; miner=miner) /
-        gsupport(_antecedent, X, threshold; miner=miner)
+    println("$(rule) - global confidence is: $(ans)")
 
     if !isnothing(miner)
         globalmemo!(miner, memokey, ans)
