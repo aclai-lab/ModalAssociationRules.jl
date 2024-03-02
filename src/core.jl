@@ -19,6 +19,12 @@ See also [`SoleLogics.check`](@ref), [`gconfidence`](@ref), [`lsupport`](@ref),
 """
 const Item = SoleLogics.Formula
 
+# TODO: type piracy - this should moved in SoleLogics.jl
+# Hash function should be forwarded to Item's value depending on its type (e.g., Atom).
+function Base.isless(a::Item, b::Item)
+    isless(hash(a), hash(b))
+end
+
 """
     const Itemset = Vector{Item}
 
@@ -46,10 +52,23 @@ Frequent itemsets are then used to generate association rules ([`ARule`](@ref)).
 See also [`ARule`](@ref), [`gsupport`](@ref), [`Item`](@ref), [`lsupport`](@ref),
 [`MeaningfulnessMeasure`](@ref).
 """
-const Itemset = Vector{Item}
-Itemset(item::Item) = Itemset([item])
-Itemset(itemset::Vector{<:Item}) = unique(itemset)
-Itemset(itemsets::Vector{Itemset}) = Itemset.([union(itemsets...)...])
+struct Itemset{I<:Item} # IDEA: use promote here?
+    items::Vector{I}
+
+    Itemset() = new{Item}([])
+    Itemset(item::I) where {I<:Item} = new{I}([item])
+    Itemset(itemset::Vector{I}) where {I<:Item} = new{I}(itemset |> unique |> sort)
+end
+
+@forward Itemset.items size, getindex, IndexStyle, setindex!
+@forward Itemset.items iterate, length, similar, show
+
+items(itemset::Itemset) = itemset.items
+
+function Base.union(itemsets::Vector{IT}) where {IT<:Itemset}
+    println("OK")
+    return Itemset(union(items.([itemsets]...)...))
+end
 
 function Base.convert(::Type{Item}, itemset::Itemset)::Item
     @assert length(itemset) == 1 "Cannot convert $(itemset) of length $(length(itemset)) " *
@@ -57,26 +76,9 @@ function Base.convert(::Type{Item}, itemset::Itemset)::Item
     return first(itemset)
 end
 
-function Base.in(itemset::Itemset, target::Itemset)
-    all(item -> item in target, itemset)
-end
-
-# this dispatch is needed to force the check to not consider the order of items in itemsets
-function Base.in(itemset::Itemset, targets::Vector{Itemset})
-    for target in targets
-        if itemset in target
-            return true
-        end
-    end
-
-    return false
-end
-
 function Base.:(==)(itemset1::Itemset, itemset2::Itemset)
-    return itemset1 in itemset2
+    return items(itemset1) == items(itemset2)
 end
-
-Base.hash(itemset::Vector{I}) where {I <: Item} = hash(Set(itemset))
 
 function Base.show(io::IO, itemset::Itemset)
     print(io, "[" * join([syntaxstring(item) for item in itemset], ", ") * "]")
@@ -89,7 +91,7 @@ Conjunctive normal form of the [`Item`](@ref)s contained in `itemset`.
 
 See also [`Item`](@ref), [`Itemset`](@ref), [`SoleLogics.LeftmostConjunctiveForm`](@ref)
 """
-toformula(itemset::Itemset) = LeftmostConjunctiveForm(itemset)
+toformula(itemset::Itemset) = itemset |> items |> LeftmostConjunctiveForm
 
 """
     const Threshold = Float64
@@ -192,7 +194,7 @@ struct ARule
 
     function ARule(antecedent::Itemset, consequent::Itemset)
         intersection = intersect(antecedent, consequent)
-        @assert  intersection |> length == 0 "Invalid rule. " *
+        @assert intersection |> length == 0 "Invalid rule. " *
         "Antecedent and consequent share the following items: $(intersection)."
 
         new(antecedent, consequent)
@@ -399,7 +401,7 @@ const Info = Dict{Symbol,Any}
 """
     struct Miner{
         D<:AbstractDataset,
-        F <:Function,
+        F<:Function,
         I<:Item,
         IM<:MeaningfulnessMeasure,
         RM<:MeaningfulnessMeasure
@@ -471,7 +473,7 @@ See also  [`ARule`](@ref), [`apriori`](@ref), [`MeaningfulnessMeasure`](@ref),
 """
 struct Miner{
     D<:AbstractDataset,
-    F <:Function,
+    F<:Function,
     I<:Item,
     IM<:MeaningfulnessMeasure,
     RM<:MeaningfulnessMeasure
@@ -486,7 +488,7 @@ struct Miner{
     item_constrained_measures::Vector{IM}
     rule_constrained_measures::Vector{RM}
 
-    freqitems::Vector{Itemset}      # collected frequent itemsets
+    freqitems::Vector{Itemset}   # collected frequent itemsets
     arules::Vector{ARule}           # collected association rules
 
     lmemo::LmeasMemo                # local memoization structure

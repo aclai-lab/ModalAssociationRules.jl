@@ -1,10 +1,14 @@
 module SoleRules
 # Currently, the only topic covered by SoleRules is Association Rules.
 
-import Base.count, Base.push!, Base.show
+import Base.count, Base.push!
+import Base.size, Base.getindex, Base.IndexStyle, Base.setindex!, Base.iterate
+import Base.length, Base.similar, Base.show, Base.union
+
 using Combinatorics
 using DataStructures
 using IterTools
+using Lazy: @forward
 using Parameters
 using Random
 using ResumableFunctions

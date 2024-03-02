@@ -303,7 +303,6 @@ Return all the unique [`Item`](@ref)s appearing in `fptree`.
 See also [`FPTree`](@ref), [`Item`](@ref), [`Itemset`](@ref).
 """
 function retrieveall(fptree::FPTree)::Itemset
-
     # internal function just to avoid repeating the final `unique`
     function _retrieve(fptree::FPTree)
         retrieved = Itemset([_retrieve(child) for child in children(fptree)])
@@ -809,8 +808,8 @@ See also [`Miner`](@ref), [`FPTree`](@ref), [`HeaderTable`](@ref),
 """
 function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothing
     # initialization logic
-    @assert SoleRules.gsupport in reduce(vcat, itemsetmeasures(miner)) "FP-Growth requires " *
-        "global support (gsupport) as meaningfulness measure in order to " *
+    @assert SoleRules.gsupport in reduce(vcat, itemsetmeasures(miner)) "FP-Growth " *
+        "requires global support (gsupport) as meaningfulness measure in order to " *
         "work. Please, add a tuple (gsupport, local support threshold, " *
         "global support threshold) to miner.item_constrained_measures field.\n" *
         "Local support is needed too, but it is already considered in the global case."
@@ -849,7 +848,7 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
             ], by=t -> globalmemo(miner, (:gsupport, t)), rev=true)
 
         ninstance_to_sorteditemset[i] = length(_sorteditemsets) > 0 ?
-            reduce(vcat, _sorteditemsets) : # single-item Itemsets are merged together
+            union(_sorteditemsets) :        # single-item Itemsets are merged together
             Itemset()                       # i-th instance has no itemsets
     end
 

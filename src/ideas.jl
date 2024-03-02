@@ -48,3 +48,14 @@
 ###     return ans
 ### end
 ###
+
+
+### struct Itemset{I<:Item}
+###     items::Vector{I}
+###
+###     Itemset(item::I) where {I<:Item} = new{I}([item])
+###     Itemset(itemset::Vector{I}) where {I<:Item} = new{I}(itemset |> unique |> sort)
+### #    Itemset(itemsets::Vector{I}) where {I<:Item} = Itemset.([union(itemsets...)...])
+### end
+###
+### @forward Itemset.items size, getindex, IndexStyle, setindex!, iterate, length, similar, show
