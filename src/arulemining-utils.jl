@@ -50,7 +50,8 @@ function grow_prune(candidates::Vector{Itemset}, frequents::Vector{Itemset}, k::
             # the iterator yields only itemsets for which every combo is in frequents;
             # note: why first(combo)? Because combinations(itemset, k-1) returns vectors,
             # each one wrapping one Itemset, but we just need that exact itemset.
-            itemset -> all(combo -> Itemset(combo) in frequents, combinations(itemset, k-1)),
+            itemset -> all(
+                combo -> Itemset(combo) in frequents, combinations(itemset, k-1)),
             combine(candidates, k)
         )
 end

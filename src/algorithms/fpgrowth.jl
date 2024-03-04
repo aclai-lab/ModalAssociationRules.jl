@@ -306,11 +306,6 @@ function retrieveall(fptree::FPTree)::Itemset
     # internal function just to avoid repeating the final `unique`
     function _retrieve(fptree::FPTree)
         retrieved = Itemset([_retrieve(child) for child in children(fptree)])
-
-        # if !isempty(retrieved)
-        #     retrieved = # retrieved = reduce(vcat, retrieved |> unique)
-        # end
-
         _content = content(fptree)
 
         if !isnothing(_content)
@@ -892,7 +887,7 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
                 getglobalthreshold(miner, gsupport) * _ninstances
             ))
 
-            for combo in combine(survivor_itemset |> items, leftout_itemset |> items) |> collect
+            for combo in combine(items(survivor_itemset), items(leftout_itemset))
                 occurrences = findmin([
                     sum([
                         contributors(:lsupport, itemset, i, miner)
@@ -908,7 +903,6 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
                 # updating global support
                 globalmemo!(miner, (:gsupport, combo),
                     count(i -> i > gsupp_integer_threshold, occurrences) / _nworlds)
-
 
                 # single-itemset case is already handled by the first pass over the dataset
                 if length(combo) > 1
