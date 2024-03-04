@@ -25,10 +25,8 @@ function apriori(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothing
 
         # save frequent itemsets inside the miner machine
         push!(freqitems(miner), frequents...)
-
         k = (candidates |> first |> length) + 1
         candidates = grow_prune(candidates, frequents, k) |> collect |> unique
-
 
         verbose && printstyled("Starting new computational loop with " *
         "$(length(candidates)) candidates...\n", color=:green)

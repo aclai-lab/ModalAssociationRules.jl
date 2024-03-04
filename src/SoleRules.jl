@@ -3,7 +3,8 @@ module SoleRules
 
 import Base.count, Base.push!
 import Base.size, Base.getindex, Base.IndexStyle, Base.setindex!, Base.iterate
-import Base.length, Base.similar, Base.show, Base.union
+import Base.length, Base.similar, Base.show, Base.union, Base.hash
+import Base.firstindex, Base.lastindex
 
 using Combinatorics
 using DataStructures
@@ -29,7 +30,7 @@ using StatsBase
 include("core.jl")
 
 export Item
-export Itemset, toformula
+export Itemset, toformula, slice
 
 export Threshold
 export WorldMask, EnhancedItemset, ConditionalPatternBase

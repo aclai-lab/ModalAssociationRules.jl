@@ -29,7 +29,7 @@ in `variable` and prepend them to `fixed` vector.
 See also [`Item`](@ref), [`Itemset`](@ref).
 """
 function combine(variable::Vector{<:Item}, fixed::Vector{<:Item})
-    return (Itemset(vcat(combo, fixed)) for combo in combinations(variable))
+    return (Itemset(union(combo, fixed)) for combo in combinations(variable))
 end
 
 """
@@ -47,9 +47,10 @@ function grow_prune(candidates::Vector{Itemset}, frequents::Vector{Itemset}, k::
     # if the frequents set does not contain the subset of a certain candidate,
     # that candidate is pruned out.
     return Iterators.filter(
-            # the iterator yields only itemsets for which every combo is in frequents
-            itemset -> all(combo ->
-                combo in frequents, combinations(itemset, k-1)),
+            # the iterator yields only itemsets for which every combo is in frequents;
+            # note: why first(combo)? Because combinations(itemset, k-1) returns vectors,
+            # each one wrapping one Itemset, but we just need that exact itemset.
+            itemset -> all(combo -> Itemset(combo) in frequents, combinations(itemset, k-1)),
             combine(candidates, k)
         )
 end

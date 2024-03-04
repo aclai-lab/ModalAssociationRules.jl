@@ -52,22 +52,54 @@ Frequent itemsets are then used to generate association rules ([`ARule`](@ref)).
 See also [`ARule`](@ref), [`gsupport`](@ref), [`Item`](@ref), [`lsupport`](@ref),
 [`MeaningfulnessMeasure`](@ref).
 """
-struct Itemset{I<:Item} # IDEA: use promote here?
-    items::Vector{I}
+struct Itemset
+    items::Vector{Item}
 
-    Itemset() = new{Item}([])
-    Itemset(item::I) where {I<:Item} = new{I}([item])
-    Itemset(itemset::Vector{I}) where {I<:Item} = new{I}(itemset |> unique |> sort)
+    Itemset() = new(Vector{Item}[])
+    Itemset(item::I) where {I<:Item} = new(Vector{Item}([item]))
+    Itemset(itemset::Vector{I}) where {I<:Item} = new(Vector{Item}(
+        itemset |> unique |> sort))
+
+    Itemset(anyvec::Vector{Any}) = begin
+        @assert isempty(anyvec) "Illegal constructor call"
+        return Itemset()
+    end
+
+    Itemset(itemsets::Vector{Itemset}) = return union(itemsets)
 end
 
-@forward Itemset.items size, getindex, IndexStyle, setindex!
-@forward Itemset.items iterate, length, similar, show
+@forward Itemset.items size, IndexStyle, setindex!
+@forward Itemset.items iterate, length, firstindex, lastindex, similar, show
+
+function Base.getindex(itemset::Itemset, indexes::Vararg{Int,N}) where N
+    return Itemset(items(itemset)[indexes...])
+end
+
+function Base.getindex(itemset::Itemset, range::AbstractUnitRange{I}) where {I<:Integer}
+    return Itemset(items(itemset)[range])
+end
+
+function push!(itemset::Itemset, item::Item)
+    push!(items(itemset), item)
+    sort!(unique!(items(itemset)))
+end
 
 items(itemset::Itemset) = itemset.items
 
-function Base.union(itemsets::Vector{IT}) where {IT<:Itemset}
-    println("OK")
+function Base.union(itemsets::Vector{Itemset})
     return Itemset(union(items.([itemsets]...)...))
+end
+
+function Base.union(itemsets::Vararg{Itemset,N}) where N
+    return union([itemsets...])
+end
+
+function Base.hash(itemset::Itemset, h::UInt)
+    return hash(items(itemset), h)
+end
+
+function Base.convert(::Type{Itemset}, formulavector::Vector{Formula})
+    return Itemset(formulavector)
 end
 
 function Base.convert(::Type{Item}, itemset::Itemset)::Item

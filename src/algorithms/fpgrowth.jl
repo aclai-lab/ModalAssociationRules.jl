@@ -307,9 +307,9 @@ function retrieveall(fptree::FPTree)::Itemset
     function _retrieve(fptree::FPTree)
         retrieved = Itemset([_retrieve(child) for child in children(fptree)])
 
-        if !isempty(retrieved)
-            retrieved = reduce(vcat, retrieved |> unique)
-        end
+        # if !isempty(retrieved)
+        #     retrieved = # retrieved = reduce(vcat, retrieved |> unique)
+        # end
 
         _content = content(fptree)
 
@@ -871,19 +871,19 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
         fptree::FPTree,
         htable::HeaderTable,
         miner::Miner,
-        leftout_items::Itemset
+        leftout_itemset::Itemset
     )
         # if `fptree` contains only one path (hence, it can be considered a linked list),
         # then combine all the Itemsets collected from previous step with the remained ones.
         if islist(fptree)
-            survivor_items = retrieveall(fptree)
+            survivor_itemset = retrieveall(fptree)
 
             verbose &&
-                printstyled("Merging $(leftout_items |> length) leftout items with " *
-                "a single-list FPTree of length $(survivor_items |> length)\n", color=:blue)
+                printstyled("Merging $(leftout_itemset |> length) leftout items with a " *
+                "single-list FPTree of length $(survivor_itemset |> length)\n", color=:blue)
 
-            # we know that all the combinations of `survivor_items` are frequent with
-            # `leftout_items`, but we need to save (inside miner) the exact local support
+            # we know that all the combinations of items in `survivor_itemset` are frequent
+            # with `leftout_itemset`, but we need to save (inside miner) the exact local
             # and global support for each new itemset: those measures are computed below.
             _nworlds = SoleLogics.nworlds(dataset(miner), 1)
             _ninstances = dataset(miner) |> ninstances
@@ -892,7 +892,7 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
                 getglobalthreshold(miner, gsupport) * _ninstances
             ))
 
-            for combo in combine(survivor_items, leftout_items) |> collect
+            for combo in combine(survivor_itemset |> items, leftout_itemset |> items) |> collect
                 occurrences = findmin([
                     sum([
                         contributors(:lsupport, itemset, i, miner)
@@ -933,7 +933,7 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
                 # considering `item` as a leftout item.
                 if length(children(conditional_fptree)) > 0
                     _fpgrowth_kernel(conditional_fptree, conditional_htable, miner,
-                        vcat(leftout_items, item))
+                        union(leftout_itemset, Itemset(item)))
                 end
             end
         end
