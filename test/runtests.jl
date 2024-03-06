@@ -14,6 +14,7 @@ println("Julia version: ", VERSION)
 
 test_suites = [
     ("Association rule mining", ["arulesmining.jl",]),
+    ("Iris", ["iris.jl",]),
 ]
 
 @testset "SoleLogics.jl" begin

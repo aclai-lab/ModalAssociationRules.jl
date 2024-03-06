@@ -29,7 +29,7 @@ in `variable` and prepend them to `fixed` vector.
 See also [`Item`](@ref), [`Itemset`](@ref).
 """
 function combine(variable::Vector{<:Item}, fixed::Vector{<:Item})
-    return (Itemset(vcat(combo, fixed)) for combo in combinations(variable))
+    return (Itemset(union(combo, fixed)) for combo in combinations(variable))
 end
 
 """
@@ -47,9 +47,11 @@ function grow_prune(candidates::Vector{Itemset}, frequents::Vector{Itemset}, k::
     # if the frequents set does not contain the subset of a certain candidate,
     # that candidate is pruned out.
     return Iterators.filter(
-            # the iterator yields only itemsets for which every combo is in frequents
-            itemset -> all(combo ->
-                combo in frequents, combinations(itemset, k-1)),
+            # the iterator yields only itemsets for which every combo is in frequents;
+            # note: why first(combo)? Because combinations(itemset, k-1) returns vectors,
+            # each one wrapping one Itemset, but we just need that exact itemset.
+            itemset -> all(
+                combo -> Itemset(combo) in frequents, combinations(itemset, k-1)),
             combine(candidates, k)
         )
 end
@@ -95,9 +97,9 @@ Generates association rules from the given collection of `itemsets` and `miner`.
 Iterates through the powerset of each itemset to generate meaningful [`ARule`](@ref).
 
 To establish the meaningfulness of each association rule, check if it meets the global
-constraints specified in `rule_meas(miner)`, and yields the rule if so.
+constraints specified in `rulemeasures(miner)`, and yields the rule if so.
 
-See also [`ARule`](@ref), [`Miner`](@ref), [`Itemset`](@ref), [`rule_meas`](@ref).
+See also [`ARule`](@ref), [`Miner`](@ref), [`Itemset`](@ref), [`rulemeasures`](@ref).
 """
 @resumable function arules_generator(
     itemsets::Vector{Itemset},
@@ -105,9 +107,10 @@ See also [`ARule`](@ref), [`Miner`](@ref), [`Itemset`](@ref), [`rule_meas`](@ref
 )
     for itemset in itemsets
         subsets = powerset(itemset)
+
         for subset in subsets
             _antecedent = subset |> Itemset
-            _consequent = symdiff(itemset, subset) |> Itemset
+            _consequent = symdiff(items(itemset), items(_antecedent)) |> Itemset
 
             if length(_antecedent) == 0 || length(_consequent) == 0
                 continue
@@ -116,7 +119,7 @@ See also [`ARule`](@ref), [`Miner`](@ref), [`Itemset`](@ref), [`rule_meas`](@ref
             interesting = true
             currentrule = ARule((_antecedent, _consequent))
 
-            for meas in rule_meas(miner)
+            for meas in rulemeasures(miner)
                 (gmeas_algo, lthreshold, gthreshold) = meas
                 gmeas_result = gmeas_algo(
                     currentrule, dataset(miner), lthreshold, miner=miner)
@@ -129,9 +132,8 @@ See also [`ARule`](@ref), [`Miner`](@ref), [`Itemset`](@ref), [`rule_meas`](@ref
 
             if interesting
                 push!(arules(miner), currentrule)
+                @yield currentrule
             end
-
-            @yield currentrule
         end
     end
 end

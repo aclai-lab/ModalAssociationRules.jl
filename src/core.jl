@@ -19,6 +19,12 @@ See also [`SoleLogics.check`](@ref), [`gconfidence`](@ref), [`lsupport`](@ref),
 """
 const Item = SoleLogics.Formula
 
+# TODO: type piracy - this should moved in SoleLogics.jl
+# Hash function should be forwarded to Item's value depending on its type (e.g., Atom).
+function Base.isless(a::Item, b::Item)
+    isless(hash(a), hash(b))
+end
+
 """
     const Itemset = Vector{Item}
 
@@ -39,12 +45,62 @@ and [`gsupport`](@ref).
 
 Frequent itemsets are then used to generate association rules ([`ARule`](@ref)).
 
+!!! note
+    It is guaranteed that, if two [`Itemset`](@ref) are created with the same content,
+    regardless of the order, their hash is the same.
+
 See also [`ARule`](@ref), [`gsupport`](@ref), [`Item`](@ref), [`lsupport`](@ref),
 [`MeaningfulnessMeasure`](@ref).
 """
-const Itemset = Vector{Item}
-Itemset(item::Item) = Itemset([item])
-Itemset(itemsets::Vector{Itemset}) = Itemset.([union(itemsets...)...])
+struct Itemset
+    items::Vector{Item}
+
+    Itemset() = new(Vector{Item}[])
+    Itemset(item::I) where {I<:Item} = new(Vector{Item}([item]))
+    Itemset(itemset::Vector{I}) where {I<:Item} = new(Vector{Item}(
+        itemset |> unique |> sort))
+
+    Itemset(anyvec::Vector{Any}) = begin
+        @assert isempty(anyvec) "Illegal constructor call"
+        return Itemset()
+    end
+
+    Itemset(itemsets::Vector{Itemset}) = return union(itemsets)
+end
+
+@forward Itemset.items size, IndexStyle, setindex!
+@forward Itemset.items iterate, length, firstindex, lastindex, similar, show
+
+function Base.getindex(itemset::Itemset, indexes::Vararg{Int,N}) where N
+    return Itemset(items(itemset)[indexes...])
+end
+
+function Base.getindex(itemset::Itemset, range::AbstractUnitRange{I}) where {I<:Integer}
+    return Itemset(items(itemset)[range])
+end
+
+function push!(itemset::Itemset, item::Item)
+    push!(items(itemset), item)
+    sort!(unique!(items(itemset)))
+end
+
+items(itemset::Itemset) = itemset.items
+
+function Base.union(itemsets::Vector{Itemset})
+    return Itemset(union(items.([itemsets]...)...))
+end
+
+function Base.union(itemsets::Vararg{Itemset,N}) where N
+    return union([itemsets...])
+end
+
+function Base.hash(itemset::Itemset, h::UInt)
+    return hash(items(itemset), h)
+end
+
+function Base.convert(::Type{Itemset}, formulavector::Vector{Formula})
+    return Itemset(formulavector)
+end
 
 function Base.convert(::Type{Item}, itemset::Itemset)::Item
     @assert length(itemset) == 1 "Cannot convert $(itemset) of length $(length(itemset)) " *
@@ -52,23 +108,15 @@ function Base.convert(::Type{Item}, itemset::Itemset)::Item
     return first(itemset)
 end
 
-function Base.in(itemset::Itemset, target::Itemset)
-    all(item -> item in target, itemset)
-end
-
-# this dispatch is needed to force the check to not consider the order of items in itemsets
-function Base.in(itemset::Itemset, targets::Vector{Itemset})
-    for target in targets
-        if itemset in target
-            return true
-        end
-    end
-
-    return false
-end
-
 function Base.:(==)(itemset1::Itemset, itemset2::Itemset)
-    return itemset1 in itemset2
+    return items(itemset1) == items(itemset2)
+end
+
+function Base.in(itemset1::Itemset, itemset2::Itemset)
+    # naive quadratic search solution is better than the second one (commented)
+    # since itemsets are intended to be fairly short (6/7 conjuncts at most).
+    return all(item -> item in items(itemset2), items(itemset1))
+    # return issubset(Set(itemset1 |> items) in Set(itemset2 |> items))
 end
 
 function Base.show(io::IO, itemset::Itemset)
@@ -82,7 +130,7 @@ Conjunctive normal form of the [`Item`](@ref)s contained in `itemset`.
 
 See also [`Item`](@ref), [`Itemset`](@ref), [`SoleLogics.LeftmostConjunctiveForm`](@ref)
 """
-toformula(itemset::Itemset) = LeftmostConjunctiveForm(itemset)
+toformula(itemset::Itemset) = itemset |> items |> LeftmostConjunctiveForm
 
 """
     const Threshold = Float64
@@ -185,7 +233,7 @@ struct ARule
 
     function ARule(antecedent::Itemset, consequent::Itemset)
         intersection = intersect(antecedent, consequent)
-        @assert  intersection |> length == 0 "Invalid rule. " *
+        @assert intersection |> length == 0 "Invalid rule. " *
         "Antecedent and consequent share the following items: $(intersection)."
 
         new(antecedent, consequent)
@@ -392,7 +440,7 @@ const Info = Dict{Symbol,Any}
 """
     struct Miner{
         D<:AbstractDataset,
-        F <:Function,
+        F<:Function,
         I<:Item,
         IM<:MeaningfulnessMeasure,
         RM<:MeaningfulnessMeasure
@@ -464,7 +512,7 @@ See also  [`ARule`](@ref), [`apriori`](@ref), [`MeaningfulnessMeasure`](@ref),
 """
 struct Miner{
     D<:AbstractDataset,
-    F <:Function,
+    F<:Function,
     I<:Item,
     IM<:MeaningfulnessMeasure,
     RM<:MeaningfulnessMeasure
@@ -479,7 +527,7 @@ struct Miner{
     item_constrained_measures::Vector{IM}
     rule_constrained_measures::Vector{RM}
 
-    freqitems::Vector{Itemset}      # collected frequent itemsets
+    freqitems::Vector{Itemset}   # collected frequent itemsets
     arules::Vector{ARule}           # collected association rules
 
     lmemo::LmeasMemo                # local memoization structure
@@ -554,26 +602,93 @@ See [`Item`](@ref), [`Miner`](@ref).
 items(miner::Miner) = miner.items
 
 """
-    item_meas(miner::Miner)::Vector{<:MeaningfulnessMeasure}
+    itemsetmeasures(miner::Miner)::Vector{<:MeaningfulnessMeasure}
 
 Return the [`MeaningfulnessMeasure`](@ref)s tailored to work with [`Itemset`](@ref)s,
 loaded inside `miner`.
 
 See  [`Itemset`](@ref), [`MeaningfulnessMeasure`](@ref), [`Miner`](@ref).
 """
-item_meas(miner::Miner)::Vector{<:MeaningfulnessMeasure} =
+itemsetmeasures(miner::Miner)::Vector{<:MeaningfulnessMeasure} =
     miner.item_constrained_measures
 
 """
-    rule_meas(miner::Miner)::Vector{<:MeaningfulnessMeasure}
+    additemmeas(miner::Miner, measure::MeaningfulnessMeasure)
+
+Add a new `measure` to `miner`'s [`itemsetmeasures`](@ref).
+
+See also [`addrulemeas`](@ref), [`Miner`](@ref), [`rulemeasures`](@ref).
+"""
+function additemmeas(miner::Miner, measure::MeaningfulnessMeasure)
+    @assert measure in first.(itemsetmeasures(miner)) "Miner already contains $(measure)."
+    push!(itemsetmeasures(miner), measure)
+end
+
+"""
+    rulemeasures(miner::Miner)::Vector{<:MeaningfulnessMeasure}
 
 Return the [`MeaningfulnessMeasure`](@ref)s tailored to work with [`ARule`](@ref)s, loaded
 inside `miner`.
 
 See [`Miner`](@ref), [`ARule`](@ref), [`MeaningfulnessMeasure`](@ref).
 """
-rule_meas(miner::Miner)::Vector{<:MeaningfulnessMeasure} =
+rulemeasures(miner::Miner)::Vector{<:MeaningfulnessMeasure} =
     miner.rule_constrained_measures
+
+"""
+    addrulemeas(miner::Miner, measure::MeaningfulnessMeasure)
+
+Add a new `measure` to `miner`'s [`rulemeasures`](@ref).
+
+See also [`itemsetmeasures`](@ref), [`Miner`](@ref), [`rulemeasures`](@ref).
+"""
+function addrulemeas(miner::Miner, measure::MeaningfulnessMeasure)
+    @assert measure in first.(rulemeasures(miner)) "Miner already contains $(measure)."
+    push!(rulemeasures(miner), measure)
+end
+
+"""
+    measures(miner::Miner)::Vector{<:MeaningfulnessMeasure}
+
+Return all the [`MeaningfulnessMeasures`](@ref) wrapped by `miner`.
+
+See also [`MeaningfulnessMeasure`](@ref), [`Miner`](@ref).
+"""
+function measures(miner::Miner)::Vector{<:MeaningfulnessMeasure}
+    return vcat(itemsetmeasures(miner), rulemeasures(miner))
+end
+
+"""
+    findmeasure(
+        miner::Miner,
+        meas::Function;
+        recognizer::Function=islocalof
+    )::MeaningfulnessMeasure
+
+Retrieve the [`MeaningfulnessMeasure`](@ref) associated with `meas`.
+
+See also [`isglobalof`](@ref), [`islocalof`](@ref), [`MeaningfulnessMeasure`](@ref),
+[`Miner`](@ref).
+"""
+function findmeasure(
+    miner::Miner,
+    meas::Function;
+    recognizer::Function=islocalof
+)::MeaningfulnessMeasure
+    try
+        return Iterators.filter(
+            m -> first(m)==meas || recognizer(meas, first(m)), measures(miner)) |> first
+    catch e
+        if isa(e, ArgumentError)
+            error("The provided miner has no measure $meas. " *
+            "Maybe the miner is not initialized properly, and $meas is omitted. " *
+            "Please use itemsetmeasures/rulemeasures to check which measures are available, " *
+            "and miner's setters to add a new measures and their thresholds.")
+        else
+            rethrow(e)
+        end
+    end
+end
 
 """
     getlocalthreshold(miner::Miner, meas::Function)::Threshold
@@ -584,30 +699,8 @@ of a dataset's instances) in `miner`.
 
 See [`Miner`](@ref), [`MeaningfulnessMeasure`](@ref), [`Threshold`](@ref).
 """
-getlocalthreshold(miner::Miner, meas::Function)::Threshold = begin
-    for (gmeas, _, lthreshold) in vcat(item_meas(miner), rule_meas(miner))
-        if gmeas == meas || islocalof(meas, gmeas)
-            return lthreshold
-        end
-    end
-
-    error("The provided miner has no local threshold for $meas. Maybe the miner is not " *
-        "initialized properly, and $meas is omitted. Please use item_meas/rule_meas " *
-        "to check which measures are available, and setlocalthreshold to add a new " *
-        "local measure, together with its local threshold.")
-end
-
-"""
-    setlocalthreshold(miner::Miner, meas::Function, threshold::Threshold)
-
-Setter for the [`Threshold`](@ref) associated with the function wrapped by some
-[`MeaningfulnessMeasure`](@ref) tailored to work locally (that is, analyzing "the inside"
-of a dataset's instances) in `miner`.
-
-See [`Miner`](@ref), [`MeaningfulnessMeasure`](@ref), [`Threshold`](@ref).
-"""
-setlocalthreshold(miner::Miner, meas::Function, threshold::Threshold) = begin
-    error("TODO: This method is not implemented yet.") # also, test this
+function getlocalthreshold(miner::Miner, meas::Function)::Threshold
+    return findmeasure(miner, meas)[2]
 end
 
 """
@@ -619,30 +712,8 @@ of a specific local-measure across all dataset's instances) in `miner`.
 
 See [`Miner`](@ref), [`MeaningfulnessMeasure`](@ref), [`Threshold`](@ref).
 """
-getglobalthreshold(miner::Miner, meas::Function)::Threshold = begin
-    for (gmeas, gthreshold, _) in vcat(item_meas(miner), rule_meas(miner))
-        if gmeas == meas
-            return gthreshold
-        end
-    end
-
-    error("The provided miner has no global threshold for $meas. Maybe the miner is not " *
-    "initialized properly, and $meas is omitted. Please use item_meas/rule_meas " *
-    "to check which measures are available, and setglobalthreshold to add a new " *
-    "global measure, together with local and global thresholds.")
-end
-
-"""
-    setglobalthreshold(miner::Miner, meas::Function, threshold::Threshold)
-
-Setter for the [`Threshold`](@ref) associated with the function wrapped by some
-[`MeaningfulnessMeasure`](@ref) tailored to work globally (that is, measuring the behavior
-of a specific local-measure across all dataset's instances) in `miner`.
-
-See [`Miner`](@ref), [`MeaningfulnessMeasure`](@ref), [`Threshold`](@ref).
-"""
-setglobalthreshold(miner::Miner, meas::Function, threshold::Threshold) = begin
-    error("TODO: This method is not implemented yet.") # also, test this
+function getglobalthreshold(miner::Miner, meas::Function)::Threshold
+    return findmeasure(miner, meas) |> last
 end
 
 """
@@ -876,15 +947,14 @@ Then, return a generator of [`ARule`](@ref)s.
 See also [`ARule`](@ref), [`Itemset`](@ref).
 """
 function apply(miner::Miner, X::AbstractDataset; forcemining::Bool=false, kwargs...)
-
-    if !info(miner, :istrained)
-        info!(miner, :istrained, true)
-    elseif !forcemining
+    istrained = info(miner, :istrained)
+    if istrained && !forcemining
         @warn "Miner has already been trained. To force mining, set `forcemining=true`."
         return Nothing
     end
 
     miner.algorithm(miner, X; kwargs...)
+    info!(miner, :istrained, true)
 
     return arules_generator(freqitems(miner), miner)
 end
@@ -901,8 +971,8 @@ function Base.show(io::IO, miner::Miner)
     println(io, "$(dataset(miner))")
 
     println(io, "Alphabet: $(items(miner))\n")
-    println(io, "Items measures: $(item_meas(miner))")
-    println(io, "Rules measures: $(rule_meas(miner))\n")
+    println(io, "Items measures: $(itemsetmeasures(miner))")
+    println(io, "Rules measures: $(rulemeasures(miner))\n")
 
     println(io, "# of frequent patterns mined: $(length(freqitems(miner)))")
     println(io, "# of association rules mined: $(length(arules(miner)))\n")

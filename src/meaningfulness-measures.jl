@@ -45,7 +45,7 @@ function lsupport(
     if !isnothing(miner)
         localmemo!(miner, memokey, ans)
 
-        # IDEA: call two methods here. One is built-in in Solo, and checks every equippable
+        # IDEA: call two methods here. One is built-in in Sole, and checks every equippable
         # attribute that `miner` can have in its info named tuple.
         # The other dispatch is empty, but customizable by the user to check his things.
         if haspowerup(miner, :contributors)
@@ -88,7 +88,9 @@ function gsupport(
     # leverage memoization if a miner is provided, and it already computed the measure
     if !isnothing(miner)
         memoized = globalmemo(miner, memokey)
-        if !isnothing(memoized) return memoized end
+        if !isnothing(memoized)
+            return memoized
+        end
     end
 
     # compute global measure, then divide it by the dataset total number of instances
@@ -134,7 +136,9 @@ function lconfidence(
     # leverage memoization if a miner is provided, and it already computed the measure
     if !isnothing(miner)
         memoized = localmemo(miner, memokey)
-        if !isnothing(memoized) return memoized end
+        if !isnothing(memoized)
+            return memoized
+        end
     end
 
     ans = lsupport(convert(Itemset, rule), logi_instance; miner=miner) /
@@ -179,14 +183,15 @@ function gconfidence(
     # leverage memoization if a miner is provided, and it already computed the measure
     if !isnothing(miner)
         memoized = globalmemo(miner, memokey)
-        if !isnothing(memoized) return memoized end
+        if !isnothing(memoized)
+            return memoized
+        end
     end
 
-    _antecedent = antecedent(rule)
-    _consequent = consequent(rule)
+    ans = sum([lconfidence(rule, getinstance(X, i_instance); miner=miner) >= threshold
+        for i_instance in 1:ninstances(X)]) / ninstances(X)
 
-    ans = gsupport(union(_antecedent, _consequent), X, threshold; miner=miner) /
-        gsupport(_antecedent, X, threshold; miner=miner)
+    println("$(rule) - global confidence is: $(ans)")
 
     if !isnothing(miner)
         globalmemo!(miner, memokey, ans)

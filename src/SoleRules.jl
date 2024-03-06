@@ -1,10 +1,15 @@
 module SoleRules
 # Currently, the only topic covered by SoleRules is Association Rules.
 
-import Base.count, Base.push!, Base.show
+import Base.count, Base.push!
+import Base.size, Base.getindex, Base.IndexStyle, Base.setindex!, Base.iterate
+import Base.length, Base.similar, Base.show, Base.union, Base.hash
+import Base.firstindex, Base.lastindex
+
 using Combinatorics
 using DataStructures
 using IterTools
+using Lazy: @forward
 using Parameters
 using Random
 using ResumableFunctions
@@ -25,7 +30,7 @@ using StatsBase
 include("core.jl")
 
 export Item
-export Itemset, toformula
+export Itemset, toformula, slice
 
 export Threshold
 export WorldMask, EnhancedItemset, ConditionalPatternBase
@@ -42,17 +47,17 @@ export Info, Powerup
 
 export Miner
 export dataset, algorithm
-export item_meas, rule_meas
+export itemsetmeasures, additemmeas
+export rulemeasures, addrulemeas
 export freqitems, arules
-export getlocalthreshold, setlocalthreshold
-export getglobalthreshold, setglobalthreshold
+export measures, findmeasure
+export getlocalthreshold, getglobalthreshold
 export localmemo, localmemo!
 export globalmemo, globalmemo!
+
 export powerups, powerups!, haspowerup, initpowerups
 export info, info!, hasinfo
-
 export contributors, contributors!
-
 export mine, apply, generaterules
 
 include("meaningfulness-measures.jl")

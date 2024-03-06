@@ -44,20 +44,20 @@ manual_items = Vector{Item}([
 
 # set meaningfulness measures, for both mining frequent itemsets and establish which
 # combinations of them are association rules.
-_item_meas = [(gsupport, 0.1, 0.1)]
-_rule_meas = [(gconfidence, 0.2, 0.2)]
+_itemsetmeasures = [(gsupport, 0.1, 0.1)]
+_rulemeasures = [(gconfidence, 0.2, 0.2)]
 
 ############################################################################################
 #### Benchmarking ##########################################################################
 ############################################################################################
 
 # Apriori runtime with no optimizations and leveraging dataset memoization
-apriori_miner = Miner(X1, apriori(), manual_items, _item_meas, _rule_meas)
+apriori_miner = Miner(X1, apriori(), manual_items, _itemsetmeasures, _rulemeasures)
 runtimes(apriori_miner, X1, "Apriori")
 
 ############################################################################################
 
 # FPGrowth runtime with no optimizations and leveraging dataset Memoization
 fpgrowth_miner = @equip_contributors Miner(
-    X2, fpgrowth(), manual_items, _item_meas, _rule_meas)
+    X2, fpgrowth(), manual_items, _itemsetmeasures, _rulemeasures)
 runtimes(fpgrowth_miner, X2, "FPGrowth")

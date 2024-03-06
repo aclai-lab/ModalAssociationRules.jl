@@ -303,15 +303,9 @@ Return all the unique [`Item`](@ref)s appearing in `fptree`.
 See also [`FPTree`](@ref), [`Item`](@ref), [`Itemset`](@ref).
 """
 function retrieveall(fptree::FPTree)::Itemset
-
     # internal function just to avoid repeating the final `unique`
     function _retrieve(fptree::FPTree)
         retrieved = Itemset([_retrieve(child) for child in children(fptree)])
-
-        if !isempty(retrieved)
-            retrieved = reduce(vcat, retrieved |> unique)
-        end
-
         _content = content(fptree)
 
         if !isnothing(_content)
@@ -383,7 +377,11 @@ struct HeaderTable
         new(Item[], Dict{Item,Union{Nothing,FPTree}}())
     end
 
-    function HeaderTable(items::Vector{<:Item}, fptseed::FPTree)
+    function HeaderTable(
+        items::Vector{<:Item},
+        fptseed::FPTree;
+        miner::Union{Nothing,Miner}=nothing
+    )
         @assert content(fptseed) === nothing "`fptseed` is not a seeder " *
         "FPTree, that is, its root content is $(content(fptseed)) instead of " *
         "nothing."
@@ -404,11 +402,19 @@ struct HeaderTable
             child = children(childfpt)
         end
 
+        if !isnothing(miner)
+            checksanity!(htable, miner)
+        end
+
         return htable
     end
 
-    function HeaderTable(itemsets::Vector{<:Itemset}, fptseed::FPTree)
-        return HeaderTable(convert.(Item, itemsets), fptseed)
+    function HeaderTable(
+        itemsets::Vector{<:Itemset},
+        fptseed::FPTree;
+        miner::Union{Nothing,Miner}=nothing
+    )
+        return HeaderTable(convert.(Item, itemsets), fptseed; miner=miner)
     end
 end
 
@@ -564,6 +570,8 @@ function Base.push!(
     if length(itemset) == 0
         return
     end
+
+    sort!(items(itemset), by=t -> globalmemo(miner, (:gsupport, Itemset(t))), rev=true)
 
     # retrieve the item to grow the tree;
     # to grow a find pattern tree in the modal case scenario, each item has to be associated
@@ -767,22 +775,18 @@ function patternbase(
 end
 
 """
-    function projection(
-        pbase::ConditionalPatternBase;
-        miner::Union{Nothing,Miner}=nothing
-    )
+    function projection(pbase::ConditionalPatternBase, miner::Miner)
 
 Return respectively a [`FPTree`](@ref) and a [`HeaderTable`](@ref) starting from `pbase`.
-It is reccomended to also provide a [`Miner`](@ref) to guarantee the generated
-header table internal state is OK, that is, its items are sorted decreasingly by
-[`gsupport`](@ref).
+A [`Miner`](@ref) must be provided to guarantee the generated header table internal state
+is OK, that is, its items are sorted decreasingly by [`gsupport`](@ref).
 
 See also [`ConditionalPatternBase`](@ref), [`FPTree`](@ref), [`gsupport`](@ref),
-[`HeaderTable`](@ref).
+[`HeaderTable`](@ref), [`Miner`](@ref).
 """
 function projection(
-    pbase::ConditionalPatternBase;
-    miner::Union{Nothing,Miner}=nothing
+    pbase::ConditionalPatternBase,
+    miner::Miner
 )
     fptree = FPTree()
     htable = HeaderTable()
@@ -812,10 +816,9 @@ See also [`Miner`](@ref), [`FPTree`](@ref), [`HeaderTable`](@ref),
 [`SoleBase.AbstractDataset`](@ref)
 """
 function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothing
-
     # initialization logic
-    @assert SoleRules.gsupport in reduce(vcat, item_meas(miner)) "FP-Growth requires " *
-        "global support (gsupport) as meaningfulness measure in order to " *
+    @assert SoleRules.gsupport in reduce(vcat, itemsetmeasures(miner)) "FP-Growth " *
+        "requires global support (gsupport) as meaningfulness measure in order to " *
         "work. Please, add a tuple (gsupport, local support threshold, " *
         "global support threshold) to miner.item_constrained_measures field.\n" *
         "Local support is needed too, but it is already considered in the global case."
@@ -829,7 +832,7 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
     # get the frequent itemsets from the first candidates set;
     # note that meaningfulness measure should leverage memoization when miner is given!
     frequents = [candidate
-        for (gmeas_algo, lthreshold, gthreshold) in item_meas(miner)
+        for (gmeas_algo, lthreshold, gthreshold) in itemsetmeasures(miner)
         for candidate in Itemset.(items(miner))
         if gmeas_algo(candidate, X, lthreshold, miner=miner) >= gthreshold
     ] |> unique
@@ -843,29 +846,31 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
 
     # associate each instance in the dataset with its frequent itemsets
     _ninstances = ninstances(X)
-    ninstance_toitemsets_sorted = [Itemset() for _ in 1:_ninstances] # Vector{Itemset}
+    ninstance_to_sorteditemset = [Itemset() for _ in 1:_ninstances] # Vector{Itemset}
 
     # for each instance, sort its frequent itemsets by global support
     for i in 1:_ninstances
-        ninstance_toitemsets_sorted[i] = reduce(vcat, sort([
+        _sorteditemsets = sort([
                 itemset
                 for itemset in frequents
                 if localmemo(miner, (:lsupport, itemset, i)) > lsupport_threshold
             ], by=t -> globalmemo(miner, (:gsupport, t)), rev=true)
-        )
+
+        ninstance_to_sorteditemset[i] = length(_sorteditemsets) > 0 ?
+            union(_sorteditemsets) :        # single-item Itemsets are merged together
+            Itemset()                       # i-th instance has no itemsets
     end
 
     verbose && printstyled("Initializing seed FPTree and Header table...\n", color=:green)
 
     # create an initial fptree
     fptree = FPTree()
-
     # create and fill an header table, necessary to traverse FPTrees horizontally
-    htable = HeaderTable(frequents, fptree)
+    htable = HeaderTable(frequents, fptree; miner=miner)
 
     verbose && printstyled("Growing seed FPTree...\n", color=:green)
 
-    SoleRules.push!(fptree, ninstance_toitemsets_sorted, _ninstances, miner;
+    SoleRules.push!(fptree, ninstance_to_sorteditemset, _ninstances, miner;
         htable=htable)
 
     verbose && printstyled("Mining longer frequent itemsets...\n", color=:green)
@@ -875,19 +880,19 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
         fptree::FPTree,
         htable::HeaderTable,
         miner::Miner,
-        leftout_items::Itemset
+        leftout_itemset::Itemset
     )
         # if `fptree` contains only one path (hence, it can be considered a linked list),
         # then combine all the Itemsets collected from previous step with the remained ones.
         if islist(fptree)
-            survivor_items = retrieveall(fptree)
+            survivor_itemset = retrieveall(fptree)
 
             verbose &&
-                printstyled("Merging $(leftout_items |> length) leftout items with " *
-                "a single-list FPTree of length $(survivor_items |> length)\n", color=:blue)
+                printstyled("Merging $(leftout_itemset |> length) leftout items with a " *
+                "single-list FPTree of length $(survivor_itemset |> length)\n", color=:blue)
 
-            # we know that all the combinations of `survivor_items` are frequent with
-            # `leftout_items`, but we need to save (inside miner) the exact local support
+            # we know that all the combinations of items in `survivor_itemset` are frequent
+            # with `leftout_itemset`, but we need to save (inside miner) the exact local
             # and global support for each new itemset: those measures are computed below.
             _nworlds = SoleLogics.nworlds(dataset(miner), 1)
             _ninstances = dataset(miner) |> ninstances
@@ -896,7 +901,7 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
                 getglobalthreshold(miner, gsupport) * _ninstances
             ))
 
-            for combo in combine(survivor_items, leftout_items) |> collect
+            for combo in combine(items(survivor_itemset), items(leftout_itemset))
                 occurrences = findmin([
                     sum([
                         contributors(:lsupport, itemset, i, miner)
@@ -913,11 +918,13 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
                 globalmemo!(miner, (:gsupport, combo),
                     count(i -> i > gsupp_integer_threshold, occurrences) / _nworlds)
 
-                push!(freqitems(miner), combo)
+                # single-itemset case is already handled by the first pass over the dataset
+                if length(combo) > 1
+                    push!(freqitems(miner), combo)
+                end
             end
         else
             for item in reverse(htable)
-
                 # a (conditional) pattern base is a vector of "enhanced" itemsets, that is,
                 # itemsets whose items are paired with a contributors vector.
                 _patternbase = patternbase(item, htable, miner)
@@ -928,13 +935,13 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
                 # rapresented by an FPTree.
                 # Also, the header table associated with the projection is returned.
                 conditional_fptree, conditional_htable =
-                    projection(_patternbase; miner=miner)
+                    projection(_patternbase, miner)
 
                 # if the new fptree is not empty, call this recursively,
                 # considering `item` as a leftout item.
                 if length(children(conditional_fptree)) > 0
                     _fpgrowth_kernel(conditional_fptree, conditional_htable, miner,
-                        vcat(leftout_items, item))
+                        union(leftout_itemset, Itemset(item)))
                 end
             end
         end
