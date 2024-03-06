@@ -112,6 +112,13 @@ function Base.:(==)(itemset1::Itemset, itemset2::Itemset)
     return items(itemset1) == items(itemset2)
 end
 
+function Base.in(itemset1::Itemset, itemset2::Itemset)
+    # naive quadratic search solution is better than the second one (commented)
+    # since itemsets are intended to be fairly short (6/7 conjuncts at most).
+    return all(item -> item in items(itemset2), items(itemset1))
+    # return issubset(Set(itemset1 |> items) in Set(itemset2 |> items))
+end
+
 function Base.show(io::IO, itemset::Itemset)
     print(io, "[" * join([syntaxstring(item) for item in itemset], ", ") * "]")
 end

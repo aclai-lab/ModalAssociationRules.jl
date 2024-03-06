@@ -107,9 +107,10 @@ See also [`ARule`](@ref), [`Miner`](@ref), [`Itemset`](@ref), [`rulemeasures`](@
 )
     for itemset in itemsets
         subsets = powerset(itemset)
+
         for subset in subsets
             _antecedent = subset |> Itemset
-            _consequent = symdiff(itemset, subset) |> Itemset
+            _consequent = symdiff(items(itemset), items(_antecedent)) |> Itemset
 
             if length(_antecedent) == 0 || length(_consequent) == 0
                 continue

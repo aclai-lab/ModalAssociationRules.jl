@@ -377,7 +377,11 @@ struct HeaderTable
         new(Item[], Dict{Item,Union{Nothing,FPTree}}())
     end
 
-    function HeaderTable(items::Vector{<:Item}, fptseed::FPTree)
+    function HeaderTable(
+        items::Vector{<:Item},
+        fptseed::FPTree;
+        miner::Union{Nothing,Miner}=nothing
+    )
         @assert content(fptseed) === nothing "`fptseed` is not a seeder " *
         "FPTree, that is, its root content is $(content(fptseed)) instead of " *
         "nothing."
@@ -398,11 +402,19 @@ struct HeaderTable
             child = children(childfpt)
         end
 
+        if !isnothing(miner)
+            checksanity!(htable, miner)
+        end
+
         return htable
     end
 
-    function HeaderTable(itemsets::Vector{<:Itemset}, fptseed::FPTree)
-        return HeaderTable(convert.(Item, itemsets), fptseed)
+    function HeaderTable(
+        itemsets::Vector{<:Itemset},
+        fptseed::FPTree;
+        miner::Union{Nothing,Miner}=nothing
+    )
+        return HeaderTable(convert.(Item, itemsets), fptseed; miner=miner)
     end
 end
 
@@ -558,6 +570,8 @@ function Base.push!(
     if length(itemset) == 0
         return
     end
+
+    sort!(items(itemset), by=t -> globalmemo(miner, (:gsupport, Itemset(t))), rev=true)
 
     # retrieve the item to grow the tree;
     # to grow a find pattern tree in the modal case scenario, each item has to be associated
@@ -772,7 +786,7 @@ See also [`ConditionalPatternBase`](@ref), [`FPTree`](@ref), [`gsupport`](@ref),
 """
 function projection(
     pbase::ConditionalPatternBase,
-    miner::Union{Miner}
+    miner::Miner
 )
     fptree = FPTree()
     htable = HeaderTable()
@@ -852,7 +866,7 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
     # create an initial fptree
     fptree = FPTree()
     # create and fill an header table, necessary to traverse FPTrees horizontally
-    htable = HeaderTable(frequents, fptree)
+    htable = HeaderTable(frequents, fptree; miner=miner)
 
     verbose && printstyled("Growing seed FPTree...\n", color=:green)
 
