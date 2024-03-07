@@ -15,8 +15,8 @@ function runtimes(miner::Miner, X::D, algoname::String) where {D<:AbstractDatase
     miner2 = deepcopy(miner)
     miner2.dataset = X2
 
-    runtime_no_optimizations = @elapsed mine(miner)
-    runtime_already_used_dataset = @elapsed mine(miner2)
+    runtime_no_optimizations = @elapsed mine!(miner)
+    runtime_already_used_dataset = @elapsed mine!(miner2)
 
     println("$(algoname) runtime:")
     println("\t no optimizations: ", runtime_no_optimizations)

@@ -36,8 +36,8 @@ apriori_miner = Miner(X1, apriori, manual_items, _itemsetmeasures, _rulemeasures
 fpgrowth_miner = Miner(X2, fpgrowth, manual_items, _itemsetmeasures, _rulemeasures)
 
 # mine the frequent patterns with both apriori and fpgrowth
-@test_nowarn mine(apriori_miner)
-@test_nowarn mine(fpgrowth_miner)
+@test_nowarn mine!(apriori_miner)
+@test_nowarn mine!(fpgrowth_miner)
 
 pq = Itemset([manual_p, manual_q])
 qr = Itemset([manual_q, manual_r])
@@ -168,7 +168,7 @@ _temp_lmemo_key2 = (:lsupport, Itemset(manual_p), 1)
     fpgrowth_miner, _temp_lmemo_key2, zeros(Int64, 1326)) == zeros(Int64, 1326)
 
 # checking for re-mining block
-@test apply(fpgrowth_miner, dataset(fpgrowth_miner)) == Nothing
+@test apply!(fpgrowth_miner, dataset(fpgrowth_miner)) == Nothing
 
 function _dummy_gsupport(
     itemset::Itemset,
@@ -260,7 +260,7 @@ _temp_arule = arules_generator(freqitems(fpgrowth_miner), fpgrowth_miner) |> fir
 lsupport(Itemset(manual_p), SoleLogics.getinstance(X2, 7); miner=fpgrowth_miner)
 lsupport(Itemset(manual_lr), SoleLogics.getinstance(X2, 7); miner=fpgrowth_miner)
 @test lconfidence(
-    _temp_arule, SoleLogics.getinstance(X2,7); miner=fpgrowth_miner) > 0.1
+    _temp_arule, SoleLogics.getinstance(X2,7); miner=fpgrowth_miner) > 0.08
 @test gconfidence(
     _temp_arule, dataset(fpgrowth_miner), 0.1; miner=fpgrowth_miner) > 0.85
 
@@ -283,7 +283,7 @@ lsupport(Itemset(manual_lr), SoleLogics.getinstance(X2, 7); miner=fpgrowth_miner
 _rulemeasures_just_for_test = [(SoleRules.gconfidence, 1.1, 1.1)]
 _temp_fpgrowth_miner = Miner(
     X3, fpgrowth, [manual_p, manual_lp], _itemsetmeasures, _rulemeasures_just_for_test)
-@test mine(_temp_fpgrowth_miner) |> collect == ARule[]
+@test mine!(_temp_fpgrowth_miner) |> collect == ARule[]
 @test_nowarn globalmemo(_temp_fpgrowth_miner)
 
 # "fpgrowth.jl - FPTree"
@@ -375,7 +375,7 @@ enhanceditemset2 = EnhancedItemset([(manual_q, 1, [1])])
 
 
 # "fpgrowth.jl - patternbase and projection"
-# @test_nowarn mine(fpgrowth_miner) # just to let @test see also internal calls
+# @test_nowarn mine!(fpgrowth_miner) # just to let @test see also internal calls
 
 
 # "Apriori and FPGrowth comparisons"

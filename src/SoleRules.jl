@@ -95,6 +95,5 @@ export equicut, quantilecut
 export make_conditions
 
 include("ideas.jl")
-export mirages!
 
 end

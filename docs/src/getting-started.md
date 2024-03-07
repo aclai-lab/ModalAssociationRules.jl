@@ -124,6 +124,6 @@ initpowerups(::Function, ::AbstractDataset)
 
 To conclude this section, this is how to start mining.
 ```@docs
-mine(miner::Miner)
-apply(miner::Miner, X::AbstractDataset)
+mine!(miner::Miner)
+apply!(miner::Miner, X::AbstractDataset)
 ```

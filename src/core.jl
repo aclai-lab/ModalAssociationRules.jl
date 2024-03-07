@@ -502,7 +502,7 @@ julia> miner = Miner(X, fpgrowth(), manual_alphabet,
 # Consider the dataset and learning algorithm wrapped by `miner` (resp., `X` and `fpgrowth`)
 # Mine the frequent itemsets, that is, those for which item measures are large enough.
 # Then iterate the generator returned by [`mine`](@ref) to enumerate association rules.
-julia> for arule in SoleRules.mine(miner)
+julia> for arule in SoleRules.mine!(miner)
     println(miner)
 end
 ```
@@ -927,18 +927,18 @@ function contributors!(miner::Miner, key::LmeasMemoKey, mask::WorldMask)
 end
 
 """
-    mine(miner::Miner)
+    mine!(miner::Miner)
 
-Synonym for `SoleRules.apply(miner, dataset(miner))`.
+Synonym for `SoleRules.apply!(miner, dataset(miner))`.
 
 See also [`ARule`](@ref), [`Itemset`](@ref), [`SoleRules.apply`](@ref).
 """
-function mine(miner::Miner; kwargs...)
-    return apply(miner, dataset(miner); kwargs...)
+function mine!(miner::Miner; kwargs...)
+    return apply!(miner, dataset(miner); kwargs...)
 end
 
 """
-    apply(miner::Miner, X::AbstractDataset)
+    apply!(miner::Miner, X::AbstractDataset)
 
 Extract association rules in the dataset referenced by `miner`, saving the interesting
 [`Itemset`](@ref)s inside `miner`.
@@ -946,7 +946,7 @@ Then, return a generator of [`ARule`](@ref)s.
 
 See also [`ARule`](@ref), [`Itemset`](@ref).
 """
-function apply(miner::Miner, X::AbstractDataset; forcemining::Bool=false, kwargs...)
+function apply!(miner::Miner, X::AbstractDataset; forcemining::Bool=false, kwargs...)
     istrained = info(miner, :istrained)
     if istrained && !forcemining
         @warn "Miner has already been trained. To force mining, set `forcemining=true`."
