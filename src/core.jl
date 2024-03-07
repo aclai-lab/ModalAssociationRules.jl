@@ -527,7 +527,7 @@ struct Miner{
     item_constrained_measures::Vector{IM}
     rule_constrained_measures::Vector{RM}
 
-    freqitems::Vector{Itemset}   # collected frequent itemsets
+    freqitems::Vector{Itemset}      # collected frequent itemsets
     arules::Vector{ARule}           # collected association rules
 
     lmemo::LmeasMemo                # local memoization structure
@@ -682,8 +682,8 @@ function findmeasure(
         if isa(e, ArgumentError)
             error("The provided miner has no measure $meas. " *
             "Maybe the miner is not initialized properly, and $meas is omitted. " *
-            "Please use itemsetmeasures/rulemeasures to check which measures are available, " *
-            "and miner's setters to add a new measures and their thresholds.")
+            "Please use itemsetmeasures/rulemeasures to check which measures are , " *
+            "available and miner's setters to add a new measures and their thresholds.")
         else
             rethrow(e)
         end

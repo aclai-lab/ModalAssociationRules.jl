@@ -41,16 +41,13 @@ See also [`EnhancedItemset`](@ref), [`fpgrowth`](@ref), [`gsupport`](@ref), [`It
 """
 mutable struct FPTree
     content::Union{Nothing,Item}        # Item contained in this node (nothing if root)
-
     parent::Union{Nothing,FPTree}       # parent node
     const children::Vector{FPTree}      # children nodes
-
     count::Int64                        # number of equal Items this node represents
 
     # how many times lsupp(content) does overpass
     # the corresponding threshold for each world
     const contributors::WorldMask
-
     link::Union{Nothing,FPTree}         # link to another FPTree root
 
     # empty constructor
@@ -692,7 +689,7 @@ function patternbase(
     htable::HeaderTable,
     miner::Miner
 )::ConditionalPatternBase
-    # think a pattern base as a vector of vector of itemsets (a vector of vector of items);
+    # think a pattern base as a vector of vector of itemsets;
     # the reason why the type is explicited differently here, is that every item must be
     # associated with a specific WorldMask to guarantee correctness.
     _patternbase = ConditionalPatternBase([])
