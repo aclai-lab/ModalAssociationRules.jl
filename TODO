@@ -33,7 +33,6 @@ Main:
     ✔ memoize gsupport and lsupport: infer it by projection WorldMasks @done(24-02-25 16:15)
     ☐ currently, this works only for local and global support. Add a for cycle to also consider user custom item measure.
     ☐ threshold must be considered when memoizing
-    ✔ Vector{<:Item} to Itemset @done(24-03-08 00:15)
 
 Generic:
   ✔ move memoization accountability to Miner @done(24-02-07 23:58)
@@ -56,7 +55,9 @@ Generic:
   ✔ ARuleMiner to Miner @done(24-02-25 16:18)
   ☐ test on iris dataset
   ✔ change mine to mine! and apply to apply! @done(24-03-08 00:16)
-  ☐ make an Itemset struct instead of Vector{Item}
+  ✔ make an Itemset struct instead of Vector{Item} @done(24-03-08 00:25)
+  ☐ use setup_lmeasmemo and setup_gmeasmemo decorators in idea.jl, to define meaningfulness measures in a more compact and robust way
+
 
 Optimizations:
   ☐ miner.items should be treated as a generator
