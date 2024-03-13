@@ -279,6 +279,10 @@ function Base.convert(::Type{Itemset}, arule::ARule)::Itemset
     return Itemset(vcat(antecedent(arule), consequent(arule)))
 end
 
+function Base.show(io::IO, arule::ARule)
+    print(io, "$(antecedent(arule)) => $(consequent(arule))")
+end
+
 """
     const MeaningfulnessMeasure = Tuple{Function, Threshold, Threshold}
 
@@ -338,6 +342,24 @@ See also [`getlocalthreshold`](@ref), [`gsupport`](@ref), [`islocalof`](@ref),
 [`lsupport`](@ref).
 """
 isglobalof(::Function, ::Function)::Bool = false
+
+"""
+    localof(::Function)
+
+Return the local measure associated with the given one.
+
+See also [`islocalof`](@ref), [`isglobalof`](@ref), [`globalof`](@ref).
+"""
+localof(::Function) = nothing
+
+"""
+    globalof(::Function) = nothing
+
+Return the global measure associated with the given one.
+
+See also [`islocalof`](@ref), [`isglobalof`](@ref), [`localof`](@ref).
+"""
+globalof(::Function) = nothing
 
 """
     ARMSubject = Union{ARule,Itemset}
@@ -989,4 +1011,29 @@ function Base.show(io::IO, miner::Miner)
 
     print(io, "Additional infos: $(info(miner) |> keys)\n")
     print(io, "Specialization fields: $(powerups(miner) |> keys)")
+end
+
+"""
+    analyze(arule::ARule, miner::Miner)
+
+Print an [`ARule`](@ref) analysis to the console, including related meaningfulness measures
+values.
+
+See also [`ARule`](@ref), [`Miner`](@ref).
+"""
+function analyze(arule::ARule, miner::Miner)
+    println("$(arule)")
+
+    for measure in rulemeasures(miner)
+        # prepare (global) measure name, and its Symbol casting
+        gmeas = measure[1]
+        gmeassym = gmeas |> Symbol
+
+        # find local measure associated
+        lmeas = localof(gmeas)
+        lmeassym = lmeas |> Symbol
+
+        println("$(gmeassym): $(globalmemo(miner, (gmeassym, arule)))")
+        println("$(lmeassym): $(globalmemo(miner, (lmeassym, arule)))")
+    end
 end
