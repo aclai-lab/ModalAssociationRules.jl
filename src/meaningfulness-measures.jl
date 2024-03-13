@@ -141,8 +141,14 @@ function lconfidence(
         end
     end
 
-    ans = lsupport(convert(Itemset, rule), logi_instance; miner=miner) /
-        lsupport(antecedent(rule), logi_instance; miner=miner)
+    # denominator could be near to zero
+    den = lsupport(antecedent(rule), logi_instance; miner=miner)
+    if (den <= 100*eps())
+        return 0
+    end
+    num = lsupport(convert(Itemset, rule), logi_instance; miner=miner)
+    ans = num / den
+
 
     if !isnothing(miner)
         localmemo!(miner, memokey, ans)
@@ -191,8 +197,13 @@ function gconfidence(
     _antecedent = antecedent(rule)
     _consequent = consequent(rule)
 
-    ans = gsupport(union(_antecedent, _consequent), X, threshold; miner=miner) /
-        gsupport(_consequent, X, threshold; miner=miner)
+    # denominator could be near to zero
+    den = gsupport(_consequent, X, threshold; miner=miner)
+    if (den <= 100*eps())
+        return 0
+    end
+    num = gsupport(union(_antecedent, _consequent), X, threshold; miner=miner)
+    ans = num / den
 
     if !isnothing(miner)
         globalmemo!(miner, memokey, ans)
