@@ -148,7 +148,7 @@ end
 _association_rules_test1(apriori_miner)
 
 _temp_lmemo_key2 = (:lsupport, Itemset(manual_p), 1)
-@test localmemo(apriori_miner) |> length == 13320
+@test localmemo(apriori_miner) |> length == 11160
 @test localmemo(apriori_miner)[(:lsupport, pq, 1)] == 0.0
 
 @test info(apriori_miner) isa Info

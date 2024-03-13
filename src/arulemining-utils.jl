@@ -103,7 +103,7 @@ See also [`ARule`](@ref), [`Miner`](@ref), [`Itemset`](@ref), [`rulemeasures`](@
 """
 @resumable function arules_generator(
     itemsets::Vector{Itemset},
-    miner::Miner
+    miner::Miner # since this is a resumable function, kwargs... should not work
 )
     for itemset in itemsets
         subsets = powerset(itemset)
@@ -112,7 +112,7 @@ See also [`ARule`](@ref), [`Miner`](@ref), [`Itemset`](@ref), [`rulemeasures`](@
             _antecedent = subset |> Itemset
             _consequent = symdiff(items(itemset), items(_antecedent)) |> Itemset
 
-            if length(_antecedent) == 0 || length(_consequent) == 0
+            if length(_antecedent) < 1 || length(_consequent) != 1
                 continue
             end
 

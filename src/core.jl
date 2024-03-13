@@ -30,10 +30,9 @@ end
 
 Collection of *unique* [`Item`](@ref)s.
 
-Given a [`MeaningfulnessMeasure`](@ref) `meas` and a threshold to be overpassed, `t`,
+Given a [`MeaningfulnessMeasure`](@ref) `meas` and a threshold to be overpassed `t`,
 then an itemset `itemset` is said to be meaningful with respect to `meas` if and only if
 `meas(itemset) > t`.
-Alternatively to meaningful, it is said to be *frequent*.
 
 Generally speaking, meaningfulness (or interestingness) of an itemset is directly
 correlated to its frequency in the data: intuitively, when a pattern is recurrent in data,
@@ -308,7 +307,6 @@ See also [`gconfidence`](@ref), [`gsupport`](@ref), [`lconfidence`](@ref),
 [`lsupport`](@ref).
 """
 const MeaningfulnessMeasure = Tuple{Function,Threshold,Threshold}
-
 
 """
     islocalof(::Function, ::Function)::Bool
@@ -959,9 +957,16 @@ function apply!(miner::Miner, X::AbstractDataset; forcemining::Bool=false, kwarg
     return arules_generator(freqitems(miner), miner)
 end
 
-function generaterules(miner::Miner; kwargs...)
+"""
+    generaterules(miner::Miner; kwargs...)
+
+Return a generator of [`ARule`](@ref)s, given an already trained [`Miner`](@ref).
+
+See also [`ARule`](@ref), [`Miner`](@ref).
+"""
+function generaterules(miner::Miner)
     if !info(miner, :istrained)
-        error("Miner should be trained before generating rules. Please, invoke `mine`.")
+        error("Miner should be trained before generating rules. Please, invoke `mine!`.")
     end
 
     return arules_generator(freqitems(miner), miner)

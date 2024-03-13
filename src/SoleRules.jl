@@ -58,7 +58,7 @@ export globalmemo, globalmemo!
 export powerups, powerups!, haspowerup, initpowerups
 export info, info!, hasinfo
 export contributors, contributors!
-export mine, apply, generaterules
+export mine!, apply!, generaterules
 
 include("meaningfulness-measures.jl")
 

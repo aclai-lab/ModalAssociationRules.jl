@@ -188,10 +188,11 @@ function gconfidence(
         end
     end
 
-    ans = sum([lconfidence(rule, getinstance(X, i_instance); miner=miner) >= threshold
-        for i_instance in 1:ninstances(X)]) / ninstances(X)
+    _antecedent = antecedent(rule)
+    _consequent = consequent(rule)
 
-    println("$(rule) - global confidence is: $(ans)")
+    ans = gsupport(union(_antecedent, _consequent), X, threshold; miner=miner) /
+        gsupport(_consequent, X, threshold; miner=miner)
 
     if !isnothing(miner)
         globalmemo!(miner, memokey, ans)

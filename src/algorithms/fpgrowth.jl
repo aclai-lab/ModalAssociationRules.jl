@@ -714,6 +714,7 @@ function patternbase(
             # in a path, but we are visiting a branch from bottom upwards.
             prepend!(enhanceditemset, [(content(ancestorfpt), fptcount,
                 map(min, fptcontributors, ancestorfpt |> contributors))])
+
             ancestorfpt = parent(ancestorfpt)
         end
 
@@ -745,8 +746,8 @@ function patternbase(
     ispromoted = Dict{Item,Bool}([])          # winner items, which will compose the pbase
 
     # collection phase
-    for itemset in _patternbase         # for each Vector{Tuple{Item,Int64,WorldMask}}
-        for enhanceditem in itemset     # for each Tuple{Item,Int64,WorldMask} in itemset
+    for piece in _patternbase         # for each Vector{Tuple{Item,Int64,WorldMask}}
+        for enhanceditem in piece     # for each Tuple{Item,Int64,WorldMask} in piece
             item, _count, _contributors = enhanceditem
             globalbouncer[item] += _count
             localbouncer[item] += _contributors
@@ -888,32 +889,16 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
                 printstyled("Merging $(leftout_itemset |> length) leftout items with a " *
                 "single-list FPTree of length $(survivor_itemset |> length)\n", color=:blue)
 
-            # we know that all the combinations of items in `survivor_itemset` are frequent
-            # with `leftout_itemset`, but we need to save (inside miner) the exact local
-            # and global support for each new itemset: those measures are computed below.
-            _nworlds = SoleLogics.nworlds(dataset(miner), 1)
-            _ninstances = dataset(miner) |> ninstances
-
-            gsupp_integer_threshold = convert(Int64, floor(
-                getglobalthreshold(miner, gsupport) * _ninstances
-            ))
-
             for combo in combine(items(survivor_itemset), items(leftout_itemset))
-                occurrences = findmin([
-                    sum([
-                        contributors(:lsupport, itemset, i, miner)
-                        for i in 1:_ninstances
-                    ])
-                    for itemset in combo
-                ]) |> first
-
-                # updating local supports
-                map(i -> localmemo!(miner, (:lsupport, combo, i),
-                    occurrences[i] / _nworlds), 1:_nworlds)
-
-                # updating global support
-                globalmemo!(miner, (:gsupport, combo),
-                    count(i -> i > gsupp_integer_threshold, occurrences) / _nworlds)
+                # local memo updating
+                # map(i -> localmemo!(miner, (:lsupport, combo, i), 1:_ninstances))
+                # global + local support memo updating
+                gsupport(
+                    combo,
+                    dataset(miner),
+                    getglobalthreshold(miner, gsupport);
+                    miner=miner
+                )
 
                 # single-itemset case is already handled by the first pass over the dataset
                 if length(combo) > 1

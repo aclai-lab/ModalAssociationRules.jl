@@ -1,3 +1,6 @@
+Critical:
+  ☐ something strange happen when computing local and global support of complex patterns, in `fpgrowth` kernel function
+
 Main:
   ✔ define Item, Itemset and its interface @done(24-01-15 16:16)
     # getters, setters, merge method
@@ -56,8 +59,8 @@ Generic:
   ☐ test on iris dataset
   ✔ change mine to mine! and apply to apply! @done(24-03-08 00:16)
   ✔ make an Itemset struct instead of Vector{Item} @done(24-03-08 00:25)
-  ☐ use setup_lmeasmemo and setup_gmeasmemo decorators in idea.jl, to define meaningfulness measures in a more compact and robust way
-
+  ☐ use make_lmeas and make_gmeas decorators in idea.jl, to define meaningfulness measures in a more compact and robust way
+  ☐ move `isless` between `Item`s to SoleLogics
 
 Optimizations:
   ☐ miner.items should be treated as a generator
