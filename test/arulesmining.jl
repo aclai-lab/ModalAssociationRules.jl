@@ -200,7 +200,7 @@ _temp_contributors = Contributors([(:lsupport, pq, 1) => zeros(Int64,42)])
 _temp_apriori_miner = Miner(X1, apriori, manual_items, _itemsetmeasures, _rulemeasures)
 @test_throws ErrorException contributors((:lsupport, pqr, 1), _temp_apriori_miner)
 
-@test_throws ErrorException generaterules(_temp_miner)
+@test_throws ErrorException generaterules!(_temp_miner)
 
 @test_nowarn repr("text/plain", _temp_miner)
 
@@ -384,4 +384,4 @@ fpgrowth_freqs = freqitems(fpgrowth_miner)
 
 @test length(apriori_freqs) == length(fpgrowth_freqs)
 @test all(item -> item in freqitems(apriori_miner), freqitems(fpgrowth_miner))
-@test generaterules(fpgrowth_miner) |> first isa ARule
+@test generaterules!(fpgrowth_miner) |> first isa ARule

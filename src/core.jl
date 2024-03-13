@@ -980,13 +980,13 @@ function apply!(miner::Miner, X::AbstractDataset; forcemining::Bool=false, kwarg
 end
 
 """
-    generaterules(miner::Miner; kwargs...)
+    generaterules!(miner::Miner; kwargs...)
 
 Return a generator of [`ARule`](@ref)s, given an already trained [`Miner`](@ref).
 
 See also [`ARule`](@ref), [`Miner`](@ref).
 """
-function generaterules(miner::Miner)
+function generaterules!(miner::Miner)
     if !info(miner, :istrained)
         error("Miner should be trained before generating rules. Please, invoke `mine!`.")
     end
@@ -1021,8 +1021,8 @@ values.
 
 See also [`ARule`](@ref), [`Miner`](@ref).
 """
-function analyze(arule::ARule, miner::Miner)
-    println("$(arule)")
+function analyze(arule::ARule, miner::Miner; io::IO=stdout)
+    println(io, "$(arule)")
 
     for measure in rulemeasures(miner)
         # prepare (global) measure name, and its Symbol casting
@@ -1033,7 +1033,7 @@ function analyze(arule::ARule, miner::Miner)
         lmeas = localof(gmeas)
         lmeassym = lmeas |> Symbol
 
-        println("$(gmeassym): $(globalmemo(miner, (gmeassym, arule)))")
-        println("$(lmeassym): $(globalmemo(miner, (lmeassym, arule)))")
+        println(io, "$(gmeassym): $(globalmemo(miner, (gmeassym, arule)))")
+        println(io, "$(lmeassym): $(globalmemo(miner, (lmeassym, arule)))")
     end
 end
