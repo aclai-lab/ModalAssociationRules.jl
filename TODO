@@ -80,9 +80,9 @@ Optimizations:
     ✔ prune @done(24-02-08 20:30)
     ✔ arules generation with powerset @done(24-02-08 20:30)
   ✔ contributors-related consts, contributors getter and addcontributors! setter (to implement modal FPTree) @done(24-02-12 02:31)
-  ☐ _prune in fpgrowth must be an utility function, getting gsupp_integer_threshold and lsupp_integer_threshold as arguments
+  ✔ prune! in fpgrowth must be an utility function, getting gsupp_integer_threshold and lsupp_integer_threshold as arguments
   ☐ gsupport and lsupport comparison with a threshold must be an utility function
-  ☐ getter for gsupport and lsupport measure threshold as integer
+  ✔ getter for gsupport and lsupport measure threshold as integer
 
 To SoleModels or SoleData:
   ✔ consider feature when binning @done(24-02-02 15:52)
@@ -167,7 +167,7 @@ MODAL FP-GROWTH - 27-element Vector{Vector{Formula}}:
   ✔ [min[V3] > -3.6, min[V1] > -0.5] @done(24-02-18 04:19)
   ✔ [[L]min[V3] > -3.6, min[V3] > -3.6, min[V1] > -0.5] @done(24-02-18 04:22)
 
-V2
+V2 (after Itemset update) ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ì
 
 MODAL APRIORI
   ✔ [min[V1] > -0.5]

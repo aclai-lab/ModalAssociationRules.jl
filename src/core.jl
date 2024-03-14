@@ -285,10 +285,10 @@ end
 """
     const MeaningfulnessMeasure = Tuple{Function, Threshold, Threshold}
 
-In the classic propositional case scenario where each instance of a dataset is composed of
-just a single world (it is a propositional interpretation), a meaningfulness measure
-is simply a function which measures how many times a property of an [`Itemset`](@ref) or an
-[`ARule`](@ref) is respected across all instances of the dataset.
+In the classic propositional case scenario where each instance of a [`Logiset`](@ref) is
+composed of just a single world (it is a propositional interpretation), a meaningfulness
+measure is simply a function which measures how many times a property of an
+[`Itemset`](@ref) or an [`ARule`](@ref) is respected across all instances of the dataset.
 
 In the context of modal logic, where the instances of a dataset are relational objects,
 every meaningfulness measure must capture two aspects: how much an [`Itemset`](@ref) or an
