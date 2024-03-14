@@ -356,7 +356,7 @@ function Base.show(io::IO, fptree::FPTree; indentation::Int64=0)
 end
 
 """
-    prune!(fptree::FPTree, gsupp_integer_threshold::Int64, lsupp_integer_threshold::Int64)
+    prune!(fptree::FPTree, miner::Miner)
 
 Prune subtrees of `fptree`, if their [`count`](@ref) or [`contributors`](@ref) is not enough
 to overpass the integer threshold associated with [`gsupport`](@ref) or [`lsupport`](@ref).

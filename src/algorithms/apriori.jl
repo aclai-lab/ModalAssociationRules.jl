@@ -1,7 +1,8 @@
 """
     apriori(miner::Miner, X::AbstractDataset; verbose::Bool=true)::Nothing
 
-Apriori algorithm, [as described here](https://ceur-ws.org/Vol-3284/492.pdf).
+Apriori algorithm, [as described here](https://ceur-ws.org/Vol-3284/492.pdf) but generalized
+to also work with modal logic.
 
 See also [`Miner`](@ref), [`SoleBase.AbstractDataset`](@ref).
 """

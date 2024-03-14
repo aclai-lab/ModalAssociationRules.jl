@@ -29,15 +29,15 @@ contributors(fptree::FPTree)
 contributors!(fptree::FPTree, contribution::WorldMask)
 addcontributors!(fptree::FPTree, contribution::WorldMask)
 
+Base.push!(fptree::FPTree, itemset::Itemset, ninstance::Int64, miner::Miner; htable::Union{Nothing,HeaderTable}=nothing)
+
 link(fptree::FPTree)
 link!(from::FPTree, to::FPTree)
 follow(fptree::FPTree)
 
 islist(fptree::FPTree)
 retrieveall(fptree::FPTree)
-
-Base.push!(fptree::FPTree, itemset::Itemset, ninstance::Int64, miner::Miner; htable::Union{Nothing,HeaderTable}=nothing)
-
+prune!(fptree::FPTree, miner::Miner)
 ```
 
 ## HeaderTable
