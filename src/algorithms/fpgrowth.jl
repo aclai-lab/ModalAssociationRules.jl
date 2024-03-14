@@ -882,9 +882,6 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
 
     verbose && printstyled("Mining longer frequent itemsets...\n", color=:green)
 
-    println("INITIAL FPTREE")
-    println(fptree)
-
     # `fpgrowth` recursive logic piece
     function _fpgrowth_kernel(
         fptree::FPTree,

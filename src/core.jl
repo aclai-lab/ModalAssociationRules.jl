@@ -19,8 +19,6 @@ See also [`SoleLogics.check`](@ref), [`gconfidence`](@ref), [`lsupport`](@ref),
 """
 const Item = SoleLogics.Formula
 
-# TODO: type piracy - this should moved in SoleLogics.jl
-# Hash function should be forwarded to Item's value depending on its type (e.g., Atom).
 function Base.isless(a::Item, b::Item)
     isless(hash(a), hash(b))
 end

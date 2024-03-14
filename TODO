@@ -1,5 +1,5 @@
 Critical:
-  ☐ something strange happen when computing local and global support of complex patterns, in `fpgrowth` kernel function
+  ☐ fpgrowth and apriori solutions are identical in iris and natops with short freqitems but fpgrowth falls short when natops is complex.
 
 Main:
   ✔ define Item, Itemset and its interface @done(24-01-15 16:16)
