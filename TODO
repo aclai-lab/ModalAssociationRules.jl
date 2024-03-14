@@ -80,7 +80,10 @@ Optimizations:
     ✔ prune @done(24-02-08 20:30)
     ✔ arules generation with powerset @done(24-02-08 20:30)
   ✔ contributors-related consts, contributors getter and addcontributors! setter (to implement modal FPTree) @done(24-02-12 02:31)
-  
+  ☐ _prune in fpgrowth must be an utility function, getting gsupp_integer_threshold and lsupp_integer_threshold as arguments
+  ☐ gsupport and lsupport comparison with a threshold must be an utility function
+  ☐ getter for gsupport and lsupport measure threshold as integer
+
 To SoleModels or SoleData:
   ✔ consider feature when binning @done(24-02-02 15:52)
   ✔ organize the items generation system @done(24-02-05 23:52)

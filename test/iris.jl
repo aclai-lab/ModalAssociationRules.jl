@@ -28,6 +28,12 @@ _rulemeasures = [(gconfidence, 0.7, 0.7)]
 fpgrowth_miner = Miner(X, fpgrowth, manual_items, _itemsetmeasures, _rulemeasures)
 @test_broken mine!(fpgrowth_miner)
 
+# this can't work, since previous test is broken and mining fails
+# freqitems(fpgrowth_miner)
+# patt = freqitems(fpgrowth_miner)[10]
+# check(patt |> toformula |> tree, X) |> sum
+# fpgrowth_miner.gmemo[(:gsupport, patt)]
+
 X = scalarlogiset(X1; relations = AbstractRelation[], conditions =
     Vector{ScalarMetaCondition}(
         collect(Iterators.flatten([
@@ -38,12 +44,6 @@ X = scalarlogiset(X1; relations = AbstractRelation[], conditions =
         ]))
     )
 )
-
-# this can't work, since previous test is broken and mining fails
-# freqitems(fpgrowth_miner)
-# patt = freqitems(fpgrowth_miner)[10]
-# check(patt |> toformula |> tree, X) |> sum
-# fpgrowth_miner.gmemo[(:gsupport, patt)]
 
 # define starting items
 manual_items = Vector{Item}(Atom.([

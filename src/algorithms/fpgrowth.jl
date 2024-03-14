@@ -32,8 +32,8 @@ true is accumulated.
 
 !!! info
     Did you notice? One FPTree structure contains all the information needed to construct an
-    [`EnhancedItemset`](@ref). This is crucial to generate new FPTree during fpgrowth
-    algorithm, via building [`ConditionalPatternBase`](@ref) iteratively while avoiding
+    [`EnhancedItemset`](@ref). This is crucial to generate new [`FPTree`](@ref)s during
+    fpgrowth algorithm, via building [`ConditionalPatternBase`](@ref) iteratively while avoiding
     visiting the dataset over and over again.
 
 See also [`EnhancedItemset`](@ref), [`fpgrowth`](@ref), [`gsupport`](@ref), [`Item`](@ref),
@@ -348,7 +348,7 @@ end
 function Base.show(io::IO, fptree::FPTree; indentation::Int64=0)
     _children = children(fptree)
     println(io, "-"^indentation * "*"^(length(_children)==0) *
-        "$(fptree |> content |> syntaxstring)")
+        "$(fptree |> content |> syntaxstring) - count: $(count(fptree)), contributors: $(contributors(fptree))")
 
     for child in children(fptree)
         Base.show(io, child; indentation=indentation+1)
@@ -574,6 +574,7 @@ function Base.push!(
     # to grow a find pattern tree in the modal case scenario, each item has to be associated
     # with its global counter (always 1!) and its contributors array (see [`WorldMask`]).
     item = first(itemset)
+
     _contributors = contributors(:lsupport, item, ninstance, miner)
 
     # check if a subtree whose content is the first item in `itemset` already exists
@@ -581,15 +582,18 @@ function Base.push!(
     _children_idx = findfirst(child -> content(child) == item, _children)
     if !isnothing(_children_idx)
         subfptree = _children[_children_idx]
-    # if it does not, then create a new children FPTree, and set this as its parent
+
+        # this has to be done here, and not in the else branch:
+        # in the else, FPTree constructor already retrieve contributors array.
+        addcontributors!(subfptree, _contributors)
     else
+        # if it does not, then create a new children FPTree, and set this as its parent
         subfptree = FPTree(itemset; isroot=false, miner=miner, ninstance=ninstance)
         children!(fptree, subfptree)
     end
 
-    # in either case, update global and local "counters"
+    # in either case, update global "counter"
     addcount!(subfptree, 1)
-    addcontributors!(subfptree, _contributors)
 
     # from the new children FPTree, continue the growing process
     push!(subfptree, itemset[2:end], ninstance, miner; htable=htable)
@@ -612,9 +616,7 @@ function Base.push!(
 )
     # if an header table is provided, and its entry associated with the content of `fptree`
     # is still empty, then perform a linking.
-    _fptree_content = content(fptree)
-
-    if htable !== nothing && _fptree_content !== nothing && link(fptree) === nothing
+    if htable !== nothing && content(fptree) !== nothing && link(fptree) === nothing
         link!(htable, fptree)
     end
 
@@ -632,22 +634,27 @@ function Base.push!(
 
     # check if a subtree whose content is the first item in `itemset` already exists
     _children = children(fptree)
+
     _children_idx = findfirst(child -> content(child) == item, _children)
     if !isnothing(_children_idx)
+        # i don't want to create a new child, just grow an already existing one
         subfptree = _children[_children_idx]
-    # if it does not, then create a new children FPTree, and set this as its parent
+        addcount!(subfptree, _count)
+
+        # here it is wrong to cumulate contributors; instead, we keep the minimum pairwise.
+        # After the initial "apriori like" phase of fpgrowth, and the construction of the
+        # first FPTree, the information about the local support of each item is always
+        # decreasing as the itemsets in which they live grows longer and longer.
+        contributors!(subfptree, map(min, contributors(subfptree), _contributors))
+
+        push!(subfptree, enhanceditemset[2:end], miner; htable=htable)
     else
-        subfptree = FPTree(enhanceditemset) # IDEA: see IDEA below
+        # here i want to create a new children FPTree, and set this as its parent;
+        # note that, here, i don't want to update count and contributors since i am already
+        # copying them from the enhanced itemset.
+        subfptree = FPTree(enhanceditemset)
         children!(fptree, subfptree)
     end
-
-    addcount!(subfptree, _count)
-    addcontributors!(subfptree, _contributors)
-
-    # IDEA: this brings up a useless overhead, in the case of IDEA up above;
-    # when a FPTree is created from an EnhancedItemset, the header table should already
-    # do its linkings. Change FPTree(enhanceditemset) to a specific builder method.
-    push!(subfptree, enhanceditemset[2:end], miner; htable=htable)
 end
 
 Base.push!(
@@ -699,16 +706,17 @@ function patternbase(
     # position, is the minimum between the value in reference's mask and the new node one.
     fptree = link(htable, item)
     fptcount = count(fptree)
-
-    # just the contributors length; new variable to avoid calling this multiple times later
-    _fptcontributors_length = length(contributors(fptree))
+    fptcontributors = contributors(fptree)
 
     while !isnothing(fptree)
-        enhanceditemset = EnhancedItemset([])
-        ancestorfpt = parent(fptree)
+        fptcount = count(fptree)
         fptcontributors = contributors(fptree)
 
-        # IDEA: `content(ancestorfpt)` is repeated two times while one variable is enough
+        enhanceditemset = EnhancedItemset([])
+        ancestorfpt = parent(fptree)
+
+        # look at ancestors, and get collect them keeping count and contributors of
+        # the leaf node from which we started this vertical visit.
         while !isnothing(content(ancestorfpt))
             # prepend! instead of push! because we must keep the top-down order of items
             # in a path, but we are visiting a branch from bottom upwards.
@@ -726,48 +734,9 @@ function patternbase(
             by=t -> globalmemo(miner, (:gsupport, Itemset([t |> first]) )), rev=true)
 
         push!(_patternbase, enhanceditemset)
+
         fptree = link(fptree)
     end
-
-    # needed to filter out new unfrequent items in the pattern base
-    lsupp_integer_threshold = convert(Int64, floor(
-        getlocalthreshold(miner, lsupport) * _fptcontributors_length
-    ))
-    gsupp_integer_threshold = convert(Int64, floor(
-        getglobalthreshold(miner, gsupport) * ninstances(dataset(miner))
-    ))
-
-    # filter out unfrequent itemsets from a pattern base
-    # IDEA: allocating two dictionaries here, instead of a single Dict with `Pair` values,
-    # is a waste. Is there a way to obtain the same effect using no immutable structures?
-    globalbouncer = DefaultDict{Item,Int64}(0)   # record of respected global thresholds
-    localbouncer = DefaultDict{Item,WorldMask}(  # record of respected local thresholds
-        ones(Int64, _fptcontributors_length))
-    ispromoted = Dict{Item,Bool}([])          # winner items, which will compose the pbase
-
-    # collection phase
-    for piece in _patternbase         # for each Vector{Tuple{Item,Int64,WorldMask}}
-        for enhanceditem in piece     # for each Tuple{Item,Int64,WorldMask} in piece
-            item, _count, _contributors = enhanceditem
-            globalbouncer[item] += _count
-            localbouncer[item] += _contributors
-        end
-    end
-
-    # now that dictionaries are filled, establish which are promoted and apply changes
-    # in the filtering phase.
-    for item in keys(globalbouncer)
-        if globalbouncer[item] < gsupp_integer_threshold ||
-            Base.count(x ->
-               x > gsupp_integer_threshold, localbouncer[item]) < lsupp_integer_threshold
-            ispromoted[item] = false
-        else
-            ispromoted[item] = true
-        end
-    end
-
-    # filtering phase
-    _patternbase = map(itemset -> filter!(t -> ispromoted[first(t)], itemset), _patternbase)
 
     return _patternbase
 end
@@ -795,6 +764,29 @@ function projection(
     else
         @warn "Mining structure not provided. Correctness is not guaranteed."
     end
+
+    # TODO: this could be an entire utility function
+    function _prune!(
+        fptree::FPTree,
+        gsupp_integer_threshold::Int64,
+        lsupp_integer_threshold::Int64
+    )
+        # TODO: write an utility method
+        filter!(child -> count(child) >= gsupp_integer_threshold, children(fptree))
+
+        for child in children(fptree)
+            _prune!(child, gsupp_integer_threshold, lsupp_integer_threshold)
+        end
+    end
+
+    lsupp_integer_threshold = convert(Int64, floor(
+        getlocalthreshold(miner, lsupport) * 150 # _fptcontributors_length
+    ))
+    gsupp_integer_threshold = convert(Int64, floor(
+        getglobalthreshold(miner, gsupport) * ninstances(dataset(miner))
+    ))
+
+    _prune!(fptree, gsupp_integer_threshold, lsupp_integer_threshold)
 
     return fptree, htable
 end
@@ -905,6 +897,7 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
                     push!(freqitems(miner), combo)
                 end
             end
+
         else
             for item in reverse(htable)
                 # a (conditional) pattern base is a vector of "enhanced" itemsets, that is,

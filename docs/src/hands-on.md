@@ -8,12 +8,10 @@ Pages = ["hands-on.md"]
 
 # [Hands-on](@id hands-on)
 
-## A little recap...
-
-Write here a little lesson here, maybe with a jupyter notebook like @giopaglia did.
+## A real case usage scenario
+Write here a little lesson, maybe with a jupyter notebook like @giopaglia did.
 
 ## Implementing a new meaningfulness measure
-
 Local and global lift.
 
 ## Writing a new mining algorithm
