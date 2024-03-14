@@ -88,8 +88,8 @@ mutable struct FPTree
     function FPTree(
         itemset::Itemset,
         ::Val{false};
-        ninstance::Union{Nothing,Int64},
-        miner::Union{Nothing,Miner}=nothing
+        miner::Union{Nothing,Miner}=nothing,
+        ninstance::Union{Nothing,Int64}=nothing
     )
         item = itemset[1]
 
@@ -348,7 +348,8 @@ end
 function Base.show(io::IO, fptree::FPTree; indentation::Int64=0)
     _children = children(fptree)
     println(io, "-"^indentation * "*"^(length(_children)==0) *
-        "$(fptree |> content |> syntaxstring) - count: $(count(fptree)), contributors: $(contributors(fptree))")
+        "$(fptree |> content |> syntaxstring) - count: $(count(fptree)), " *
+        "contributors: $(contributors(fptree))")
 
     for child in children(fptree)
         Base.show(io, child; indentation=indentation+1)
@@ -553,7 +554,7 @@ function Base.push!(
     itemset::Itemset,
     ninstance::Int64,
     miner::Miner;
-    htable::Union{Nothing,HeaderTable}=nothing,
+    htable::Union{Nothing,HeaderTable}=nothing
 )
     # if an header table is provided, and its entry associated with the content of `fptree`
     # is still empty, then perform a linking.
@@ -581,22 +582,18 @@ function Base.push!(
     _children = children(fptree)
     _children_idx = findfirst(child -> content(child) == item, _children)
     if !isnothing(_children_idx)
+        # a child containing item already exist: grow deeper in this direction
         subfptree = _children[_children_idx]
-
-        # this has to be done here, and not in the else branch:
-        # in the else, FPTree constructor already retrieve contributors array.
+        addcount!(subfptree, 1)
         addcontributors!(subfptree, _contributors)
+        push!(subfptree, itemset[2:end], ninstance, miner; htable=htable)
     else
         # if it does not, then create a new children FPTree, and set this as its parent
         subfptree = FPTree(itemset; isroot=false, miner=miner, ninstance=ninstance)
         children!(fptree, subfptree)
+        addcount!(subfptree, 1)
+        addcontributors!(subfptree, _contributors)
     end
-
-    # in either case, update global "counter"
-    addcount!(subfptree, 1)
-
-    # from the new children FPTree, continue the growing process
-    push!(subfptree, itemset[2:end], ninstance, miner; htable=htable)
 end
 
 Base.push!(
@@ -604,9 +601,10 @@ Base.push!(
     itemsets::Vector{Itemset},
     ninstances::Int64,
     miner::Miner;
-    htable::Union{Nothing,HeaderTable}=nothing
-) = map(ninstance ->
-    push!(fptree, itemsets[ninstance], ninstance, miner; htable=htable), 1:ninstances)
+    htable::Union{Nothing,HeaderTable}=nothing,
+    kwargs...
+) = map(ninstance -> push!(
+    fptree, itemsets[ninstance], ninstance, miner; htable=htable, kwargs...), 1:ninstances)
 
 function Base.push!(
     fptree::FPTree,
@@ -705,12 +703,13 @@ function patternbase(
     # for each reference, collect all the ancestors keeping a WorldMask which, at each
     # position, is the minimum between the value in reference's mask and the new node one.
     fptree = link(htable, item)
-    fptcount = count(fptree)
-    fptcontributors = contributors(fptree)
+    cumulated_count = 0
 
     while !isnothing(fptree)
         fptcount = count(fptree)
         fptcontributors = contributors(fptree)
+
+        cumulated_count += fptcount
 
         enhanceditemset = EnhancedItemset([])
         ancestorfpt = parent(fptree)
@@ -860,8 +859,7 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
 
     verbose && printstyled("Growing seed FPTree...\n", color=:green)
 
-    SoleRules.push!(fptree, ninstance_to_sorteditemset, _ninstances, miner;
-        htable=htable)
+    SoleRules.push!(fptree, ninstance_to_sorteditemset, _ninstances, miner; htable=htable)
 
     verbose && printstyled("Mining longer frequent itemsets...\n", color=:green)
 
@@ -885,12 +883,12 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
                 # local memo updating
                 # map(i -> localmemo!(miner, (:lsupport, combo, i), 1:_ninstances))
                 # global + local support memo updating
-                gsupport(
-                    combo,
-                    dataset(miner),
-                    getglobalthreshold(miner, gsupport);
-                    miner=miner
-                )
+                # gsupport(
+                #     combo,
+                #     dataset(miner),
+                #     getglobalthreshold(miner, gsupport);
+                #     miner=miner
+                # )
 
                 # single-itemset case is already handled by the first pass over the dataset
                 if length(combo) > 1
