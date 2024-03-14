@@ -22,14 +22,12 @@ function apriori(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothing
             if gmeas_algo(candidate, X, lthreshold, miner=miner) >= gthreshold
         ]
 
-        # sort!(frequents, by=t -> globalmemo(miner, (:gsupport, t)), rev=true)
-
         # save frequent itemsets inside the miner machine
         push!(freqitems(miner), frequents...)
         k = (candidates |> first |> length) + 1
         candidates = grow_prune(candidates, frequents, k) |> collect |> unique
 
         verbose && printstyled("Starting new computational loop with " *
-        "$(length(candidates)) candidates...\n", color=:green)
+            "$(length(candidates)) candidates...\n", color=:green)
     end
 end
