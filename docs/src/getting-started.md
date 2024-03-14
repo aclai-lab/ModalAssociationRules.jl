@@ -9,7 +9,7 @@ Pages = ["getting-started.md"]
 # [Getting started](@id man-core)
 
 In this introductory section you will learn about the main building blocks of SoleRules.jl. 
-Also if a good picture about *association rule mining* (ARM, from now onwards) is given during the documentation, to make the most out of this documentation we suggest to read the following articles:
+Also if a good picture about *association rule mining* (ARM, from now onwards) is given during the documentation, to make the most out of this guide we suggest to read the following articles:
 - [association rule mining introduction and Apriori algorithm](https://ceur-ws.org/Vol-3284/492.pdf)
 - [FPGrowth algorithm](https://www.cs.sfu.ca/~jpei/publications/sigmod00.pdf)
 Those up above introduce two important algorithms, which are also built-in in this package. Moreover, the latter one is the state-of-the-art in the field of ARM.
