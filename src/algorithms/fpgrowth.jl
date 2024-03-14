@@ -934,7 +934,7 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
 end
 
 """
-    initpowerups(::typeof(fpgrowth), ::AbstractDataset)::NamedTuple
+    initpowerups(::typeof(fpgrowth), ::AbstractDataset)::Powerup
 
 Powerups suite for FP-Growth algorithm.
 

@@ -18,7 +18,7 @@ Further on in the documentation, the potential of SoleRules.jl will emerge: this
 
 ## Core definitions
 
-One [`Item`](@ref) is just a logical formula, which can be interpreted by a certain model. At the moment, here, we don't care about how models are represented by Sole.jl under the hood, or how interpretation algorithm works: what matters is that [`Item`](@ref)s are manipulated by ARM algorithms, which try to find which conjunctions between items are most *statistically significant*.
+One [`Item`](@ref) is just a logical formula, which can be interpreted by a certain model. At the moment, here, we don't care about how models are represented by Sole.jl under the hood, or how the checking algorithm works: what matters is that [`Item`](@ref)s are manipulated by ARM algorithms, which try to find which conjunctions between items are most *statistically significant*.
 
 ```@docs
 Item
@@ -30,6 +30,8 @@ Notice that one [`Itemset`](@ref) could be a set, but actually it is a vector: t
 toformula
 ```
 
+In general, an [`Itemset`](@ref) behaves exactly like you would expect a `Vector{Item}` would do. At the end of the day, the only difference is that manipulating an [`Itemset`](@ref), for example through `push!` or `union`, guarantees the wrapped items always keep the same sorting.
+
 Enough about [`Itemset`](@ref)s. Our final goal is to produce *association rules*. 
 
 ```@docs
@@ -39,22 +41,31 @@ antecedent(rule::ARule)
 consequent(rule::ARule)
 ```
 
-When you want to consider a generic entity obtained through an association rule mining algorithm (*frequent itemsets* and, of course, *association rules*) just use the following type.
+To print an [`ARule`](@ref) enriched with more informations (at the moment, this is everything we need to know), we can use the following.
+```@docs
+analyze(arule::ARule, miner::Miner; io::IO=stdout)
+```
+
+Sometimes we could be interested in writing a function that consider a generic entity obtained through an association rule mining algorithm (*frequent itemsets* and, of course, *association rules*). Think about a dictionary mapping some extracted pattern to metadata. We call that generic entity "an ARM subject", and the following union type comes in help.
 ```@docs
 ARMSubject
 ```
 
 ## Measures
 
-We cannot establish when a [`ARMSubject`](@ref) is interesting just by looking at its shape: we need *meaningfulness measures*. 
+To establish when an [`ARMSubject`](@ref) is interesting, we need *meaningfulness measures*. 
 ```@docs
 Threshold
 MeaningfulnessMeasure
+
 islocalof(::Function, ::Function)
+localof(::Function)
+
 isglobalof(::Function, ::Function)
+globalof(::Function)
 ```
 
-The following are little data structures which will return useful later, when you will read about how a dataset is "mined", looking for [`ARMSubject`](@ref)s.
+The following are little data structures which will return useful later, when you will read about how a dataset is mined, looking for [`ARMSubject`](@ref)s.
 ```@docs
 LmeasMemoKey
 LmeasMemo
@@ -67,9 +78,9 @@ In the [`hands-on`](@ref) section you will learn how to implement your own measu
 
 ```@docs
 lsupport(itemset::Itemset, logi_instance::LogicalInstance; miner::Union{Nothing,Miner}=nothing)
-gsupport(itemset::Itemset, X::SupportedLogiset, threshold::Threshold; miner::Union{Nothing,Miner} = nothing)
+gsupport(itemset::Itemset, X::SupportedLogiset, threshold::Threshold; miner::Union{Nothing,Miner}=nothing)
 lconfidence(rule::ARule, logi_instance::LogicalInstance; miner::Union{Nothing,Miner} = nothing)
-gconfidence(rule::ARule, X::SupportedLogiset, threshold::Threshold; miner::Union{Nothing,Miner} = nothing)
+gconfidence(rule::ARule, X::SupportedLogiset, threshold::Threshold; miner::Union{Nothing,Miner}=nothing)
 ```
 
 ## Mining structures
@@ -79,24 +90,47 @@ We just need to specify which dataset we are working with, together with a minin
 
 ```@docs
 Miner
+```
 
+Let us see which getters and setters are available for [`Miner`](@ref).
+
+```@docs
 dataset(miner::Miner)
 algorithm(miner::Miner)
 items(miner::Miner)
 
+measures(miner::Miner)
+findmeasure(miner::Miner,meas::Function; recognizer::Function=islocalof)
 itemsetmeasures(miner::Miner)
+additemmeas(miner::Miner, measure::MeaningfulnessMeasure)
 rulemeasures(miner::Miner)
+addrulemeas(miner::Miner, measure::MeaningfulnessMeasure)
+
 getlocalthreshold(miner::Miner, meas::Function)
 setlocalthreshold(miner::Miner, meas::Function, threshold::Threshold)
 getglobalthreshold(miner::Miner, meas::Function)
 setglobalthreshold(miner::Miner, meas::Function, threshold::Threshold)
 ```
 
-After a [`Miner`](@ref) ends mining, frequent [`Itemset`](@ref)s and [`ARule`](@ref) are accessibles through the getters below.
+After a [`Miner`](@ref) ends mining (we will see how to mine in a second), frequent [`Itemset`](@ref)s and [`ARule`](@ref) are accessibles through the getters below.
 ```@docs
 freqitems(miner::Miner)
 arules(miner::Miner)
 ```
+
+Here is how to start mining.
+```@docs
+mine!(miner::Miner)
+apply!(miner::Miner, X::AbstractDataset)
+```
+
+The mining call returns an [`ARule`](@ref) generator. Since the extracted rules could be several, it's up to you to collect all the rules in a step or analyze them lazily, collecting them one at a time. You can also call the mining function ignoring it's return value, and then generate the rules later by calling the following.
+
+```@docs
+generaterules!(miner::Miner)
+```
+
+During both the mining and the rules generation phases, the values returned by [`MeaningfulnessMeasure`](@ref) applied on a certain [`ARMSubject`](@ref) are saved (memoized) inside the [`Miner`](@ref). Thanks to the methods hereafter, a [`Miner`](@ref) can avoid useless recomputations.
 
 ```@docs
 localmemo(miner::Miner)
@@ -105,8 +139,14 @@ globalmemo(miner::Miner)
 globalmemo!(miner::Miner, key::GmeasMemoKey, val::Threshold)
 ```
 
+## Miner customization
+
+A [`Miner`](@ref) also contains two fields to keep additional informations, those are [`info`](@ref) and [`powerups`](@ref).
+
 The [`info`](@ref) field in [`Miner`](@ref) is a dictionary used to store extra informations about the miner, such as statistics about mining. Currently, since the package is still being developed, the `info` field only contains a flag indicating whether the `miner` has been used for mining or no.
+
 ```@docs
+Info
 info(miner::Miner)
 info!(miner::Miner, key::Symbol, val)
 hasinfo(miner::Miner, key::Symbol)
@@ -120,10 +160,4 @@ powerups(miner::Miner)
 powerups!(miner::Miner, key::Symbol, val)
 haspowerup(miner::Miner, key::Symbol)
 initpowerups(::Function, ::AbstractDataset)
-```
-
-To conclude this section, this is how to start mining.
-```@docs
-mine!(miner::Miner)
-apply!(miner::Miner, X::AbstractDataset)
 ```

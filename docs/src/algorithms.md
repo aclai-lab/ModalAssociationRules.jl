@@ -11,7 +11,7 @@ Pages = ["algorithms.md"]
 ## Candidate generation based
 
 ```@docs
-apriori(;fulldump::Bool=true, verbose::Bool=true)
+apriori(miner::Miner, X::AbstractDataset; verbose::Bool=false)
 ```
 
 ## TreeProjection based
@@ -19,7 +19,7 @@ apriori(;fulldump::Bool=true, verbose::Bool=true)
 ### FPGrowth
 
 ```@docs
-fpgrowth(;fulldump::Bool=true, verbose::Bool=true)
+fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)
 ```
 
 FPGrowth algorithm relies on two data structures, [`FPTree`](@ref) and [`HeaderTable`](@ref).
@@ -29,7 +29,7 @@ FPGrowth algorithm relies on the following two routines.
 
 ```@docs
 patternbase(item::Item, htable::HeaderTable, miner::Miner)
-projection(pbase::ConditionalPatternBase; miner::Union{Nothing,Miner}=nothing)
+projection(pbase::ConditionalPatternBase, miner::Miner)
 ```
 
 Also, FPGrowth requires the [`Miner`](@ref) to remember the [`Contributors`](@ref) associated with the extracted frequent itemsets.

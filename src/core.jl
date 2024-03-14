@@ -212,9 +212,10 @@ const ConditionalPatternBase = Vector{EnhancedItemset}
     const ARule = Tuple{Itemset,Itemset}
 
 An association rule represents a strong and meaningful co-occurrence relationship between
-two [`Itemset`](@ref)s whose intersection is empty.
+two [`Itemset`](@ref)s, callend [`antecedent`](@ref) and [`consequent`](@ref), whose
+intersection is empty.
 
-Generating all the [`ARule`](@ref) "hidden" in the data is the main purpose of ARM.
+Extracting all the [`ARule`](@ref) "hidden" in the data is the main purpose of ARM.
 
 The general framework always followed by ARM techniques is to, firstly, generate all the
 frequent itemsets considering a set of [`MeaningfulnessMeasure`](@ref) specifically
@@ -894,11 +895,11 @@ Return a vector whose size is the number of worlds, and the content is 0 if the 
 threshold is not overpassed, 1 otherwise.
 
 !!! warning
-    This method requires the [`Miner`](@ref) to be declared using
-    [`@equip_contributors`](@ref).
+    This method requires the [`Miner`](@ref) to have a [`Contributor`](@ref) powerup.
+    See [`initpowerups`](@ref).
 
 See also [`Item`](@ref), [`LmeasMemoKey`](@ref), [`lsupport`](@ref),
-[`@equip_contributors`](@ref), [`Threshold`](@ref), [`WorldMask`](@ref).
+[`initpowerups`](@ref), [`Threshold`](@ref), [`WorldMask`](@ref).
 """
 function contributors(
     memokey::LmeasMemoKey,
@@ -935,7 +936,7 @@ end
 
 Set a `miner`'s contributors entry.
 
-See also [`Miner`](@ref), [`LmeasMemoKey`](@ref), [`@equip_contributors`](@ref),
+See also [`Miner`](@ref), [`LmeasMemoKey`](@ref), [`initpowerups`](@ref),
 [`WorldMask`](@ref).
 """
 function contributors!(miner::Miner, key::LmeasMemoKey, mask::WorldMask)

@@ -38,9 +38,6 @@ end
 Return a generator, which yields only the `candidates` for which every (k-1)-length subset
 is in `frequents`.
 
-!!! warning
-    Generated [`Itemset`](@ref)s could contain repetitions.
-
 See also [`Itemset`](@ref).
 """
 function grow_prune(candidates::Vector{Itemset}, frequents::Vector{Itemset}, k::Integer)
@@ -92,6 +89,8 @@ end
 
 """
     arules_generator(itemsets::Vector{Itemset}, miner::Miner)
+
+This has be considered a raw version of [`generaterules!(miner::Miner; kwargs...)`](@ref).
 
 Generates association rules from the given collection of `itemsets` and `miner`.
 Iterates through the powerset of each itemset to generate meaningful [`ARule`](@ref).

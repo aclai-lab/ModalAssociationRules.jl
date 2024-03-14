@@ -58,6 +58,5 @@ runtimes(apriori_miner, X1, "Apriori")
 ############################################################################################
 
 # FPGrowth runtime with no optimizations and leveraging dataset Memoization
-fpgrowth_miner = @equip_contributors Miner(
-    X2, fpgrowth(), manual_items, _itemsetmeasures, _rulemeasures)
+fpgrowth_miner = Miner(X2, fpgrowth(), manual_items, _itemsetmeasures, _rulemeasures)
 runtimes(fpgrowth_miner, X2, "FPGrowth")
