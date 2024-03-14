@@ -136,3 +136,24 @@ See also [`ARule`](@ref), [`Miner`](@ref), [`Itemset`](@ref), [`rulemeasures`](@
         end
     end
 end
+
+############################################################################################
+#### Miner #################################################################################
+############################################################################################
+"""
+    getlocalthreshold_integer(miner::Miner, meas::Function, contributorslength::Int64)
+
+See [`getlocalthreshold`](@ref).
+"""
+function getlocalthreshold_integer(miner::Miner, meas::Function, contributorslength::Int64)
+    return convert(Int64, ceil(getlocalthreshold(miner, meas) * contributorslength))
+end
+
+"""
+    getglobalthreshold_integer(miner::Miner, meas::Function, ninstances::Int64)
+
+See [`getglobalthreshold`](@ref).
+"""
+function getglobalthreshold_integer(miner::Miner, meas::Function, ninstances::Int64)
+    return convert(Int64, ceil(getglobalthreshold(miner, meas) * ninstances))
+end

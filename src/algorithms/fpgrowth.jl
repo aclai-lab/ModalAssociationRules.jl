@@ -348,11 +348,51 @@ end
 function Base.show(io::IO, fptree::FPTree; indentation::Int64=0)
     _children = children(fptree)
     println(io, "-"^indentation * "*"^(length(_children)==0) *
-        "$(fptree |> content |> syntaxstring) - count: $(count(fptree)), " *
-        "contributors: $(contributors(fptree))")
+        "$(fptree |> content |> syntaxstring) - count: $(count(fptree))")
 
     for child in children(fptree)
         Base.show(io, child; indentation=indentation+1)
+    end
+end
+
+"""
+    prune!(fptree::FPTree, gsupp_integer_threshold::Int64, lsupp_integer_threshold::Int64)
+
+Prune subtrees of `fptree`, if their [`count`](@ref) or [`contributors`](@ref) is not enough
+to overpass the integer threshold associated with [`gsupport`](@ref) or [`lsupport`](@ref).
+
+See also [`contributors`](@ref), [`count`](@ref), [`FPTree`](@ref),
+[`getglobalthreshold_integer`](@ref), [`gsupport`](@ref),
+[`getlocalthreshold_integer`](@ref), [`lsupport`](@ref).
+"""
+function prune!(fptree::FPTree, miner::Miner)
+    if isempty(children(fptree))
+        return
+    end
+
+    # float gsupport threshold
+    gsupp_t = getglobalthreshold(miner, gsupport)
+
+    # gsupport integer threshold
+    gsupp_int_t = getglobalthreshold_integer(miner, gsupport, ninstances(dataset(miner)))
+
+    # contributors length and lsupport integer threshold
+    contribslen = children(fptree)[1] |> contributors |> length
+    lsupp_int_t =  getlocalthreshold_integer(
+        miner, lsupport, contribslen)
+
+    # is global support honored by child?
+    filter!(child -> count(child) >= gsupp_int_t, children(fptree))
+
+    # percentage of worlds for which local support is satisfied,
+    # must be greater than global support.
+    filter!(child ->
+            count(c -> c >= lsupp_int_t, contributors(child)) / contribslen >= gsupp_t,
+        children(fptree)
+    )
+
+    for child in children(fptree)
+        prune!(child, miner)
     end
 end
 
@@ -764,28 +804,7 @@ function projection(
         @warn "Mining structure not provided. Correctness is not guaranteed."
     end
 
-    # TODO: this could be an entire utility function
-    function _prune!(
-        fptree::FPTree,
-        gsupp_integer_threshold::Int64,
-        lsupp_integer_threshold::Int64
-    )
-        # TODO: write an utility method
-        filter!(child -> count(child) >= gsupp_integer_threshold, children(fptree))
-
-        for child in children(fptree)
-            _prune!(child, gsupp_integer_threshold, lsupp_integer_threshold)
-        end
-    end
-
-    lsupp_integer_threshold = convert(Int64, floor(
-        getlocalthreshold(miner, lsupport) * 150 # _fptcontributors_length
-    ))
-    gsupp_integer_threshold = convert(Int64, floor(
-        getglobalthreshold(miner, gsupport) * ninstances(dataset(miner))
-    ))
-
-    _prune!(fptree, gsupp_integer_threshold, lsupp_integer_threshold)
+    prune!(fptree, miner)
 
     return fptree, htable
 end
@@ -863,6 +882,9 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
 
     verbose && printstyled("Mining longer frequent itemsets...\n", color=:green)
 
+    println("INITIAL FPTREE")
+    println(fptree)
+
     # `fpgrowth` recursive logic piece
     function _fpgrowth_kernel(
         fptree::FPTree,
@@ -873,22 +895,21 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
         # if `fptree` contains only one path (hence, it can be considered a linked list),
         # then combine all the Itemsets collected from previous step with the remained ones.
         if islist(fptree)
+            # representative FPTree node, to retrieve global and local support
+            leader_fpnode = children(fptree)[1]
+
+            # all the survived items, from which compose new frequent itemsets
             survivor_itemset = retrieveall(fptree)
+
+            _ninstances = ninstances(dataset(miner))
 
             verbose &&
                 printstyled("Merging $(leftout_itemset |> length) leftout items with a " *
                 "single-list FPTree of length $(survivor_itemset |> length)\n", color=:blue)
 
             for combo in combine(items(survivor_itemset), items(leftout_itemset))
-                # local memo updating
-                # map(i -> localmemo!(miner, (:lsupport, combo, i), 1:_ninstances))
-                # global + local support memo updating
-                # gsupport(
-                #     combo,
-                #     dataset(miner),
-                #     getglobalthreshold(miner, gsupport);
-                #     miner=miner
-                # )
+                globalmemo!(
+                    miner, (:gsupport, combo), (leader_fpnode |> count) / _ninstances)
 
                 # single-itemset case is already handled by the first pass over the dataset
                 if length(combo) > 1

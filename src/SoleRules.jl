@@ -70,6 +70,7 @@ include("arulemining-utils.jl")
 export combine, prune, prune!
 export grow_prune, coalesce_contributors
 export arules_generator # wrapped by generaterules!
+export getlocalthreshold_integer, getglobalthreshold_integer
 
 include("algorithms/apriori.jl")
 
