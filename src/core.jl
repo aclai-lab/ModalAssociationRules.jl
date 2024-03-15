@@ -24,7 +24,9 @@ function Base.isless(a::Item, b::Item)
 end
 
 """
-    const Itemset = Vector{Item}
+    struct Itemset
+        items::Vector{Item}
+    end
 
 Collection of *unique* [`Item`](@ref)s.
 

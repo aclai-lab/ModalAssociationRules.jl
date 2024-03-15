@@ -1,4 +1,3 @@
-
 """
     function lsupport(
         itemset::Itemset,
@@ -67,9 +66,9 @@ end
 Compute the global support for the given `itemset` on a logiset `X`, considering `threshold`
 as the threshold for the local support called internally.
 
-Global support is the ratio between the number of [`LogicalInstance`](@ref)s in a [`SupportedLogiset`](@ref)
-for which the local support, [`lsupport`](@ref), is greater than a [`Threshold`](@ref),
-and the total number of instances in the same logiset.
+Global support is the ratio between the number of [`LogicalInstance`](@ref)s in a
+[`SupportedLogiset`](@ref) for which the local support, [`lsupport`](@ref), is greater than
+a [`Threshold`](@ref), and the total number of instances in the same logiset.
 
 If a miner is provided, then its internal state is updated and used to leverage memoization.
 
