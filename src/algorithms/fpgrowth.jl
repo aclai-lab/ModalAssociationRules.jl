@@ -98,7 +98,6 @@ mutable struct FPTree
 
         _contributors = isnothing(miner) ?
             zeros(Int64,1) : SoleRules.contributors(:lsupport, item, ninstance, miner)
-            # zeros(Int64,1) : SoleRules.allcontributors(:lsupport, item, miner)
 
         fptree = length(itemset) == 1 ?
             new(item, nothing, FPTree[], 1, _contributors, nothing) :
@@ -354,52 +353,6 @@ function Base.show(io::IO, fptree::FPTree; indentation::Int64=0)
 
     for child in children(fptree)
         Base.show(io, child; indentation=indentation+1)
-    end
-end
-
-"""
-    prune!(fptree::FPTree, miner::Miner)
-
-Prune subtrees of `fptree`, if their [`count`](@ref) or [`contributors`](@ref) is not enough
-to overpass the integer threshold associated with [`gsupport`](@ref) or [`lsupport`](@ref).
-
-See also [`contributors`](@ref), [`count`](@ref), [`FPTree`](@ref),
-[`getglobalthreshold_integer`](@ref), [`gsupport`](@ref),
-[`getlocalthreshold_integer`](@ref), [`lsupport`](@ref).
-"""
-function prune!(fptree::FPTree, miner::Miner)
-    if isempty(children(fptree))
-        return
-    end
-
-    # gsupport float threshold
-    gsupp_t = getglobalthreshold(miner, gsupport)
-
-    # gsupport integer threshold
-    gsupp_int_t = getglobalthreshold_integer(miner, gsupport, ninstances(dataset(miner)))
-
-    # contributors length
-    contribslen = children(fptree)[1] |> contributors |> length
-
-    # lsupport float threhsold
-    lsupp_t = getlocalthreshold(miner, lsupport)
-
-    # lsupport integer threshold
-    lsupp_int_t =  getlocalthreshold_integer(miner, lsupport, contribslen)
-
-    # is global support honored by child?
-    filter!(child -> count(child) >= gsupp_int_t, fptree.children)
-
-    # FIX:
-    # percentage of worlds for which global support is satisfied,
-    # must be greater than local support.
-    filter!(child ->
-            count(c -> c >= 1, contributors(child)) >= lsupp_int_t,
-        children(fptree)
-    )
-
-    for child in children(fptree)
-        prune!(child, miner)
     end
 end
 
@@ -778,10 +731,10 @@ function patternbase(
     return _patternbase
 end
 
+# TODO: this code is ugly. Refactor it after frequencies results the same as apriori
 function compress!(pbase::ConditionalPatternBase, miner::Miner)
-    # in the first enhanced itemset, in its first tuple, last position is a world mask;
+    # in the first enhanced itemset, in its first tuple, the last position is a world mask;
     # retrieve its length.
-
     contribslen = pbase[1] |> first |> last |> length
 
     # integer thresholds, needed later to filter out
@@ -844,11 +797,6 @@ function projection(
     else
         @warn "Mining structure not provided. Correctness is not guaranteed."
     end
-
-    # This has to be done while constructing the conditional pattern base...
-    # See `patternbase`
-    # TODO: remove this after fixing the code
-    prune!(fptree, miner)
 
     return fptree, htable
 end
