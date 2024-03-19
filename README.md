@@ -1,4 +1,4 @@
-# SoleRules.jl
+# ModalAssociationRules.jl
 
 <!-- [![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://aclai-lab.github.io/SoleRules.jl/) -->
 [![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://aclai-lab.github.io/SoleRules.jl/dev)
