@@ -258,7 +258,7 @@ Dict{Tuple{Symbol, ARMSubject}, Float64} with 31 entries:
   (:gsupport, [min[V3] > -3.6, min[V1] > -0.5, [L]min[V3] > -3.6])                    => 0.561111
   (:gsupport, [[L]min[V1] > -0.5, min[V3] > -3.6, min[V1] > -0.5, [L]min[V3] > -3.6]) => 0.172222
 
-julia> fpgrowth_miner.gmemo (correct frequent patterns, wrong frequence)
+julia> fpgrowth_miner.gmemo (correct frequent patterns, wrong frequences)
 Dict{Tuple{Symbol, ARMSubject}, Float64} with 27 entries:
   (:gsupport, [min[V2] ≤ -2.2, min[V3] > -3.6, ⟨L⟩min[V2] ≤ -2.2])                    => 0.133333
   (:gsupport, [min[V3] > -3.6, ⟨L⟩min[V2] ≤ -2.2, [L]min[V3] > -3.6])                 => 0.133333

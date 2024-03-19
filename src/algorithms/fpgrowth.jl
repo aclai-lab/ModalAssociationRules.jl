@@ -848,7 +848,7 @@ function projection(
     # This has to be done while constructing the conditional pattern base...
     # See `patternbase`
     # TODO: remove this after fixing the code
-    # prune!(fptree, miner)
+    prune!(fptree, miner)
 
     return fptree, htable
 end
@@ -924,9 +924,6 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
 
     SoleRules.push!(fptree, ninstance_to_sorteditemset, _ninstances, miner; htable=htable)
 
-    println("First fptree: ")
-    println(fptree)
-
     verbose && printstyled("Mining longer frequent itemsets...\n", color=:green)
 
     # `fpgrowth` recursive logic piece
@@ -944,11 +941,6 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
 
             # all the survived items, from which compose new frequent itemsets
             survivor_itemset = retrieveall(fptree)
-
-            println("NEW:")
-            println(fptree)
-            println("LEFTOUT: $(leftout_itemset)")
-            println("##############")
 
             _ninstances = ninstances(dataset(miner))
 
@@ -968,19 +960,9 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
 
         else
             for item in reverse(htable)
-                println("########################")
-                println("Working with $(item)")
-
                 # a (conditional) pattern base is a vector of "enhanced" itemsets, that is,
                 # itemsets whose items are paired with a contributors vector.
                 _patternbase = patternbase(item, htable, miner)
-
-                println("PATTERNBASE IS")
-                println(_patternbase)
-                println("")
-
-                println("PRE PROJECTION")
-                println(fptree)
 
                 # a new FPTree is projected, via the conditional pattern base retrieved
                 # starting from `fptree` nodes whose content is exactly `item`.
@@ -989,10 +971,6 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
                 # Also, the header table associated with the projection is returned.
                 conditional_fptree, conditional_htable =
                     projection(_patternbase, miner)
-
-                println("POST PROJECTEION")
-                println(conditional_fptree)
-                println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
 
                 # if the new fptree is not empty, call this recursively,
                 # considering `item` as a leftout item.
