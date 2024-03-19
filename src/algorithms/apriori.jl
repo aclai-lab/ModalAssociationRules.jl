@@ -12,8 +12,7 @@ function apriori(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothing
 
     while !isempty(candidates)
         # get the frequent itemsets from the first candidates set;
-        # note that meaningfulness measure should leverage memoization when
-        # miner is given.
+        # note that meaningfulness measure should leverage memoization when miner is given.
         frequents = [candidate
             for (gmeas_algo, lthreshold, gthreshold) in itemsetmeasures(miner)
             for candidate in candidates

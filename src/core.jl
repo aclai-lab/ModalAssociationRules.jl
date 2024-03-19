@@ -159,6 +159,11 @@ See also [`Contributors`](@ref), [`Itemset`](@ref), [`MeaningfulnessMeasure`](@r
 const WorldMask = Vector{Int64}
 
 """
+    const EnhancedItem = Tuple{Item,Int64,WorldMask}
+"""
+const EnhancedItem = Tuple{Item,Int64,WorldMask}
+
+"""
     const EnhancedItemset = Vector{Tuple{Item,Int64,WorldMask}}
 
 "Enhanced" representation of an [`Itemset`](@ref), in which each [`Item`](@ref) is
@@ -179,7 +184,7 @@ want to avoid iterating an entire dataset multiple times when extracting frequen
 
 See also [`fpgrowth`](@ref), [`Item`](@ref), [`Itemset`](@ref), [`WorldMask`](@ref).
 """
-const EnhancedItemset = Vector{Tuple{Item,Int64,WorldMask}}
+const EnhancedItemset = Vector{EnhancedItem}
 
 function Base.convert(
     ::Type{EnhancedItemset},
@@ -192,6 +197,15 @@ end
 
 function Base.convert(::Type{Itemset}, enhanceditemset::EnhancedItemset)
     return Itemset([first(enhanceditem) for enhanceditem in enhanceditemset])
+end
+
+function Base.show(io::IO, enhanceditemset::EnhancedItemset)
+    print(io, "[")
+    for itemset in enhanceditemset
+        _content, _count, _contributors = itemset
+        print(io, "($(_content |> syntaxstring) / $(_count) / $(sum(_contributors))), ")
+    end
+    println(io, "]")
 end
 
 """
@@ -895,7 +909,7 @@ Return a vector whose size is the number of worlds, and the content is 0 if the 
 threshold is not overpassed, 1 otherwise.
 
 !!! warning
-    This method requires the [`Miner`](@ref) to have a [`Contributor`](@ref) powerup.
+    This method requires the [`Miner`](@ref) to have a [`Contributors`](@ref) powerup.
     See [`initpowerups`](@ref).
 
 See also [`Item`](@ref), [`LmeasMemoKey`](@ref), [`lsupport`](@ref),
@@ -929,6 +943,19 @@ function contributors(
     miner::Miner
 )::WorldMask
     return contributors(measname, Itemset(item), ninstance, miner)
+end
+
+"""
+    allcontributors(measname::Symbol, itemset::Itemset, miner::Miner)
+
+Retrieve all the [`contributors`](@ref) associated with `itemset`.
+
+See also [`Contributors`](@ref), [`contributors`](@ref), [`Itemset`](@ref), [`Miner`](@ref).
+"""
+function allcontributors(measname::Symbol, itemset::Itemset, miner::Miner)
+    # TODO: memo this call inside miner
+    return reduce(vcat, sum.(eachcol([
+        contributors(measname, itemset, i, miner) for i in 1:ninstances(dataset(miner))])))
 end
 
 """

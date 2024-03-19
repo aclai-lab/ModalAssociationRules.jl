@@ -48,6 +48,7 @@ function lsupport(
         # attribute that `miner` can have in its info named tuple.
         # The other dispatch is empty, but customizable by the user to check his things.
         if haspowerup(miner, :contributors)
+
             contributors!(miner, memokey, _contributors)
         end
     end
