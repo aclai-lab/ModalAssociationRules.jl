@@ -338,11 +338,11 @@ See also [`follow`](@ref), [`FPTree`](@ref), [`HeaderTable`](@ref).
 """
 function link!(from::FPTree, to::FPTree)
     # find the last FPTree by iteratively following the internal link
+    @assert from !== link(from) "Error - self linking the following FPTree: \n$(from)"
+
     from = follow(from)
 
-    if from.link === nothing && to.link === nothing
-        from.link = to
-    end
+    from.link = to
 end
 
 function Base.show(io::IO, fptree::FPTree; indentation::Int64=0)
@@ -376,29 +376,21 @@ struct HeaderTable
     end
 
     function HeaderTable(
-        items::Vector{<:Item},
         fptseed::FPTree;
         miner::Union{Nothing,Miner}=nothing
     )
-        @assert content(fptseed) === nothing "`fptseed` is not a seeder " *
-        "FPTree, that is, its root content is $(content(fptseed)) instead of " *
-        "nothing."
+        htable = new(Vector{Item}(), Dict{Item,Union{Nothing,FPTree}}([]))
 
-        @assert islist(fptseed) "`fptseed` is not a simple list FPTree. " *
-        "Currently, only simple list FPTree are supported to automatically " *
-        "build and HeaderTable. Please, make sure islist(fptseed) is true."
-
-        # make an empty htable, whose entries are `Item` objects, in `items`
-        htable = new(items, Dict{Item,Union{Nothing,FPTree}}([
-            item => nothing for item in items]))
-
-        # iteratively fill htable
-        child = children(fptseed)
-        while !isempty(child)
-            childfpt = first(child)
-            link!(htable, childfpt)
-            child = children(childfpt)
+        function fillhtable!(_children::Vector{FPTree}, htable::HeaderTable)
+            for c in _children
+                link!(htable, c)
+                fillhtable!(children(c), htable)
+            end
         end
+
+        # recursively fill htable
+        child = children(fptseed)
+        fillhtable!(child, htable)
 
         if !isnothing(miner)
             checksanity!(htable, miner)
@@ -463,24 +455,23 @@ See also [`content`](@ref), [`FPTree`](@ref), [`HeaderTable`](@ref).
 function link!(htable::HeaderTable, fptree::FPTree)
     _content = content(fptree)
 
-    # the content of `fptree` was never seen before by this `htable`
     hitems = items(htable)
     if !(_content in hitems)
+        # the content of `fptree` was never seen before by this `htable`
         push!(hitems, _content)
-        htable.link[_content] = nothing
-    end
-
-    # the content of `fptree` was loaded into the header table, but never looked up
-    if link(htable, _content) |> isnothing
         htable.link[_content] = fptree
         return
     end
 
-    # the arrival FPTree is linked to the new `fptree`
-    arrival = follow(htable, _content)
-    if arrival isa FPTree && arrival != fptree
-        link!(arrival, fptree)
-    # invalid optionì
+    if isnothing(htable.link[_content])
+        # the content of `fptree` is already loaded: an empty `HeaderTable` constructor
+        # was called sometime before now and the entry associated with the content is empty.
+        htable.link[_content] = fptree
+    else
+        from = follow(htable, _content)
+        if from !== fptree
+            link!(from, fptree)
+        end
     end
 end
 
@@ -553,17 +544,8 @@ function Base.push!(
     fptree::FPTree,
     itemset::Itemset,
     ninstance::Int64,
-    miner::Miner;
-    htable::Union{Nothing,HeaderTable}=nothing
+    miner::Miner
 )
-    # if an header table is provided, and its entry associated with the content of `fptree`
-    # is still empty, then perform a linking.
-    _fptree_content = content(fptree)
-
-    if htable !== nothing && _fptree_content !== nothing && link(fptree) === nothing
-        link!(htable, fptree)
-    end
-
     # base case
     if length(itemset) == 0
         return
@@ -586,13 +568,11 @@ function Base.push!(
         subfptree = _children[_children_idx]
         addcount!(subfptree, 1)
         addcontributors!(subfptree, _contributors)
-        push!(subfptree, itemset[2:end], ninstance, miner; htable=htable)
+        push!(subfptree, itemset[2:end], ninstance, miner)
     else
         # if it does not, then create a new children FPTree, and set this as its parent
         subfptree = FPTree(itemset; isroot=false, miner=miner, ninstance=ninstance)
         children!(fptree, subfptree)
-        addcount!(subfptree, 1)
-        addcontributors!(subfptree, _contributors)
     end
 end
 
@@ -601,23 +581,15 @@ Base.push!(
     itemsets::Vector{Itemset},
     ninstances::Int64,
     miner::Miner;
-    htable::Union{Nothing,HeaderTable}=nothing,
     kwargs...
 ) = map(ninstance -> push!(
-    fptree, itemsets[ninstance], ninstance, miner; htable=htable, kwargs...), 1:ninstances)
+    fptree, itemsets[ninstance], ninstance, miner; kwargs...), 1:ninstances)
 
 function Base.push!(
     fptree::FPTree,
     enhanceditemset::EnhancedItemset,
-    miner::Miner;
-    htable::Union{Nothing,HeaderTable}=nothing,
+    miner::Miner
 )
-    # if an header table is provided, and its entry associated with the content of `fptree`
-    # is still empty, then perform a linking.
-    if htable !== nothing && content(fptree) !== nothing && link(fptree) === nothing
-        link!(htable, fptree)
-    end
-
     # end of push case
     if length(enhanceditemset) == 0
         return
@@ -640,7 +612,7 @@ function Base.push!(
         addcount!(subfptree, _count)
         addcontributors!(subfptree, _contributors)
 
-        push!(subfptree, enhanceditemset[2:end], miner; htable=htable)
+        push!(subfptree, enhanceditemset[2:end], miner)
     else
         # here i want to create a new children FPTree, and set this as its parent;
         # note that, here, i don't want to update count and contributors since i am already
@@ -654,8 +626,8 @@ Base.push!(
     fptree::FPTree,
     enhanceditemsets::ConditionalPatternBase,
     miner::Miner;
-    htable::Union{Nothing,HeaderTable}=nothing
-) = [push!(fptree, itemset, miner; htable=htable) for itemset in enhanceditemsets]
+    kwargs...
+) = [push!(fptree, itemset, miner; kwargs...) for itemset in enhanceditemsets]
 
 """
     Base.reverse(htable::HeaderTable)
@@ -709,9 +681,16 @@ function patternbase(
         # look at ancestors, and get collect them keeping count and contributors of
         # the leaf node from which we started this vertical visit.
         while !isnothing(content(ancestorfpt))
+            fptcontributors = map(min, ancestorfpt |> contributors, fptcontributors)
+
             # prepend! instead of push! because we must keep the top-down order of items
             # in a path, but we are visiting a branch from bottom upwards.
-            prepend!(enhanceditemset, [(content(ancestorfpt), fptcount, fptcontributors)])
+            prepend!(enhanceditemset, [(
+                content(ancestorfpt),
+                fptcount,
+                fptcontributors
+                # map(min, ancestorfpt |> contributors, fptcontributors)
+            )])
 
             ancestorfpt = parent(ancestorfpt)
         end
@@ -724,6 +703,10 @@ function patternbase(
             by=t -> globalmemo(miner, (:gsupport, Itemset([t |> first]) )), rev=true)
 
         push!(_patternbase, enhanceditemset)
+
+        # println("Debug - obtained patternbase:")
+        # println(_patternbase)
+        # println("Debug - endof patternbase")
 
         fptree = link(fptree)
     end
@@ -754,8 +737,9 @@ function compress!(pbase::ConditionalPatternBase, miner::Miner)
             contribs_accumulator[_item] += _contributors
 
             if bouncer[_item] == false
-                if count_accumulator[_item] >= gsupp_int_t &&
-                    count(x -> x >= gsupp_int_t, contribs_accumulator[_item]) >= lsupp_int_t
+                if count_accumulator[_item] >= gsupp_int_t # &&
+                    # TODO: uncomment after refactoring
+                    # count(x -> x >= gsupp_int_t, contribs_accumulator[_item]) >= lsupp_int_t
                     bouncer[_item] = true # enhitem is going to be in our pattern base
                 end
             end
@@ -782,15 +766,17 @@ function projection(
     miner::Miner
 )
     fptree = FPTree()
-    htable = HeaderTable()
+    # htable = HeaderTable()
 
+    # assert pattern base does not contain dirty leftovers
     filter!(x -> !isempty(x), pbase)
 
     if length(pbase) > 0
         compress!(pbase, miner)
-        push!(fptree, pbase, miner; htable=htable)
+        push!(fptree, pbase, miner) # TODO: HTABLE-REFACTORING
     end
 
+    htable = HeaderTable(fptree; miner=miner)
 
     if !isnothing(miner)
         checksanity!(htable, miner)
@@ -865,12 +851,13 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
 
     # create an initial fptree
     fptree = FPTree()
-    # create and fill an header table, necessary to traverse FPTrees horizontally
-    htable = HeaderTable(frequents, fptree; miner=miner)
 
     verbose && printstyled("Growing seed FPTree...\n", color=:green)
 
-    SoleRules.push!(fptree, ninstance_to_sorteditemset, _ninstances, miner; htable=htable)
+    SoleRules.push!(fptree, ninstance_to_sorteditemset, _ninstances, miner)
+
+    # create and fill an header table, necessary to traverse FPTrees horizontally
+    htable = HeaderTable(fptree; miner=miner)
 
     verbose && printstyled("Mining longer frequent itemsets...\n", color=:green)
 
@@ -908,6 +895,8 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
 
         else
             for item in reverse(htable)
+                println("WORKING WITH: $(item)")
+
                 # a (conditional) pattern base is a vector of "enhanced" itemsets, that is,
                 # itemsets whose items are paired with a contributors vector.
                 _patternbase = patternbase(item, htable, miner)

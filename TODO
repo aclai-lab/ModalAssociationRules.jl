@@ -313,3 +313,26 @@ Dict{Tuple{Symbol, ARMSubject}, Float64} with 23 entries:
   (:gsupport, [min[V2] ≤ -2.2, [L]min[V3] > -3.6])                                    => 0.166667
   (:gsupport, [[L]min[V1] > -0.5, min[V3] > -3.6, min[V1] > -0.5, [L]min[V3] > -3.6]) => 0.238889
   (:gsupport, [min[V3] > -3.6, min[V1] > -0.5, [L]min[V3] > -3.6])                    => 0.558333
+
+  ------------------------------------------------------------------------------------------------
+
+20/3 w. manual_p, manual_q, manual_r
+
+julia> apriori_miner.gmemo
+Dict{Tuple{Symbol, ARMSubject}, Float64} with 6 entries:
+  (:gsupport, [min[V2] ≤ -2.2, min[V1] > -0.5]) => 0.025 <- not frequent!
+  (:gsupport, [min[V3] > -3.6, min[V1] > -0.5]) => 0.561111
+  (:gsupport, [min[V2] ≤ -2.2])                 => 0.158333
+  (:gsupport, [min[V3] > -3.6])                 => 1.0
+  (:gsupport, [min[V2] ≤ -2.2, min[V3] > -3.6]) => 0.158333
+  (:gsupport, [min[V1] > -0.5])                 => 0.561111
+
+julia> fpgrowth_miner.gmemo
+Dict{Tuple{Symbol, ARMSubject}, Float64} with 5 entries:
+  (:gsupport, [min[V3] > -3.6, min[V1] > -0.5]) => 0.561111
+  (:gsupport, [min[V2] ≤ -2.2])                 => 0.158333
+  (:gsupport, [min[V3] > -3.6])                 => 1.0
+  (:gsupport, [min[V2] ≤ -2.2, min[V3] > -3.6]) => 0.163889
+  (:gsupport, [min[V1] > -0.5])                 => 0.561111
+
+Back to: manual_p, manual_q, manual_r, manual_lp, manual_lq, manual_lr
