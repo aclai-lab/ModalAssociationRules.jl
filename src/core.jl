@@ -56,8 +56,7 @@ struct Itemset
 
     Itemset() = new(Vector{Item}[])
     Itemset(item::I) where {I<:Item} = new(Vector{Item}([item]))
-    Itemset(itemset::Vector{I}) where {I<:Item} = new(Vector{Item}(
-        itemset |> unique |> sort))
+    Itemset(itemset::Vector{I}) where {I<:Item} = new(Vector{Item}(itemset |> unique))
 
     Itemset(anyvec::Vector{Any}) = begin
         @assert isempty(anyvec) "Illegal constructor call"

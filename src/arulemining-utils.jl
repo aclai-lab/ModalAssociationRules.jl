@@ -146,7 +146,8 @@ end
 See [`getlocalthreshold`](@ref).
 """
 function getlocalthreshold_integer(miner::Miner, meas::Function, contributorslength::Int64)
-    return convert(Int64, floor(getlocalthreshold(miner, meas) * contributorslength))
+    # TODO: infer `contributorslength` from miner
+    return convert(Int64, ceil(getlocalthreshold(miner, meas) * contributorslength))
 end
 
 """
@@ -154,6 +155,7 @@ end
 
 See [`getglobalthreshold`](@ref).
 """
-function getglobalthreshold_integer(miner::Miner, meas::Function, ninstances::Int64)
-    return convert(Int64, floor(getglobalthreshold(miner, meas) * ninstances))
+function getglobalthreshold_integer(miner::Miner, meas::Function)
+    return convert(
+            Int64, floor(getglobalthreshold(miner, meas) * ninstances(dataset(miner))))
 end

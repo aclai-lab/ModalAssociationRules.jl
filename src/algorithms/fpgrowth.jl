@@ -91,14 +91,18 @@ mutable struct FPTree
         miner::Union{Nothing,Miner}=nothing,
         ninstance::Union{Nothing,Int64}=nothing
     )
+        # peek element is pushed first: `2,3,...,lastindex(itemset)` will follow
         item = itemset[1]
 
         @assert !xor(isnothing(miner), isnothing(ninstance)) "Miner and instance number " *
             "associated with the FPTree creation must be given simultaneously as kwargs."
 
+        # warning here... deepcopy is necessary to avoid changing what's inside miner!
         _contributors = isnothing(miner) ?
-            zeros(Int64,1) : SoleRules.contributors(:lsupport, item, ninstance, miner)
+            zeros(Int64,1) :
+            deepcopy(SoleRules.contributors(:lsupport, item, ninstance, miner))
 
+        # leaf or internal node case scenario
         fptree = length(itemset) == 1 ?
             new(item, nothing, FPTree[], 1, _contributors, nothing) :
             new(item, nothing,
@@ -106,6 +110,7 @@ mutable struct FPTree
                     FPTree(itemset[2:end]; isroot=false, miner=miner, ninstance=ninstance)],
                 1, _contributors, nothing)
 
+        # vertical link
         map(child -> parent!(child, fptree), children(fptree))
 
         return fptree
@@ -300,7 +305,6 @@ Return all the unique [`Item`](@ref)s appearing in `fptree`.
 See also [`FPTree`](@ref), [`Item`](@ref), [`Itemset`](@ref).
 """
 function retrieveall(fptree::FPTree)::Itemset
-    # internal function just to avoid repeating the final `unique`
     function _retrieve(fptree::FPTree)
         retrieved = Itemset([_retrieve(child) for child in children(fptree)])
         _content = content(fptree)
@@ -341,12 +345,12 @@ function link!(from::FPTree, to::FPTree)
     @assert from !== link(from) "Error - self linking the following FPTree: \n$(from)"
 
     from = follow(from)
-
     from.link = to
 end
 
 function Base.show(io::IO, fptree::FPTree; indentation::Int64=0)
     _children = children(fptree)
+
     println(io, "-"^indentation * "*"^(length(_children)==0) *
         "$(fptree |> content |> syntaxstring) \t\t count: $(count(fptree)) -\t " *
             "contributors sum: $(sum(contributors(fptree)))")
@@ -368,7 +372,7 @@ struct HeaderTable
     # vector of Items, sorted decreasingly by global support
     items::Vector{Item}
 
-    # Item -> FPTree association
+    # association Item -> FPTree
     link::Dict{Item,Union{Nothing,FPTree}}
 
     function HeaderTable()
@@ -382,13 +386,13 @@ struct HeaderTable
         htable = new(Vector{Item}(), Dict{Item,Union{Nothing,FPTree}}([]))
 
         function fillhtable!(_children::Vector{FPTree}, htable::HeaderTable)
+            # recursively fill htable
             for c in _children
                 link!(htable, c)
                 fillhtable!(children(c), htable)
             end
         end
 
-        # recursively fill htable
         child = children(fptseed)
         fillhtable!(child, htable)
 
@@ -468,6 +472,7 @@ function link!(htable::HeaderTable, fptree::FPTree)
         # was called sometime before now and the entry associated with the content is empty.
         htable.link[_content] = fptree
     else
+        # a new linkage is established
         from = follow(htable, _content)
         if from !== fptree
             link!(from, fptree)
@@ -488,6 +493,7 @@ function checksanity!(htable::HeaderTable, miner::Miner)::Bool
     _issorted = issorted(items(htable),
         by=t -> globalmemo(miner, (:gsupport, Itemset(t))), rev=true)
 
+    # force sorting if needed
     if !_issorted
         sort!(items(htable), by=t -> globalmemo(miner, (:gsupport, Itemset(t))), rev=true)
     end
@@ -551,14 +557,13 @@ function Base.push!(
         return
     end
 
+    # sorting must be guaranteed: remember an FPTree essentially is a prefix tree
     sort!(items(itemset), by=t -> globalmemo(miner, (:gsupport, Itemset(t))), rev=true)
 
     # retrieve the item to grow the tree;
     # to grow a find pattern tree in the modal case scenario, each item has to be associated
     # with its global counter (always 1!) and its contributors array (see [`WorldMask`]).
     item = first(itemset)
-
-    _contributors = contributors(:lsupport, item, ninstance, miner)
 
     # check if a subtree whose content is the first item in `itemset` already exists
     _children = children(fptree)
@@ -567,7 +572,7 @@ function Base.push!(
         # a child containing item already exist: grow deeper in this direction
         subfptree = _children[_children_idx]
         addcount!(subfptree, 1)
-        addcontributors!(subfptree, _contributors)
+        addcontributors!(subfptree, contributors(:lsupport, item, ninstance, miner))
         push!(subfptree, itemset[2:end], ninstance, miner)
     else
         # if it does not, then create a new children FPTree, and set this as its parent
@@ -598,8 +603,8 @@ function Base.push!(
     # retrieve the item to grow the tree;
     # to grow a find pattern tree in the modal case scenario, each item has to be associated
     # with its global and local "counters" collected previously.
-    # You may ask: why collected previously? Well, this dispatch is specialized to grow
-    # conditional pattern base.
+    # You may ask: why collected previously?
+    # Well, this dispatch is specialized to grow conditional pattern base.
     item, _count, _contributors = first(enhanceditemset)
 
     # check if a subtree whose content is the first item in `itemset` already exists
@@ -614,8 +619,8 @@ function Base.push!(
 
         push!(subfptree, enhanceditemset[2:end], miner)
     else
-        # here i want to create a new children FPTree, and set this as its parent;
-        # note that, here, i don't want to update count and contributors since i am already
+        # here I want to create a new children FPTree, and set this as its parent;
+        # note that I don't want to update count and contributors since i am already
         # copying them from the enhanced itemset.
         subfptree = FPTree(enhanceditemset)
         children!(fptree, subfptree)
@@ -672,11 +677,10 @@ function patternbase(
     fptree = link(htable, item)
 
     while !isnothing(fptree)
-        fptcount = count(fptree)
-        fptcontributors = contributors(fptree)
-
-        enhanceditemset = EnhancedItemset([])
-        ancestorfpt = parent(fptree)
+        enhanceditemset = EnhancedItemset([])   # prepare the new enhanced itemset
+        ancestorfpt = parent(fptree)            # parent reference to climb up
+        fptcount = count(fptree)                # starting count, propagated to ancestors
+        fptcontributors = contributors(fptree)  # starting contributors, ^ ^ ^
 
         # look at ancestors, and get collect them keeping count and contributors of
         # the leaf node from which we started this vertical visit.
@@ -689,7 +693,6 @@ function patternbase(
                 content(ancestorfpt),
                 fptcount,
                 fptcontributors
-                # map(min, ancestorfpt |> contributors, fptcontributors)
             )])
 
             ancestorfpt = parent(ancestorfpt)
@@ -704,10 +707,6 @@ function patternbase(
 
         push!(_patternbase, enhanceditemset)
 
-        # println("Debug - obtained patternbase:")
-        # println(_patternbase)
-        # println("Debug - endof patternbase")
-
         fptree = link(fptree)
     end
 
@@ -721,27 +720,24 @@ function compress!(pbase::ConditionalPatternBase, miner::Miner)
     contribslen = pbase[1] |> first |> last |> length
 
     # integer thresholds, needed later to filter out
-    gsupp_int_t = getglobalthreshold_integer(miner, gsupport, ninstances(dataset(miner)))
-    lsupp_int_t =  getlocalthreshold_integer(miner, lsupport, contribslen)
+    gsupp_int_t = getglobalthreshold_integer(miner, gsupport)
 
+    # accumulators needed to establish whether an enhanced itemset is promoted or no
     count_accumulator = DefaultDict{Item, Int64}(0)
     contribs_accumulator = DefaultDict{Item, WorldMask}(zeros(contribslen))
 
     # dictionary representing whether an enhanced itemset is promoted or no
     bouncer = DefaultDict{Item, Bool}(false)
 
+    # enhanceditemset shape : [(atom, count, contributors), (enhitem2), (enhitem3), ...]
     for enhanceditemset in pbase
         for enhitem in enhanceditemset
             _item, _count, _contributors = enhitem
             count_accumulator[_item] += _count
             contribs_accumulator[_item] += _contributors
 
-            if bouncer[_item] == false
-                if count_accumulator[_item] >= gsupp_int_t # &&
-                    # TODO: uncomment after refactoring
-                    # count(x -> x >= gsupp_int_t, contribs_accumulator[_item]) >= lsupp_int_t
-                    bouncer[_item] = true # enhitem is going to be in our pattern base
-                end
+            if count_accumulator[_item] >= gsupp_int_t
+                bouncer[_item] = true # enhitem is going to be in our pattern base
             end
         end
     end
@@ -765,24 +761,18 @@ function projection(
     pbase::ConditionalPatternBase,
     miner::Miner
 )
+    # what this function does, essentially, is to filter the given pattern base.
     fptree = FPTree()
-    # htable = HeaderTable()
 
     # assert pattern base does not contain dirty leftovers
     filter!(x -> !isempty(x), pbase)
 
     if length(pbase) > 0
         compress!(pbase, miner)
-        push!(fptree, pbase, miner) # TODO: HTABLE-REFACTORING
+        push!(fptree, pbase, miner)
     end
 
     htable = HeaderTable(fptree; miner=miner)
-
-    if !isnothing(miner)
-        checksanity!(htable, miner)
-    else
-        @warn "Mining structure not provided. Correctness is not guaranteed."
-    end
 
     return fptree, htable
 end
@@ -832,19 +822,21 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
 
     # associate each instance in the dataset with its frequent itemsets
     _ninstances = ninstances(X)
-    ninstance_to_sorteditemset = [Itemset() for _ in 1:_ninstances] # Vector{Itemset}
+    ninstance_to_itemset = [Itemset() for _ in 1:_ninstances] # Vector{Itemset}
 
-    # for each instance, sort its frequent itemsets by global support
+    # for each instance, retrieve its frequent itemsets;
+    # later, when those itemsets will be pushed, they will be sorted by `push!`
+    # so there is no sense in repeating the process here.
     for i in 1:_ninstances
-        _sorteditemsets = sort([
-                itemset
-                for itemset in frequents
-                if localmemo(miner, (:lsupport, itemset, i)) > lsupport_threshold
-            ], by=t -> globalmemo(miner, (:gsupport, t)), rev=true)
+        _itemsets = [
+            itemset
+            for itemset in frequents
+            if localmemo(miner, (:lsupport, itemset, i)) > lsupport_threshold
+        ]
 
-        ninstance_to_sorteditemset[i] = length(_sorteditemsets) > 0 ?
-            union(_sorteditemsets) :        # single-item Itemsets are merged together
-            Itemset()                       # i-th instance has no itemsets
+        ninstance_to_itemset[i] = length(_itemsets) > 0 ?
+            union(_itemsets) :   # single-item Itemsets are merged together
+            Itemset()                   # i-th instance has no itemsets
     end
 
     verbose && printstyled("Initializing seed FPTree and Header table...\n", color=:green)
@@ -854,7 +846,7 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
 
     verbose && printstyled("Growing seed FPTree...\n", color=:green)
 
-    SoleRules.push!(fptree, ninstance_to_sorteditemset, _ninstances, miner)
+    SoleRules.push!(fptree, ninstance_to_itemset, _ninstances, miner)
 
     # create and fill an header table, necessary to traverse FPTrees horizontally
     htable = HeaderTable(fptree; miner=miner)
@@ -871,8 +863,11 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
         # if `fptree` contains only one path (hence, it can be considered a linked list),
         # then combine all the Itemsets collected from previous step with the remained ones.
         if islist(fptree)
-            # representative FPTree node, to retrieve global and local support
+            # representative FPTree node, to retrieve global and local support;
+            # this must have the lower amount of `count` and (the sum among) `contributors`.
             leader_fpnode = children(fptree)[1]
+            _leader_count = count(leader_fpnode)
+            _leader_contributors = contributors(leader_fpnode)
 
             # all the survived items, from which compose new frequent itemsets
             survivor_itemset = retrieveall(fptree)
@@ -885,7 +880,7 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
 
             for combo in combine(items(survivor_itemset), items(leftout_itemset))
                 globalmemo!(
-                    miner, (:gsupport, combo), (leader_fpnode |> count) / _ninstances)
+                    miner, (:gsupport, combo), _leader_count / _ninstances)
 
                 # single-itemset case is already handled by the first pass over the dataset
                 if length(combo) > 1
@@ -895,17 +890,13 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
 
         else
             for item in reverse(htable)
-                println("WORKING WITH: $(item)")
-
                 # a (conditional) pattern base is a vector of "enhanced" itemsets, that is,
                 # itemsets whose items are paired with a contributors vector.
                 _patternbase = patternbase(item, htable, miner)
 
                 # a new FPTree is projected, via the conditional pattern base retrieved
-                # starting from `fptree` nodes whose content is exactly `item`.
-                # A projection, is, essentialy, a slice/subset of the dataset
-                # rapresented by an FPTree.
-                # Also, the header table associated with the projection is returned.
+                # starting from `fptree` nodes whose content is exactly `item`;
+                # a projection is a subset of the original dataset represented by an FPTree.
                 conditional_fptree, conditional_htable =
                     projection(_patternbase, miner)
 
