@@ -66,7 +66,7 @@ Generic:
 
 Renamings:
   ☐ link property to nextcousin
-  ☐ push to grow or something similar 
+  ✔ push to grow or something similar @done(24-04-03 17:30)
 
 Optimizations:
   ☐ miner.items should be treated as a generator
