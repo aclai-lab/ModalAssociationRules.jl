@@ -222,12 +222,12 @@ Add a new [`FPTree`](@ref) to `fptree`'s children vector.
 !!! warning
     This method forces the new children to be added: it is a caller's responsability to
     check whether `child` is not already a children of `fptree` and, if so, handle the case.
-    This check is performed, for example, in [`Base.push!`](@ref).
+    This check is performed, for example, in [`grow!`](@ref).
 
 !!! note
     This method already sets the new children parent to `fptree` itself.
 
-See also [`Base.push!`](@ref), [`children`](@ref), [`FPTree`](@ref).
+See also [`children`](@ref), [`FPTree`](@ref).
 """
 children!(fptree::FPTree, child::FPTree) = begin
     push!(children(fptree), child)
@@ -502,7 +502,7 @@ function checksanity!(htable::HeaderTable, miner::Miner)::Bool
 end
 
 doc_fptree_push = """
-    function Base.push!(
+    function grow!(
         fptree::FPTree,
         itemset::Itemset,
         ninstance::Int64,
@@ -510,7 +510,7 @@ doc_fptree_push = """
         htable::Union{Nothing,HeaderTable}=nothing
     )
 
-    function Base.push!(
+    function grow!(
         fptree::FPTree,
         itemset::EnhancedItemset,
         ninstance::Int64,
@@ -518,7 +518,7 @@ doc_fptree_push = """
         htable::Union{Nothing,HeaderTable}=nothing
     )
 
-    Base.push!(
+    grow!(
         fptree::FPTree,
         enhanceditemsets::ConditionalPatternBase,
         miner::Miner;
@@ -538,7 +538,7 @@ See also [`EnhancedItemset`](@ref), [`FPTree`](@ref), [`gsupport`](@ref),
 """
 
 # # IDEA: write uniquely the following dispatch, merging Itemset and EnhancedItemset cases
-# function Base.push!(
+# function grow!(
 #     fptree::FPTree,
 #     itemsets::Vector{T},
 #     miner::Miner;
@@ -546,7 +546,7 @@ See also [`EnhancedItemset`](@ref), [`FPTree`](@ref), [`gsupport`](@ref),
 # ) where {T <: Union{Itemset, EnhancedItemset}}
 
 """$(doc_fptree_push)"""
-function Base.push!(
+function grow!(
     fptree::FPTree,
     itemset::Itemset,
     ninstance::Int64,
@@ -573,7 +573,7 @@ function Base.push!(
         subfptree = _children[_children_idx]
         addcount!(subfptree, 1)
         addcontributors!(subfptree, contributors(:lsupport, item, ninstance, miner))
-        push!(subfptree, itemset[2:end], ninstance, miner)
+        grow!(subfptree, itemset[2:end], ninstance, miner)
     else
         # if it does not, then create a new children FPTree, and set this as its parent
         subfptree = FPTree(itemset; isroot=false, miner=miner, ninstance=ninstance)
@@ -581,16 +581,16 @@ function Base.push!(
     end
 end
 
-Base.push!(
+grow!(
     fptree::FPTree,
     itemsets::Vector{Itemset},
     ninstances::Int64,
     miner::Miner;
     kwargs...
-) = map(ninstance -> push!(
+) = map(ninstance -> grow!(
     fptree, itemsets[ninstance], ninstance, miner; kwargs...), 1:ninstances)
 
-function Base.push!(
+function grow!(
     fptree::FPTree,
     enhanceditemset::EnhancedItemset,
     miner::Miner
@@ -617,7 +617,7 @@ function Base.push!(
         addcount!(subfptree, _count)
         addcontributors!(subfptree, _contributors)
 
-        push!(subfptree, enhanceditemset[2:end], miner)
+        grow!(subfptree, enhanceditemset[2:end], miner)
     else
         # here I want to create a new children FPTree, and set this as its parent;
         # note that I don't want to update count and contributors since i am already
@@ -627,12 +627,12 @@ function Base.push!(
     end
 end
 
-Base.push!(
+grow!(
     fptree::FPTree,
     enhanceditemsets::ConditionalPatternBase,
     miner::Miner;
     kwargs...
-) = [push!(fptree, itemset, miner; kwargs...) for itemset in enhanceditemsets]
+) = [grow!(fptree, itemset, miner; kwargs...) for itemset in enhanceditemsets]
 
 """
     Base.reverse(htable::HeaderTable)
@@ -714,7 +714,7 @@ function patternbase(
 end
 
 # TODO: this code is ugly. Refactor it after frequencies results the same as apriori
-function compress!(pbase::ConditionalPatternBase, miner::Miner)
+function bounce!(pbase::ConditionalPatternBase, miner::Miner)
     # in the first enhanced itemset, in its first tuple, the last position is a world mask;
     # retrieve its length.
     contribslen = pbase[1] |> first |> last |> length
@@ -726,24 +726,18 @@ function compress!(pbase::ConditionalPatternBase, miner::Miner)
     count_accumulator = DefaultDict{Item, Int64}(0)
     contribs_accumulator = DefaultDict{Item, WorldMask}(zeros(contribslen))
 
-    # dictionary representing whether an enhanced itemset is promoted or no
-    bouncer = DefaultDict{Item, Bool}(false)
-
     # enhanceditemset shape : [(atom, count, contributors), (enhitem2), (enhitem3), ...]
     for enhanceditemset in pbase
         for enhitem in enhanceditemset
             _item, _count, _contributors = enhitem
             count_accumulator[_item] += _count
             contribs_accumulator[_item] += _contributors
-
-            if count_accumulator[_item] >= gsupp_int_t
-                bouncer[_item] = true # enhitem is going to be in our pattern base
-            end
         end
     end
 
     for enhanceditemset in pbase
-        filter!(enhitem -> bouncer[enhitem |> first] == true, enhanceditemset)
+        filter!(
+            enhitem -> count_accumulator[enhitem |> first] >= gsupp_int_t, enhanceditemset)
     end
 end
 
@@ -768,8 +762,8 @@ function projection(
     filter!(x -> !isempty(x), pbase)
 
     if length(pbase) > 0
-        compress!(pbase, miner)
-        push!(fptree, pbase, miner)
+        bounce!(pbase, miner)
+        grow!(fptree, pbase, miner)
     end
 
     htable = HeaderTable(fptree; miner=miner)
@@ -816,27 +810,30 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
     verbose && printstyled("Saving computed metrics into miner...\n", color=:green)
 
     # update miner with the frequent itemsets just computed
-    push!(freqitems(miner), frequents...)
+    append!(freqitems(miner), frequents)
 
     verbose && printstyled("Preprocessing frequent itemsets...\n", color=:green)
 
     # associate each instance in the dataset with its frequent itemsets
     _ninstances = ninstances(X)
-    ninstance_to_itemset = [Itemset() for _ in 1:_ninstances] # Vector{Itemset}
+    ninstance_to_itemset = begin
+        ninstance_to_itemset = [Itemset() for _ in 1:_ninstances] # Vector{Itemset}
 
-    # for each instance, retrieve its frequent itemsets;
-    # later, when those itemsets will be pushed, they will be sorted by `push!`
-    # so there is no sense in repeating the process here.
-    for i in 1:_ninstances
-        _itemsets = [
-            itemset
-            for itemset in frequents
-            if localmemo(miner, (:lsupport, itemset, i)) > lsupport_threshold
-        ]
+        # for each instance, retrieve its frequent itemsets;
+        # later, when those itemsets will be pushed, they will be sorted by `grow!`
+        # so there is no sense in repeating the process here.
+        for i in 1:_ninstances
+            _itemsets = [
+                itemset
+                for itemset in frequents
+                if localmemo(miner, (:lsupport, itemset, i)) > lsupport_threshold
+            ]
 
-        ninstance_to_itemset[i] = length(_itemsets) > 0 ?
-            union(_itemsets) :   # single-item Itemsets are merged together
-            Itemset()                   # i-th instance has no itemsets
+            ninstance_to_itemset[i] = length(_itemsets) > 0 ?
+                union(_itemsets) :          # single-item Itemsets are merged together
+                Itemset()                   # i-th instance has no itemsets
+        end
+        ninstance_to_itemset
     end
 
     verbose && printstyled("Initializing seed FPTree and Header table...\n", color=:green)
@@ -846,7 +843,7 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
 
     verbose && printstyled("Growing seed FPTree...\n", color=:green)
 
-    SoleRules.push!(fptree, ninstance_to_itemset, _ninstances, miner)
+    SoleRules.grow!(fptree, ninstance_to_itemset, _ninstances, miner)
 
     # create and fill an header table, necessary to traverse FPTrees horizontally
     htable = HeaderTable(fptree; miner=miner)

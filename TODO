@@ -64,13 +64,17 @@ Generic:
   ☐ use make_lmeas and make_gmeas decorators in idea.jl, to define meaningfulness measures in a more compact and robust way
   ☐ move `isless` between `Item`s to SoleLogics
 
+Renamings:
+  ☐ link property to nextcousin
+  ☐ push to grow or something similar 
+
 Optimizations:
   ☐ miner.items should be treated as a generator
   ☐ global memoization should check if memoized treshold is larger than requested one
   ☐ check whether sum between two vectors in addcontributors!(fptree::FPTree, contribution::WorldMask) is optimized
   ☐ give the possiblity to consider a dataset slice to extract rules without trivial items (see `EnhancedItemset`)
 
-  Utility:
+Utility:
   ✔ Base.in between two itemsets @done(24-02-19 14:18)
   ☐ build a macro to implement decorator pattern to build local and global measures, optionally exploiting Miner memoization
   ☐ better design how an Miner keeps track of local measures. Local and global measures CAN be independent. 
