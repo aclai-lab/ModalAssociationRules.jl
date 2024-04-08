@@ -79,7 +79,7 @@ end
 
 function push!(itemset::Itemset, item::Item)
     push!(items(itemset), item)
-    sort!(unique!(items(itemset)))
+    # sort!(unique!(items(itemset))) # TODO: remove
 end
 
 items(itemset::Itemset) = itemset.items
@@ -155,56 +155,59 @@ only on two instances. If we consider the third world, then the itemset is never
 
 See also [`Contributors`](@ref), [`Itemset`](@ref), [`MeaningfulnessMeasure`](@ref).
 """
-const WorldMask = Vector{Int64}
+ const WorldMask = Vector{Int64}
 
 """
     const EnhancedItem = Tuple{Item,Int64,WorldMask}
 """
-const EnhancedItem = Tuple{Item,Int64,WorldMask}
+const EnhancedItem = Tuple{Item,Int64}
+
+# TODO: remove this
+# """
+#     const EnhancedItemset = Vector{Tuple{Item,Int64,WorldMask}}
+#
+# "Enhanced" representation of an [`Itemset`](@ref), in which each [`Item`](@ref) is
+# associated to a counter and a specific [`WorldMask`](@ref).
+#
+# Consider an [`Item`](@ref) called `item`.
+# The first counter keeps the value of [`gsupport`](@ref) applied on `item` itself.
+# The second counter counts on which worlds `item` is true.
+#
+# Intuitively, this type is useful to represent and manipulate collections of items when we
+# want to avoid iterating an entire dataset multiple times when extracting frequent
+# [`Itemset`](@ref).
+#
+# !!! info
+#     To give you a better insight into where this type of data is used, this is widely used
+#     behind the scenes in the implementation of [`fpgrowth`](@ref), which is the
+#     state of art algorithm to perform ARM.
+#
+# See also [`fpgrowth`](@ref), [`Item`](@ref), [`Itemset`](@ref), [`WorldMask`](@ref).
+# """
+# const EnhancedItemset = Vector{EnhancedItem}
 
 """
-    const EnhancedItemset = Vector{Tuple{Item,Int64,WorldMask}}
-
-"Enhanced" representation of an [`Itemset`](@ref), in which each [`Item`](@ref) is
-associated to a counter and a specific [`WorldMask`](@ref).
-
-Consider an [`Item`](@ref) called `item`.
-The first counter keeps the value of [`gsupport`](@ref) applied on `item` itself.
-The second counter counts on which worlds `item` is true.
-
-Intuitively, this type is useful to represent and manipulate collections of items when we
-want to avoid iterating an entire dataset multiple times when extracting frequent
-[`Itemset`](@ref).
-
-!!! info
-    To give you a better insight into where this type of data is used, this is widely used
-    behind the scenes in the implementation of [`fpgrowth`](@ref), which is the
-    state of art algorithm to perform ARM.
-
-See also [`fpgrowth`](@ref), [`Item`](@ref), [`Itemset`](@ref), [`WorldMask`](@ref).
+    const EnhancedItemset = Tuple{Itemset,Int64}
 """
-const EnhancedItemset = Vector{EnhancedItem}
+const EnhancedItemset = Tuple{Itemset,Int64}
+
+itemset(enhitemset::EnhancedItemset) = first(enhitemset)
+count(enhitemset::EnhancedItemset) = last(enhitemset)
 
 function Base.convert(
     ::Type{EnhancedItemset},
     itemset::Itemset,
-    count::Int64,
-    nworlds::Int64
+    count::Int64
 )
-    return EnhancedItemset([(item, count, zeros(Int64, nworlds)) for item in itemset])
+    return EnhancedItemset((itemset, count))
 end
 
 function Base.convert(::Type{Itemset}, enhanceditemset::EnhancedItemset)
-    return Itemset([first(enhanceditem) for enhanceditem in enhanceditemset])
+    return Itemset(first(enhanceditemset))
 end
 
 function Base.show(io::IO, enhanceditemset::EnhancedItemset)
-    print(io, "[")
-    for itemset in enhanceditemset
-        _content, _count, _contributors = itemset
-        print(io, "($(_content |> syntaxstring) / $(_count) / $(sum(_contributors))), ")
-    end
-    println(io, "]")
+    print(io, "[$(first(enhanceditemset))] : $(last(enhanceditemset))")
 end
 
 """
@@ -411,17 +414,18 @@ See also [`LmeasMemoKey`](@ref), [`ARMSubject`](@ref).
 """
 const LmeasMemo = Dict{LmeasMemoKey,Threshold}
 
-"""
-Structure for storing association between a local measure, applied on a certain
-[`ARMSubject`](@ref) on a certain [`LogicalInstance`](@ref), and a vector of integers
-representing the worlds for which the measure is greater than a certain threshold.
-
-This type is intended to be used inside a [`Miner`](@ref) `info` named tuple, to
-support the execution of, for example, [`fpgrowth`](@ref) algorthm.
-
-See also [`LmeasMemoKey`](@ref), [`WorldMask`](@ref)
-"""
-const Contributors = Dict{LmeasMemoKey, WorldMask}
+# TODO: remove this
+# """
+# Structure for storing association between a local measure, applied on a certain
+# [`ARMSubject`](@ref) on a certain [`LogicalInstance`](@ref), and a vector of integers
+# representing the worlds for which the measure is greater than a certain threshold.
+#
+# This type is intended to be used inside a [`Miner`](@ref) `info` named tuple, to
+# support the execution of, for example, [`fpgrowth`](@ref) algorthm.
+#
+# See also [`LmeasMemoKey`](@ref), [`WorldMask`](@ref)
+# """
+# const Contributors = Dict{LmeasMemoKey, WorldMask}
 
 """
     const GmeasMemoKey = Tuple{Symbol,ARMSubject}
