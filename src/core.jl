@@ -885,6 +885,7 @@ See also [`Miner`](@ref).
 """
 hasinfo(miner::Miner, key::Symbol) = haskey(miner |> info, key)
 
+# TODO: after Contributors are removed, also delete all utilities related to them.
 doc_getcontributors = """
     contributors(
         measname::Symbol,

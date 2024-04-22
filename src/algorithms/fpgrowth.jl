@@ -86,9 +86,6 @@ mutable struct FPTree
         # peek element is pushed first: `2,3,...,lastindex(itemset)` will follow
         item = itemset[1]
 
-        @assert !xor(isnothing(miner), isnothing(ninstance)) "Miner and instance number " *
-            "associated with the FPTree creation must be given simultaneously as kwargs."
-
         # leaf or internal node case scenario
         fptree = length(itemset) == 1 ?
             new(item, nothing, FPTree[], 1, nothing) :
@@ -104,11 +101,14 @@ mutable struct FPTree
     function FPTree(enhanceditemset::EnhancedItemset)
         _itemset = itemset(enhanceditemset)
         _count = count(enhanceditemset)
+        _item = first(_itemset)
 
         fptree = length(_itemset) == 1 ?
-            new(item, nothing, FPTree[], _count, nothing) :
-            new(item, nothing, FPTree[FPTree(EnhancedItemset(_itemset[2:end], _count))],
-                _count, nothing)
+            new(_item, nothing, FPTree[], _count, nothing) :
+            new(_item, nothing,
+                FPTree[(_itemset[2:end], _count) |> EnhancedItemset |> FPTree],
+                _count, nothing
+            )
 
         map(child -> parent!(child, fptree), children(fptree))
 
@@ -545,9 +545,9 @@ function grow!(
     end
 
     # sorting must be guaranteed: remember an FPTree essentially is a prefix tree
-    # WARNING: this is not correct, after the modal fp-growth refactoring all the calls to
-    # fpgrowth must be independent from Miner (fpgrowth is called multiple times with
-    # different parameters, and using a single Miner can be messy)
+    # WARNING: this might be not correct, after the modal fp-growth refactoring all the
+    # calls to fpgrowth should be independent from Miner (fpgrowth is called multiple times
+    # with different parameters, and using a single Miner can be messy)
     sort!(items(itemset), by=t -> globalmemo(miner, (:gsupport, Itemset(t))), rev=true)
 
     # retrieve the item to grow the tree;
@@ -599,7 +599,7 @@ function grow!(
         # i don't want to create a new child, just grow an already existing one
         subfptree = _children[_children_idx]
         addcount!(subfptree, _count)
-        grow!(subfptree, EnhancedItemset(_itemset[2:end], _count), miner)
+        grow!(subfptree, (_itemset[2:end], _count) |> EnhancedItemset, miner)
     else
         # here I want to create a new children FPTree, and set this as its parent;
         # note that I don't want to update count and contributors since i am already
@@ -676,10 +676,10 @@ function patternbase(
         # items inside the itemset are sorted decreasingly by global support.
         # Note that, although we are working with enhanced itemsets, the sorting only
         # requires to consider the items inside them (so, the "non-enhanced" part).
-        sort!(_itemset,
-            by=t -> globalmemo(miner, (:gsupport, Itemset([t |> first]) )), rev=true)
+        sort!(items(_itemset),
+            by=t -> globalmemo(miner, (:gsupport, Itemset(t))), rev=true)
 
-        push!(_patternbase, EnhancedItemset(_itemset, fptcount))
+        push!(_patternbase, EnhancedItemset((_itemset, fptcount)))
 
         fptree = link(fptree)
     end
@@ -687,6 +687,8 @@ function patternbase(
     return _patternbase
 end
 
+# TODO: debug how the new ConditionalPatternBase is filtered out
+# and debug why count field is no more correctly accumulated.
 function bounce!(pbase::ConditionalPatternBase, miner::Miner)
     # integer thresholds, needed later to filter out
     gsupp_int_t = getglobalthreshold_integer(miner, gsupport)
@@ -705,7 +707,9 @@ function bounce!(pbase::ConditionalPatternBase, miner::Miner)
 
     for enhanceditemset in pbase
         filter!(
-            _item -> count_accumulator[_item] >= gsupp_int_t, itemset(enhanceditemset))
+            _item -> count_accumulator[_item] >= gsupp_int_t,
+            enhanceditemset |> itemset |> items
+        )
     end
 end
 
@@ -759,7 +763,8 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
         "requires global support (gsupport) as meaningfulness measure in order to " *
         "work. Please, add a tuple (gsupport, local support threshold, " *
         "global support threshold) to miner.item_constrained_measures field.\n" *
-        "Local support is needed too, but it is already considered in the global case."
+        "Note that local support is needed too, but it is already considered internally " *
+        "by global support."
 
     # retrieve local support threshold, as this is necessary later to filter which
     # frequent items are meaningful on each instance.
@@ -781,35 +786,27 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
 
     verbose && printstyled("Preprocessing frequent itemsets...\n", color=:green)
 
-    # for each world, apply fpgrowth. Then, combine all the results and keep
-    # TODO: discuss idea with Eduard
-    # fpbouncer = Dict{Itemset,Int64}()
-    # for world in 1:nworlds(X, 0)
-    #     for instance in 1:ninstances(X)
-    #     end
-    # end
-
     # associate each instance in the dataset with its frequent itemsets
-    # _ninstances = ninstances(X)
-    # ninstance_to_itemset = begin
-    #     ninstance_to_itemset = [Itemset() for _ in 1:_ninstances] # Vector{Itemset}
-    #
-    #     # for each instance, retrieve its frequent itemsets;
-    #     # later, when those itemsets will be pushed, they will be sorted by `grow!`
-    #     # so there is no sense in repeating the process here.
-    #     for i in 1:_ninstances
-    #         _itemsets = [
-    #             itemset
-    #             for itemset in frequents
-    #             if localmemo(miner, (:lsupport, itemset, i)) > lsupport_threshold
-    #         ]
-    #
-    #         ninstance_to_itemset[i] = length(_itemsets) > 0 ?
-    #             union(_itemsets) :          # single-item Itemsets are merged together
-    #             Itemset()                   # i-th instance has no itemsets
-    #     end
-    #     ninstance_to_itemset
-    # end
+    _ninstances = ninstances(X)
+    ninstance_to_itemset = begin
+        ninstance_to_itemset = [Itemset() for _ in 1:_ninstances]
+
+        # for each instance, retrieve its frequent itemsets;
+        # later, when those itemsets will be pushed, they will be sorted by `grow!`
+        # so there is no sense in repeating the process here.
+        for i in 1:_ninstances
+            _itemsets = [
+                itemset
+                for itemset in frequents
+                if localmemo(miner, (:lsupport, itemset, i)) > lsupport_threshold
+            ]
+
+            ninstance_to_itemset[i] = length(_itemsets) > 0 ?
+                union(_itemsets) :          # single-item Itemsets are merged together
+                Itemset()                   # i-th instance has no itemsets
+        end
+        ninstance_to_itemset
+    end
 
     verbose && printstyled("Initializing seed FPTree and Header table...\n", color=:green)
 
@@ -818,7 +815,9 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
 
     verbose && printstyled("Growing seed FPTree...\n", color=:green)
 
-    SoleRules.grow!(fptree, ninstance_to_itemset, _ninstances, miner)
+    SoleRules.grow!(fptree, ninstance_to_itemset, miner)
+
+    verbose && printstyled("Linking Header table...\n", color=:green)
 
     # create and fill an header table, necessary to traverse FPTrees horizontally
     htable = HeaderTable(fptree; miner=miner)
@@ -884,6 +883,8 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
     _fpgrowth_kernel(fptree, htable, miner, Itemset())
 end
 
+# TODO: powerup system is cool, but since Contributors are about to be completely removed,
+# also remove this (or keep this but empty its content).
 """
     initpowerups(::typeof(fpgrowth), ::AbstractDataset)::Powerup
 
@@ -893,5 +894,6 @@ how miner's `powerup` field is filled to optimize the mining.
 See also [`haspowerup`](@ref), [`powerup`](@ref).
 """
 function initpowerups(::typeof(fpgrowth), ::AbstractDataset)::Powerup
-    return Powerup([:contributors => Contributors([])])
+    return Powerup([])
+    # return Powerup([:contributors => Contributors([])])
 end
