@@ -11,10 +11,6 @@
 
         count::Int64                        # number of equal Items this node represents
 
-        # how many times lsupp(content) does overpass
-        # the corresponding threshold for each world
-        const contributors::WorldMask       # TODO: remove
-
         link::Union{Nothing,FPTree}         # link to another FPTree root
     end
 
@@ -154,25 +150,6 @@ See also [`count!`](@ref), [`FPTree`](@ref), [`Item`](@ref).
 """
 Base.count(fptree::FPTree)::Int64 = fptree.count
 
-# TODO: remove this
-# """
-#     contributors(fptree::FPTree)::WorldMask
-#
-# Getter for the `fptree` contributors array.
-#
-# Consider the [`Contributors`](@ref) definition.
-# In the specific case of an [`FPTree`](@ref), the contributors array is simply a vector of
-# integers which answers the following question for each i-th world of a generic instance:
-# given a local support threshold `t`, how many times is `lsupp(content) >= t` ?
-#
-# Essentially, it represents the number of overlappings [`Item`](@ref) which ended up in
-# `fptree` node during the building process of the tree itself.
-#
-# See also [`Contributors`](@ref), [`contributors!`](@ref), [`FPTree`](@ref), [`Item`](@ref),
-# [`lsupport`](@ref).
-# """
-# contributors(fptree::FPTree)::WorldMask = fptree.contributors
-
 """
     link(fptree::FPTree)::Union{Nothing,FPTree}
 
@@ -239,32 +216,6 @@ Add `newcount` to `fptree`'s internal counter.
 See also [`count`](@ref), [`FPTree`](@ref).
 """
 addcount!(fptree::FPTree, deltacount::Int64) = fptree.count += deltacount
-
-# TODO: remove this
-# """
-#     contributors!(fptree::FPTree, contribution::WorldMask)
-#
-# Setter for `fptree`'s internal contributors mask to `contribution` [`WorldMask`](@ref).
-#
-# See also [`contributors`](@ref), [`FPTree`](@ref), [`WorldMask`](@ref).
-# """
-# function contributors!(fptree::FPTree, contribution::WorldMask)
-#     @assert length(contributors(fptree)) == length(contribution) "Masks length mismatch. " *
-#         "FPTree contributors mask length is $(length(contributors(fptree))), while the " *
-#         "provided mask length is $(length(contribution))."
-#
-#     map!(x -> x, contributors(fptree), contribution)
-# end
-#
-# """
-#     addcontributors!(fptree::FPTree, contribution::WorldMask) =
-#
-# Add the `contribution` [`WorldMask`](@ref) to `fptree`'s internal contributors mask.
-#
-# See also [`contributors`](@ref), [`FPTree`](@ref), [`WorldMask`](@ref).
-# """
-# addcontributors!(fptree::FPTree, contribution::WorldMask) =
-#     fptree.contributors .+= contribution
 
 """
     islist(fptree::FPTree)::Bool
@@ -545,9 +496,6 @@ function grow!(
     end
 
     # sorting must be guaranteed: remember an FPTree essentially is a prefix tree
-    # WARNING: this might be not correct, after the modal fp-growth refactoring all the
-    # calls to fpgrowth should be independent from Miner (fpgrowth is called multiple times
-    # with different parameters, and using a single Miner can be messy)
     sort!(items(itemset), by=t -> globalmemo(miner, (:gsupport, Itemset(t))), rev=true)
 
     # retrieve the item to grow the tree;
@@ -656,18 +604,15 @@ function patternbase(
     # for each reference, collect all the ancestors keeping a WorldMask which, at each
     # position, is the minimum between the value in reference's mask and the new node one.
     fptree = link(htable, item)
-    fptcount = count(fptree)                    # count propagated to ancestors
 
     while !isnothing(fptree)
         _itemset = Itemset([])                  # prepare the new enhanced itemset content
         ancestorfpt = parent(fptree)            # parent reference to climb up
+        fptcount = count(fptree)                # count to be propagated to ancestors
 
         # look at ancestors, and collect them keeping count of
         # the leaf node from which we started this vertical visit.
         while !isnothing(content(ancestorfpt))
-            # prepend! instead of push! because we must keep the top-down order of items
-            # in a path, but we are visiting a branch from bottom upwards.
-            # prepend!(_itemset, content(ancestorfpt)) # TODO: remove
             push!(_itemset, content(ancestorfpt))
             ancestorfpt = parent(ancestorfpt)
         end
@@ -687,8 +632,6 @@ function patternbase(
     return _patternbase
 end
 
-# TODO: debug how the new ConditionalPatternBase is filtered out
-# and debug why count field is no more correctly accumulated.
 function bounce!(pbase::ConditionalPatternBase, miner::Miner)
     # integer thresholds, needed later to filter out
     gsupp_int_t = getglobalthreshold_integer(miner, gsupport)
@@ -834,14 +777,16 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
         # if `fptree` contains only one path (hence, it can be considered a linked list),
         # then combine all the Itemsets collected from previous step with the remained ones.
         if islist(fptree)
-            # representative FPTree node, to retrieve global support;
+            # representative FPTree node;
+            # its count field is enough to compute global support.
             leader_fpnode = children(fptree)[1]
-            _leader_count = count(leader_fpnode)
+            leader_count = count(leader_fpnode)
+
+            # denominator to compute global support later
+            _ninstances = ninstances(dataset(miner))
 
             # all the survived items, from which compose new frequent itemsets
             survivor_itemset = retrieveall(fptree)
-
-            _ninstances = ninstances(dataset(miner))
 
             verbose &&
                 printstyled("Merging $(leftout_itemset |> length) leftout items with a " *
@@ -849,7 +794,7 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
 
             for combo in combine(items(survivor_itemset), items(leftout_itemset))
                 globalmemo!(
-                    miner, (:gsupport, combo), _leader_count / _ninstances)
+                    miner, (:gsupport, combo), leader_count / _ninstances)
 
                 # single-itemset case is already handled by the first pass over the dataset
                 if length(combo) > 1
@@ -879,12 +824,13 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
         end
     end
 
-    # call main logic
+    # call main logic;
+    # IDEA: maybe, when thinking about parallel modal FPgrowth, having a monolitic
+    # miner object being passed all through the algorithm recursions will be hard to manage.
+    # An idea could be that of creating a Configuration struct foreach parallel execution.
     _fpgrowth_kernel(fptree, htable, miner, Itemset())
 end
 
-# TODO: powerup system is cool, but since Contributors are about to be completely removed,
-# also remove this (or keep this but empty its content).
 """
     initpowerups(::typeof(fpgrowth), ::AbstractDataset)::Powerup
 
@@ -894,6 +840,6 @@ how miner's `powerup` field is filled to optimize the mining.
 See also [`haspowerup`](@ref), [`powerup`](@ref).
 """
 function initpowerups(::typeof(fpgrowth), ::AbstractDataset)::Powerup
+    # customize your fpgrowth here
     return Powerup([])
-    # return Powerup([:contributors => Contributors([])])
 end

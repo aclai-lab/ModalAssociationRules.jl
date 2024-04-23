@@ -79,7 +79,6 @@ end
 
 function push!(itemset::Itemset, item::Item)
     push!(items(itemset), item)
-    # sort!(unique!(items(itemset))) # TODO: remove
 end
 
 items(itemset::Itemset) = itemset.items
@@ -161,30 +160,6 @@ See also [`Contributors`](@ref), [`Itemset`](@ref), [`MeaningfulnessMeasure`](@r
     const EnhancedItem = Tuple{Item,Int64,WorldMask}
 """
 const EnhancedItem = Tuple{Item,Int64}
-
-# TODO: remove this
-# """
-#     const EnhancedItemset = Vector{Tuple{Item,Int64,WorldMask}}
-#
-# "Enhanced" representation of an [`Itemset`](@ref), in which each [`Item`](@ref) is
-# associated to a counter and a specific [`WorldMask`](@ref).
-#
-# Consider an [`Item`](@ref) called `item`.
-# The first counter keeps the value of [`gsupport`](@ref) applied on `item` itself.
-# The second counter counts on which worlds `item` is true.
-#
-# Intuitively, this type is useful to represent and manipulate collections of items when we
-# want to avoid iterating an entire dataset multiple times when extracting frequent
-# [`Itemset`](@ref).
-#
-# !!! info
-#     To give you a better insight into where this type of data is used, this is widely used
-#     behind the scenes in the implementation of [`fpgrowth`](@ref), which is the
-#     state of art algorithm to perform ARM.
-#
-# See also [`fpgrowth`](@ref), [`Item`](@ref), [`Itemset`](@ref), [`WorldMask`](@ref).
-# """
-# const EnhancedItemset = Vector{EnhancedItem}
 
 """
     const EnhancedItemset = Tuple{Itemset,Int64}
@@ -413,19 +388,6 @@ instance, and its value.
 See also [`LmeasMemoKey`](@ref), [`ARMSubject`](@ref).
 """
 const LmeasMemo = Dict{LmeasMemoKey,Threshold}
-
-# TODO: remove this
-# """
-# Structure for storing association between a local measure, applied on a certain
-# [`ARMSubject`](@ref) on a certain [`LogicalInstance`](@ref), and a vector of integers
-# representing the worlds for which the measure is greater than a certain threshold.
-#
-# This type is intended to be used inside a [`Miner`](@ref) `info` named tuple, to
-# support the execution of, for example, [`fpgrowth`](@ref) algorthm.
-#
-# See also [`LmeasMemoKey`](@ref), [`WorldMask`](@ref)
-# """
-# const Contributors = Dict{LmeasMemoKey, WorldMask}
 
 """
     const GmeasMemoKey = Tuple{Symbol,ARMSubject}
@@ -884,99 +846,6 @@ Return whether `miner` additional informations field contains an entry `key`.
 See also [`Miner`](@ref).
 """
 hasinfo(miner::Miner, key::Symbol) = haskey(miner |> info, key)
-
-# TODO: after Contributors are removed, also delete all utilities related to them.
-doc_getcontributors = """
-    contributors(
-        measname::Symbol,
-        item::Item,
-        ninstance::Int64,
-        miner::Miner
-    )::WorldMask
-
-    function contributors(
-        measname::Symbol,
-        itemset::Itemset,
-        ninstance::Int64,
-        miner::Miner
-    )::WorldMask
-
-    function contributors(
-        memokey::LmeasMemoKey,
-        miner::Miner
-    )::WorldMask
-
-Consider all the contributors of an [`Item`](@ref), that is, all the worlds for which the
-[`lsupport`](@ref) is greater than a certain [`Threshold`](@ref).
-
-Return a vector whose size is the number of worlds, and the content is 0 if the local
-threshold is not overpassed, 1 otherwise.
-
-!!! warning
-    This method requires the [`Miner`](@ref) to have a [`Contributors`](@ref) powerup.
-    See [`initpowerups`](@ref).
-
-See also [`Item`](@ref), [`LmeasMemoKey`](@ref), [`lsupport`](@ref),
-[`initpowerups`](@ref), [`Threshold`](@ref), [`WorldMask`](@ref).
-"""
-function contributors(
-    memokey::LmeasMemoKey,
-    miner::Miner
-)::WorldMask
-    if !haspowerup(miner, :contributors)
-        _fsym, _subject, _ninstance = memokey
-        error("Error when getting contributors of $(_fsym) applied to $(_subject) " *
-        "item and instance $(_ninstance). This functionality is not supported by " *
-        "the mining algorithm provided ($(algorithm(miner)))")
-    else
-        return powerups(miner, :contributors)[memokey]
-    end
-end
-function contributors(
-    measname::Symbol,
-    itemset::Itemset,
-    ninstance::Int64,
-    miner::Miner
-)::WorldMask
-    return contributors((measname, itemset, ninstance), miner)
-end
-function contributors(
-    measname::Symbol,
-    item::Item,
-    ninstance::Int64,
-    miner::Miner
-)::WorldMask
-    return contributors(measname, Itemset(item), ninstance, miner)
-end
-
-"""
-    allcontributors(measname::Symbol, itemset::Itemset, miner::Miner)
-
-Retrieve all the [`contributors`](@ref) associated with `itemset`.
-
-See also [`Contributors`](@ref), [`contributors`](@ref), [`Itemset`](@ref), [`Miner`](@ref).
-"""
-function allcontributors(measname::Symbol, itemset::Itemset, miner::Miner)
-    # TODO: memo this call inside miner
-    return reduce(vcat, sum.(eachcol([
-        contributors(measname, itemset, i, miner) for i in 1:ninstances(dataset(miner))])))
-end
-
-"""
-    contributors!(miner::Miner, key::LmeasMemoKey, mask::WorldMask)
-
-Set a `miner`'s contributors entry.
-
-See also [`Miner`](@ref), [`LmeasMemoKey`](@ref), [`initpowerups`](@ref),
-[`WorldMask`](@ref).
-"""
-function contributors!(miner::Miner, key::LmeasMemoKey, mask::WorldMask)
-    if !haspowerup(miner, :contributors)
-        error("Contributors is not supported by $(algorithm(miner)).")
-    else
-        powerups(miner, :contributors)[key] = mask
-    end
-end
 
 """
     mine!(miner::Miner)
