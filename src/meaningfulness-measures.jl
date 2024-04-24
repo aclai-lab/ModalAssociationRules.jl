@@ -47,8 +47,8 @@ function lsupport(
         # IDEA: call two methods here. One is built-in in Sole, and checks every equippable
         # attribute that `miner` can have in its info named tuple.
         # The other dispatch is empty, but customizable by the user to check his things.
-        if haspowerup(miner, :contributors)
-            contributors!(miner, memokey, _contributors)
+        if haspowerup(miner, :instance_item_toworlds)
+            powerups(miner, :instance_item_toworlds)[(i_instance, itemset)] = _contributors
         end
     end
 

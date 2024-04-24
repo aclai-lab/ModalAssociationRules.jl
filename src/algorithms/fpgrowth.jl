@@ -347,7 +347,7 @@ struct HeaderTable
         fptseed::FPTree;
         miner::Union{Nothing,Miner}=nothing
     )
-        return HeaderTable(convert.(Item, itemsets), fptseed; miner=miner)
+        return HeaderTable(convert.(Item, itemsets), fptseed; miner)
     end
 end
 
@@ -633,8 +633,8 @@ function patternbase(
 end
 
 function bounce!(pbase::ConditionalPatternBase, miner::Miner)
-    # integer thresholds, needed later to filter out
-    gsupp_int_t = getglobalthreshold_integer(miner, gsupport)
+    # needed to filter out later
+    lsupp_int_threshold = powerups(miner, :local_threshold_integer)
 
     # accumulators needed to establish whether an enhanced itemset is promoted or no
     count_accumulator = DefaultDict{Item, Int64}(0)
@@ -650,7 +650,7 @@ function bounce!(pbase::ConditionalPatternBase, miner::Miner)
 
     for enhanceditemset in pbase
         filter!(
-            _item -> count_accumulator[_item] >= gsupp_int_t,
+            _item -> count_accumulator[_item] >= lsupp_int_threshold,
             enhanceditemset |> itemset |> items
         )
     end
@@ -701,73 +701,7 @@ See also [`Miner`](@ref), [`FPTree`](@ref), [`HeaderTable`](@ref),
 [`SoleBase.AbstractDataset`](@ref)
 """
 function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothing
-    # initialization logic
-    @assert SoleRules.gsupport in reduce(vcat, itemsetmeasures(miner)) "FP-Growth " *
-        "requires global support (gsupport) as meaningfulness measure in order to " *
-        "work. Please, add a tuple (gsupport, local support threshold, " *
-        "global support threshold) to miner.item_constrained_measures field.\n" *
-        "Note that local support is needed too, but it is already considered internally " *
-        "by global support."
-
-    # retrieve local support threshold, as this is necessary later to filter which
-    # frequent items are meaningful on each instance.
-    lsupport_threshold = getlocalthreshold(miner, SoleRules.gsupport)
-
-    verbose && printstyled("Generating frequent itemsets of length 1...\n", color=:green)
-
-    # get the frequent itemsets from the first candidates set;
-    frequents = [candidate
-        for (gmeas_algo, lthreshold, gthreshold) in itemsetmeasures(miner)
-        for candidate in Itemset.(items(miner))
-        if gmeas_algo(candidate, X, lthreshold, miner=miner) >= gthreshold
-    ] |> unique
-
-    verbose && printstyled("Saving computed metrics into miner...\n", color=:green)
-
-    # update miner with the frequent itemsets just computed
-    append!(freqitems(miner), frequents)
-
-    verbose && printstyled("Preprocessing frequent itemsets...\n", color=:green)
-
-    # associate each instance in the dataset with its frequent itemsets
-    _ninstances = ninstances(X)
-    ninstance_to_itemset = begin
-        ninstance_to_itemset = [Itemset() for _ in 1:_ninstances]
-
-        # for each instance, retrieve its frequent itemsets;
-        # later, when those itemsets will be pushed, they will be sorted by `grow!`
-        # so there is no sense in repeating the process here.
-        for i in 1:_ninstances
-            _itemsets = [
-                itemset
-                for itemset in frequents
-                if localmemo(miner, (:lsupport, itemset, i)) > lsupport_threshold
-            ]
-
-            ninstance_to_itemset[i] = length(_itemsets) > 0 ?
-                union(_itemsets) :          # single-item Itemsets are merged together
-                Itemset()                   # i-th instance has no itemsets
-        end
-        ninstance_to_itemset
-    end
-
-    verbose && printstyled("Initializing seed FPTree and Header table...\n", color=:green)
-
-    # create an initial fptree
-    fptree = FPTree()
-
-    verbose && printstyled("Growing seed FPTree...\n", color=:green)
-
-    SoleRules.grow!(fptree, ninstance_to_itemset, miner)
-
-    verbose && printstyled("Linking Header table...\n", color=:green)
-
-    # create and fill an header table, necessary to traverse FPTrees horizontally
-    htable = HeaderTable(fptree; miner=miner)
-
-    verbose && printstyled("Mining longer frequent itemsets...\n", color=:green)
-
-    # `fpgrowth` recursive logic piece
+    # `fpgrowth` recursive logic piece; scroll down to see initialization section.
     function _fpgrowth_kernel(
         fptree::FPTree,
         htable::HeaderTable,
@@ -824,11 +758,90 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
         end
     end
 
-    # call main logic;
-    # IDEA: maybe, when thinking about parallel modal FPgrowth, having a monolitic
-    # miner object being passed all through the algorithm recursions will be hard to manage.
-    # An idea could be that of creating a Configuration struct foreach parallel execution.
-    _fpgrowth_kernel(fptree, htable, miner, Itemset())
+    # initialization logic
+    @assert SoleRules.gsupport in reduce(vcat, itemsetmeasures(miner)) "FP-Growth " *
+        "requires global support (gsupport) as meaningfulness measure in order to " *
+        "work. Please, add a tuple (gsupport, local support threshold, " *
+        "global support threshold) to miner.item_constrained_measures field.\n" *
+        "Note that local support is needed too, but it is already considered internally " *
+        "by global support."
+
+    powerups!(miner, :local_threshold_integer, getlocal_threshold_integer(miner, lsupport))
+
+    verbose && printstyled("Generating frequent itemsets of length 1...\n", color=:green)
+
+    # get the frequent itemsets from the first candidates set;
+    frequents = [candidate
+        for (gmeas_algo, lthreshold, gthreshold) in itemsetmeasures(miner)
+        for candidate in Itemset.(items(miner))
+        if gmeas_algo(candidate, X, lthreshold, miner=miner) >= gthreshold
+    ] |> unique
+
+    verbose && printstyled("Saving computed metrics into miner...\n", color=:green)
+
+    # update miner with the frequent itemsets just computed
+    append!(freqitems(miner), frequents)
+
+    verbose && printstyled("Preprocessing frequent itemsets...\n", color=:green)
+
+    # consider the dataset rearranged as follows:
+    #=
+            w0      w1      ...     wN
+        I0
+        I1
+        ..
+        IN
+    =#
+    # for each instance I, apply fpgrowth horizontally across worlds to find all the
+    # locally frequent itemsets associated with I;
+    # then, merge all the results together to compute the global support of each generated
+    # itemset (that is, how many times an itemset appear as the result of an FP-Growth
+    # application on an Instance)
+
+    for ninstance in 1:ninstances(X)
+        # from now on, the instance is fixed and we apply fpgrowth horizontally;
+        # the assumption here is that all the frames are shaped equally.
+        kripkeframe = SoleLogics.frame(X, 1)
+        _nworlds = kripkeframe |> SoleLogics.nworlds
+        nworld_to_itemset = [Itemset() for _ in 1:_nworlds]
+
+        for (nworld, w) in enumerate(kripkeframe |> SoleLogics.allworlds)
+            nworld_to_itemset[nworld] = [
+                itemset
+                # 1-length Itemset (a.k.a, frequent Item)
+                for itemset in frequents
+                # retrieve the frequent items that are true on each world
+                if powerups(
+                    miner, :instance_item_toworlds)[(ninstance, itemset)][nworld] > 0
+                # then merge all the 1-length Itemset into an unique Itemset
+            ] |> union
+        end
+
+        verbose && printstyled("Initializing seed FPTree...\n", color=:green)
+
+        # create an initial fptree
+        fptree = FPTree()
+
+        verbose && printstyled("Growing seed FPTree...\n", color=:green)
+
+        SoleRules.grow!(fptree, nworld_to_itemset, miner)
+
+        verbose && printstyled("Linking Header table...\n", color=:green)
+
+        # create and fill an header table, necessary to traverse FPTrees horizontally
+        htable = HeaderTable(fptree; miner=miner)
+
+        verbose && printstyled("Mining frequent itemsets...\n", color=:green)
+
+        # prepare Miner internal powerups state to handle an FPGrowth call
+
+
+        # call main logic
+        _fpgrowth_kernel(fptree, htable, miner, Itemset())
+
+        println("First execution terminated")
+        return
+    end
 end
 
 """
@@ -841,5 +854,14 @@ See also [`haspowerup`](@ref), [`powerup`](@ref).
 """
 function initpowerups(::typeof(fpgrowth), ::AbstractDataset)::Powerup
     # customize your fpgrowth here
-    return Powerup([])
+    return Powerup([
+        # keeps track of which worlds w satisfies the truth relation I,w ⊧ λ,
+        # where λ is an Item (represented as a 1-length Itemset);
+        # this is useful when generalizing fpgrowth to the modal case scenario.
+        :instance_item_toworlds => Dict{Tuple{Int,Itemset}, WorldMask}([]),
+
+        # threshold (as integer) to establish which itemsets are frequent when
+        # an instance is fixed and fpgrowth is applied across worlds.
+        :local_threshold_integer => 0,
+    ])
 end

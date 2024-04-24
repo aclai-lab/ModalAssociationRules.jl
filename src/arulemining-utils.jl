@@ -141,13 +141,13 @@ end
 #### Miner #################################################################################
 ############################################################################################
 """
-    getlocalthreshold_integer(miner::Miner, meas::Function, contributorslength::Int64)
+    getlocalthreshold_integer(miner::Miner, meas::Function)
 
 See [`getlocalthreshold`](@ref).
 """
-function getlocalthreshold_integer(miner::Miner, meas::Function, contributorslength::Int64)
-    # TODO: infer `contributorslength` from miner
-    return convert(Int64, ceil(getlocalthreshold(miner, meas) * contributorslength))
+function getlocalthreshold_integer(miner::Miner, meas::Function)
+    _nworlds = SoleLogics.frame(dataset(miner), 1) |> SoleLogics.nworlds
+    return convert(Int64, ceil(getlocalthreshold(miner, meas) * _nworlds))
 end
 
 """
