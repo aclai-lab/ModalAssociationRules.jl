@@ -60,7 +60,7 @@ end
         itemset::Itemset,
         X::SupportedLogiset,
         threshold::Threshold;
-        miner::Union{Nothing,Miner} = nothing
+        miner::Union{Nothing,Miner}=nothing
     )::Float64
 
 Compute the global support for the given `itemset` on a logiset `X`, considering `threshold`
@@ -79,7 +79,7 @@ function gsupport(
     itemset::Itemset,
     X::SupportedLogiset,
     threshold::Threshold;
-    miner::Union{Nothing,Miner} = nothing
+    miner::Union{Nothing,Miner}=nothing
 )::Float64
     # this is needed to access memoization structures
     memokey = GmeasMemoKey((Symbol(gsupport), itemset))
@@ -113,7 +113,7 @@ globalof(::typeof(lsupport)) = gsupport
     function lconfidence(
         rule::ARule,
         logi_instance::LogicalInstance;
-        miner::Union{Nothing,Miner} = nothing
+        miner::Union{Nothing,Miner}=nothing
     )::Float64
 
 Compute the local confidence for the given `rule` in the given `logi_instance`.
@@ -130,7 +130,7 @@ See also [`antecedent`](@ref), [`ARule`](@ref), [`Miner`](@ref),
 function lconfidence(
     rule::ARule,
     logi_instance::LogicalInstance;
-    miner::Union{Nothing,Miner} = nothing
+    miner::Union{Nothing,Miner}=nothing
 )::Float64
     # this is needed to access memoization structures
     memokey = LmeasMemoKey((Symbol(lconfidence), rule, logi_instance.i_instance))
@@ -164,7 +164,7 @@ end
         rule::ARule,
         X::SupportedLogiset,
         threshold::Threshold;
-        miner::Union{Nothing,Miner} = nothing
+        miner::Union{Nothing,Miner}=nothing
     )::Float64
 
 Compute the global confidence for the given `rule` on a logiset `X`, considering `threshold`
@@ -183,7 +183,7 @@ function gconfidence(
     rule::ARule,
     X::SupportedLogiset,
     threshold::Threshold;
-    miner::Union{Nothing,Miner} = nothing
+    miner::Union{Nothing,Miner}=nothing
 )::Float64
     # this is needed to access memoization structures
     memokey = GmeasMemoKey((Symbol(gconfidence), rule))

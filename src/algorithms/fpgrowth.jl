@@ -519,7 +519,7 @@ function grow!(
 )
     _itemset = itemset(enhanceditemset)
 
-    # end of push case
+    # base case
     if length(_itemset) == 0
         return
     end
@@ -533,14 +533,14 @@ function grow!(
 
     _children_idx = findfirst(child -> content(child) == _item, _children)
     if !isnothing(_children_idx)
-        # i don't want to create a new child, just grow an already existing one
+        # there is no need to create a new child, just grow an already existing one
         subfptree = _children[_children_idx]
         addcount!(subfptree, _count)
         grow!(subfptree, (_itemset[2:end], _count) |> EnhancedItemset)
     else
-        # here I want to create a new children FPTree, and set this as its parent;
-        # note that I don't want to update count and contributors since i am already
-        # copying them from the enhanced itemset.
+        # here we want to create a new children FPTree, and set this as its parent;
+        # note that we don't want to update count and contributors since we already
+        # copy it from the enhanced itemset.
         subfptree = FPTree(enhanceditemset)
         children!(fptree, subfptree)
     end
@@ -620,6 +620,7 @@ function patternbase(
     return _patternbase
 end
 
+# TODO: check if this mechanism is correct
 function bounce!(pbase::ConditionalPatternBase, miner::Miner)
     # needed to filter out later
     lsupp_int_threshold = powerups(miner, :local_threshold_integer)
@@ -669,9 +670,9 @@ function projection(
         grow!(fptree, pbase)
     end
 
-    htable = HeaderTable(fptree; miner=miner)
+    println(pbase)
 
-    return fptree, htable
+    return fptree, HeaderTable(fptree; miner=miner)
 end
 
 ############################################################################################
@@ -708,6 +709,15 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
         if islist(fptree)
             # representative FPTree node;
             # its count field is enough to compute global support.
+            # WARNING: here, `leader_node` should be `representative_node`
+            # whose value is the leaf of the list.
+            # Otherwise, this might happen:
+            #=
+                nothing                         count: 0
+                -[L]min[V3] > -3.6              count: 830
+                --min[V3] > -3.6                count: 830
+                ---*⟨L⟩min[V2] ≤ -2.2           count: 729
+            =#
             leader_fpnode = children(fptree)[1]
             leader_count = count(leader_fpnode)
 
@@ -731,19 +741,10 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
                     sort!(items(combo),
                         by=t -> globalmemo(miner, (:gsupport, Itemset(t))), rev=true)
 
-                    # TODO: compute local support value here
+                    # TODO: compute local support value here using `leader_count`
 
                     fpgrowth_fragments[combo] += 1
                 end
-
-                # deprecated
-                # globalmemo!(
-                #     miner, (:gsupport, combo), leader_count / _ninstances)
-                #
-                # # single-itemset case is already handled by the apriori-like step
-                # if length(combo) > 1
-                #     push!(freqitems(miner), combo)
-                # end
             end
 
         else

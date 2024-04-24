@@ -148,7 +148,7 @@ See [`getlocalthreshold`](@ref).
 """
 function getlocalthreshold_integer(miner::Miner, meas::Function)
     _nworlds = SoleLogics.frame(dataset(miner), 1) |> SoleLogics.nworlds
-    return convert(Int64, ceil(getlocalthreshold(miner, meas) * _nworlds))
+    return convert(Int64, floor(getlocalthreshold(miner, meas) * _nworlds))
 end
 
 """
