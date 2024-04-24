@@ -35,6 +35,9 @@ Main:
     ☐ currently, this works only for local and global support. Add a for cycle to also consider user custom item measure.
     ☐ threshold must be considered when memoizing
     ✔ clean fpgrowth algorithm, removing contributors powerup system since it is not necessary to write a correct fpgrowth @done(24-04-23 09:35)
+    ✔ remove all the unecessary dependencies from miner inside all fpgrowth subroutine calls @done(24-04-24 18:42)
+      ☐ is the current global reference to miner inside sort! calls correct? I don't think so, since the order of the frequent items could change depending on which instance it's currently being fixed
+  ☐ user custom meaningfulness measures should be checked too
 
 Generic:
   ✔ move memoization accountability to Miner @done(24-02-07 23:58)
@@ -60,6 +63,7 @@ Generic:
   ✔ make an Itemset struct instead of Vector{Item} @done(24-03-08 00:25)
   ☐ use make_lmeas and make_gmeas decorators in idea.jl, to define meaningfulness measures in a more compact and robust way
   ☐ move `isless` between `Item`s to SoleLogics
+  ☐ rename getglobalthreshold_integer to global_threshold_integer; do the same for local support
 
 Renamings:
   ☐ link property to nextcousin

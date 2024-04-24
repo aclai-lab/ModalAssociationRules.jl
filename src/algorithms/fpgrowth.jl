@@ -49,36 +49,24 @@ mutable struct FPTree
     end
 
     # choose root or new subtree constructor
-    function FPTree(
-        itemset::Itemset;
-        isroot=true,
-        miner::Union{Nothing,Miner}=nothing
-    )
+    function FPTree(itemset::Itemset; isroot=true)
         # singleton design pattern
-        FPTree(itemset, Val(isroot); miner=miner)
+        FPTree(itemset, Val(isroot))
     end
 
     # root constructor
-    function FPTree(
-        itemset::Itemset,
-        ::Val{true};
-        miner::Union{Nothing,Miner}=nothing
-    )
+    function FPTree(itemset::Itemset, ::Val{true})
         # make FPTree empty root
         fptree = FPTree()
 
         # start growing a path
-        children!(fptree, FPTree(itemset; isroot=false, miner=miner))
+        children!(fptree, FPTree(itemset; isroot=false))
 
         return fptree
     end
 
     # internal tree constructor
-    function FPTree(
-        itemset::Itemset,
-        ::Val{false};
-        miner::Union{Nothing,Miner}=nothing,
-    )
+    function FPTree(itemset::Itemset, ::Val{false})
         # peek element is pushed first: `2,3,...,lastindex(itemset)` will follow
         item = itemset[1]
 
@@ -86,7 +74,7 @@ mutable struct FPTree
         fptree = length(itemset) == 1 ?
             new(item, nothing, FPTree[], 1, nothing) :
             new(item, nothing,
-                FPTree[FPTree(itemset[2:end]; isroot=false, miner=miner)], 1, nothing)
+                FPTree[FPTree(itemset[2:end]; isroot=false)], 1, nothing)
 
         # vertical link
         map(child -> parent!(child, fptree), children(fptree))
@@ -511,7 +499,7 @@ function grow!(
         grow!(subfptree, itemset[2:end], miner)
     else
         # if it does not, then create a new children FPTree, and set this as its parent
-        subfptree = FPTree(itemset; isroot=false, miner=miner)
+        subfptree = FPTree(itemset; isroot=false)
         children!(fptree, subfptree)
     end
 end
@@ -525,8 +513,7 @@ grow!(
 
 function grow!(
     fptree::FPTree,
-    enhanceditemset::EnhancedItemset,
-    miner::Miner
+    enhanceditemset::EnhancedItemset
 )
     _itemset = itemset(enhanceditemset)
 
@@ -547,7 +534,7 @@ function grow!(
         # i don't want to create a new child, just grow an already existing one
         subfptree = _children[_children_idx]
         addcount!(subfptree, _count)
-        grow!(subfptree, (_itemset[2:end], _count) |> EnhancedItemset, miner)
+        grow!(subfptree, (_itemset[2:end], _count) |> EnhancedItemset)
     else
         # here I want to create a new children FPTree, and set this as its parent;
         # note that I don't want to update count and contributors since i am already
@@ -559,11 +546,10 @@ end
 
 grow!(
     fptree::FPTree,
-    enhanceditemsets::ConditionalPatternBase,
-    miner::Miner;
+    enhanceditemsets::ConditionalPatternBase;
     kwargs...
 ) = [grow!(
-        fptree, enhanceditemset, miner; kwargs...) for enhanceditemset in enhanceditemsets]
+        fptree, enhanceditemset; kwargs...) for enhanceditemset in enhanceditemsets]
 
 """
     Base.reverse(htable::HeaderTable)
@@ -678,7 +664,7 @@ function projection(
 
     if length(pbase) > 0
         bounce!(pbase, miner)
-        grow!(fptree, pbase, miner)
+        grow!(fptree, pbase)
     end
 
     htable = HeaderTable(fptree; miner=miner)
@@ -701,6 +687,13 @@ See also [`Miner`](@ref), [`FPTree`](@ref), [`HeaderTable`](@ref),
 [`SoleBase.AbstractDataset`](@ref)
 """
 function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothing
+    # essentially, modal fpgrowth consists of a iterative application of multiple
+    # "standard" (a.k.a, propositional) fpgrowth calls;
+    # this dictionary is necessary to convey all the intermediate results between
+    # fpgrowth calls, and is filled up inside the "kernel" of the current procedure.
+    # See `_fpgrowth_kernel` subroutine
+    fpgrowth_fragments = DefaultDict{Itemset, Int}(0)
+
     # `fpgrowth` recursive logic piece; scroll down to see initialization section.
     function _fpgrowth_kernel(
         fptree::FPTree,
@@ -727,24 +720,32 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
                 "single-list FPTree of length $(survivor_itemset |> length)\n", color=:blue)
 
             for combo in combine(items(survivor_itemset), items(leftout_itemset))
-                globalmemo!(
-                    miner, (:gsupport, combo), leader_count / _ninstances)
-
-                # single-itemset case is already handled by the first pass over the dataset
+                # at this point, combo is certainly frequent by local support;
+                # compute the exact value for local support and save the result into
+                # the external "conveyor" dictionary.
                 if length(combo) > 1
-                    push!(freqitems(miner), combo)
+                    # TODO: compute local support value here
+                    fpgrowth_fragments[combo] += 1
                 end
+
+                # deprecated
+                # globalmemo!(
+                #     miner, (:gsupport, combo), leader_count / _ninstances)
+                #
+                # # single-itemset case is already handled by the apriori-like step
+                # if length(combo) > 1
+                #     push!(freqitems(miner), combo)
+                # end
             end
 
         else
             for item in reverse(htable)
-                # a (conditional) pattern base is a vector of "enhanced" itemsets, that is,
-                # itemsets whose items are paired with a contributors vector.
+                # a (conditional) pattern base is a vector of "enhanced" itemsets
                 _patternbase = patternbase(item, htable, miner)
 
                 # a new FPTree is projected, via the conditional pattern base retrieved
                 # starting from `fptree` nodes whose content is exactly `item`;
-                # a projection is a subset of the original dataset represented by an FPTree.
+                # a projection is a subset of the original dataset, viewed as a FPTree.
                 conditional_fptree, conditional_htable =
                     projection(_patternbase, miner)
 
@@ -766,7 +767,7 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
         "Note that local support is needed too, but it is already considered internally " *
         "by global support."
 
-    powerups!(miner, :local_threshold_integer, getlocal_threshold_integer(miner, lsupport))
+    powerups!(miner, :local_threshold_integer, getlocalthreshold_integer(miner, lsupport))
 
     verbose && printstyled("Generating frequent itemsets of length 1...\n", color=:green)
 
@@ -799,6 +800,10 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
     # application on an Instance)
 
     for ninstance in 1:ninstances(X)
+        verbose && printstyled("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n", color=:green)
+        verbose && printstyled(
+            "Starting execution for $(ninstance) instance...\n", color=:green)
+
         # from now on, the instance is fixed and we apply fpgrowth horizontally;
         # the assumption here is that all the frames are shaped equally.
         kripkeframe = SoleLogics.frame(X, 1)
@@ -834,13 +839,25 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
         verbose && printstyled("Mining frequent itemsets...\n", color=:green)
 
         # prepare Miner internal powerups state to handle an FPGrowth call
-
+        # TODO: is this necessary? Maybe the sorting between frequent itemsets could change
+        # for each fixed instance, and should be memorized here in a powerup field.
 
         # call main logic
         _fpgrowth_kernel(fptree, htable, miner, Itemset())
 
-        println("First execution terminated")
-        return
+        verbose && printstyled(
+            "Execution for instance $(ninstance) terminated correctly.\n", color=:green)
+    end
+
+    gsupp_threshold = getglobalthreshold(miner, gsupport)
+    for (itemset, gfrequency_int) in fpgrowth_fragments
+        gfrequency = gfrequency_int / ninstances(X)
+        if gfrequency >= gsupp_threshold
+            globalmemo!(miner, GmeasMemoKey((Symbol(gsupport), itemset)), gfrequency)
+            push!(freqitems(miner), itemset)
+        end
+
+        # TODO: check other custom meaningfulness measures
     end
 end
 
