@@ -37,6 +37,7 @@ Main:
     ✔ clean fpgrowth algorithm, removing contributors powerup system since it is not necessary to write a correct fpgrowth @done(24-04-23 09:35)
     ✔ remove all the unecessary dependencies from miner inside all fpgrowth subroutine calls @done(24-04-24 18:42)
       ☐ is the current global reference to miner inside sort! calls correct? I don't think so, since the order of the frequent items could change depending on which instance it's currently being fixed
+    ☐ considering local support, frequent itemsets are identified but it is also necessary to compute the measure exact value.
   ☐ user custom meaningfulness measures should be checked too
 
 Generic:
@@ -312,3 +313,87 @@ Dict{Tuple{Symbol, ARMSubject}, Float64} with 5 entries:
   (:gsupport, [min[V1] > -0.5])                 => 0.561111
 
 Back to: manual_p, manual_q, manual_r, manual_lp, manual_lq, manual_lr
+
+# New Modal FPGrowth implementation progresses (on NATOPS)
+
+# First trial
+julia> fpgrowth_miner.gmemo
+Dict{Tuple{Symbol, ARMSubject}, Float64} with 20 entries:
+  (:gsupport, [min[V3] > -3.6, min[V1] > -0.5])                       => 0.475
+  (:gsupport, [min[V3] > -3.6, [L]min[V3] > -3.6])                    => 0.766667
+  (:gsupport, [[L]min[V3] > -3.6, min[V3] > -3.6])                    => 0.233333
+  (:gsupport, [[L]min[V1] > -0.5, [L]min[V3] > -3.6])                 => 0.233333
+  (:gsupport, [[L]min[V3] > -3.6, [L]min[V1] > -0.5])                 => 0.155556
+  (:gsupport, [min[V3] > -3.6, [L]min[V3] > -3.6, [L]min[V1] > -0.5]) => 0.155556
+  (:gsupport, [[L]min[V3] > -3.6, min[V1] > -0.5])                    => 0.475
+  (:gsupport, [[L]min[V1] > -0.5, [L]min[V3] > -3.6, min[V3] > -3.6]) => 0.233333
+  (:gsupport, [min[V3] > -3.6, min[V2] ≤ -2.2])                       => 0.155556
+  (:gsupport, [[L]min[V3] > -3.6, min[V2] ≤ -2.2])                    => 0.155556
+  (:gsupport, [min[V1] > -0.5])                                       => 0.561111
+  (:gsupport, [min[V3] > -3.6, [L]min[V1] > -0.5])                    => 0.155556
+  (:gsupport, [[L]min[V1] > -0.5])                                    => 0.241667
+  (:gsupport, [⟨L⟩min[V2] ≤ -2.2])                                    => 0.136111
+  (:gsupport, [[L]min[V3] > -3.6])                                    => 1.0
+  (:gsupport, [min[V3] > -3.6, [L]min[V3] > -3.6, min[V2] ≤ -2.2])    => 0.155556
+  (:gsupport, [[L]min[V1] > -0.5, min[V3] > -3.6])                    => 0.233333
+  (:gsupport, [min[V2] ≤ -2.2])                                       => 0.158333
+  (:gsupport, [min[V3] > -3.6])                                       => 1.0
+  (:gsupport, [min[V3] > -3.6, [L]min[V3] > -3.6, min[V1] > -0.5])    => 0.475
+
+# Second trial
+Dict{Tuple{Symbol, ARMSubject}, Float64} with 23 entries:
+  (:gsupport, [min[V3] > -3.6, min[V1] > -0.5])                       => 0.561111
+  (:gsupport, [min[V3] > -3.6, [L]min[V3] > -3.6])                    => 0.766667
+  (:gsupport, [min[V1] > -0.5, [L]min[V1] > -0.5])                    => 0.172222
+  (:gsupport, [[L]min[V3] > -3.6, min[V3] > -3.6])                    => 0.233333
+  (:gsupport, [[L]min[V3] > -3.6, min[V1] > -0.5, [L]min[V1] > -0.5]) => 0.172222
+  (:gsupport, [[L]min[V3] > -3.6, [L]min[V1] > -0.5])                 => 0.388889
+  (:gsupport, [min[V3] > -3.6, min[V1] > -0.5, [L]min[V1] > -0.5])    => 0.172222
+  (:gsupport, [min[V3] > -3.6, [L]min[V3] > -3.6, [L]min[V1] > -0.5]) => 0.155556
+  (:gsupport, [[L]min[V3] > -3.6, min[V1] > -0.5])                    => 0.561111
+  (:gsupport, [min[V3] > -3.6, min[V2] ≤ -2.2])                       => 0.155556
+  (:gsupport, [[L]min[V3] > -3.6, min[V2] ≤ -2.2])                    => 0.155556
+  (:gsupport, [min[V1] > -0.5])                                       => 0.561111
+  (:gsupport, [min[V3] > -3.6, [L]min[V1] > -0.5])                    => 0.388889
+  (:gsupport, [[L]min[V3] > -3.6, min[V2] ≤ -2.2, ⟨L⟩min[V2] ≤ -2.2]) => 0.105556
+  (:gsupport, [[L]min[V1] > -0.5])                                    => 0.241667
+  (:gsupport, [⟨L⟩min[V2] ≤ -2.2])                                    => 0.136111
+  (:gsupport, [[L]min[V3] > -3.6])                                    => 1.0
+  (:gsupport, [min[V3] > -3.6, [L]min[V3] > -3.6, min[V2] ≤ -2.2])    => 0.155556
+  (:gsupport, [[L]min[V3] > -3.6, min[V3] > -3.6, [L]min[V1] > -0.5]) => 0.233333
+  (:gsupport, [min[V2] ≤ -2.2])                                       => 0.158333
+  (:gsupport, [min[V3] > -3.6])                                       => 1.0
+  (:gsupport, [min[V3] > -3.6, min[V2] ≤ -2.2, ⟨L⟩min[V2] ≤ -2.2])    => 0.102778
+  (:gsupport, [min[V3] > -3.6, [L]min[V3] > -3.6, min[V1] > -0.5])    => 0.475
+
+  Dict{Tuple{Symbol, ARMSubject}, Float64} with 30 entries:
+    (:gsupport, [min[V3] > -3.6, min[V1] > -0.5])                                       => 0.558333
+    (:gsupport, [min[V3] > -3.6, [L]min[V3] > -3.6])                                    => 0.727778
+    (:gsupport, [min[V1] > -0.5, [L]min[V1] > -0.5])                                    => 0.172222
+    (:gsupport, [[L]min[V3] > -3.6, min[V3] > -3.6])                                    => 0.269444
+    (:gsupport, [[L]min[V3] > -3.6, min[V1] > -0.5, [L]min[V1] > -0.5])                 => 0.172222
+    (:gsupport, [[L]min[V3] > -3.6, [L]min[V1] > -0.5])                                 => 0.388889
+    (:gsupport, [min[V3] > -3.6, min[V1] > -0.5, [L]min[V1] > -0.5])                    => 0.172222
+    (:gsupport, [min[V2] ≤ -2.2, ⟨L⟩min[V2] ≤ -2.2])                                    => 0.102778
+    (:gsupport, [min[V3] > -3.6, [L]min[V3] > -3.6, [L]min[V1] > -0.5])                 => 0.119444
+    (:gsupport, [[L]min[V3] > -3.6, min[V1] > -0.5])                                    => 0.558333
+    (:gsupport, [min[V3] > -3.6, [L]min[V3] > -3.6, min[V2] ≤ -2.2, ⟨L⟩min[V2] ≤ -2.2]) => 0.102778
+    (:gsupport, [[L]min[V3] > -3.6, min[V3] > -3.6, min[V1] > -0.5, [L]min[V1] > -0.5]) => 0.122222
+    (:gsupport, [[L]min[V3] > -3.6, min[V3] > -3.6, min[V1] > -0.5])                    => 0.125
+    (:gsupport, [min[V3] > -3.6, min[V2] ≤ -2.2])                                       => 0.155556
+    (:gsupport, [[L]min[V3] > -3.6, min[V2] ≤ -2.2])                                    => 0.155556
+    (:gsupport, [min[V1] > -0.5])                                                       => 0.561111
+    (:gsupport, [min[V3] > -3.6, [L]min[V1] > -0.5])                                    => 0.388889
+    (:gsupport, [min[V3] > -3.6, ⟨L⟩min[V2] ≤ -2.2])                                    => 0.130556
+    (:gsupport, [[L]min[V3] > -3.6, min[V2] ≤ -2.2, ⟨L⟩min[V2] ≤ -2.2])                 => 0.105556
+    (:gsupport, [[L]min[V1] > -0.5])                                                    => 0.241667
+    (:gsupport, [⟨L⟩min[V2] ≤ -2.2])                                                    => 0.136111
+    (:gsupport, [[L]min[V3] > -3.6])                                                    => 1.0
+    (:gsupport, [min[V3] > -3.6, [L]min[V3] > -3.6, min[V2] ≤ -2.2])                    => 0.155556
+    (:gsupport, [min[V3] > -3.6, [L]min[V3] > -3.6, ⟨L⟩min[V2] ≤ -2.2])                 => 0.133333
+    (:gsupport, [[L]min[V3] > -3.6, min[V3] > -3.6, [L]min[V1] > -0.5])                 => 0.269444
+    (:gsupport, [min[V2] ≤ -2.2])                                                       => 0.158333
+    (:gsupport, [min[V3] > -3.6])                                                       => 1.0
+    (:gsupport, [min[V3] > -3.6, min[V2] ≤ -2.2, ⟨L⟩min[V2] ≤ -2.2])                    => 0.102778
+    (:gsupport, [min[V3] > -3.6, [L]min[V3] > -3.6, min[V1] > -0.5])                    => 0.436111
+    (:gsupport, [[L]min[V3] > -3.6, ⟨L⟩min[V2] ≤ -2.2])                                 => 0.133333
