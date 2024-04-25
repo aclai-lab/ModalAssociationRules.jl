@@ -23,8 +23,8 @@ manual_lp = box(IA_L)(manual_p)
 manual_lq = diamond(IA_L)(manual_q)
 manual_lr = box(IA_L)(manual_r)
 
-# manual_items = Vector{Item}([manual_p, manual_r, manual_lr])
-manual_items = Vector{Item}([manual_q, manual_lq])
+manual_items = Vector{Item}([manual_lr, manual_r])
+# manual_items = Vector{Item}([manual_q, manual_lq])
 
 # set meaningfulness measures, for both mining frequent itemsets and establish which
 # combinations of them are association rules.
@@ -40,8 +40,8 @@ fpgrowth_miner = Miner(X2, fpgrowth, manual_items, _itemsetmeasures, _rulemeasur
 mine!(apriori_miner)
 mine!(fpgrowth_miner)
 
-itap = Itemset([manual_q, manual_lq])
-itfp = Itemset([manual_lq, manual_q])
+itap = Itemset([manual_lr, manual_r])
+itfp = Itemset([manual_lr, manual_r])
 
 for ninstance in 1:360
     try

@@ -428,3 +428,32 @@ Dict{Tuple{Symbol, ARMSubject}, Float64} with 27 entries:
   (:gsupport, [min[V2] ≤ -2.2])                                                       => 0.158333
   (:gsupport, [[L]min[V3] > -3.6, [L]min[V1] > -0.5, min[V1] > -0.5])                 => 0.230556
   (:gsupport, [[L]min[V3] > -3.6, ⟨L⟩min[V2] ≤ -2.2])                                 => 0.136111
+
+  Dict{Tuple{Symbol, ARMSubject}, Float64} with 27 entries:
+    (:gsupport, [⟨L⟩min[V2] ≤ -2.2, min[V3] > -3.6])                                    => 0.130556
+    (:gsupport, [min[V3] > -3.6, min[V1] > -0.5])                                       => 0.558333
+    (:gsupport, [[L]min[V3] > -3.6, min[V3] > -3.6])                                    => 0.997222
+    (:gsupport, [[L]min[V3] > -3.6, ⟨L⟩min[V2] ≤ -2.2, min[V3] > -3.6])                 => 0.136111
+    (:gsupport, [[L]min[V3] > -3.6, [L]min[V1] > -0.5])                                 => 0.241667
+    (:gsupport, [[L]min[V3] > -3.6, min[V1] > -0.5])                                    => 0.558333
+    (:gsupport, [[L]min[V3] > -3.6, [L]min[V1] > -0.5, min[V3] > -3.6])                 => 0.241667
+    (:gsupport, [[L]min[V3] > -3.6, min[V3] > -3.6, min[V1] > -0.5])                    => 0.561111
+    (:gsupport, [⟨L⟩min[V2] ≤ -2.2, min[V2] ≤ -2.2])                                    => 0.102778
+    (:gsupport, [[L]min[V3] > -3.6, ⟨L⟩min[V2] ≤ -2.2, min[V2] ≤ -2.2])                 => 0.105556
+    (:gsupport, [min[V3] > -3.6, min[V2] ≤ -2.2])                                       => 0.155556
+    (:gsupport, [[L]min[V3] > -3.6, min[V2] ≤ -2.2])                                    => 0.155556
+    (:gsupport, [⟨L⟩min[V2] ≤ -2.2, min[V3] > -3.6, min[V2] ≤ -2.2])                    => 0.102778
+    (:gsupport, [min[V1] > -0.5])                                                       => 0.561111
+    (:gsupport, [[L]min[V3] > -3.6, min[V3] > -3.6, min[V2] ≤ -2.2])                    => 0.158333
+    (:gsupport, [[L]min[V1] > -0.5])                                                    => 0.241667
+    (:gsupport, [⟨L⟩min[V2] ≤ -2.2])                                                    => 0.136111
+    (:gsupport, [[L]min[V3] > -3.6])                                                    => 1.0
+    (:gsupport, [[L]min[V3] > -3.6, ⟨L⟩min[V2] ≤ -2.2, min[V3] > -3.6, min[V2] ≤ -2.2]) => 0.102778
+    (:gsupport, [[L]min[V1] > -0.5, min[V3] > -3.6, min[V1] > -0.5])                    => 0.172222
+    (:gsupport, [[L]min[V1] > -0.5, min[V1] > -0.5])                                    => 0.172222
+    (:gsupport, [[L]min[V1] > -0.5, min[V3] > -3.6])                                    => 0.241667
+    (:gsupport, [[L]min[V3] > -3.6, [L]min[V1] > -0.5, min[V3] > -3.6, min[V1] > -0.5]) => 0.172222
+    (:gsupport, [min[V3] > -3.6])                                                       => 1.0
+    (:gsupport, [min[V2] ≤ -2.2])                                                       => 0.158333
+    (:gsupport, [[L]min[V3] > -3.6, [L]min[V1] > -0.5, min[V1] > -0.5])                 => 0.172222
+    (:gsupport, [[L]min[V3] > -3.6, ⟨L⟩min[V2] ≤ -2.2])                                 => 0.133333

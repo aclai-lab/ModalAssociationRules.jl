@@ -644,9 +644,6 @@ function patternbase(
 end
 
 function bounce!(pbase::ConditionalPatternBase, miner::Miner)
-    # needed to filter out later
-    lsupp_int_threshold = powerups(miner, :local_threshold_integer)
-
     # accumulators needed to establish whether an enhanced itemset is promoted or no
     count_accumulator = DefaultDict{Item, Int64}(0)
 
@@ -660,8 +657,8 @@ function bounce!(pbase::ConditionalPatternBase, miner::Miner)
     end
 
     for enhanceditemset in pbase
-        filter!(
-            _item -> count_accumulator[_item] >= lsupp_int_threshold,
+        filter!(_item ->
+            count_accumulator[_item] / nworlds(miner) >= getlocalthreshold(miner, gsupport),
             enhanceditemset |> itemset |> items
         )
     end
@@ -727,8 +724,9 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
         # if `fptree` contains only one path (hence, it can be considered a linked list),
         # then combine all the Itemsets collected from previous step with the remained ones.
         if islist(fptree)
-            leaf_fpnode = retrieveleaf(fptree)
-            leaf_count = count(leaf_fpnode)
+            # leaf_fpnode = retrieveleaf(fptree)
+            # leaf_count = count(leaf_fpnode)
+            leaf_count = children(fptree)[1] |> count
 
             # all the survived items, from which compose new frequent itemsets
             survivor_itemset = itemset_from_fplist(fptree)
@@ -747,10 +745,7 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
                 # Note that this sorting does not depend by
                 #   powerups(miner, :current_items_frequency)[Itemset(t)]
                 # but it is shared among each sub-fpgrowth call of modal fpgrowth
-                sort!(items(combo),
-                    by=t -> powerups(miner, :lexicographic_ordering)[t],
-                    rev=true
-                )
+                sort!(items(combo), by=t -> powerups(miner, :lexicographic_ordering)[t])
 
                 lsupport_value = leaf_count / nworlds(miner)
                 localmemo!(miner,
@@ -807,7 +802,7 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
     # itemset (that is, how many times an itemset appear as the result of an FP-Growth
     # application on an Instance)
 
-    # general lexicographic ordering
+    # arbitrary general lexicographic ordering
     incremental = 0
     for candidate in items(miner)
         powerups(miner, :lexicographic_ordering)[candidate] = incremental
@@ -840,8 +835,8 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
             if lsupport(candidate, getinstance(X, ninstance); miner=miner) >= lthreshold
         ] |> unique
 
-        for one_length_itemset in frequents
-            fpgrowth_fragments[one_length_itemset] += 1
+        for itemset in frequents
+            fpgrowth_fragments[itemset] += 1
         end
 
         for (nworld, w) in enumerate(kripkeframe |> SoleLogics.allworlds)
@@ -882,11 +877,10 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
             "Execution for instance $(ninstance) terminated correctly.\n", color=:green)
     end
 
-    gsupp_threshold = getglobalthreshold(miner, gsupport)
     for (itemset, gfrequency_int) in fpgrowth_fragments
         gfrequency = gfrequency_int / ninstances(X)
 
-        if gfrequency >= gsupp_threshold
+        if gfrequency >= getglobalthreshold(miner, gsupport)
             globalmemo!(miner, GmeasMemoKey((Symbol(gsupport), itemset)), gfrequency)
             push!(freqitems(miner), itemset)
         end
@@ -913,7 +907,7 @@ function initpowerups(::typeof(fpgrowth), ::AbstractDataset)::Powerup
 
         # threshold (as integer) to establish which itemsets are frequent when
         # an instance is fixed and fpgrowth is applied across worlds.
-        :local_threshold_integer => 0,
+        :local_threshold_integer => 0, # TODO: remove this, no longer needed
 
         # current instance number;
         # needed when computing local support to remember which
