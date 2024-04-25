@@ -226,13 +226,13 @@ function islist(fptree::FPTree)::Bool
 end
 
 """
-    function retrieveall(fptree::FPTree)::Itemset
+    function itemset_from_fplist(fptree::FPTree)::Itemset
 
 Return all the unique [`Item`](@ref)s appearing in `fptree`.
 
 See also [`FPTree`](@ref), [`Item`](@ref), [`Itemset`](@ref).
 """
-function retrieveall(fptree::FPTree)::Itemset
+function itemset_from_fplist(fptree::FPTree)::Itemset
     function _retrieve(fptree::FPTree)
         retrieved = Itemset([_retrieve(child) for child in children(fptree)])
         _content = content(fptree)
@@ -245,6 +245,21 @@ function retrieveall(fptree::FPTree)::Itemset
     end
 
     return _retrieve(fptree)
+end
+
+"""
+    function retrieveleaf(fptree::FPTree)::FPTree
+
+Return a reference to the last node in a list-shaped [`FPTree`](@ref).
+
+See also [`FPTree`](@ref);
+"""
+function retrieveleaf(fptree::FPTree)::FPTree
+    if length(fptree |> children) == 0
+        return fptree
+    else
+        return retrieveleaf(fptree |> children |> first)
+    end
 end
 
 """
@@ -320,8 +335,7 @@ struct HeaderTable
             end
         end
 
-        child = children(fptseed)
-        fillhtable!(child, htable)
+        fillhtable!(children(fptseed), htable)
 
         if !isnothing(miner)
             checksanity!(htable, miner)
@@ -623,6 +637,9 @@ function patternbase(
         fptree = link(fptree)
     end
 
+    # assert pattern base does not contain dirty leftovers
+    filter!(x -> !isempty(first(x)), _patternbase)
+
     return _patternbase
 end
 
@@ -710,22 +727,11 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
         # if `fptree` contains only one path (hence, it can be considered a linked list),
         # then combine all the Itemsets collected from previous step with the remained ones.
         if islist(fptree)
-            # representative FPTree node;
-            # its count field is enough to compute global support.
-            # WARNING: here, `leader_node` should be `representative_node`
-            # whose value is the leaf of the list.
-            # Otherwise, this might happen:
-            #=
-                nothing                         count: 0
-                -[L]min[V3] > -3.6              count: 830
-                --min[V3] > -3.6                count: 830
-                ---*⟨L⟩min[V2] ≤ -2.2           count: 729
-            =#
-            leader_fpnode = children(fptree)[1]
-            leader_count = count(leader_fpnode)
+            leaf_fpnode = retrieveleaf(fptree)
+            leaf_count = count(leaf_fpnode)
 
             # all the survived items, from which compose new frequent itemsets
-            survivor_itemset = retrieveall(fptree)
+            survivor_itemset = itemset_from_fplist(fptree)
 
             verbose &&
                 printstyled("Merging $(leftout_itemset |> length) leftout items with a " *
@@ -735,21 +741,27 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
                 # at this point, combo is certainly frequent by local support;
                 # compute the exact value for local support and save the result into
                 # the external "conveyor" dictionary.
-                if length(combo) > 1
-                    # each combo must be reshaped, following a certain order specified
-                    # universally by the miner.
-                    # Note that this sorting does not depend by
-                    #   powerups(miner, :current_items_frequency)[Itemset(t)]
-                    # but it is shared among each sub-fpgrowth call of modal fpgrowth
-                    sort!(items(combo),
-                        by=t -> globalmemo(miner, (:gsupport, Itemset(t))), rev=true)
 
-                    # TODO: compute local support value here using `leader_count`
+                # each combo must be reshaped, following a certain order specified
+                # universally by the miner.
+                # Note that this sorting does not depend by
+                #   powerups(miner, :current_items_frequency)[Itemset(t)]
+                # but it is shared among each sub-fpgrowth call of modal fpgrowth
+                sort!(items(combo),
+                    by=t -> powerups(miner, :lexicographic_ordering)[t],
+                    rev=true
+                )
 
+                lsupport_value = leaf_count / nworlds(miner)
+                localmemo!(miner,
+                    (:lsupport, combo, powerups(miner, :current_instance)),
+                    lsupport_value
+                )
+
+                if (length(combo) > 1)
                     fpgrowth_fragments[combo] += 1
                 end
             end
-
         else
             for item in reverse(htable)
                 # a (conditional) pattern base is a vector of "enhanced" itemsets
@@ -781,22 +793,6 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
 
     powerups!(miner, :local_threshold_integer, getlocalthreshold_integer(miner, lsupport))
 
-    verbose && printstyled("Generating frequent itemsets of length 1...\n", color=:green)
-
-    # get the frequent itemsets from the first candidates set;
-    frequents = [candidate
-        for (gmeas_algo, lthreshold, gthreshold) in itemsetmeasures(miner)
-        for candidate in Itemset.(items(miner))
-        if gmeas_algo(candidate, X, lthreshold, miner=miner) >= gthreshold
-    ] |> unique
-
-    verbose && printstyled("Saving computed metrics into miner...\n", color=:green)
-
-    # update miner with the frequent itemsets just computed
-    append!(freqitems(miner), frequents)
-
-    verbose && printstyled("Preprocessing frequent itemsets...\n", color=:green)
-
     # consider the dataset rearranged as follows:
     #=
             w0      w1      ...     wN
@@ -811,10 +807,21 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
     # itemset (that is, how many times an itemset appear as the result of an FP-Growth
     # application on an Instance)
 
+    # general lexicographic ordering
+    incremental = 0
+    for candidate in items(miner)
+        powerups(miner, :lexicographic_ordering)[candidate] = incremental
+        incremental += 1
+    end
+
     for ninstance in 1:ninstances(X)
         verbose && printstyled("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n", color=:green)
         verbose && printstyled(
             "Starting execution for $(ninstance) instance...\n", color=:green)
+
+        # the instance we are applying fpgrowth to has to be remembered to properly store
+        # local support at the end of each sub-fpgrowth execution.
+        powerups!(miner, :current_instance, ninstance)
 
         # the frequency of each 1-length frequent itemset is tracked in a fresh dictionary;
         # this may vary between each iteration of this cycle (each sub-fpgrowth execution).
@@ -826,15 +833,23 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
         _nworlds = kripkeframe |> SoleLogics.nworlds
         nworld_to_itemset = [Itemset() for _ in 1:_nworlds]
 
+        # get the frequent 1-length itemsets from the first candidates set;
+        frequents = [candidate
+            for (gmeas_algo, lthreshold, gthreshold) in itemsetmeasures(miner)
+            for candidate in Itemset.(items(miner))
+            if lsupport(candidate, getinstance(X, ninstance); miner=miner) >= lthreshold
+        ] |> unique
+
+        for one_length_itemset in frequents
+            fpgrowth_fragments[one_length_itemset] += 1
+        end
+
         for (nworld, w) in enumerate(kripkeframe |> SoleLogics.allworlds)
             nworld_to_itemset[nworld] = [
                 itemset
-                # 1-length Itemset (a.k.a, frequent Item)
                 for itemset in frequents
-                # retrieve the frequent items that are true on each world
                 if powerups(
                     miner, :instance_item_toworlds)[(ninstance, itemset)][nworld] > 0
-                # then merge all the 1-length Itemset into an unique Itemset
             ] |> union
 
             # count 1-length frequent itemsets frequency;
@@ -870,6 +885,7 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
     gsupp_threshold = getglobalthreshold(miner, gsupport)
     for (itemset, gfrequency_int) in fpgrowth_fragments
         gfrequency = gfrequency_int / ninstances(X)
+
         if gfrequency >= gsupp_threshold
             globalmemo!(miner, GmeasMemoKey((Symbol(gsupport), itemset)), gfrequency)
             push!(freqitems(miner), itemset)
@@ -899,9 +915,17 @@ function initpowerups(::typeof(fpgrowth), ::AbstractDataset)::Powerup
         # an instance is fixed and fpgrowth is applied across worlds.
         :local_threshold_integer => 0,
 
+        # current instance number;
+        # needed when computing local support to remember which
+        # instance is associated with a sub-fpgrowth execution.
+        :current_instance => 0,
+
         # when modal fpgrowth calls propositional fpgrowth multiple times, each call
         # has to know its specific 1-length itemsets sorting;
         # otherwise, the building process of fptrees is not correct anymore.
-        :current_items_frequency => DefaultDict{Itemset, Int}(0)
+        :current_items_frequency => DefaultDict{Itemset, Int}(0),
+
+        # dict necessary to reshape all the extracted itemsets to a common sorting
+        :lexicographic_ordering => Dict{Item, Int}([])
     ])
 end

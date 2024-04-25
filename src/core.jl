@@ -778,7 +778,7 @@ See also [`Miner`](@ref), [`GmeasMemo`](@ref), [`GmeasMemoKey`](@ref).
 globalmemo!(miner::Miner, key::GmeasMemoKey, val::Threshold) = miner.gmemo[key] = val
 
 ############################################################################################
-#### Miner machines specializations ###################################################
+#### Miner machines specializations ########################################################
 ############################################################################################
 
 """
@@ -937,4 +937,20 @@ function analyze(arule::ARule, miner::Miner; io::IO=stdout)
         println(io, "$(gmeassym): $(globalmemo(miner, (gmeassym, arule)))")
         println(io, "$(lmeassym): $(globalmemo(miner, (lmeassym, arule)))")
     end
+end
+
+############################################################################################
+#### Dataset utilities #####################################################################
+############################################################################################
+
+function SoleLogics.frame(miner::Miner)
+    return SoleLogics.frame(dataset(miner), 1)
+end
+
+function SoleLogics.allworlds(miner::Miner)
+    return frame(miner) |> SoleLogics.allworlds
+end
+
+function SoleLogics.nworlds(miner::Miner)
+    return frame(miner) |> SoleLogics.nworlds
 end

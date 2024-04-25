@@ -22,7 +22,9 @@ using Reexport
 using SoleModels
 # export SoleModels.evaluate
 
-using SoleLogics: AbstractInterpretation, getinstance, LogicalInstance, nworlds
+using SoleLogics: AbstractInterpretation, getinstance, LogicalInstance
+using SoleLogics: nworlds, frame, allworlds, nworlds
+
 using SoleData: SupportedLogiset
 
 using StatsBase
@@ -59,6 +61,8 @@ export powerups, powerups!, haspowerup, initpowerups
 export info, info!, hasinfo
 export contributors, contributors!
 export mine!, apply!, generaterules!
+
+export frame, allworlds, nworlds
 
 include("meaningfulness-measures.jl")
 

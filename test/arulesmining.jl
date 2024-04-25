@@ -26,6 +26,9 @@ manual_lr = box(IA_L)(manual_r)
 manual_items = Vector{Item}([
     manual_p, manual_q, manual_r, manual_lp, manual_lq, manual_lr])
 
+# items to short test-case
+# manual_items = Vector{Item}([manual_p, manual_r, manual_lr])
+
 # set meaningfulness measures, for both mining frequent itemsets and establish which
 # combinations of them are association rules.
 _itemsetmeasures = [(gsupport, 0.1, 0.1)]
