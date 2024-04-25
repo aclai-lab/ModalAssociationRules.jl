@@ -515,7 +515,8 @@ grow!(
 
 function grow!(
     fptree::FPTree,
-    enhanceditemset::EnhancedItemset
+    enhanceditemset::EnhancedItemset,
+    miner::Miner
 )
     _itemset = itemset(enhanceditemset)
 
@@ -523,6 +524,10 @@ function grow!(
     if length(_itemset) == 0
         return
     end
+
+    # sorting must be guaranteed: remember an FPTree essentially is a prefix tree
+    sort!(items(_itemset),
+        by=t -> powerups(miner, :current_items_frequency)[Itemset(t)], rev=true)
 
     # retrieve the item to grow the tree, and its count
     _count = count(enhanceditemset)
@@ -536,7 +541,7 @@ function grow!(
         # there is no need to create a new child, just grow an already existing one
         subfptree = _children[_children_idx]
         addcount!(subfptree, _count)
-        grow!(subfptree, (_itemset[2:end], _count) |> EnhancedItemset)
+        grow!(subfptree, (_itemset[2:end], _count) |> EnhancedItemset, miner)
     else
         # here we want to create a new children FPTree, and set this as its parent;
         # note that we don't want to update count and contributors since we already
@@ -548,10 +553,11 @@ end
 
 grow!(
     fptree::FPTree,
-    enhanceditemsets::ConditionalPatternBase;
+    enhanceditemsets::ConditionalPatternBase,
+    miner::Miner;
     kwargs...
-) = [grow!(
-        fptree, enhanceditemset; kwargs...) for enhanceditemset in enhanceditemsets]
+) = [grow!(fptree, enhanceditemset, miner; kwargs...)
+        for enhanceditemset in enhanceditemsets]
 
 """
     Base.reverse(htable::HeaderTable)
@@ -620,7 +626,6 @@ function patternbase(
     return _patternbase
 end
 
-# TODO: check if this mechanism is correct
 function bounce!(pbase::ConditionalPatternBase, miner::Miner)
     # needed to filter out later
     lsupp_int_threshold = powerups(miner, :local_threshold_integer)
@@ -643,6 +648,9 @@ function bounce!(pbase::ConditionalPatternBase, miner::Miner)
             enhanceditemset |> itemset |> items
         )
     end
+
+    # assert pattern base does not contain dirty leftovers
+    filter!(x -> !isempty(first(x)), pbase)
 end
 
 """
@@ -662,15 +670,10 @@ function projection(
     # what this function does, essentially, is to filter the given pattern base.
     fptree = FPTree()
 
-    # assert pattern base does not contain dirty leftovers
-    filter!(x -> !isempty(x), pbase)
-
     if length(pbase) > 0
         bounce!(pbase, miner)
-        grow!(fptree, pbase)
+        grow!(fptree, pbase, miner)
     end
-
-    println(pbase)
 
     return fptree, HeaderTable(fptree; miner=miner)
 end
