@@ -726,7 +726,7 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
         if islist(fptree)
             # leaf_fpnode = retrieveleaf(fptree)
             # leaf_count = count(leaf_fpnode)
-            leaf_count = children(fptree)[1] |> count
+            resulting_lsupp = children(fptree)[1] |> count
 
             # all the survived items, from which compose new frequent itemsets
             survivor_itemset = itemset_from_fplist(fptree)
@@ -747,7 +747,7 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
                 # but it is shared among each sub-fpgrowth call of modal fpgrowth
                 sort!(items(combo), by=t -> powerups(miner, :lexicographic_ordering)[t])
 
-                lsupport_value = leaf_count / nworlds(miner)
+                lsupport_value = resulting_lsupp / nworlds(miner)
                 localmemo!(miner,
                     (:lsupport, combo, powerups(miner, :current_instance)),
                     lsupport_value
