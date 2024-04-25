@@ -41,7 +41,7 @@ mine!(apriori_miner)
 mine!(fpgrowth_miner)
 
 itap = Itemset([manual_lr, manual_r])
-itfp = Itemset([manual_lr, manual_r])
+itfp = Itemset([manual_r, manual_lr])
 
 for ninstance in 1:360
     try
