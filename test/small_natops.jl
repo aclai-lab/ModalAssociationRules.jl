@@ -23,8 +23,7 @@ manual_lp = box(IA_L)(manual_p)
 manual_lq = diamond(IA_L)(manual_q)
 manual_lr = box(IA_L)(manual_r)
 
-manual_items = Vector{Item}([manual_lr, manual_r])
-# manual_items = Vector{Item}([manual_q, manual_lq])
+manual_items = Vector{Item}([manual_r, manual_lq])
 
 # set meaningfulness measures, for both mining frequent itemsets and establish which
 # combinations of them are association rules.
@@ -40,8 +39,9 @@ fpgrowth_miner = Miner(X2, fpgrowth, manual_items, _itemsetmeasures, _rulemeasur
 mine!(apriori_miner)
 mine!(fpgrowth_miner)
 
-itap = Itemset([manual_lr, manual_r])
-itfp = Itemset([manual_r, manual_lr])
+itap = Itemset([manual_r, manual_lq])
+itaprev = Itemset([manual_lq, manual_r])
+itfp = Itemset([manual_r, manual_lq])
 
 for ninstance in 1:360
     try
@@ -60,28 +60,16 @@ for ninstance in 1:360
             fpgrowth_lsupp_haskey =
                 haskey(fpgrowth_miner.lmemo, (:lsupport, itap, ninstance))
 
-            if (apriori_lsupp < lsupport_threshold)
-                continue
-            end
+            apriori_lsupp = apriori_miner.lmemo[(:lsupport, itap, ninstance)]
 
-            println("Empty lsupp entry: ")
-            println("\tinstance $(ninstance);")
-            println("\tapriori? $(apriori_lsupp_haskey);")
-            println("\tfpgrowth? $(fpgrowth_lsupp_haskey);")
+            if apriori_lsupp > lsupport_threshold
+                println("Missing informative lsupp entry: ")
+                println("\tinstance $(ninstance);")
+                println("\tapriori? $(apriori_lsupp_haskey);")
+                println("\tfpgrowth? $(fpgrowth_lsupp_haskey);")
+            end
         else
             rethrow(e)
         end
     end
 end
-
-lsupp_threshold_count = 0
-for ninstance in 1:360
-    if !haskey(fpgrowth_miner.lmemo, (:lsupport, itfp, ninstance))
-        continue
-    end
-
-    if fpgrowth_miner.lmemo[(:lsupport, itfp, ninstance)] >= lsupport_threshold
-        lsupp_threshold_count += 1
-    end
-end
-println(lsupp_threshold_count)

@@ -602,7 +602,7 @@ function patternbase(
     item::Item,
     htable::HeaderTable,
     miner::Miner
-)::ConditionalPatternBase
+)
     # think a pattern base as a vector of vector of itemsets;
     # the reason why the type is explicited differently here, is that every item must be
     # associated with a specific WorldMask to guarantee correctness.
@@ -613,10 +613,13 @@ function patternbase(
     # position, is the minimum between the value in reference's mask and the new node one.
     fptree = link(htable, item)
 
+    leftout_count = 0
+
     while !isnothing(fptree)
         _itemset = Itemset([])                  # prepare the new enhanced itemset content
         ancestorfpt = parent(fptree)            # parent reference to climb up
         fptcount = count(fptree)                # count to be propagated to ancestors
+        leftout_count += fptcount              # count associated with the item lefted out
 
         # look at ancestors, and collect them keeping count of
         # the leaf node from which we started this vertical visit.
@@ -640,7 +643,7 @@ function patternbase(
     # assert pattern base does not contain dirty leftovers
     filter!(x -> !isempty(first(x)), _patternbase)
 
-    return _patternbase
+    return _patternbase, leftout_count
 end
 
 function bounce!(pbase::ConditionalPatternBase, miner::Miner)
@@ -719,35 +722,41 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
         fptree::FPTree,
         htable::HeaderTable,
         miner::Miner,
-        leftout_itemset::Itemset
+        leftout_itemset::Itemset,
+        leftout_count::Int64
     )
         # if `fptree` contains only one path (hence, it can be considered a linked list),
         # then combine all the Itemsets collected from previous step with the remained ones.
         if islist(fptree)
-            # leaf_fpnode = retrieveleaf(fptree)
-            # leaf_count = count(leaf_fpnode)
-            resulting_lsupp = children(fptree)[1] |> count
-
-            # all the survived items, from which compose new frequent itemsets
-            survivor_itemset = itemset_from_fplist(fptree)
-
             verbose &&
                 printstyled("Merging $(leftout_itemset |> length) leftout items with a " *
                 "single-list FPTree of length $(survivor_itemset |> length)\n", color=:blue)
 
-            for combo in combine(items(survivor_itemset), items(leftout_itemset))
-                # at this point, combo is certainly frequent by local support;
-                # compute the exact value for local support and save the result into
-                # the external "conveyor" dictionary.
+            if length(leftout_itemset) > 1
+                sort!(items(leftout_itemset),
+                    by=t -> powerups(miner, :lexicographic_ordering)[t])
 
+                fpgrowth_fragments[leftout_itemset] += 1
+
+                localmemo!(miner,
+                    (:lsupport, leftout_itemset, powerups(miner, :current_instance)),
+                    leftout_count / nworlds(miner)
+                )
+            end
+
+            if fptree |> children |> length > 0 && leftout_count == 0
+                leftout_count = children(fptree)[1] |> count # retrieveleaf(fptree) |> count
+            end
+
+            # all the survived items, from which compose new frequent itemsets
+            survivor_itemset = itemset_from_fplist(fptree)
+
+            for combo in combine(items(survivor_itemset), items(leftout_itemset))
                 # each combo must be reshaped, following a certain order specified
                 # universally by the miner.
-                # Note that this sorting does not depend by
-                #   powerups(miner, :current_items_frequency)[Itemset(t)]
-                # but it is shared among each sub-fpgrowth call of modal fpgrowth
                 sort!(items(combo), by=t -> powerups(miner, :lexicographic_ordering)[t])
 
-                lsupport_value = resulting_lsupp / nworlds(miner)
+                lsupport_value = leftout_count / nworlds(miner)
                 localmemo!(miner,
                     (:lsupport, combo, powerups(miner, :current_instance)),
                     lsupport_value
@@ -760,7 +769,7 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
         else
             for item in reverse(htable)
                 # a (conditional) pattern base is a vector of "enhanced" itemsets
-                _patternbase = patternbase(item, htable, miner)
+                _patternbase, _leftout_count = patternbase(item, htable, miner)
 
                 # a new FPTree is projected, via the conditional pattern base retrieved
                 # starting from `fptree` nodes whose content is exactly `item`;
@@ -770,10 +779,8 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
 
                 # if the new fptree is not empty, call this recursively,
                 # considering `item` as a leftout item.
-                if length(children(conditional_fptree)) > 0
-                    _fpgrowth_kernel(conditional_fptree, conditional_htable, miner,
-                        union(leftout_itemset, Itemset(item)))
-                end
+                _fpgrowth_kernel(conditional_fptree, conditional_htable, miner,
+                    union(leftout_itemset, Itemset(item)), _leftout_count)
             end
         end
     end
@@ -871,7 +878,7 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
         verbose && printstyled("Mining frequent itemsets...\n", color=:green)
 
         # call main logic
-        _fpgrowth_kernel(fptree, htable, miner, Itemset())
+        _fpgrowth_kernel(fptree, htable, miner, Itemset(), 0)
 
         verbose && printstyled(
             "Execution for instance $(ninstance) terminated correctly.\n", color=:green)
