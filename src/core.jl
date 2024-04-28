@@ -95,6 +95,10 @@ function Base.hash(itemset::Itemset, h::UInt)
     return hash(items(itemset), h)
 end
 
+function Base.convert(::Type{Itemset}, item::Item)
+    return Itemset(item)
+end
+
 function Base.convert(::Type{Itemset}, formulavector::Vector{Formula})
     return Itemset(formulavector)
 end
@@ -106,7 +110,8 @@ function Base.convert(::Type{Item}, itemset::Itemset)::Item
 end
 
 function Base.:(==)(itemset1::Itemset, itemset2::Itemset)
-    return items(itemset1) == items(itemset2)
+    # return items(itemset1) == items(itemset2)
+    return length(itemset1) == length(itemset2) && itemset1 in itemset2
 end
 
 function Base.in(itemset1::Itemset, itemset2::Itemset)
@@ -178,7 +183,7 @@ function Base.convert(
 end
 
 function Base.convert(::Type{Itemset}, enhanceditemset::EnhancedItemset)
-    return Itemset(first(enhanceditemset))
+    return first(enhanceditemset)
 end
 
 function Base.show(io::IO, enhanceditemset::EnhancedItemset)

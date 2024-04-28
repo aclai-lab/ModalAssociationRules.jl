@@ -205,6 +205,10 @@ See also [`count`](@ref), [`FPTree`](@ref).
 """
 addcount!(fptree::FPTree, deltacount::Int64) = fptree.count += deltacount
 
+function isroot(fptree::FPTree)::Bool
+    return fptree |> content |> isnothing
+end
+
 """
     islist(fptree::FPTree)::Bool
 
@@ -342,14 +346,6 @@ struct HeaderTable
         end
 
         return htable
-    end
-
-    function HeaderTable(
-        itemsets::Vector{<:Itemset},
-        fptseed::FPTree;
-        miner::Union{Nothing,Miner}=nothing
-    )
-        return HeaderTable(convert.(Item, itemsets), fptseed; miner)
     end
 end
 

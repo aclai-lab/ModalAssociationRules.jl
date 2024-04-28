@@ -86,7 +86,9 @@ export FPTree
 export content, parent, children, count
 export content!, parent!, children!
 export count!, addcount!, addcontributors!
-export islist, retrieveall
+export isroot, islist
+export itemset_from_fplist, retrieveleaf
+export grow!
 
 export HeaderTable, items
 export link, link!, follow  # dispatches for both FPTree and HeaderTable

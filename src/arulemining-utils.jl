@@ -53,36 +53,6 @@ function grow_prune(candidates::Vector{Itemset}, frequents::Vector{Itemset}, k::
         )
 end
 
-"""
-    coalesce_contributors(
-        itemset::Itemset,
-        miner::Miner;
-        lmeas::Function=lsupport
-    )
-
-Consider all the [`contributors`](@ref) of an [`ARMSubject`](@ref) on all the instances.
-Return their sum and a boolean value, indicating whether the resulting contributors
-overpasses the local support threshold enough times.
-
-See also [`ARMSubject`](@ref), [`contributors`](@ref), [`Threshold`](@ref).
-"""
-function coalesce_contributors(
-    itemset::Itemset,
-    miner::Miner;
-    lmeas::Function=lsupport
-)
-    _ninstances = ninstances(dataset(miner))
-    _contributors = sum([
-        contributors(Symbol(lmeas), itemset, i, miner) for i in 1:_ninstances])
-
-    lsupp_integer_threshold = convert(Int64, floor(
-        getlocalthreshold(miner, lmeas) * length(_contributors)
-    ))
-
-    return _contributors, Base.count(
-        x -> x > 0, _contributors) >= lsupp_integer_threshold
-end
-
 ############################################################################################
 #### Association rules #####################################################################
 ############################################################################################
@@ -102,7 +72,7 @@ See also [`ARule`](@ref), [`Miner`](@ref), [`Itemset`](@ref), [`rulemeasures`](@
 """
 @resumable function arules_generator(
     itemsets::Vector{Itemset},
-    miner::Miner # since this is a resumable function, kwargs... should not work
+    miner::Miner
 )
     for itemset in itemsets
         subsets = powerset(itemset)
