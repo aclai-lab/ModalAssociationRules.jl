@@ -110,8 +110,11 @@ function Base.convert(::Type{Item}, itemset::Itemset)::Item
 end
 
 function Base.:(==)(itemset1::Itemset, itemset2::Itemset)
-    # return items(itemset1) == items(itemset2)
-    return length(itemset1) == length(itemset2) && itemset1 in itemset2
+    # order is important
+    return items(itemset1) == items(itemset2)
+
+    # order is ignored
+    # return length(itemset1) == length(itemset2) && itemset1 in itemset2
 end
 
 function Base.in(itemset1::Itemset, itemset2::Itemset)
@@ -157,7 +160,7 @@ mask of an itemset could be [5,2,0], meaning that the itemset is always true on 
 world of every instance. If we consider the second world, the same itemset is true on it
 only on two instances. If we consider the third world, then the itemset is never true.
 
-See also [`Contributors`](@ref), [`Itemset`](@ref), [`MeaningfulnessMeasure`](@ref).
+See also [`Itemset`](@ref), [`MeaningfulnessMeasure`](@ref).
 """
  const WorldMask = Vector{Int64}
 
@@ -758,7 +761,24 @@ Setter for a specific entry `key` inside the local memoization structure wrapped
 
 See also [`Miner`](@ref), [`LmeasMemo`](@ref), [`LmeasMemoKey`](@ref).
 """
-localmemo!(miner::Miner, key::LmeasMemoKey, val::Threshold) = miner.lmemo[key] = val
+function localmemo!(miner::Miner, key::LmeasMemoKey, val::Threshold)
+    # DEBUG:
+    manual_p = Atom(ScalarCondition(UnivariateMin(1), >, -0.5))
+    manual_q = Atom(ScalarCondition(UnivariateMin(2), <=, -2.2))
+    manual_r = Atom(ScalarCondition(UnivariateMin(3), >, -3.6))
+
+    manual_lp = box(IA_L)(manual_p)
+    manual_lq = diamond(IA_L)(manual_q)
+    manual_lr = box(IA_L)(manual_r)
+
+    s, it, in = key
+
+    if in == 1 && itemset == Itemset(manual_lp)
+        println("Chaning $(it) in instance: $(in)")
+    end
+
+    miner.lmemo[key] = val
+end
 
 """
     globalmemo(miner::Miner)::GmeasMemo

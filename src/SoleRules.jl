@@ -42,9 +42,8 @@ export antecedent, consequent
 
 export MeaningfulnessMeasure, islocalof, isglobalof
 export ARMSubject
-export LmeasMemoKey, LmeasMemo, Contributors
+export LmeasMemoKey, LmeasMemo
 export GmeasMemoKey, GmeasMemo
-export Contributors
 export Info, Powerup
 
 export Miner

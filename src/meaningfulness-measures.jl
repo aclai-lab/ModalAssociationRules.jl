@@ -28,6 +28,7 @@ function lsupport(
     # leverage memoization if a miner is provided, and it already computed the measure
     if !isnothing(miner)
         memoized = localmemo(miner, memokey)
+
         if !isnothing(memoized)
             return memoized
         end

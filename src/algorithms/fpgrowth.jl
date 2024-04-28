@@ -237,6 +237,8 @@ Return all the unique [`Item`](@ref)s appearing in `fptree`.
 See also [`FPTree`](@ref), [`Item`](@ref), [`Itemset`](@ref).
 """
 function itemset_from_fplist(fptree::FPTree)::Itemset
+    @assert islist(fptree) "FPTree is not shaped as list, function call is ambiguous."
+
     function _retrieve(fptree::FPTree)
         retrieved = Itemset([_retrieve(child) for child in children(fptree)])
         _content = content(fptree)
@@ -251,6 +253,18 @@ function itemset_from_fplist(fptree::FPTree)::Itemset
     return _retrieve(fptree)
 end
 
+function retrievebycontent(fptree::FPTree, target::Item)::Union{Nothing,FPTree}
+    @assert islist(fptree) "FPTree is not shaped as list, function call is ambiguous."
+
+    if content(fptree) == target
+        return fptree
+    elseif length(fptree |> children) == 0
+        return nothing
+    else
+        return retrievebycontent(fptree |> children |> first, target)
+    end
+end
+
 """
     function retrieveleaf(fptree::FPTree)::FPTree
 
@@ -259,6 +273,8 @@ Return a reference to the last node in a list-shaped [`FPTree`](@ref).
 See also [`FPTree`](@ref);
 """
 function retrieveleaf(fptree::FPTree)::FPTree
+    @assert islist(fptree) "FPTree is not shaped as list, function call is ambiguous."
+
     if length(fptree |> children) == 0
         return fptree
     else
@@ -740,19 +756,44 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
                 )
             end
 
-            if fptree |> children |> length > 0 && leftout_count == 0
-                leftout_count = children(fptree)[1] |> count # retrieveleaf(fptree) |> count
-            end
-
             # all the survived items, from which compose new frequent itemsets
             survivor_itemset = itemset_from_fplist(fptree)
+
+            leftout_count_dict = Dict{Item, Float64}()
+            if fptree |> children |> length > 0 && leftout_count == 0
+                for item in survivor_itemset
+                    leftout_count_dict[item] =
+                        retrievebycontent(fptree, item) |> count
+                end
+            end
 
             for combo in combine(items(survivor_itemset), items(leftout_itemset))
                 # each combo must be reshaped, following a certain order specified
                 # universally by the miner.
                 sort!(items(combo), by=t -> powerups(miner, :lexicographic_ordering)[t])
 
-                lsupport_value = leftout_count / nworlds(miner)
+                #=
+                    nothing                  count: 0
+                    -min[V3] > -3.6                  count: 1326
+                    --[L]min[V3] > -3.6              count: 1326
+                    ---[L]min[V1] > -0.5             count: 1311
+                    ----*min[V1] > -0.5              count: 990
+
+                    if combo contains [L]min[V1] but does not contain min[V1],
+                    then we should consider 1311.
+                =#
+                _leftout_count = typemax(Int64)
+                if leftout_count == 0
+                    for item in keys(leftout_count_dict)
+                        if item in combo && leftout_count_dict[item] < _leftout_count
+                            _leftout_count = min(_leftout_count, leftout_count_dict[item])
+                        end
+                    end
+                else
+                    _leftout_count = leftout_count
+                end
+
+                lsupport_value = _leftout_count / nworlds(miner)
                 localmemo!(miner,
                     (:lsupport, combo, powerups(miner, :current_instance)),
                     lsupport_value
@@ -788,8 +829,6 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
         "global support threshold) to miner.item_constrained_measures field.\n" *
         "Note that local support is needed too, but it is already considered internally " *
         "by global support."
-
-    powerups!(miner, :local_threshold_integer, getlocalthreshold_integer(miner, lsupport))
 
     # consider the dataset rearranged as follows:
     #=
@@ -901,16 +940,14 @@ how miner's `powerup` field is filled to optimize the mining.
 See also [`haspowerup`](@ref), [`powerup`](@ref).
 """
 function initpowerups(::typeof(fpgrowth), ::AbstractDataset)::Powerup
-    # customize your fpgrowth here
     return Powerup([
-        # keeps track of which worlds w satisfies the truth relation I,w ⊧ λ,
-        # where λ is an Item (represented as a 1-length Itemset);
-        # this is useful when generalizing fpgrowth to the modal case scenario.
+        # given and instance I and an itemset λ, the default behaviour when computing
+        # local support is to perform model checking to establish in how many worlds
+        # the relation I,w ⊧ λ is satisfied.
+        # A numerical value is obtained, but the exact worlds in which the truth relation
+        # holds is not kept in memory by default.
+        # Here, however, we want to keep track of the relation.
         :instance_item_toworlds => Dict{Tuple{Int,Itemset}, WorldMask}([]),
-
-        # threshold (as integer) to establish which itemsets are frequent when
-        # an instance is fixed and fpgrowth is applied across worlds.
-        :local_threshold_integer => 0, # TODO: remove this, no longer needed
 
         # current instance number;
         # needed when computing local support to remember which
@@ -918,11 +955,11 @@ function initpowerups(::typeof(fpgrowth), ::AbstractDataset)::Powerup
         :current_instance => 0,
 
         # when modal fpgrowth calls propositional fpgrowth multiple times, each call
-        # has to know its specific 1-length itemsets sorting;
+        # has to know its specific 1-length itemsets ordering;
         # otherwise, the building process of fptrees is not correct anymore.
         :current_items_frequency => DefaultDict{Itemset, Int}(0),
 
-        # dict necessary to reshape all the extracted itemsets to a common sorting
+        # necessary to reshape all the extracted itemsets to a common ordering
         :lexicographic_ordering => Dict{Item, Int}([])
     ])
 end

@@ -249,9 +249,6 @@ lsupport(Itemset(manual_lr), SoleLogics.getinstance(X2, 7); miner=fpgrowth_miner
 
 # more on Miner powerups (a.k.a, "customization system")
 @test SoleRules.initpowerups(apriori, dataset(apriori_miner)) == Powerup()
-# TODO: remove uneccesary fields in initpowerups(::typeof(fpgrowth)) and come back here
-# @test SoleRules.initpowerups(fpgrowth, dataset(fpgrowth_miner)) == Powerup(
-#     [:contributors => Contributors([])])
 
 # "arulemining-utils.jl"
 @test combine([pq, qr], 3) |> first == pqr
@@ -417,6 +414,16 @@ enhanceditemset2 = (Itemset(manual_q), 1)
 @test Base.reverse(htable) == htable |> items |> reverse
 
 # "Apriori and FPGrowth comparisons"
+# mine has to be repeated, since it might be invalidated previously for tests purpose
+_itemsetmeasures = [(gsupport, 0.1, 0.1)]
+_rulemeasures = [(gconfidence, 0.2, 0.2)]
+
+apriori_miner = Miner(X2, apriori, manual_items, _itemsetmeasures, _rulemeasures)
+fpgrowth_miner = Miner(X2, fpgrowth, manual_items, _itemsetmeasures, _rulemeasures)
+
+mine!(apriori_miner)
+mine!(fpgrowth_miner)
+
 apriori_freqs = freqitems(apriori_miner)
 fpgrowth_freqs = freqitems(fpgrowth_miner)
 
@@ -425,4 +432,34 @@ fpgrowth_freqs = freqitems(fpgrowth_miner)
 @test all(item -> item in freqitems(apriori_miner), freqitems(fpgrowth_miner))
 @test generaterules!(fpgrowth_miner) |> first isa ARule
 
-# check if meaningfulness measures coincides for each frequent itemset
+# check if global support coincides for each frequent itemset
+for itemset in freqitems(fpgrowth_miner)
+    @test apriori_miner.gmemo[(:gsupport, itemset)] ==
+        fpgrowth_miner.gmemo[(:gsupport, itemset)]
+end
+
+# check if local support coincides for each frequent itemset
+function _isequal_lsupp(
+    miner1::Miner,
+    miner2::Miner,
+    itemset::Itemset,
+    ninstance::Int64
+)
+    miner1_lsupp = get(miner1.lmemo, (:lsupport, itemset, ninstance), 0.0)
+    miner2_lsupp = get(miner2.lmemo, (:lsupport, itemset, ninstance), 0.0)
+
+    if miner1_lsupp != miner2_lsupp
+        if length(itemset) == 1
+            println("Instance: $(ninstance) - Testing: $(itemset)")
+            println("Values: $(miner1_lsupp) vs $(miner2_lsupp)")
+        end
+    end
+
+#     @test miner1_lsupp == miner2_lsupp
+end
+
+for itemset in freqitems(fpgrowth_miner)
+    for ninstance in 1:(fpgrowth_miner |> dataset |> ninstances)
+        _isequal_lsupp(apriori_miner, fpgrowth_miner, itemset, ninstance)
+    end
+end
