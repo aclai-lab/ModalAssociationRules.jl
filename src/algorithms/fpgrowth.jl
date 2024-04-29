@@ -740,6 +740,8 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
         # if `fptree` contains only one path (hence, it can be considered a linked list),
         # then combine all the Itemsets collected from previous step with the remained ones.
         if islist(fptree)
+            # TODO: refactor this
+
             verbose &&
                 printstyled("Merging $(leftout_itemset |> length) leftout items with a " *
                 "single-list FPTree of length $(survivor_itemset |> length)\n", color=:blue)
@@ -760,7 +762,7 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
             survivor_itemset = itemset_from_fplist(fptree)
 
             leftout_count_dict = Dict{Item, Float64}()
-            if fptree |> children |> length > 0 && leftout_count == 0
+            if fptree |> children |> length > 0
                 for item in survivor_itemset
                     leftout_count_dict[item] =
                         retrievebycontent(fptree, item) |> count
@@ -783,14 +785,10 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
                     then we should consider 1311.
                 =#
                 _leftout_count = typemax(Int64)
-                if leftout_count == 0
-                    for item in keys(leftout_count_dict)
-                        if item in combo && leftout_count_dict[item] < _leftout_count
-                            _leftout_count = min(_leftout_count, leftout_count_dict[item])
-                        end
+                for item in keys(leftout_count_dict)
+                    if item in combo && leftout_count_dict[item] < _leftout_count
+                        _leftout_count = min(_leftout_count, leftout_count_dict[item])
                     end
-                else
-                    _leftout_count = leftout_count
                 end
 
                 lsupport_value = _leftout_count / nworlds(miner)

@@ -2,7 +2,9 @@ Critical:
   ✔ fpgrowth is not correct. formalize it and come back here. @done(24-04-26 13:53)
   ☐ fpgrowth.jl refactoring 
     ✔ remove unecessary powerups @done(24-04-28 18:48)
-  ☐ more tests, better organized
+    ☐ the fpgrowth-recursion base case is too cumbersome 
+  ✔ more tests, better organized @done(24-04-29 12:34)
+    ✔ redundant mining with apriori-based miner removed - tests are too slow @done(24-04-29 12:34)
   ☐ a miner should expose which lexicographic ordering he is using, and the same ordering has to ALWAYS be used when changing miner's internal state
     # maybe he could save it in the info field when is created?
 

@@ -39,9 +39,8 @@ fpgrowth_miner = Miner(X2, fpgrowth, manual_items, _itemsetmeasures, _rulemeasur
 mine!(apriori_miner)
 mine!(fpgrowth_miner)
 
-itap = Itemset([manual_r, manual_lq])
-itaprev = Itemset([manual_lq, manual_r])
-itfp = Itemset([manual_r, manual_lq])
+itap = Itemset([manual_p, manual_lp])
+itfp = Itemset([manual_p, manual_lp])
 
 for ninstance in 1:360
     try

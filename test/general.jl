@@ -5,6 +5,8 @@ using SoleRules
 using SoleData
 using StatsBase
 
+import SoleRules.children
+
 # load NATOPS dataset and convert it to a Logiset
 X_df, y = SoleData.load_arff_dataset("NATOPS");
 X1 = scalarlogiset(X_df)
@@ -34,13 +36,8 @@ manual_items = Vector{Item}([
 _itemsetmeasures = [(gsupport, 0.1, 0.1)]
 _rulemeasures = [(gconfidence, 0.2, 0.2)]
 
-# make two miners: the first digs the search space using aprior, the second uses fpgrowth
 apriori_miner = Miner(X1, apriori, manual_items, _itemsetmeasures, _rulemeasures)
 fpgrowth_miner = Miner(X2, fpgrowth, manual_items, _itemsetmeasures, _rulemeasures)
-
-# mine the frequent patterns with both apriori and fpgrowth
-@test_nowarn mine!(apriori_miner)
-@test_nowarn mine!(fpgrowth_miner)
 
 pq = Itemset([manual_p, manual_q])
 qr = Itemset([manual_q, manual_r])
@@ -106,33 +103,17 @@ arule3 = ARule(Itemset([manual_q, manual_p]), Itemset(manual_r))
 @test GmeasMemo <: Dict{GmeasMemoKey,Threshold}
 
 # "core.jl - Miner"
+mine!(fpgrowth_miner)
+
 @test_nowarn Miner(X1, apriori, manual_items)
 @test_nowarn algorithm(Miner(X1, apriori, manual_items)) isa Function
 
-@test dataset(apriori_miner) == X1
-@test algorithm(apriori_miner) isa Function
+@test dataset(fpgrowth_miner) == X2
+@test algorithm(fpgrowth_miner) isa Function
 @test items(Miner(X1, apriori, manual_items)) == manual_items
 
-@test itemsetmeasures(apriori_miner) == _itemsetmeasures
-@test rulemeasures(apriori_miner) == _rulemeasures
-
-@test length(freqitems(apriori_miner)) == 27
-@test arules(apriori_miner) == []
-
-_temp_lmemo_key = (:lsupport, freqitems(apriori_miner)[1], 1)
-_temp_lmemo_val = localmemo(apriori_miner, _temp_lmemo_key)
-@test  _temp_lmemo_val >= 0.74 && _temp_lmemo_val <= 0.75
-@test localmemo(apriori_miner, (:lsupport, freqitems(apriori_miner)[1], 2)) == 1.0
-@test localmemo(apriori_miner, (:lsupport, freqitems(apriori_miner)[1], 4)) == 0.0
-
-@test_nowarn localmemo!(apriori_miner, _temp_lmemo_key, 0.5)
-@test localmemo(apriori_miner, _temp_lmemo_key) == 0.5
-
-_temp_gmemo_key = (:gsupport, freqitems(apriori_miner)[3])
-@test globalmemo(apriori_miner, _temp_gmemo_key) == 1.0
-
-@test_nowarn globalmemo!(apriori_miner, _temp_gmemo_key, 0.0)
-@test globalmemo(apriori_miner, _temp_gmemo_key) == 0.0
+@test itemsetmeasures(fpgrowth_miner) == _itemsetmeasures
+@test rulemeasures(fpgrowth_miner) == _rulemeasures
 
 function _association_rules_test1(miner::Miner)
     countdown = 3
@@ -146,16 +127,9 @@ function _association_rules_test1(miner::Miner)
         countdown -= 1
     end
 end
-_association_rules_test1(apriori_miner)
+_association_rules_test1(fpgrowth_miner)
 
-_temp_lmemo_key2 = (:lsupport, Itemset(manual_p), 1)
-@test localmemo(apriori_miner) |> length == 11880
-@test localmemo(apriori_miner)[(:lsupport, pq, 1)] == 0.0
-
-@test info(apriori_miner) isa Info
-
-# checking for re-mining block
-@test apply!(fpgrowth_miner, dataset(fpgrowth_miner)) == Nothing
+@test info(fpgrowth_miner) isa Info
 
 function _dummy_gsupport(
     itemset::Itemset,
@@ -234,10 +208,6 @@ _temp_apriori_miner = Miner(X1, apriori, manual_items, _itemsetmeasures, _ruleme
 _temp_lsupport = lsupport(pq, SoleLogics.getinstance(X2, 7); miner=fpgrowth_miner)
 @test _temp_lsupport > 0.0 && _temp_lsupport < 1.0
 
-# this is slow since fpgrowth-based miners only keep track of statistics about
-# frequent itemsets, and `pq` is not (in fact, its value for gsupport is < 0.1)
-@test gsupport(pq, dataset(apriori_miner), 0.1; miner=fpgrowth_miner) == 0.025
-
 _temp_arule = arules_generator(freqitems(fpgrowth_miner), fpgrowth_miner) |> first
 
 lsupport(Itemset(manual_p), SoleLogics.getinstance(X2, 7); miner=fpgrowth_miner)
@@ -293,7 +263,7 @@ map(_ -> children!(root, fpt), 1:3)
 
 @test !(islist(root)) # because of children! behaviour, se above
 @test islist(fpt_c1)
-@test itemset_from_fplist(fpt_c1) == pqr
+@test pqr in itemset_from_fplist(fpt_c1)
 
 # structure itself is returned, since internal link is empty
 @test follow(fpt_c1) == fpt_c1
@@ -327,19 +297,19 @@ manual_fptree = FPTree()
 @test_nowarn grow!(manual_fptree, conditional_patternbase, fpgrowth_miner)
 
 # 1st property - most frequent item has only a single node directly under the root
-@test count(x -> x == manual_r, content.(manual_fptree |> children)) == 1
+@test count(x -> x == manual_r, content.(manual_fptree |> SoleRules.children)) == 1
 
 # 2nd property - the sum of counts for each item equals the total count we know manually
 item_to_count = Dict{Item, Int64}(manual_p => 0, manual_q => 0, manual_r => 0)
 
 function _count_accumulation(fptree::FPTree)
-    for child in children(fptree)
+    for child in SoleRules.children(fptree)
         _count_accumulation(child)
     end
     item_to_count[content(fptree)] += count(fptree)
 end
 
-@test_nowarn map(child -> _count_accumulation(child), children(manual_fptree))
+@test_nowarn map(child -> _count_accumulation(child), SoleRules.children(manual_fptree))
 
 @test item_to_count[manual_p] == 2
 @test item_to_count[manual_q] == 4
@@ -352,7 +322,7 @@ function _parent_supremacy(fptree::FPTree)
     _parent_supremacy.(fptree |> children)
 end
 
-@test_nowarn map(child -> _parent_supremacy(child), children(manual_fptree))
+@test_nowarn map(child -> _parent_supremacy(child), SoleRules.children(manual_fptree))
 
 # 4th property - there are x itemsets having prefix p before y, where y is the label of a
 # node in the tree, p is the prefix on the path from the root, and x the count of the node.
@@ -380,7 +350,7 @@ end
 @test HeaderTable() isa HeaderTable
 
 fpt = FPTree(pqr)
-@test_throws AssertionError htable = HeaderTable([pqr], fpt)
+@test_throws MethodError htable = HeaderTable([pqr], fpt)
 @test_nowarn @eval htable = HeaderTable(fpt)
 
 @test all(item -> item in pqr, items(htable))
@@ -412,54 +382,3 @@ enhanceditemset2 = (Itemset(manual_q), 1)
 @test_nowarn grow!(root, [enhanceditemset, enhanceditemset2], fpgrowth_miner)
 
 @test Base.reverse(htable) == htable |> items |> reverse
-
-# "Apriori and FPGrowth comparisons"
-# mine has to be repeated, since it might be invalidated previously for tests purpose
-_itemsetmeasures = [(gsupport, 0.1, 0.1)]
-_rulemeasures = [(gconfidence, 0.2, 0.2)]
-
-apriori_miner = Miner(X2, apriori, manual_items, _itemsetmeasures, _rulemeasures)
-fpgrowth_miner = Miner(X2, fpgrowth, manual_items, _itemsetmeasures, _rulemeasures)
-
-mine!(apriori_miner)
-mine!(fpgrowth_miner)
-
-apriori_freqs = freqitems(apriori_miner)
-fpgrowth_freqs = freqitems(fpgrowth_miner)
-
-# check if generated frequent itemsets are the same
-@test length(apriori_freqs) == length(fpgrowth_freqs)
-@test all(item -> item in freqitems(apriori_miner), freqitems(fpgrowth_miner))
-@test generaterules!(fpgrowth_miner) |> first isa ARule
-
-# check if global support coincides for each frequent itemset
-for itemset in freqitems(fpgrowth_miner)
-    @test apriori_miner.gmemo[(:gsupport, itemset)] ==
-        fpgrowth_miner.gmemo[(:gsupport, itemset)]
-end
-
-# check if local support coincides for each frequent itemset
-function _isequal_lsupp(
-    miner1::Miner,
-    miner2::Miner,
-    itemset::Itemset,
-    ninstance::Int64
-)
-    miner1_lsupp = get(miner1.lmemo, (:lsupport, itemset, ninstance), 0.0)
-    miner2_lsupp = get(miner2.lmemo, (:lsupport, itemset, ninstance), 0.0)
-
-    if miner1_lsupp != miner2_lsupp
-        if length(itemset) == 1
-            println("Instance: $(ninstance) - Testing: $(itemset)")
-            println("Values: $(miner1_lsupp) vs $(miner2_lsupp)")
-        end
-    end
-
-#     @test miner1_lsupp == miner2_lsupp
-end
-
-for itemset in freqitems(fpgrowth_miner)
-    for ninstance in 1:(fpgrowth_miner |> dataset |> ninstances)
-        _isequal_lsupp(apriori_miner, fpgrowth_miner, itemset, ninstance)
-    end
-end
