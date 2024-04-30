@@ -1,30 +1,18 @@
+#=
+Apriori elapsed time:
+mining on fresh logiset -       777.262767117
+leveraging logiset memo -       753.123956295
+
+FPGrowth elapsed time:
+mining on fresh logiset -       50.99628183
+leveraging logiset memo -       22.111844555
+=#
+
 using BenchmarkTools
 
 using SoleRules
 using SoleData
 using StatsBase
-
-"""
-Given a Miner, print two runtimes:
-the former is the time elapsed to mine all frequent itemsets starting from a fresh Logiset
-while the latter is the time elapsed to resolve the same task but leveraging the Logiset
-internal memoization potential.
-"""
-function runtimes(miner::Miner, X::D, algoname::String) where {D<:AbstractDataset}
-    X2 = deepcopy(X)
-    miner2 = deepcopy(miner)
-    miner2.dataset = X2
-
-    runtime_no_optimizations = @elapsed mine!(miner)
-
-    # X2 internal memoization structures are now filled,
-    # let's see how much time is improved.
-    runtime_already_used_dataset = @elapsed mine!(miner2)
-
-    println("$(algoname) runtime:")
-    println("\t no optimizations: ", runtime_no_optimizations)
-    println("\t keeping previous dataset: ", runtime_already_used_dataset)
-end
 
 # load NATOPS dataset and convert it to a Logiset
 X_df, y = SoleData.load_arff_dataset("NATOPS");
@@ -55,11 +43,25 @@ _rulemeasures = [(gconfidence, 0.2, 0.2)]
 ############################################################################################
 
 # Apriori runtime with no optimizations and leveraging dataset memoization
-apriori_miner = Miner(X1, apriori(), manual_items, _itemsetmeasures, _rulemeasures)
-runtimes(apriori_miner, X1, "Apriori")
+apriori_miner = Miner(X1, apriori, manual_items, _itemsetmeasures, _rulemeasures)
+apriori_runtime_no_logiset_optimizations = @elapsed mine!(apriori_miner)
+
+apriori_miner = Miner(X1, apriori, manual_items, _itemsetmeasures, _rulemeasures)
+apriori_runtime_with_logiset_optimizations = @elapsed mine!(apriori_miner)
+
+println("Apriori elapsed time:")
+println("mining on fresh logiset -\t$(apriori_runtime_no_logiset_optimizations)")
+println("leveraging logiset memo -\t$(apriori_runtime_with_logiset_optimizations)")
 
 ############################################################################################
 
 # FPGrowth runtime with no optimizations and leveraging dataset Memoization
-fpgrowth_miner = Miner(X2, fpgrowth(), manual_items, _itemsetmeasures, _rulemeasures)
-runtimes(fpgrowth_miner, X2, "FPGrowth")
+fpgrowth_miner = Miner(X2, fpgrowth, manual_items, _itemsetmeasures, _rulemeasures)
+fpgrowth_runtime_no_logiset_optimizations = @elapsed mine!(fpgrowth_miner)
+
+fpgrowth_miner = Miner(X2, fpgrowth, manual_items, _itemsetmeasures, _rulemeasures)
+fpgrowth_runtime_with_logiset_optimizations = @elapsed mine!(fpgrowth_miner)
+
+println("\nFPGrowth elapsed time (in seconds):")
+println("mining on fresh logiset -\t$(fpgrowth_runtime_no_logiset_optimizations)")
+println("leveraging logiset memo -\t$(fpgrowth_runtime_with_logiset_optimizations)")
