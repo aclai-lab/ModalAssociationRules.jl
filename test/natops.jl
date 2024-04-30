@@ -1,4 +1,4 @@
-# "Apriori and FPGrowth comparisons"
+# Apriori and FPGrowth comparison on multiple parametrizations
 using Test
 
 using SoleRules
@@ -27,7 +27,6 @@ manual_lr = box(IA_L)(manual_r)
 
 manual_items = Vector{Item}([
     manual_p, manual_q, manual_r, manual_lp, manual_lq, manual_lr])
-
 
 # check if global support coincides for each frequent itemset
 function isequal_gsupp(miner1::Miner, miner2::Miner)
@@ -63,7 +62,7 @@ function isequal_lsupp(miner1::Miner, miner2::Miner)
 end
 
 # perform comparison
-function compare(miner1::Miner, miner2::Miner)
+function compare_freqitems(miner1::Miner, miner2::Miner)
     mine!(miner1)
     mine!(miner2)
 
@@ -79,7 +78,7 @@ function compare(miner1::Miner, miner2::Miner)
 end
 
 # 1st comparison
-print("Debug print: comparison #1\n")
+# print("Debug print: comparison #1\n")
 
 _1_items = Vector{Item}([manual_p, manual_q, manual_r, manual_lp, manual_lq, manual_lr])
 _1_itemsetmeasures = [(gsupport, 0.1, 0.1)]
@@ -88,14 +87,14 @@ _1_rulemeasures = [(gconfidence, 0.2, 0.2)]
 apriori_miner = Miner(X2, apriori, _1_items, _1_itemsetmeasures, _1_rulemeasures)
 fpgrowth_miner = Miner(X2, fpgrowth, _1_items, _1_itemsetmeasures, _1_rulemeasures)
 
-compare(apriori_miner, fpgrowth_miner)
+compare_freqitems(apriori_miner, fpgrowth_miner)
 
 # checking for re-mining block
 @test apply!(apriori_miner, dataset(apriori_miner)) == Nothing
 @test apply!(fpgrowth_miner, dataset(fpgrowth_miner)) == Nothing
 
 # 2nd comparison
-print("Debug print: comparison #2\n")
+# print("Debug print: comparison #2\n")
 
 _2_items = Vector{Item}([manual_p, manual_q, manual_r])
 _2_itemsetmeasures = [(gsupport, 0.5, 0.7)]
@@ -104,10 +103,10 @@ _2_rulemeasures = [(gconfidence, 0.7, 0.7)]
 apriori_miner = Miner(X2, apriori, _2_items, _2_itemsetmeasures, _2_rulemeasures)
 fpgrowth_miner = Miner(X2, fpgrowth, _2_items, _2_itemsetmeasures, _2_rulemeasures)
 
-compare(apriori_miner, fpgrowth_miner)
+compare_freqitems(apriori_miner, fpgrowth_miner)
 
 # 3rd comparisons
-print("Debug print: comparison #3\n")
+# print("Debug print: comparison #3\n")
 
 _3_items = Vector{Item}([manual_lp, manual_lq, manual_lr])
 _3_itemsetmeasures = [(gsupport, 0.8, 0.8)]
@@ -116,10 +115,10 @@ _3_rulemeasures = [(gconfidence, 0.7, 0.7)]
 apriori_miner = Miner(X2, apriori, _3_items, _3_itemsetmeasures, _3_rulemeasures)
 fpgrowth_miner = Miner(X2, fpgrowth, _3_items, _3_itemsetmeasures, _3_rulemeasures)
 
-compare(apriori_miner, fpgrowth_miner)
+compare_freqitems(apriori_miner, fpgrowth_miner)
 
 # 4th comparisons
-print("Debug print: comparison #4\n")
+# print("Debug print: comparison #4\n")
 
 _4_items = Vector{Item}([manual_q, manual_r, manual_lp, manual_lr])
 _4_itemsetmeasures = [(gsupport, 0.4, 0.4)]
@@ -128,4 +127,4 @@ _4_rulemeasures = [(gconfidence, 0.7, 0.7)]
 apriori_miner = Miner(X2, apriori, _4_items, _4_itemsetmeasures, _4_rulemeasures)
 fpgrowth_miner = Miner(X2, fpgrowth, _4_items, _4_itemsetmeasures, _4_rulemeasures)
 
-compare(apriori_miner, fpgrowth_miner)
+compare_freqitems(apriori_miner, fpgrowth_miner)

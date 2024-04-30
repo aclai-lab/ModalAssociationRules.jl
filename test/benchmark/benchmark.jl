@@ -5,10 +5,10 @@ using SoleData
 using StatsBase
 
 """
-Print two runtimes.
-The first one considers a new miner, with a fresh logiset.
-The second one considers a new miner, but the same old logiset, and, thus,
-its internal memoization.
+Given a Miner, print two runtimes:
+the former is the time elapsed to mine all frequent itemsets starting from a fresh Logiset
+while the latter is the time elapsed to resolve the same task but leveraging the Logiset
+internal memoization potential.
 """
 function runtimes(miner::Miner, X::D, algoname::String) where {D<:AbstractDataset}
     X2 = deepcopy(X)
@@ -16,6 +16,9 @@ function runtimes(miner::Miner, X::D, algoname::String) where {D<:AbstractDatase
     miner2.dataset = X2
 
     runtime_no_optimizations = @elapsed mine!(miner)
+
+    # X2 internal memoization structures are now filled,
+    # let's see how much time is improved.
     runtime_already_used_dataset = @elapsed mine!(miner2)
 
     println("$(algoname) runtime:")

@@ -1,4 +1,7 @@
-# Small tests about NATOPS, to help debugging modal fpgrowth implementation
+# Small tests about NATOPS, to help debugging modal fpgrowth implementation.
+# Those tests are deprecated and will be removed,
+# since now are included in natops.jl
+
 using Test
 
 using SoleRules

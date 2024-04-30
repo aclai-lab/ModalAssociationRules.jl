@@ -58,7 +58,7 @@ Generic:
     # check push! docstrings
   ✔ make more macros like @equip_contributors (e.g., to handle mining timing). This is not trivial, as these macros can be chained @done(24-02-25 16:40)
     # changed in powerup and @initpowerup
-  ☐ show for Item, Itemset, EnhancedItemset, Miner, FPTree, HeaderTable
+  ☐ show for Item, Itemset, ARule, EnhancedItemset, Miner, FPTree, HeaderTable
   ☐ sort/issort by globalmemo, managing correct casting from Item, Itemset and EnhancedItemset
   ✔ contributors array should not be in Miner.info, but rather a proper attribute @done(24-02-27 11:36)
     # or maybe not?
@@ -111,7 +111,7 @@ Testing:
 
 Future:
   ☐ item_contrained_measures and rule_constrained_measures fields in Miner could be dictionaries
-  ☐ instead of just (gmeas, lthreshold, gthreshold), may a collection of indipendent (lmeas, lthreshold) be useful?
+  ☐ instead of just (gmeas, lthreshold, gthreshold), maybe a collection of indipendent (lmeas, lthreshold) could be better?
 
 Documentation:
   ✔ write a v0.1 documentation @done(24-02-23 15:11)
