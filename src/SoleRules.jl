@@ -22,7 +22,9 @@ using Reexport
 using SoleModels
 # export SoleModels.evaluate
 
-using SoleLogics: AbstractInterpretation, getinstance, LogicalInstance, nworlds
+using SoleLogics: AbstractInterpretation, getinstance, LogicalInstance
+using SoleLogics: nworlds, frame, allworlds, nworlds
+
 using SoleData: SupportedLogiset
 
 using StatsBase
@@ -40,9 +42,8 @@ export antecedent, consequent
 
 export MeaningfulnessMeasure, islocalof, isglobalof
 export ARMSubject
-export LmeasMemoKey, LmeasMemo, Contributors
+export LmeasMemoKey, LmeasMemo
 export GmeasMemoKey, GmeasMemo
-export Contributors
 export Info, Powerup
 
 export Miner
@@ -58,7 +59,9 @@ export globalmemo, globalmemo!
 export powerups, powerups!, haspowerup, initpowerups
 export info, info!, hasinfo
 export contributors, contributors!
-export mine, apply, generaterules
+export mine!, apply!, generaterules!
+
+export frame, allworlds, nworlds
 
 include("meaningfulness-measures.jl")
 
@@ -69,7 +72,8 @@ include("arulemining-utils.jl")
 
 export combine, prune, prune!
 export grow_prune, coalesce_contributors
-export arules_generator # wrapped by generaterules
+export arules_generator # wrapped by generaterules!
+export getlocalthreshold_integer, getglobalthreshold_integer
 
 include("algorithms/apriori.jl")
 
@@ -81,13 +85,15 @@ export FPTree
 export content, parent, children, count
 export content!, parent!, children!
 export count!, addcount!, addcontributors!
-export islist, retrieveall
+export isroot, islist
+export itemset_from_fplist, retrieveleaf
+export grow!
 
 export HeaderTable, items
 export link, link!, follow  # dispatches for both FPTree and HeaderTable
 export checksanity!
 export patternbase
-export fpgrowth, @equip_contributors
+export fpgrowth
 
 include("utils.jl")         # IDEA: move this in SoleData
 
@@ -95,6 +101,5 @@ export equicut, quantilecut
 export make_conditions
 
 include("ideas.jl")
-export mirages!
 
 end

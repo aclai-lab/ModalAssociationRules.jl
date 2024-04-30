@@ -38,9 +38,6 @@ end
 Return a generator, which yields only the `candidates` for which every (k-1)-length subset
 is in `frequents`.
 
-!!! warning
-    Generated [`Itemset`](@ref)s could contain repetitions.
-
 See also [`Itemset`](@ref).
 """
 function grow_prune(candidates::Vector{Itemset}, frequents::Vector{Itemset}, k::Integer)
@@ -56,42 +53,14 @@ function grow_prune(candidates::Vector{Itemset}, frequents::Vector{Itemset}, k::
         )
 end
 
-"""
-    coalesce_contributors(
-        itemset::Itemset,
-        miner::Miner;
-        lmeas::Function=lsupport
-    )
-
-Consider all the [`contributors`](@ref) of an [`ARMSubject`](@ref) on all the instances.
-Return their sum and a boolean value, indicating whether the resulting contributors
-overpasses the local support threshold enough times.
-
-See also [`ARMSubject`](@ref), [`contributors`](@ref), [`Threshold`](@ref).
-"""
-function coalesce_contributors(
-    itemset::Itemset,
-    miner::Miner;
-    lmeas::Function=lsupport
-)
-    _ninstances = ninstances(dataset(miner))
-    _contributors = sum([
-        contributors(Symbol(lmeas), itemset, i, miner) for i in 1:_ninstances])
-
-    lsupp_integer_threshold = convert(Int64, floor(
-        getlocalthreshold(miner, lmeas) * length(_contributors)
-    ))
-
-    return _contributors, Base.count(
-        x -> x > 0, _contributors) >= lsupp_integer_threshold
-end
-
 ############################################################################################
 #### Association rules #####################################################################
 ############################################################################################
 
 """
     arules_generator(itemsets::Vector{Itemset}, miner::Miner)
+
+This has be considered a raw version of [`generaterules!(miner::Miner; kwargs...)`](@ref).
 
 Generates association rules from the given collection of `itemsets` and `miner`.
 Iterates through the powerset of each itemset to generate meaningful [`ARule`](@ref).
@@ -112,7 +81,7 @@ See also [`ARule`](@ref), [`Miner`](@ref), [`Itemset`](@ref), [`rulemeasures`](@
             _antecedent = subset |> Itemset
             _consequent = symdiff(items(itemset), items(_antecedent)) |> Itemset
 
-            if length(_antecedent) == 0 || length(_consequent) == 0
+            if length(_antecedent) < 1 || length(_consequent) != 1
                 continue
             end
 
@@ -136,4 +105,28 @@ See also [`ARule`](@ref), [`Miner`](@ref), [`Itemset`](@ref), [`rulemeasures`](@
             end
         end
     end
+end
+
+############################################################################################
+#### Miner #################################################################################
+############################################################################################
+# TODO: rename those in local_threshold_integer/global_threshold_integer
+"""
+    getlocalthreshold_integer(miner::Miner, meas::Function)
+
+See [`getlocalthreshold`](@ref).
+"""
+function getlocalthreshold_integer(miner::Miner, meas::Function)
+    _nworlds = SoleLogics.frame(dataset(miner), 1) |> SoleLogics.nworlds
+    return convert(Int64, floor(getlocalthreshold(miner, meas) * _nworlds))
+end
+
+"""
+    getglobalthreshold_integer(miner::Miner, meas::Function, ninstances::Int64)
+
+See [`getglobalthreshold`](@ref).
+"""
+function getglobalthreshold_integer(miner::Miner, meas::Function)
+    return convert(
+            Int64, floor(getglobalthreshold(miner, meas) * ninstances(dataset(miner))))
 end

@@ -19,8 +19,8 @@ ConditionalPatternBase
 ## Modal logic in action
 ```@docs
 Contributors
-@equip_contributors
-isequipped
 contributors
 contributors!
+
+initpowerups(::typeof(fpgrowth), ::AbstractDataset)
 ```

@@ -1,4 +1,3 @@
-
 """
     function lsupport(
         itemset::Itemset,
@@ -29,6 +28,7 @@ function lsupport(
     # leverage memoization if a miner is provided, and it already computed the measure
     if !isnothing(miner)
         memoized = localmemo(miner, memokey)
+
         if !isnothing(memoized)
             return memoized
         end
@@ -48,8 +48,8 @@ function lsupport(
         # IDEA: call two methods here. One is built-in in Sole, and checks every equippable
         # attribute that `miner` can have in its info named tuple.
         # The other dispatch is empty, but customizable by the user to check his things.
-        if haspowerup(miner, :contributors)
-            contributors!(miner, memokey, _contributors)
+        if haspowerup(miner, :instance_item_toworlds)
+            powerups(miner, :instance_item_toworlds)[(i_instance, itemset)] = _contributors
         end
     end
 
@@ -61,15 +61,15 @@ end
         itemset::Itemset,
         X::SupportedLogiset,
         threshold::Threshold;
-        miner::Union{Nothing,Miner} = nothing
+        miner::Union{Nothing,Miner}=nothing
     )::Float64
 
 Compute the global support for the given `itemset` on a logiset `X`, considering `threshold`
 as the threshold for the local support called internally.
 
-Global support is the ratio between the number of [`LogicalInstance`](@ref)s in a [`SupportedLogiset`](@ref)
-for which the local support, [`lsupport`](@ref), is greater than a [`Threshold`](@ref),
-and the total number of instances in the same logiset.
+Global support is the ratio between the number of [`LogicalInstance`](@ref)s in a
+[`SupportedLogiset`](@ref) for which the local support, [`lsupport`](@ref), is greater than
+a [`Threshold`](@ref), and the total number of instances in the same logiset.
 
 If a miner is provided, then its internal state is updated and used to leverage memoization.
 
@@ -80,7 +80,7 @@ function gsupport(
     itemset::Itemset,
     X::SupportedLogiset,
     threshold::Threshold;
-    miner::Union{Nothing,Miner} = nothing
+    miner::Union{Nothing,Miner}=nothing
 )::Float64
     # this is needed to access memoization structures
     memokey = GmeasMemoKey((Symbol(gsupport), itemset))
@@ -107,11 +107,14 @@ end
 islocalof(::typeof(lsupport), ::typeof(gsupport)) = true
 isglobalof(::typeof(gsupport), ::typeof(lsupport)) = true
 
+localof(::typeof(gsupport)) = lsupport
+globalof(::typeof(lsupport)) = gsupport
+
 """
     function lconfidence(
         rule::ARule,
         logi_instance::LogicalInstance;
-        miner::Union{Nothing,Miner} = nothing
+        miner::Union{Nothing,Miner}=nothing
     )::Float64
 
 Compute the local confidence for the given `rule` in the given `logi_instance`.
@@ -128,7 +131,7 @@ See also [`antecedent`](@ref), [`ARule`](@ref), [`Miner`](@ref),
 function lconfidence(
     rule::ARule,
     logi_instance::LogicalInstance;
-    miner::Union{Nothing,Miner} = nothing
+    miner::Union{Nothing,Miner}=nothing
 )::Float64
     # this is needed to access memoization structures
     memokey = LmeasMemoKey((Symbol(lconfidence), rule, logi_instance.i_instance))
@@ -141,8 +144,14 @@ function lconfidence(
         end
     end
 
-    ans = lsupport(convert(Itemset, rule), logi_instance; miner=miner) /
-        lsupport(antecedent(rule), logi_instance; miner=miner)
+    # denominator could be near to zero
+    den = lsupport(antecedent(rule), logi_instance; miner=miner)
+    if (den <= 100*eps())
+        return 0
+    end
+    num = lsupport(convert(Itemset, rule), logi_instance; miner=miner)
+    ans = num / den
+
 
     if !isnothing(miner)
         localmemo!(miner, memokey, ans)
@@ -156,7 +165,7 @@ end
         rule::ARule,
         X::SupportedLogiset,
         threshold::Threshold;
-        miner::Union{Nothing,Miner} = nothing
+        miner::Union{Nothing,Miner}=nothing
     )::Float64
 
 Compute the global confidence for the given `rule` on a logiset `X`, considering `threshold`
@@ -175,7 +184,7 @@ function gconfidence(
     rule::ARule,
     X::SupportedLogiset,
     threshold::Threshold;
-    miner::Union{Nothing,Miner} = nothing
+    miner::Union{Nothing,Miner}=nothing
 )::Float64
     # this is needed to access memoization structures
     memokey = GmeasMemoKey((Symbol(gconfidence), rule))
@@ -188,10 +197,16 @@ function gconfidence(
         end
     end
 
-    ans = sum([lconfidence(rule, getinstance(X, i_instance); miner=miner) >= threshold
-        for i_instance in 1:ninstances(X)]) / ninstances(X)
+    _antecedent = antecedent(rule)
+    _consequent = consequent(rule)
 
-    println("$(rule) - global confidence is: $(ans)")
+    # denominator could be near to zero
+    den = gsupport(_consequent, X, threshold; miner=miner)
+    if (den <= 100*eps())
+        return 0
+    end
+    num = gsupport(union(_antecedent, _consequent), X, threshold; miner=miner)
+    ans = num / den
 
     if !isnothing(miner)
         globalmemo!(miner, memokey, ans)
@@ -202,3 +217,6 @@ end
 
 islocalof(::typeof(lconfidence), ::typeof(gconfidence)) = true
 isglobalof(::typeof(gconfidence), ::typeof(lconfidence)) = true
+
+localof(::typeof(gconfidence)) = lconfidence
+globalof(::typeof(lconfidence)) = gconfidence
