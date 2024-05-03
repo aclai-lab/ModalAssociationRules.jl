@@ -71,10 +71,13 @@ function compare_freqitems(miner1::Miner, miner2::Miner)
 
     # check if generated frequent itemsets are the same
     @test length(miner1_freqs) == length(miner2_freqs)
-    @test all(item -> item in freqitems(miner1), freqitems(miner2))
+    @test all(item -> item in miner1_freqs, miner2_freqs)
 
     isequal_gsupp(miner1, miner2)
     isequal_lsupp(miner1, miner2)
+
+    isequal_gsupp(miner2, miner1)
+    isequal_lsupp(miner2, miner1)
 end
 
 # 1st comparison
