@@ -199,13 +199,15 @@ function gconfidence(
 
     _antecedent = antecedent(rule)
     _consequent = consequent(rule)
+    _union = union(_antecedent, _consequent)
 
     # denominator could be near to zero
     den = gsupport(_consequent, X, threshold; miner=miner)
     if (den <= 100*eps())
         return 0
     end
-    num = gsupport(union(_antecedent, _consequent), X, threshold; miner=miner)
+
+    num = gsupport(_union, X, threshold; miner=miner)
     ans = num / den
 
     if !isnothing(miner)

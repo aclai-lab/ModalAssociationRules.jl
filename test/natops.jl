@@ -61,7 +61,6 @@ function isequal_lsupp(miner1::Miner, miner2::Miner)
     end
 end
 
-# perform comparison
 function compare_freqitems(miner1::Miner, miner2::Miner)
     mine!(miner1)
     mine!(miner2)
@@ -77,6 +76,28 @@ function compare_freqitems(miner1::Miner, miner2::Miner)
     isequal_lsupp(miner1, miner2)
 end
 
+function compare_arules(miner1::Miner, miner2::Miner)
+    generaterules!(miner1) |> collect
+    generaterules!(miner2) |> collect
+
+    @test length(arules(miner1)) == length(arules(miner2))
+
+    for rule1 in arules(miner1)
+        for rule2 in arules(miner2)
+            if rule1 == rule2
+                @test miner1.gmemo[(:gconfidence, rule1)] ==
+                    miner2.gmemo[(:gconfidence), rule2]
+            end
+        end
+    end
+end
+
+# perform comparison
+function compare(miner1::Miner, miner2::Miner)
+    compare_freqitems(miner1, miner2)
+    compare_arules(miner1, miner2)
+end
+
 # 1st comparison
 # print("Debug print: comparison #1\n")
 
@@ -87,7 +108,7 @@ _1_rulemeasures = [(gconfidence, 0.2, 0.2)]
 apriori_miner = Miner(X2, apriori, _1_items, _1_itemsetmeasures, _1_rulemeasures)
 fpgrowth_miner = Miner(X2, fpgrowth, _1_items, _1_itemsetmeasures, _1_rulemeasures)
 
-compare_freqitems(apriori_miner, fpgrowth_miner)
+compare(apriori_miner, fpgrowth_miner)
 
 # checking for re-mining block
 @test apply!(apriori_miner, dataset(apriori_miner)) == Nothing
@@ -103,7 +124,7 @@ _2_rulemeasures = [(gconfidence, 0.7, 0.7)]
 apriori_miner = Miner(X2, apriori, _2_items, _2_itemsetmeasures, _2_rulemeasures)
 fpgrowth_miner = Miner(X2, fpgrowth, _2_items, _2_itemsetmeasures, _2_rulemeasures)
 
-compare_freqitems(apriori_miner, fpgrowth_miner)
+compare(apriori_miner, fpgrowth_miner)
 
 # 3rd comparisons
 # print("Debug print: comparison #3\n")
@@ -115,7 +136,7 @@ _3_rulemeasures = [(gconfidence, 0.7, 0.7)]
 apriori_miner = Miner(X2, apriori, _3_items, _3_itemsetmeasures, _3_rulemeasures)
 fpgrowth_miner = Miner(X2, fpgrowth, _3_items, _3_itemsetmeasures, _3_rulemeasures)
 
-compare_freqitems(apriori_miner, fpgrowth_miner)
+compare(apriori_miner, fpgrowth_miner)
 
 # 4th comparisons
 # print("Debug print: comparison #4\n")
@@ -127,4 +148,4 @@ _4_rulemeasures = [(gconfidence, 0.7, 0.7)]
 apriori_miner = Miner(X2, apriori, _4_items, _4_itemsetmeasures, _4_rulemeasures)
 fpgrowth_miner = Miner(X2, fpgrowth, _4_items, _4_itemsetmeasures, _4_rulemeasures)
 
-compare_freqitems(apriori_miner, fpgrowth_miner)
+compare(apriori_miner, fpgrowth_miner)
