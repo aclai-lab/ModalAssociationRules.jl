@@ -31,8 +31,8 @@ function compare_arules(miner1::Miner, miner2::Miner)
     mine!(miner1)
     mine!(miner2)
 
-    SoleRules.generaterules!(miner1) |> collect
-    SoleRules.generaterules!(miner2) |> collect
+    generaterules!(miner1) |> collect
+    generaterules!(miner2) |> collect
 
     @test length(arules(miner1)) == length(arules(miner2))
 
