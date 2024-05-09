@@ -4,7 +4,7 @@
 
 using Test
 
-using SoleRules
+using ModalAssociationRules
 using SoleData
 using StatsBase
 

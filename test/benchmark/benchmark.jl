@@ -10,7 +10,7 @@ leveraging logiset memo -       22.111844555
 
 using BenchmarkTools
 
-using SoleRules
+using ModalAssociationRules
 using SoleData
 using StatsBase
 

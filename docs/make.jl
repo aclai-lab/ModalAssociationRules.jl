@@ -1,17 +1,17 @@
-using SoleRules
+using ModalAssociationRules
 using Documenter
 
-DocMeta.setdocmeta!(SoleRules, :DocTestSetup, :(using SoleRules); recursive = true)
+DocMeta.setdocmeta!(ModalAssociationRules, :DocTestSetup, :(using ModalAssociationRules); recursive = true)
 
 makedocs(;
-    modules = [SoleRules],
+    modules = [ModalAssociationRules],
     authors = "Mauro Milella, Giovanni Pagliarini, Edoardo Ponsanesi",
-    repo=Documenter.Remotes.GitHub("aclai-lab", "SoleRules.jl"),
-    sitename = "SoleRules.jl",
+    repo=Documenter.Remotes.GitHub("aclai-lab", "ModalAssociationRules.jl"),
+    sitename = "ModalAssociationRules.jl",
     format = Documenter.HTML(;
         size_threshold = 4000000,
         prettyurls = get(ENV, "CI", "false") == "true",
-        canonical = "https://aclai-lab.github.io/SoleRules.jl",
+        canonical = "https://aclai-lab.github.io/ModalAssociationRules.jl",
         assets = String[],
     ),
     pages = [
@@ -30,7 +30,7 @@ makedocs(;
 @info "`makedocs` has finished running. "
 
 deploydocs(;
-    repo = "github.com/aclai-lab/SoleRules.jl",
+    repo = "github.com/aclai-lab/ModalAssociationRules.jl",
     target = "build",
     branch = "gh-pages",
     versions = ["main" => "main", "stable" => "v^", "v#.#", "dev" => "dev"],

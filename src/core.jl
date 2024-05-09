@@ -491,7 +491,7 @@ Machine learning model interface to perform association rules extraction.
 
 # Examples
 ```julia-repl
-julia> using SoleRules
+julia> using ModalAssociationRules
 julia> using SoleData
 
 # Load NATOPS DataFrame
@@ -526,7 +526,7 @@ julia> miner = Miner(X, fpgrowth(), manual_alphabet,
 # Consider the dataset and learning algorithm wrapped by `miner` (resp., `X` and `fpgrowth`)
 # Mine the frequent itemsets, that is, those for which item measures are large enough.
 # Then iterate the generator returned by [`mine`](@ref) to enumerate association rules.
-julia> for arule in SoleRules.mine!(miner)
+julia> for arule in ModalAssociationRules.mine!(miner)
     println(miner)
 end
 ```
@@ -580,7 +580,7 @@ struct Miner{
             "Please, provide an uniform dataset to guarantee mining correctness."
 
         # gsupport is indispensable to mine association rule
-        @assert SoleRules.gsupport in reduce(
+        @assert ModalAssociationRules.gsupport in reduce(
             vcat, item_constrained_measures) "Miner requires global support " *
             "(gsupport) as meaningfulness measure in order to work properly. " *
             "Please, add a tuple (gsupport, local support threshold, global support " *
@@ -876,9 +876,9 @@ hasinfo(miner::Miner, key::Symbol) = haskey(miner |> info, key)
 """
     mine!(miner::Miner)
 
-Synonym for `SoleRules.apply!(miner, dataset(miner))`.
+Synonym for `ModalAssociationRules.apply!(miner, dataset(miner))`.
 
-See also [`ARule`](@ref), [`Itemset`](@ref), [`SoleRules.apply`](@ref).
+See also [`ARule`](@ref), [`Itemset`](@ref), [`ModalAssociationRules.apply`](@ref).
 """
 function mine!(miner::Miner; kwargs...)
     return apply!(miner, dataset(miner); kwargs...)

@@ -1,11 +1,11 @@
 # Apriori and FPGrowth comparison on multiple parametrizations
 using Test
 
-using SoleRules
+using ModalAssociationRules
 using SoleData
 using StatsBase
 
-import SoleRules.children
+import ModalAssociationRules.children
 
 # load NATOPS dataset and convert it to a Logiset
 X_df, y = SoleData.load_arff_dataset("NATOPS");

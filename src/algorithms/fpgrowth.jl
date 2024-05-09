@@ -821,7 +821,7 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
     end
 
     # initialization logic
-    @assert SoleRules.gsupport in reduce(vcat, itemsetmeasures(miner)) "FP-Growth " *
+    @assert ModalAssociationRules.gsupport in reduce(vcat, itemsetmeasures(miner)) "FP-Growth " *
         "requires global support (gsupport) as meaningfulness measure in order to " *
         "work. Please, add a tuple (gsupport, local support threshold, " *
         "global support threshold) to miner.item_constrained_measures field.\n" *
@@ -901,7 +901,7 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
 
         verbose && printstyled("Growing seed FPTree...\n", color=:green)
 
-        SoleRules.grow!(fptree, nworld_to_itemset, miner)
+        ModalAssociationRules.grow!(fptree, nworld_to_itemset, miner)
 
         verbose && printstyled("Linking Header table...\n", color=:green)
 

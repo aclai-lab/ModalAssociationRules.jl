@@ -1,11 +1,11 @@
 # Association rule extraction algorithms test suite
 using Test
 
-using SoleRules
+using ModalAssociationRules
 using SoleData
 using StatsBase
 
-import SoleRules.children
+import ModalAssociationRules.children
 
 # load NATOPS dataset and convert it to a Logiset
 X_df, y = SoleData.load_arff_dataset("NATOPS");
@@ -149,7 +149,7 @@ _temp_miner = Miner(X2, fpgrowth, manual_items, [(gsupport, 0.1, 0.1)], _rulemea
 @test length(itemsetmeasures(_temp_miner)) == 1
 @test_throws AssertionError addrulemeas(_temp_miner, (gconfidence, 0.1, 0.1))
 @test length(rulemeasures(_temp_miner)) == 1
-@test length(SoleRules.measures(_temp_miner)) == 2
+@test length(ModalAssociationRules.measures(_temp_miner)) == 2
 
 @test_nowarn findmeasure(_temp_miner, lsupport, recognizer=islocalof)
 
@@ -219,7 +219,7 @@ lsupport(Itemset(manual_lr), SoleLogics.getinstance(X2, 7); miner=fpgrowth_miner
     _temp_arule, dataset(fpgrowth_miner), 0.1; miner=fpgrowth_miner) > 0.68
 
 # more on Miner powerups (a.k.a, "customization system")
-@test SoleRules.initpowerups(apriori, dataset(apriori_miner)) == Powerup()
+@test ModalAssociationRules.initpowerups(apriori, dataset(apriori_miner)) == Powerup()
 
 # "arulemining-utils.jl"
 @test combine([pq, qr], 3) |> first == pqr
@@ -230,7 +230,7 @@ lsupport(Itemset(manual_lr), SoleLogics.getinstance(X2, 7); miner=fpgrowth_miner
 @test grow_prune([pq,qr,pr], [pq,qr,pr], 3) |> collect |> unique == [pqr]
 @test arules_generator(freqitems(fpgrowth_miner), fpgrowth_miner) |> first isa ARule
 
-_rulemeasures_just_for_test = [(SoleRules.gconfidence, 1.1, 1.1)]
+_rulemeasures_just_for_test = [(ModalAssociationRules.gconfidence, 1.1, 1.1)]
 _temp_fpgrowth_miner = Miner(
     X3, fpgrowth, [manual_p, manual_lp], _itemsetmeasures, _rulemeasures_just_for_test)
 @test mine!(_temp_fpgrowth_miner) |> collect == ARule[]
@@ -240,27 +240,27 @@ _temp_fpgrowth_miner = Miner(
 root = FPTree()
 @test root isa FPTree
 @test content(root) === nothing
-@test SoleRules.parent(root) === nothing
-@test SoleRules.children(root) == FPTree[]
+@test ModalAssociationRules.parent(root) === nothing
+@test ModalAssociationRules.children(root) == FPTree[]
 @test count(root) == 0
 @test link(root) === nothing
 
 @test content!(root, manual_p) == manual_p
 newroot = FPTree()
-@test_nowarn SoleRules.parent!(root, newroot) === newroot
-@test content(SoleRules.parent(root)) === nothing
+@test_nowarn ModalAssociationRules.parent!(root, newroot) === newroot
+@test content(ModalAssociationRules.parent(root)) === nothing
 
 @test_nowarn @eval fpt = FPTree(pqr)
-fpt_c1 = SoleRules.children(fpt) |> first
+fpt_c1 = ModalAssociationRules.children(fpt) |> first
 @test count(fpt_c1) == 1
-@test SoleRules.count!(fpt_c1, 5) == 5
+@test ModalAssociationRules.count!(fpt_c1, 5) == 5
 @test addcount!(fpt_c1, 2) == 7
 @test link(fpt) === nothing
 @test_nowarn @eval content!(fpt, manual_lp)
 
 # children! does not perform any check!
 map(_ -> children!(root, fpt), 1:3)
-@test SoleRules.children(root) |> length == 3
+@test ModalAssociationRules.children(root) |> length == 3
 
 @test !(islist(root)) # because of children! behaviour, se above
 @test islist(fpt_c1)
@@ -298,19 +298,19 @@ manual_fptree = FPTree()
 @test_nowarn grow!(manual_fptree, conditional_patternbase, fpgrowth_miner)
 
 # 1st property - most frequent item has only a single node directly under the root
-@test count(x -> x == manual_r, content.(manual_fptree |> SoleRules.children)) == 1
+@test count(x -> x == manual_r, content.(manual_fptree |> ModalAssociationRules.children)) == 1
 
 # 2nd property - the sum of counts for each item equals the total count we know manually
 item_to_count = Dict{Item, Int64}(manual_p => 0, manual_q => 0, manual_r => 0)
 
 function _count_accumulation(fptree::FPTree)
-    for child in SoleRules.children(fptree)
+    for child in ModalAssociationRules.children(fptree)
         _count_accumulation(child)
     end
     item_to_count[content(fptree)] += count(fptree)
 end
 
-@test_nowarn map(child -> _count_accumulation(child), SoleRules.children(manual_fptree))
+@test_nowarn map(child -> _count_accumulation(child), ModalAssociationRules.children(manual_fptree))
 
 @test item_to_count[manual_p] == 2
 @test item_to_count[manual_q] == 4
@@ -323,7 +323,7 @@ function _parent_supremacy(fptree::FPTree)
     _parent_supremacy.(fptree |> children)
 end
 
-@test_nowarn map(child -> _parent_supremacy(child), SoleRules.children(manual_fptree))
+@test_nowarn map(child -> _parent_supremacy(child), ModalAssociationRules.children(manual_fptree))
 
 # 4th property - there are x itemsets having prefix p before y, where y is the label of a
 # node in the tree, p is the prefix on the path from the root, and x the count of the node.
@@ -336,7 +336,7 @@ function _allowed_existence(fptree::FPTree)
             return Itemset()
         else
             return union(fptree |> content |> Itemset,
-                fptree |> SoleRules.parent |> _retrieve_prefix)
+                fptree |> ModalAssociationRules.parent |> _retrieve_prefix)
         end
     end
 
@@ -356,7 +356,7 @@ fpt = FPTree(pqr)
 
 @test all(item -> item in pqr, items(htable))
 
-fpt_c1 = SoleRules.children(fpt)[1]
+fpt_c1 = ModalAssociationRules.children(fpt)[1]
 @test link(htable)[manual_p] isa FPTree
 
 @test follow(htable, manual_p) == link(htable)[manual_p]
@@ -364,7 +364,7 @@ fpt_c1 = SoleRules.children(fpt)[1]
 @test follow(htable, manual_r) == link(htable)[manual_r]
 
 fpt2 = FPTree(pqr)
-fpt2_c1 = SoleRules.children(fpt2)[1]
+fpt2_c1 = ModalAssociationRules.children(fpt2)[1]
 @test_nowarn link!(htable, fpt2_c1)
 @test link(htable)[manual_p] isa FPTree
 
@@ -372,7 +372,7 @@ fpt2_c1 = SoleRules.children(fpt2)[1]
 
 root = FPTree()
 @test_nowarn grow!(root, pqr, fpgrowth_miner)
-@test SoleRules.children(root) |> first |> count == 1
+@test ModalAssociationRules.children(root) |> first |> count == 1
 
 @test_nowarn grow!(root, [pqr, qr], fpgrowth_miner)
 

@@ -1,5 +1,5 @@
-module SoleRules
-# Currently, the only topic covered by SoleRules is Association Rules.
+module ModalAssociationRules
+# Currently, the only topic covered by ModalAssociationRules is Association Rules.
 
 import Base.count, Base.push!
 import Base.size, Base.getindex, Base.IndexStyle, Base.setindex!, Base.iterate

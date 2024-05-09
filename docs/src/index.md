@@ -1,19 +1,19 @@
 ```@meta
-CurrentModule = SoleRules
+CurrentModule = ModalAssociationRules
 ```
 
-# SoleRules
+# ModalAssociationRules
 
 ## Introduction
 
-Welcome to the documentation for [SoleRules](https://github.com/aclai-lab/SoleRules.jl), a Julia package for mining (modal) association rules in SoleRules.jl. 
+Welcome to the documentation for [ModalAssociationRules](https://github.com/aclai-lab/ModalAssociationRules.jl), a Julia package for mining (modal) association rules in ModalAssociationRules.jl. 
 
 ## Installation
 
-To install SoleRules.jl, use the Julia package manager:
+To install ModalAssociationRules.jl, use the Julia package manager:
 ```julia
 using Pkg
-Pkg.add("SoleRules")
+Pkg.add("ModalAssociationRules")
 ```
 
 ## Feature Summary
@@ -22,7 +22,7 @@ Pkg.add("SoleRules")
 
 The package is developed by the [ACLAI Lab](https://aclai.unife.it/en/) @ University of Ferrara.
 
-*SoleRules.jl* lives in the context of [*Sole.jl*](https://github.com/aclai-lab/Sole.jl), an open-source framework for *symbolic machine learning*, originally designed for machine learning based on modal logics (see [Eduard I. Stan](https://eduardstan.github.io/)'s PhD thesis *'Foundations of Modal Symbolic Learning'* [here](https://www.repository.unipr.it/bitstream/1889/5219/5/main.pdf)).
+*ModalAssociationRules.jl* lives in the context of [*Sole.jl*](https://github.com/aclai-lab/Sole.jl), an open-source framework for *symbolic machine learning*, originally designed for machine learning based on modal logics (see [Eduard I. Stan](https://eduardstan.github.io/)'s PhD thesis *'Foundations of Modal Symbolic Learning'* [here](https://www.repository.unipr.it/bitstream/1889/5219/5/main.pdf)).
 
 ## More on Sole
 - [SoleBase.jl](https://github.com/aclai-lab/SoleBase.jl)

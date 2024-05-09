@@ -1,5 +1,5 @@
 ### using Test
-### using SoleRules
+### using ModalAssociationRules
 ### using MLJ
 ### using Random
 ### using DataFrames
