@@ -23,11 +23,11 @@ The following instructions assume `~/.julia/dev/` as the only working directory.
 And checkout everything on `dev` branch.
 For each package, open the Julia REPL and install the dependencies by executing the following.
 
-    SoleBase.jl ->              ]instantiate
-    MultiData.jl ->             ]dev SoleBase.jl
-    SoleLogics.jl ->            ]dev SoleBase.jl
-    SoleData.jl ->              ]dev SoleBase.jl SoleLogics.jl
-    SoleModels.jl ->            ]dev SoleBase.jl MultiData.jl SoleLogics.jl SoleData.jl
-    ModalAssociationRules.jl -> ]dev SoleBase.jl MultiData.jl SoleLogics.jl SoleData.jl SoleModels.jl
+    SoleBase ->              ]instantiate
+    MultiData ->             ]dev SoleBase
+    SoleLogics ->            ]dev SoleBase
+    SoleData ->              ]dev SoleBase SoleLogics MultiData
+    SoleModels ->            ]dev SoleBase MultiData SoleLogics SoleData
+    ModalAssociationRules -> ]dev SoleBase MultiData SoleLogics SoleData SoleModels
 
-When not specified (every time but in SoleBase.jl), also execute ```]instantiate```.
+When not specified (every time but in SoleBase), also execute ```]instantiate```.
