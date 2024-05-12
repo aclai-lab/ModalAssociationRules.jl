@@ -7,8 +7,8 @@
 function load_NATOPS(dirpath::String="../datasets/Multivariate_arff/NATOPS")
     (X_train, y_train), (X_test, y_test) = begin
         (
-            read("$(dirpath)_TEST.arff", String) |> parseARFF,
-            read("$(dirpath)_TRAIN.arff", String) |> parseARFF,
+            read("$(dirpath)_TEST.arff", String) |> SoleData.parseARFF,
+            read("$(dirpath)_TRAIN.arff", String) |> SoleData.parseARFF,
         )
     end
 
