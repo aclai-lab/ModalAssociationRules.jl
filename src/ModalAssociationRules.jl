@@ -63,6 +63,7 @@ export powerups, powerups!, haspowerup, initpowerups
 export info, info!, hasinfo
 export contributors, contributors!
 export mine!, apply!, generaterules!
+export analyze
 
 export frame, allworlds, nworlds
 

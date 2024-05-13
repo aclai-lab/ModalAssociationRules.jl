@@ -4,6 +4,7 @@
 
 /Manifest.toml
 /test/data/*
+/test/experiments/results/*
 /docs/build/
 
 TODO

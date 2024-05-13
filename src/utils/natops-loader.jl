@@ -26,10 +26,7 @@ function load_NATOPS(
     end
 end
 
-function _load_NATOPS(
-    dirpath::String="test/data/NATOPS",
-    fileprefix::String="NATOPS"
-)
+function _load_NATOPS(dirpath::String, fileprefix::String)
     (X_train, y_train), (X_test, y_test) = begin
         (
             read("$(dirpath)/$(fileprefix)_TEST.arff", String) |> SoleData.parseARFF,

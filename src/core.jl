@@ -295,8 +295,16 @@ function Base.hash(arule::ARule, h::UInt)
     return hash(vcat(_antecedent, _consequent), h)
 end
 
-function Base.show(io::IO, arule::ARule)
-    print(io, "$(antecedent(arule)) => $(consequent(arule))")
+function Base.show(
+    io::IO,
+    arule::ARule;
+    variable_names::Union{Nothing,Vector{String}}=nothing
+)
+    _antecedent = arule |> antecedent |> toformula
+    _consequent = arule |> consequent |> toformula
+
+    print(io, "$(syntaxstring(_antecedent, variable_names_map=variable_names)) => " *
+        "$(syntaxstring(_consequent, variable_names_map=variable_names))")
 end
 
 """
@@ -948,8 +956,15 @@ values.
 
 See also [`ARule`](@ref), [`Miner`](@ref).
 """
-function analyze(arule::ARule, miner::Miner; io::IO=stdout, localities::Bool=false)
-    println(io, "$(arule)")
+function analyze(
+    arule::ARule,
+    miner::Miner;
+    io::IO=stdout,
+    localities::Bool=false,
+    variable_names::Union{Nothing,Vector{String}}=nothing
+)
+    Base.show(io, arule; variable_names=variable_names)
+    println(io, "")
 
     for measure in rulemeasures(miner)
         # prepare (global) measure name, and its Symbol casting
@@ -967,6 +982,8 @@ function analyze(arule::ARule, miner::Miner; io::IO=stdout, localities::Bool=fal
             println(io, "")
         end
     end
+
+    println(io, "")
 end
 
 ############################################################################################
