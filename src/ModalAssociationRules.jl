@@ -40,7 +40,10 @@ export WorldMask, EnhancedItemset, ConditionalPatternBase
 export ARule
 export antecedent, consequent
 
-export MeaningfulnessMeasure, islocalof, isglobalof
+export MeaningfulnessMeasure,
+export islocalof, isglobalof
+export localof, globalof
+
 export ARMSubject
 export LmeasMemoKey, LmeasMemo
 export GmeasMemoKey, GmeasMemo

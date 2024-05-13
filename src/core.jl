@@ -941,14 +941,14 @@ function Base.show(io::IO, miner::Miner)
 end
 
 """
-    analyze(arule::ARule, miner::Miner)
+    analyze(arule::ARule, miner::Miner; io::IO=stdout, localities=false)
 
 Print an [`ARule`](@ref) analysis to the console, including related meaningfulness measures
 values.
 
 See also [`ARule`](@ref), [`Miner`](@ref).
 """
-function analyze(arule::ARule, miner::Miner; io::IO=stdout)
+function analyze(arule::ARule, miner::Miner; io::IO=stdout, localities::Bool=false)
     println(io, "$(arule)")
 
     for measure in rulemeasures(miner)
@@ -956,12 +956,16 @@ function analyze(arule::ARule, miner::Miner; io::IO=stdout)
         gmeas = measure[1]
         gmeassym = gmeas |> Symbol
 
-        # find local measure associated
-        lmeas = localof(gmeas)
-        lmeassym = lmeas |> Symbol
+        # find local measure (its name, as Symbol) associated with the global measure
+        lmeassym = ModalAssociationRules.localof(gmeas) |> Symbol
 
         println(io, "$(gmeassym): $(globalmemo(miner, (gmeassym, arule)))")
-        println(io, "$(lmeassym): $(globalmemo(miner, (lmeassym, arule)))")
+        if localities
+            for i in 1:ninstances(miner |> dataset)
+                print(io, "$(lmeassym): $(localmemo(miner, (lmeassym, arule, i))) ")
+            end
+            println(io, "")
+        end
     end
 end
 
