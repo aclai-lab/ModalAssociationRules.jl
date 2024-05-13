@@ -68,9 +68,9 @@ include("meaningfulness-measures.jl")
 export lsupport, gsupport
 export lconfidence, gconfidence
 
-include("arulemining-utils.jl")
+include("utils/arulemining-utils.jl")
 
-export combine, prune, prune!
+export combine_items, prune, prune!
 export grow_prune, coalesce_contributors
 export arules_generator # wrapped by generaterules!
 export getlocalthreshold_integer, getglobalthreshold_integer
@@ -95,10 +95,14 @@ export checksanity!
 export patternbase
 export fpgrowth
 
-include("utils.jl")         # IDEA: move this in SoleData
+include("utils/natops-loader.jl")
+
+export load_NATOPS
+
+include("utils/literals-selector.jl")   # IDEA: move this in SoleData
 
 export equicut, quantilecut
-export make_conditions
+export makeconditions
 
 include("ideas.jl")
 

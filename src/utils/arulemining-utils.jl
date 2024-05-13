@@ -3,14 +3,14 @@
 ############################################################################################
 
 """
-    combine(itemsets::Vector{<:Itemset}, newlength::Integer)
+    combine_items(itemsets::Vector{<:Itemset}, newlength::Integer)
 
 Return a generator which combines [`Itemset`](@ref)s from `itemsets` into new itemsets of
 length `newlength` by taking all combinations of two itemsets and joining them.
 
 See also [`Itemset`](@ref).
 """
-function combine(itemsets::Vector{<:Itemset}, newlength::Integer)
+function combine_items(itemsets::Vector{<:Itemset}, newlength::Integer)
     return Iterators.filter(
         combo -> length(combo) == newlength,
         Iterators.map(
@@ -21,14 +21,14 @@ function combine(itemsets::Vector{<:Itemset}, newlength::Integer)
 end
 
 """
-    combine(variable::Vector{<:Item}, fixed::Vector{<:Item})
+    combine_items(variable::Vector{<:Item}, fixed::Vector{<:Item})
 
 Return a generator of [`Itemset`](@ref), which iterates the combinations of [`Item`](@ref)s
 in `variable` and prepend them to `fixed` vector.
 
 See also [`Item`](@ref), [`Itemset`](@ref).
 """
-function combine(variable::Vector{<:Item}, fixed::Vector{<:Item})
+function combine_items(variable::Vector{<:Item}, fixed::Vector{<:Item})
     return (Itemset(union(combo, fixed)) for combo in combinations(variable))
 end
 
@@ -49,7 +49,7 @@ function grow_prune(candidates::Vector{Itemset}, frequents::Vector{Itemset}, k::
             # each one wrapping one Itemset, but we just need that exact itemset.
             itemset -> all(
                 combo -> Itemset(combo) in frequents, combinations(itemset, k-1)),
-            combine(candidates, k)
+                combine_items(candidates, k)
         )
 end
 

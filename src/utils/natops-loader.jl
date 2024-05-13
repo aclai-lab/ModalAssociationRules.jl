@@ -3,12 +3,21 @@
 # By default, when tests run, NATOPS is downloaded from timeseriesclassification.com,
 # but it might be down for some reason.
 
-function load_NATOPS(dirpath::String="~/datasets/Multivariate_arff/NATOPS")
+using ZipFile
+using DataFrames
+using CategoricalArrays
+
+using DataStructures: OrderedDict
+
+function load_NATOPS(
+    dirpath::String="../../../datasets/Multivariate_arff/NATOPS",
+    datasetname::String="NATOPS"
+)
     (X_train, y_train), (X_test, y_test) = begin
         (
             # TODO: place number here
-            read("$(dirpath)_TEST.arff", String) |> SoleData.parseARFF,
-            read("$(dirpath)_TRAIN.arff", String) |> SoleData.parseARFF,
+            read("$(dirpath)/$(datasetname)_TEST.arff", String) |> SoleData.parseARFF,
+            read("$(dirpath)/$(datasetname)_TRAIN.arff", String) |> SoleData.parseARFF,
         )
     end
 

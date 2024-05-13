@@ -222,9 +222,9 @@ lsupport(Itemset(manual_lr), SoleLogics.getinstance(X2, 7); miner=fpgrowth_miner
 @test ModalAssociationRules.initpowerups(apriori, dataset(apriori_miner)) == Powerup()
 
 # "arulemining-utils.jl"
-@test combine([pq, qr], 3) |> first == pqr
-@test combine([manual_p, manual_q], [manual_r]) |> collect |> length == 3
-@test combine([manual_p, manual_q], [manual_r]) |>
+@test combine_items([pq, qr], 3) |> first == pqr
+@test combine_items([manual_p, manual_q], [manual_r]) |> collect |> length == 3
+@test combine_items([manual_p, manual_q], [manual_r]) |>
     collect |> first == Itemset([manual_p, manual_r])
 
 @test grow_prune([pq,qr,pr], [pq,qr,pr], 3) |> collect |> unique == [pqr]

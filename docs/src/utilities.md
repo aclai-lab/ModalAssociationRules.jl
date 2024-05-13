@@ -13,7 +13,7 @@ The following utilities often involve performing some combinatoric trick between
 ## Items and Itemsets
 
 ```@docs
-combine
+combine_items
 grow_prune
 coalesce_contributors(itemset::Itemset, miner::Miner; lmeas::Function=lsupport)
 ```

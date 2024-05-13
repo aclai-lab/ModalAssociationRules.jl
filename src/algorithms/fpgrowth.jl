@@ -769,7 +769,7 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
                 end
             end
 
-            for combo in combine(items(survivor_itemset), items(leftout_itemset))
+            for combo in combine_items(items(survivor_itemset), items(leftout_itemset))
                 # each combo must be reshaped, following a certain order specified
                 # universally by the miner.
                 sort!(items(combo), by=t -> powerups(miner, :lexicographic_ordering)[t])

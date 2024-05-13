@@ -74,7 +74,7 @@
 ### See also [`syntaxstring`](@ref), [`SoleData.TestOperator`](@ref),
 ### [`SoleLogics.UnivariateFeature`](@ref).
 ### """
-### function make_conditions(
+### function makeconditions(
 ###     thresholds::Vector{<:Real},
 ###     nvariables::Vector{Int64},
 ###     features::Vector{DataType}, # NOTE: this should be Vector{<:AbstractFeature}
