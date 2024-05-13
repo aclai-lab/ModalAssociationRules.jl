@@ -148,7 +148,8 @@ function lconfidence(
     den = lsupport(antecedent(rule), logi_instance; miner=miner)
 
     if (den <= 100*eps())
-        error("Illegal denominator when computing local confidence: (value is $(den))")
+        return 0.0 # illegal denominator
+        # error("Illegal denominator when computing local confidence: (value is $(den))")
     end
 
     num = lsupport(convert(Itemset, rule), logi_instance; miner=miner)
@@ -207,8 +208,8 @@ function gconfidence(
     den = gsupport(_consequent, X, threshold; miner=miner)
 
     if (den <= 100*eps())
-        error("Illegal denominator when computing global confidence: (value is $(den))")
-        return 0
+        return 0.0 # illegal denominator
+        # error("Illegal denominator when computing global confidence: (value is $(den))")
     end
 
     num = gsupport(_union, X, threshold; miner=miner)
