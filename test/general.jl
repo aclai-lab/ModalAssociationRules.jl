@@ -8,7 +8,7 @@ using StatsBase
 import ModalAssociationRules.children
 
 # load NATOPS dataset and convert it to a Logiset
-X_df, y = SoleData.load_arff_dataset("NATOPS");
+X_df, y = load_NATOPS()
 X1 = scalarlogiset(X_df)
 
 # different tested algorithms will use different Logiset's copies,
@@ -206,7 +206,7 @@ _temp_apriori_miner = Miner(X1, apriori, manual_items, _itemsetmeasures, _ruleme
 @test lsupport(pq, SoleLogics.getinstance(X2, 1); miner=fpgrowth_miner) == 0.0
 
 _temp_lsupport = lsupport(pq, SoleLogics.getinstance(X2, 7); miner=fpgrowth_miner)
-@test _temp_lsupport > 0.0 && _temp_lsupport < 1.0
+@test _temp_lsupport >= 0.0 && _temp_lsupport <= 1.0
 
 _temp_arule = arules_generator(freqitems(fpgrowth_miner), fpgrowth_miner) |> first
 

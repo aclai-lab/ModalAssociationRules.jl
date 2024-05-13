@@ -11,12 +11,29 @@ using DataStructures: OrderedDict
 
 function load_NATOPS(
     dirpath::String="test/data/NATOPS",
-    datasetname::String="NATOPS"
+    fileprefix::String="NATOPS"
+)
+    # if data is not locally available (e.g., in test/data/),
+    # then try download it using SoleData default loader.
+    try
+        _load_NATOPS(dirpath, fileprefix)
+    catch error
+        if error isa SystemError
+            SoleData.load_arff_dataset("NATOPS")
+        else
+            rethrow(error)
+        end
+    end
+end
+
+function _load_NATOPS(
+    dirpath::String="test/data/NATOPS",
+    fileprefix::String="NATOPS"
 )
     (X_train, y_train), (X_test, y_test) = begin
         (
-            read("$(dirpath)/$(datasetname)_TEST.arff", String) |> SoleData.parseARFF,
-            read("$(dirpath)/$(datasetname)_TRAIN.arff", String) |> SoleData.parseARFF,
+            read("$(dirpath)/$(fileprefix)_TEST.arff", String) |> SoleData.parseARFF,
+            read("$(dirpath)/$(fileprefix)_TRAIN.arff", String) |> SoleData.parseARFF,
         )
     end
 

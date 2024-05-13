@@ -8,7 +8,7 @@ using StatsBase
 import ModalAssociationRules.children
 
 # load NATOPS dataset and convert it to a Logiset
-X_df, y = SoleData.load_arff_dataset("NATOPS");
+X_df, y = load_NATOPS();
 X1 = scalarlogiset(X_df)
 
 # different tested algorithms will use different Logiset's copies,
