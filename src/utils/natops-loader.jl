@@ -10,12 +10,11 @@ using CategoricalArrays
 using DataStructures: OrderedDict
 
 function load_NATOPS(
-    dirpath::String="../../../datasets/Multivariate_arff/NATOPS",
+    dirpath::String="test/data/NATOPS",
     datasetname::String="NATOPS"
 )
     (X_train, y_train), (X_test, y_test) = begin
         (
-            # TODO: place number here
             read("$(dirpath)/$(datasetname)_TEST.arff", String) |> SoleData.parseARFF,
             read("$(dirpath)/$(datasetname)_TRAIN.arff", String) |> SoleData.parseARFF,
         )
