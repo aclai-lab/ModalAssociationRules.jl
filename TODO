@@ -118,6 +118,18 @@ Testing:
 Future:
   ☐ item_contrained_measures and rule_constrained_measures fields in Miner could be dictionaries
   ☐ instead of just (gmeas, lthreshold, gthreshold), maybe a collection of indipendent (lmeas, lthreshold) could be better?
+  ☐ leverage OneStepMemo
+    # X_df, y = load_NATOPS();
+    # X = scalarlogiset(X_df; relations = [IA_L], conditions =
+    #     Vector{ScalarMetaCondition}(
+    #         collect(Iterators.flatten([
+    #             [ScalarMetaCondition(f, <=) for f in UnivariateMin.(1:24)],
+    #             [ScalarMetaCondition(f, >) for f in UnivariateMin.(1:24)],
+    #             [ScalarMetaCondition(f, <=) for f in UnivariateMax.(1:24)],
+    #             [ScalarMetaCondition(f, >) for f in UnivariateMax.(1:24)],
+    #         ]))
+    #     )
+    # )
 
 Documentation:
   ✔ write a v0.1 documentation @done(24-02-23 15:11)

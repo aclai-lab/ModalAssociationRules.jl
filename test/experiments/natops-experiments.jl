@@ -1,9 +1,10 @@
 using Test
 
-using Date
 using ModalAssociationRules
+using Date
 using SoleData
 using StatsBase
+using
 
 import ModalAssociationRules.children
 

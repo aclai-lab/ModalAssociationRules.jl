@@ -40,7 +40,7 @@ export WorldMask, EnhancedItemset, ConditionalPatternBase
 export ARule
 export antecedent, consequent
 
-export MeaningfulnessMeasure,
+export MeaningfulnessMeasure
 export islocalof, isglobalof
 export localof, globalof
 
