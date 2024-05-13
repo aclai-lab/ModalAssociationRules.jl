@@ -1,8 +1,8 @@
 Critical:
   ✔ fpgrowth is not correct. formalize it and come back here. @done(24-04-26 13:53)
-  ☐ fpgrowth.jl refactoring 
+  ☐ fpgrowth.jl refactoring
     ✔ remove unecessary powerups @done(24-04-28 18:48)
-    ☐ the fpgrowth-recursion base case is too cumbersome 
+    ☐ the fpgrowth-recursion base case is too cumbersome
   ✔ more tests, better organized @done(24-04-29 12:34)
     ✔ redundant mining with apriori-based miner removed - tests are too slow @done(24-04-29 12:34)
   ✔ leverage Itemset and ARule hashing to avoid missing entries in dictionary (e.g., itemsets given with different item sorting must have same hash) @done(24-05-06 15:40)
@@ -50,6 +50,7 @@ Main:
     ☐ is this really necessary? try to remove :lexicographic_ordering powerup field from fpgrowth
   ☐ user custom meaningfulness measures should be checked too
   ☐ parallelize apriori and fpgrowth
+  ☐ write a loader for NATOPS, in order to execute experiments also if timeseriesclassification.com is offline
 
 Generic:
   ✔ move memoization accountability to Miner @done(24-02-07 23:58)
@@ -90,7 +91,7 @@ Optimizations:
 Utility:
   ✔ Base.in between two itemsets @done(24-02-19 14:18)
   ☐ build a macro to implement decorator pattern to build local and global measures, optionally exploiting Miner memoization
-  ☐ better design how an Miner keeps track of local measures. Local and global measures CAN be independent. 
+  ☐ better design how an Miner keeps track of local measures. Local and global measures CAN be independent.
     # maybe this is something we don't want to permit! Find one example of useful local measure independent from a global one
   ☐ Base.push!(fptree::FPTree, itemset::Itemset, miner::Miner) doesn't check if itemset is sorted by gsupport. Add a safe=false flag.
   ✔ expose a simple-to-understand pool of utility methods to perform combinatorics over itemsets @done(24-02-08 20:30)
@@ -162,7 +163,7 @@ Dict{Tuple{Symbol, ARMSubject}, Float64} with 27 entries:
     (:gsupport, [min[V2] ≤ -2.2])                                                       => 0.158333
     (:gsupport, [min[V3] > -3.6])                                                       => 1.0
     (:gsupport, [min[V2] ≤ -2.2, [L]min[V3] > -3.6])                                    => 0.158333
-  
+
 Dict{Tuple{Symbol, ARMSubject}, Float64} with 27 entries:
   (:gsupport, [min[V3] > -3.6, ⟨L⟩min[V2] ≤ -2.2, [L]min[V3] > -3.6])                 => 0.136111
   (:gsupport, [min[V2] ≤ -2.2, min[V3] > -3.6, ⟨L⟩min[V2] ≤ -2.2])                    => 0.102778
