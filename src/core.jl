@@ -966,16 +966,25 @@ function analyze(
     Base.show(io, arule; variable_names=variable_names)
     println(io, "")
 
-    for measure in rulemeasures(miner)
-        # prepare (global) measure name, and its Symbol casting
-        gmeas = measure[1]
+    for measure in itemsetmeasures(miner)
+        gmeas = first(measure)
         gmeassym = gmeas |> Symbol
 
-        # find local measure (its name, as Symbol) associated with the global measure
-        lmeassym = ModalAssociationRules.localof(gmeas) |> Symbol
+        for item in Iterators.flatten([antecedent(arule), consequent(arule)])
+            println(io, "\t$(gmeassym) - $(Itemset(item)): " *
+                "$(globalmemo(miner, (gmeassym, Itemset(item))))")
+        end
+    end
 
-        println(io, "$(gmeassym): $(globalmemo(miner, (gmeassym, arule)))")
+    for measure in rulemeasures(miner)
+        gmeas = first(measure)
+        gmeassym = gmeas |> Symbol
+
+        println(io, "\t$(gmeassym): $(globalmemo(miner, (gmeassym, arule)))")
+
         if localities
+            # find local measure (its name, as Symbol) associated with the global measure
+            lmeassym = ModalAssociationRules.localof(gmeas) |> Symbol
             for i in 1:ninstances(miner |> dataset)
                 print(io, "$(lmeassym): $(localmemo(miner, (lmeassym, arule, i))) ")
             end

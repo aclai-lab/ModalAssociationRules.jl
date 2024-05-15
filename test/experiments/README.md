@@ -9,7 +9,7 @@ To know more about experiments setup, see `<dataset-name>-experiements.jl`.
 ## NATOPS
 
 ### I have command
-- The operator tends to rotate his right palm in front of him, when his arms are approaching the the highest point of the arc of movement.
+- The operator tends to rotate his right palm in front of him, when his arms are approaching the highest point of the arc of movement.
 
     `(min[X[Hand tip r]] ≤ 1) ∧ (min[Z[Hand tip r]] ≥ 0) => (min[Y[Hand tip r]] ≥ -0.5)`
 
