@@ -206,7 +206,7 @@ function gconfidence(
     _union = union(_antecedent, _consequent)
 
     # denominator could be near to zero
-    den = gsupport(_consequent, X, threshold; miner=miner)
+    den = gsupport(_antecedent, X, threshold; miner=miner)
 
     ans = 0.0
     if (den <= 100*eps())
