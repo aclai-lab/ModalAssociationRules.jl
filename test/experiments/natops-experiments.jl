@@ -370,7 +370,7 @@ runexperiment(
 # Experiment #4
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
-# Wrists in Spread wings, using during, overlap and meet relations.
+# Wrists in Spread wings, using during, ends-with and overlap relations.
 # V13, V14, V15 - left wrist.
 # V16, V17, V18 - right wrist.
 #
