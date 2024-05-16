@@ -1,12 +1,14 @@
 Critical:
   ✔ fpgrowth is not correct. formalize it and come back here. @done(24-04-26 13:53)
+    ☐ tests are correct, but leveraging gsupport memoization brings up inconsistent confidences (a.k.a, confidences are > 1.0).
+      # misteriously, this is resolved when gsupport memoization is not enabled...
   ☐ fpgrowth.jl refactoring
     ✔ remove unecessary powerups @done(24-04-28 18:48)
     ☐ the fpgrowth-recursion base case is too cumbersome
   ✔ more tests, better organized @done(24-04-29 12:34)
     ✔ redundant mining with apriori-based miner removed - tests are too slow @done(24-04-29 12:34)
   ✔ leverage Itemset and ARule hashing to avoid missing entries in dictionary (e.g., itemsets given with different item sorting must have same hash) @done(24-05-06 15:40)
-  ☐ implement a smarter method for arules generation
+  ✔ implement a smarter method for arules generation @done(24-05-16 09:40)
 
 Main:
   ✔ define Item, Itemset and its interface @done(24-01-15 16:16)

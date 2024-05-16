@@ -28,7 +28,6 @@ function lsupport(
     # leverage memoization if a miner is provided, and it already computed the measure
     if !isnothing(miner)
         memoized = localmemo(miner, memokey)
-
         if !isnothing(memoized)
             return memoized
         end
@@ -80,15 +79,27 @@ function gsupport(
     itemset::Itemset,
     X::SupportedLogiset,
     threshold::Threshold;
-    miner::Union{Nothing,Miner}=nothing
+    miner::Union{Nothing,Miner}=nothing,
+    mymemo_on::Bool=true
 )::Float64
     # this is needed to access memoization structures
     memokey = GmeasMemoKey((Symbol(gsupport), itemset))
 
     # leverage memoization if a miner is provided, and it already computed the measure
-    if !isnothing(miner)
+    if !isnothing(miner) && mymemo_on
         memoized = globalmemo(miner, memokey)
         if !isnothing(memoized)
+            # WARNING: investigate - if this return is uncommented, then memoization is
+            # leveraged here;
+            # This causes some issues during experiments, maybe because the internal
+            # logiset memo structure is conflicting with this.
+
+            # For example, given a certain itemset, if memoization is NOT exploited then
+            # it can be the case that the following overwriting holds.
+            #   Overwriting 0.96 with 0.0
+            # Think about the case where overwriting is not performed: then, when
+            # computing global confidence, denominator could be smaller than the numerator
+            # (a.k.a, union between antecedent and consequent of a rule).
             return memoized
         end
     end
@@ -188,13 +199,15 @@ function gconfidence(
     rule::ARule,
     X::SupportedLogiset,
     threshold::Threshold;
-    miner::Union{Nothing,Miner}=nothing
+    miner::Union{Nothing,Miner}=nothing,
+    mymemo_on::Bool=true,
+    internalmemo_on::Bool=true
 )::Float64
     # this is needed to access memoization structures
     memokey = GmeasMemoKey((Symbol(gconfidence), rule))
 
     # leverage memoization if a miner is provided, and it already computed the measure
-    if !isnothing(miner)
+    if !isnothing(miner) && internalmemo_on
         memoized = globalmemo(miner, memokey)
         if !isnothing(memoized)
             return memoized
@@ -206,14 +219,15 @@ function gconfidence(
     _union = union(_antecedent, _consequent)
 
     # denominator could be near to zero
-    den = gsupport(_antecedent, X, threshold; miner=miner)
+    den = gsupport(_antecedent, X, threshold; miner=miner, mymemo_on=false)
 
     ans = 0.0
+    num = 0.0
     if (den <= 100*eps())
         return 0.0 # illegal denominator
         # error("Illegal denominator when computing global confidence: (value is $(den))")
     else
-        num = gsupport(_union, X, threshold; miner=miner)
+        num = gsupport(_union, X, threshold; miner=miner, mymemo_on=false)
         ans = num / den
     end
 

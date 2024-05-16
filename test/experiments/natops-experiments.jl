@@ -83,7 +83,12 @@ function runexperiment(
 	reportname::Union{Nothing, String} = nothing,
 	variable_names::Union{Nothing, Vector{String}} = nothing
 )
-	miner = Miner(X, algorithm, items, itemsetmeasures, rulemeasures)
+    # avoid filling the given dataset with infos necessary to optimize future minings,
+    # and don't use those metadata if already loaded up!
+    # In fact, that could make experiments uncorrect (e.g., confidences over 1.0).
+    _X = deepcopy(X)
+
+	miner = Miner(_X, algorithm, items, itemsetmeasures, rulemeasures)
 	mine!(miner)
 	generaterules!(miner) |> collect
 
@@ -96,7 +101,7 @@ function runexperiment(
 		redirect_stdout(out) do
             # For some reason, `itemsetmeasures` and `rulemeasures` getters triggers
             # a MethodError here (maybe this is caused by stdout redirection?).
-            println("\nParameterization:\n")
+            println("Parameterization:\n")
             println(miner.item_constrained_measures)
             println(miner.rule_constrained_measures)
 
@@ -257,7 +262,7 @@ _1_right_hand_tip_propositional_items = vcat(
 
 _1_items = _1_right_hand_tip_propositional_items
 _1_itemsetmeasures = [(gsupport, 0.1, 0.1)]
-_1_rulemeasures = [(gconfidence, 0.6, 0.6)]
+_1_rulemeasures = [(gconfidence, 0.5, 0.5)]
 
 runexperiment(
 	X_1_have_command,
@@ -285,11 +290,13 @@ plot(
 =#
 ############################################################################################
 
-_2_right_hand_tip_X_items_later = box(IA_L).(_1_right_hand_tip_propositional_items)
+_2_right_hand_tip_X_items_later = diamond(IA_L).(_1_right_hand_tip_propositional_items)
 
 _2_right_hand_tip_later_items = vcat(
-    _1_right_hand_tip_propositional_items,
-    _2_right_hand_tip_X_items_later
+    _1_right_hand_tip_propositional_items[2],
+    _1_right_hand_tip_propositional_items[4],
+    _1_right_hand_tip_propositional_items[6],
+    _2_right_hand_tip_X_items_later[1]
 ) |> Vector{Formula}
 
 _2_items = _2_right_hand_tip_later_items

@@ -790,6 +790,7 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
                         _leftout_count = min(_leftout_count, leftout_count_dict[item])
                     end
                 end
+                _leftout_count = min(_leftout_count, leftout_count)
 
                 lsupport_value = _leftout_count / nworlds(miner)
                 localmemo!(miner,
@@ -821,7 +822,8 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
     end
 
     # initialization logic
-    @assert ModalAssociationRules.gsupport in reduce(vcat, itemsetmeasures(miner)) "FP-Growth " *
+    @assert ModalAssociationRules.gsupport in reduce(vcat, itemsetmeasures(miner)) "" *
+        "FP-Growth " *
         "requires global support (gsupport) as meaningfulness measure in order to " *
         "work. Please, add a tuple (gsupport, local support threshold, " *
         "global support threshold) to miner.item_constrained_measures field.\n" *

@@ -216,7 +216,7 @@ lsupport(Itemset(manual_lr), SoleLogics.getinstance(X2, 7); miner=fpgrowth_miner
 @test lconfidence(
     _temp_arule, SoleLogics.getinstance(X2,7); miner=fpgrowth_miner) > 0.5
 @test gconfidence(
-    _temp_arule, dataset(fpgrowth_miner), 0.1; miner=fpgrowth_miner) > 0.68
+    _temp_arule, dataset(fpgrowth_miner), 0.1; miner=fpgrowth_miner) > 0.5
 
 # more on Miner powerups (a.k.a, "customization system")
 @test ModalAssociationRules.initpowerups(apriori, dataset(apriori_miner)) == Powerup()

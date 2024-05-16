@@ -809,7 +809,9 @@ Setter for a specific entry `key` inside the global memoization structure wrappe
 
 See also [`Miner`](@ref), [`GmeasMemo`](@ref), [`GmeasMemoKey`](@ref).
 """
-globalmemo!(miner::Miner, key::GmeasMemoKey, val::Threshold) = miner.gmemo[key] = val
+globalmemo!(miner::Miner, key::GmeasMemoKey, val::Threshold) = begin
+    miner.gmemo[key] = val
+end
 
 ############################################################################################
 #### Miner machines specializations ########################################################
@@ -960,29 +962,44 @@ function analyze(
     arule::ARule,
     miner::Miner;
     io::IO=stdout,
-    localities::Bool=false,
+    itemsets_localities::Bool=false,
+    rule_localities::Bool=false,
+    verbose::Bool=false,
     variable_names::Union{Nothing,Vector{String}}=nothing
 )
+    if verbose
+        itemsets_localities = true
+        rule_localities = true
+    end
+
     Base.show(io, arule; variable_names=variable_names)
     println(io, "")
 
-    for measure in itemsetmeasures(miner)
-        gmeas = first(measure)
-        gmeassym = gmeas |> Symbol
+    # report global measures for both antecedent and consequent
+    if verbose
+        for measure in itemsetmeasures(miner)
+            gmeas = first(measure)
+            gmeassym = gmeas |> Symbol
 
-        for item in Iterators.flatten([antecedent(arule), consequent(arule)])
-            println(io, "\t$(gmeassym) - $(Itemset(item)): " *
-                "$(globalmemo(miner, (gmeassym, Itemset(item))))")
+            println(io, "\t$(gmeassym) - (antecedent): " *
+                "$(globalmemo(miner, (gmeassym, antecedent(rule))))")
+            # TODO: report local measures for the antecedent (use `itemsets_localities`)
+
+            println(io, "\t$(gmeassym) - (consequent): " *
+                "$(globalmemo(miner, (gmeassym, consequent(rule))))")
+            # TODO: report local measures for the consequent (use `itemsets_localities`)
         end
     end
 
+    # report global emasures for the rule
     for measure in rulemeasures(miner)
         gmeas = first(measure)
         gmeassym = gmeas |> Symbol
 
         println(io, "\t$(gmeassym): $(globalmemo(miner, (gmeassym, arule)))")
 
-        if localities
+        # report local measures for the rule
+        if rule_localities
             # find local measure (its name, as Symbol) associated with the global measure
             lmeassym = ModalAssociationRules.localof(gmeas) |> Symbol
             for i in 1:ninstances(miner |> dataset)
