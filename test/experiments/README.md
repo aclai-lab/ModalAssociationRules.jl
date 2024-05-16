@@ -4,7 +4,7 @@ This file is intended to give a general overview of the most remarkable results 
 Currently, only [NATOPS](https://github.com/yalesong/natops) dataset is being analysed.
 
 The following results are a small part of all the extracted rules, and are made by manually picking the literals from which itemsets are extracted.
-To know more about experiments setup, see `<dataset-name>-experiements.jl`.
+To know more about experiments setup, see `<dataset-name>-experiments.jl`.
 
 ## NATOPS
 
