@@ -962,34 +962,25 @@ function analyze(
     arule::ARule,
     miner::Miner;
     io::IO=stdout,
-    itemsets_localities::Bool=false,
-    rule_localities::Bool=false,
+    itemsets_local_info::Bool=false,
+    itemsets_global_info::Bool=false,
+    rule_local_info::Bool=false,
     verbose::Bool=false,
     variable_names::Union{Nothing,Vector{String}}=nothing
 )
+    # print constraints
     if verbose
-        itemsets_localities = true
-        rule_localities = true
+        itemsets_global_info = true
+        itemsets_local_info = true
+        rule_local_info = true
+    end
+
+    if itemsets_local_info
+        itemsets_global_info = true
     end
 
     Base.show(io, arule; variable_names=variable_names)
     println(io, "")
-
-    # report global measures for both antecedent and consequent
-    if verbose
-        for measure in itemsetmeasures(miner)
-            gmeas = first(measure)
-            gmeassym = gmeas |> Symbol
-
-            println(io, "\t$(gmeassym) - (antecedent): " *
-                "$(globalmemo(miner, (gmeassym, antecedent(rule))))")
-            # TODO: report local measures for the antecedent (use `itemsets_localities`)
-
-            println(io, "\t$(gmeassym) - (consequent): " *
-                "$(globalmemo(miner, (gmeassym, consequent(rule))))")
-            # TODO: report local measures for the consequent (use `itemsets_localities`)
-        end
-    end
 
     # report global emasures for the rule
     for measure in rulemeasures(miner)
@@ -999,13 +990,38 @@ function analyze(
         println(io, "\t$(gmeassym): $(globalmemo(miner, (gmeassym, arule)))")
 
         # report local measures for the rule
-        if rule_localities
+        if rule_local_info
             # find local measure (its name, as Symbol) associated with the global measure
             lmeassym = ModalAssociationRules.localof(gmeas) |> Symbol
             for i in 1:ninstances(miner |> dataset)
                 print(io, "$(lmeassym): $(localmemo(miner, (lmeassym, arule, i))) ")
             end
             println(io, "")
+        end
+    end
+
+    # report global measures for both antecedent and consequent
+    if itemsets_global_info
+        for measure in itemsetmeasures(miner)
+            gmeas = first(measure)
+            gmeassym = gmeas |> Symbol
+
+            println(io, "\t$(gmeassym) - (antecedent): " *
+                "$(globalmemo(miner, (gmeassym, antecedent(arule))))")
+            # if itemsets_local_info
+            # TODO: report local measures for the antecedent (use `itemsets_localities`)
+
+            println(io, "\t$(gmeassym) - (consequent): " *
+                "$(globalmemo(miner, (gmeassym, consequent(arule))))")
+            # if itemsets_local_info
+            # TODO: report local measures for the consequent (use `itemsets_localities`)
+
+            _entire_content = union(antecedent(arule), consequent(arule))
+            println(io, "\t$(gmeassym) - (entire): " *
+                "$(globalmemo(miner, (gmeassym, _entire_content)))")
+            # if itemsets_local_info
+            # TODO: report local measures for the consequent (use `itemsets_localities`)
+
         end
     end
 

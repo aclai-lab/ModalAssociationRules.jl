@@ -722,7 +722,7 @@ See also [`Miner`](@ref), [`FPTree`](@ref), [`HeaderTable`](@ref),
 [`SoleBase.AbstractDataset`](@ref)
 """
 function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothing
-    # essentially, modal fpgrowth consists of a iterative application of multiple
+    # essentially, modal fpgrowth consists of an iterative application of multiple
     # "standard" (a.k.a, propositional) fpgrowth calls;
     # this dictionary is necessary to convey all the intermediate results between
     # fpgrowth calls, and is filled up inside the "kernel" of the current procedure.
@@ -790,7 +790,6 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
                         _leftout_count = min(_leftout_count, leftout_count_dict[item])
                     end
                 end
-                _leftout_count = min(_leftout_count, leftout_count)
 
                 lsupport_value = _leftout_count / nworlds(miner)
                 localmemo!(miner,
@@ -920,9 +919,15 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
     end
 
     for (itemset, gfrequency_int) in fpgrowth_fragments
+        _threshold = getglobalthreshold(miner, gsupport)
         gfrequency = gfrequency_int / ninstances(X)
+        if gfrequency >= _threshold
+            # DEBUG:
+            # _gsupport = gsupport(itemset, dataset(miner), _threshold; miner=miner)
+            # if gfrequency != _gsupport
+            #   println("Error: $(gfrequency) vs $(_gsupport) for $(itemset))
+            # end
 
-        if gfrequency >= getglobalthreshold(miner, gsupport)
             globalmemo!(miner, GmeasMemoKey((Symbol(gsupport), itemset)), gfrequency)
             push!(freqitems(miner), itemset)
         end

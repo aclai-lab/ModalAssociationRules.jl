@@ -9,9 +9,26 @@ To know more about experiments setup, see `<dataset-name>-experiements.jl`.
 ## NATOPS
 
 ### I have command
-- The operator tends to rotate his right palm in front of him, when his arms are approaching the highest point of the arc of movement.
+Support thresholds: $0.1$<br>
+Confidence thresholds: $0.5$
 
-    `(min[X[Hand tip r]] ≤ 1) ∧ (min[Z[Hand tip r]] ≥ 0) => (min[Y[Hand tip r]] ≥ -0.5)`
+![NATOPS plot of right hand tips](./natops-images/natops-have-command-x-y-z-hand-tips.png)
 
-    global confidence: $0.92$
+- When the operator's right hand is at the height of his shoulders, then it's palm is rotated in front of him.
 
+    `(max[Z[Hand tip r]] ≥ 0) => (min[Y[Hand tip r]] ≥ -0.5)` <br> gconfidence: 0.95
+
+- When the operator's right hand is away from his body, and is also rotated, then this means that it is not low.
+
+    `(min[X[Hand tip r]] ≥ 1) ∧ (min[Y[Hand tip r]] ≥ -0.5) => (max[Z[Hand tip r]] ≥ 0)` <br> gconfidence: $1.0$
+
+- When operator's right hand terminated the movement ascending phase (it is "close to its body" in the X axis, but also further away from the ground), then it is rotated.
+
+    `(min[X[Hand tip r]] ≤ 1) ∧ (min[Z[Hand tip r]] ≥ 0) => (min[Y[Hand tip r]] ≥ -0.5)` <br> global confidence: $0.92$
+
+### All clear
+Support thresholds: $0.1$<br>
+Confidence thresholds: $0.5$
+
+![NATOPS right hand tips plot](./natops-images/natops-all-clear-x-y-z-hand-tips.png)
+![NATOPS right elbow plot](./natops-images/natops-all-clear-x-y-z-right-elbow.png)

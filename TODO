@@ -7,10 +7,13 @@ Critical:
       What really causes the problem: probably how frequencies are summed up in fpgrowth
       Other ideas?: 12k tests works, apriori and fpgrowth seems to coincide. Maybe experiments are incorrect?
           - attempt1: maybe logiset internal memo structure is the problem? No, Logiset is deepcopied from a fresh one everytime we start a new experiment.
-
+    ☐ 01-right-hand-tip-only-apriori.exp, 01-right-hand-tip-only.exp, 02-right-hand-tip-later-apriori.exp, 02-right-hand-tip-only.exp
+      # check if measures in (max[Z[Hand tip r]] ≥ 0) => (min[Y[Hand tip r]] ≥ -0.5) are always the same
+      # see at the end of the file
   ☐ fpgrowth.jl refactoring
     ✔ remove unecessary powerups @done(24-04-28 18:48)
-    ☐ the fpgrowth-recursion base case is too cumbersome
+    ☐ recursion base case is too cumbersome
+    ☐ remove `fpgrowth_fragments` support structure and clean deprecated code in the section at the end of fpgrowth function (where global supports are computed)
   ✔ more tests, better organized @done(24-04-29 12:34)
     ✔ redundant mining with apriori-based miner removed - tests are too slow @done(24-04-29 12:34)
   ✔ leverage Itemset and ARule hashing to avoid missing entries in dictionary (e.g., itemsets given with different item sorting must have same hash) @done(24-05-06 15:40)
@@ -212,3 +215,36 @@ Dict{Tuple{Symbol, ARMSubject}, Float64} with 27 entries:
   (:gsupport, [min[V2] ≤ -2.2])                                                       => 0.158333
   (:gsupport, [min[V3] > -3.6])                                                       => 1.0
   (:gsupport, [min[V2] ≤ -2.2, [L]min[V3] > -3.6])                                    => 0.158333
+
+
+
+Cursed configuration to trigger fpgrowth inconsistency:
+  _1_right_hand_tip_propositional_items_short = [
+      Atom(ScalarCondition(UnivariateMin(4), >=, 1))
+      Atom(ScalarCondition(UnivariateMin(4), >=, 1.8))
+      Atom(ScalarCondition(UnivariateMin(5), >=, -0.5))
+      Atom(ScalarCondition(UnivariateMax(6), >=, 0))
+  ] |> Vector{Item}
+
+  _2_right_hand_tip_X_items_later_short = diamond(IA_L).(
+      _1_right_hand_tip_propositional_items_short)
+
+  _2_right_hand_tip_later_items = vcat(
+      _1_right_hand_tip_propositional_items_short[1:4],
+      diamond(IA_L).(_1_right_hand_tip_propositional_items_short)[1:4],
+      # box(IA_L).(_1_right_hand_tip_propositional_items_short)[1:4],
+  ) |> Vector{Formula}
+
+  _2_items = _2_right_hand_tip_later_items
+  _2_itemsetmeasures = [(gsupport, 0.1, 0.1)]
+  _2_rulemeasures = [(gconfidence, 0.1, 0.1)]
+
+  runexperiment(
+    X_1_have_command,
+    fpgrowth,
+    _2_items,
+    _2_itemsetmeasures,
+    _2_rulemeasures;
+    reportname = "02-right-hand-tip-with-later.exp",
+    variable_names = VARIABLE_NAMES,
+  )

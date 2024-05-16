@@ -9,14 +9,12 @@ mining on fresh logiset -       50.99628183
 leveraging logiset memo -       22.111844555
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 NATOPS downloaded locally - load_NATOPS()
 Apriori elapsed time:
 mining on fresh logiset -       132.475009557
 leveraging logiset memo -       107.724620054
 
 FPGrowth elapsed time (in seconds):
-# NOTE: this result is compromised and slower since a lot of debug print are considered
 mining on fresh logiset -       55.956303671
 leveraging logiset memo -       24.282045798
 =#

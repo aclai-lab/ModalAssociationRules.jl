@@ -7,7 +7,7 @@
 # Each class (e.g., "I Have Command") is associated with a movement, identified by
 # X,Y and Z coordinates of hand tips, elbows, wrists and thumbs.
 # To visualize some class labels, check out the following link:
-# https://github.com/yalesong/natops/tree/master.
+# https://github.com/yalesong/natops.
 ############################################################################################
 
 using Test
@@ -107,8 +107,9 @@ function runexperiment(
 
             println("\nResults:\n")
 			for r in sort(
-                arules(miner), by = x -> miner.gmemo[(:gconfidence, x)], rev = true)
-				ModalAssociationRules.analyze(r, miner; variable_names = variable_names)
+                arules(miner), by = x -> miner.gmemo[(:gconfidence, x)], rev=true)
+				ModalAssociationRules.analyze(
+                    r, miner; variable_names=variable_names, itemsets_global_info=true)
 			end
 		end
 	end
@@ -140,7 +141,7 @@ plot(
 # Involved in: "Spread wings", "Fold wings", "Lock wings".
 #=
 plot(
-	map(i->plot(collect(X_df[i,1:3]), labels=nothing, title=y[i]), 1:30:180)...,
+	map(i->plot(collect(X_df[i,1:3]), labels=["x" "y" "z"], title=y[i]), 1:30:180)...,
 	layout = (2, 3),
 	size = (1500,400)
 )
@@ -150,7 +151,7 @@ plot(
 # Involved in: every class.
 #=
 plot(
-	map(i->plot(collect(X_df[i,4:6]), labels=nothing, title=y[i]), 1:30:180)...,
+	map(i->plot(collect(X_df[i,4:6]), labels=["x" "y" "z"], title=y[i]), 1:30:180)...,
 	layout = (2, 3),
 	size = (1500,400)
 )
@@ -160,7 +161,7 @@ plot(
 # Involved in: "All clear", "Spread wings", "Fold wings", "Lock wings".
 #=
 plot(
-	map(i->plot(collect(X_df[i,7:9]), labels=nothing, title=y[i]), 1:30:180)...,
+	map(i->plot(collect(X_df[i,7:9]), labels=["x" "y" "z"], title=y[i]), 1:30:180)...,
 	layout = (2, 3),
 	size = (1500,400)
 )
@@ -170,7 +171,7 @@ plot(
 # Involved in: every class.
 #=
 plot(
-	map(i->plot(collect(X_df[i,10:12]), labels=nothing, title=y[i]), 1:30:180)...,
+	map(i->plot(collect(X_df[i,10:12]), labels=["x" "y" "z"], title=y[i]), 1:30:180)...,
 	layout = (2, 3),
 	size = (1500,400)
 )
@@ -180,7 +181,7 @@ plot(
 # Involved in: "Spread wings", "Fold wings", "Lock wings".
 #=
 plot(
-	map(i->plot(collect(X_df[i,13:15]), labels=nothing, title=y[i]), 1:30:180)...,
+	map(i->plot(collect(X_df[i,13:15]), labels=["x" "y" "z"], title=y[i]), 1:30:180)...,
 	layout = (2, 3),
 	size = (1500,400)
 )
@@ -190,7 +191,7 @@ plot(
 # Involved in: every class
 #=
 plot(
-	map(i->plot(collect(X_df[i,16:18]), labels=nothing, title=y[i]), 1:30:180)...,
+	map(i->plot(collect(X_df[i,16:18]), labels=["x" "y" "z"], title=y[i]), 1:30:180)...,
 	layout = (2, 3),
 	size = (1500,400)
 )
@@ -200,7 +201,7 @@ plot(
 # Involved in: "Spread wings", "Fold wings", "Lock wings".
 #=
 plot(
-	map(i->plot(collect(X_df[i,19:21]), labels=nothing, title=y[i]), 1:30:180)...,
+	map(i->plot(collect(X_df[i,19:21]), labels=["x" "y" "z"], title=y[i]), 1:30:180)...,
 	layout = (2, 3),
 	size = (1500,400)
 )
@@ -210,7 +211,7 @@ plot(
 # Involved in: "Spread wings", "Fold wings", "Lock wings".
 #=
 plot(
-	map(i->plot(collect(X_df[i,22:24]), labels=nothing, title=y[i]), 1:30:180)...,
+	map(i->plot(collect(X_df[i,22:24]), labels=["x" "y" "z"], title=y[i]), 1:30:180)...,
 	layout = (2, 3),
 	size = (1500,400)
 )
@@ -227,7 +228,8 @@ plot(
 # V6:   Z, tip is going up in the first phase, then goes down.
 #
 #=
-plot(collect(X_df_1_have_command[1,4:6]), labels=nothing, title=y[1])
+plot(collect(X_df_1_have_command[1,4:6]),
+    labels=["x" "y" "z"], title="I have command - right hand tips")
 =#
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Remarkable results:
@@ -248,8 +250,8 @@ _1_right_hand_tip_Y_items = [
 ]
 
 _1_right_hand_tip_Z_items = [
-    Atom(ScalarCondition(UnivariateMin(6), <=, -1))
     Atom(ScalarCondition(UnivariateMax(6), >=, -1))
+    Atom(ScalarCondition(UnivariateMin(6), <=, -1))
     Atom(ScalarCondition(UnivariateMin(6), <=, 1))
     Atom(ScalarCondition(UnivariateMax(6), >=, 1))
 ]
@@ -258,11 +260,18 @@ _1_right_hand_tip_propositional_items = vcat(
     _1_right_hand_tip_X_items,
     _1_right_hand_tip_Y_items,
     _1_right_hand_tip_Z_items
-) |> Vector{Formula}
+) |> Vector{Item}
 
-_1_items = _1_right_hand_tip_propositional_items
+_1_right_hand_tip_propositional_items_short = [
+    Atom(ScalarCondition(UnivariateMin(4), >=, 1))
+    Atom(ScalarCondition(UnivariateMin(4), >=, 1.8))
+    Atom(ScalarCondition(UnivariateMin(5), >=, -0.5))
+    Atom(ScalarCondition(UnivariateMax(6), >=, 0))
+] |> Vector{Item}
+
+_1_items = _1_right_hand_tip_propositional_items_short
 _1_itemsetmeasures = [(gsupport, 0.1, 0.1)]
-_1_rulemeasures = [(gconfidence, 0.5, 0.5)]
+_1_rulemeasures = [(gconfidence, 0.1, 0.1)]
 
 runexperiment(
 	X_1_have_command,
@@ -270,7 +279,7 @@ runexperiment(
 	_1_items,
 	_1_itemsetmeasures,
 	_1_rulemeasures;
-	reportname = "01-right-hand-tip-only.exp",
+	reportname = "01-have-command-right-hand-tip-only.exp",
 	variable_names = VARIABLE_NAMES,
 )
 
@@ -282,33 +291,77 @@ runexperiment(
 # V4, V5, V6 - right hand tip; X, Y, Z coordinates.
 #
 #=
-plot(
-	map(i->plot(collect(X_df_1_have_command[:,4:6]), labels=nothing,title=y[i]), 1:30)...,
-	layout = (2, 3),
-	size = (1500,400)
-)
+plot(collect(X_df_1_have_command[1,4:6]),
+    labels=["x" "y" "z"], title="I have command - right hand tips")
 =#
 ############################################################################################
 
-_2_right_hand_tip_X_items_later = diamond(IA_L).(_1_right_hand_tip_propositional_items)
-
 _2_right_hand_tip_later_items = vcat(
-    _1_right_hand_tip_propositional_items[2],
-    _1_right_hand_tip_propositional_items[4],
-    _1_right_hand_tip_propositional_items[6],
-    _2_right_hand_tip_X_items_later[1]
+    _1_right_hand_tip_propositional_items_short[1:4],
+    diamond(IA_L).(_1_right_hand_tip_propositional_items_short)[1:4],
+    box(IA_L).(_1_right_hand_tip_propositional_items_short)[1:4],
 ) |> Vector{Formula}
 
 _2_items = _2_right_hand_tip_later_items
 _2_itemsetmeasures = [(gsupport, 0.1, 0.1)]
-_2_rulemeasures = [(gconfidence, 0.5, 0.5)]
+_2_rulemeasures = [(gconfidence, 0.1, 0.1)]
 
 runexperiment(
 	X_1_have_command,
-	fpgrowth,
+	apriori,
 	_2_items,
 	_2_itemsetmeasures,
 	_2_rulemeasures;
-	reportname = "02-right-hand-tip-with-later.exp",
+	reportname = "02-have-command-hand-tip-with-later-relation.exp",
+	variable_names = VARIABLE_NAMES,
+)
+
+############################################################################################
+# Experiment #3
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
+# Right hand tips with during temporal relation.
+# V4, V5, V6 - right hand tip.
+# V10, V11, V12 - right elbow.
+#
+#=
+plot(collect(X_df_2_all_clear[1,4:6]),
+    labels=["x" "y" "z"], title="All clear - right hand tips")
+
+plot(collect(X_df_2_all_clear[1,10:12]),
+    labels=["x" "y" "z"], title="All clear - right elbow")
+=#
+############################################################################################
+
+_3_right_hand_tip_propositional_items_short = [
+    Atom(ScalarCondition(UnivariateMin(4), >=, 1))
+    Atom(ScalarCondition(UnivariateMin(5), >=, 0.5))
+    Atom(ScalarCondition(UnivariateMin(6), >=, 1))
+] |> Vector{Item}
+
+_3_right_elbow_propositional_items_short = [
+    Atom(ScalarCondition(UnivariateMin(10), >=, 0.6))
+    Atom(ScalarCondition(UnivariateMin(11), >=, 0.5))
+    Atom(ScalarCondition(UnivariateMin(12), >=, -0.5))
+]
+
+_3_right_hand_tip_later_items = vcat(
+    _3_right_hand_tip_propositional_items_short,
+    _3_right_elbow_propositional_items_short,
+    box(IA_D).(_3_right_hand_tip_propositional_items_short),
+    box(IA_D).(_3_right_elbow_propositional_items_short),
+) |> Vector{Formula}
+
+_3_items = _3_right_hand_tip_later_items
+_3_itemsetmeasures = [(gsupport, 0.1, 0.1)]
+_3_rulemeasures = [(gconfidence, 0.1, 0.1)]
+
+runexperiment(
+	X_2_all_clear,
+	apriori,
+	_3_items,
+	_3_itemsetmeasures,
+	_3_rulemeasures;
+	reportname = "03-all-clear-right-hand-and-elbow-during-relation.exp",
 	variable_names = VARIABLE_NAMES,
 )
