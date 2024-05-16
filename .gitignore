@@ -3,7 +3,7 @@
 *.jl.mem
 
 /Manifest.toml
-/test/data/*
+/test/data/NATOPS/NATOPSDimension*
 /test/experiments/results/*
 /docs/build/
 
