@@ -37,7 +37,23 @@ Confidence thresholds: $0.5$
 
     `(min[X[Elbow r]] ≥ 0.6) ∧ ([D]min[Z[Elbow r]] ≥ -0.5) => (min[X[Hand tip r]] ≥ 1)` <br> global confidence: $1.0$
 
+- discuss with the others
+
+    `(min[X[Elbow r]] ≥ 0.6) ∧ (min[Z[Elbow r]] ≥ -0.5) ∧ ([D]min[X[Hand tip r]] ≥ 1) ∧ ([D]min[Y[Hand tip r]] ≥ 0.5) ∧ ([D]min[X[Elbow r]] ≥ 0.6) => ([D]min[Z[Elbow r]] ≥ -0.5)` <br> global confidence: $1.0$
+
+- discuss with the others
+
+    `(min[Z[Elbow r]] ≥ -0.5) ∧ ([D]min[Y[Hand tip r]] ≥ 0.5) => (min[X[Elbow r]] ≥ 0.6)` <br> global confidence: $0.8$
+
+
 ### Spread wings
 ![NATOPS left wrist plot](./natops-images/04-left-wrist.png)
 ![NATOPS right wrist plot](./natops-images/04-right-wrist.png)
 
+- While left-wrist blue line is low in the first plot, the right-wrist blue line is high in the second one. 
+
+    `(max[X[Wrist l]] ≤ -1.0) => ([D]min[X[Wrist r]] ≥ 1)` <br> global confidence $1.0$
+
+- discuss with the others
+
+    `(⟨D⟩max[X[Wrist l]] ≤ -1.0) ∧ (⟨D⟩min[Y[Wrist l]] ≥ -0.5) ∧ (⟨E⟩max[X[Wrist l]] ≤ -1.0) ∧ (⟨E⟩min[Y[Wrist l]] ≥ -0.5) ∧ (⟨O⟩max[X[Wrist l]] ≤ -1.0) => (min[Y[Wrist l]] ≥ -0.5)` <br> global confidence $0.7666$
