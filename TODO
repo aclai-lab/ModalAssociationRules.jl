@@ -2,6 +2,12 @@ Critical:
   ✔ fpgrowth is not correct. formalize it and come back here. @done(24-04-26 13:53)
     ☐ tests are correct, but leveraging gsupport memoization brings up inconsistent confidences (a.k.a, confidences are > 1.0).
       # misteriously, this is resolved when gsupport memoization is not enabled...
+      How to mitigate the problem: disable memoization for confidence computation
+      What causes the problem: memo call inside gsupport
+      What really causes the problem: probably how frequencies are summed up in fpgrowth
+      Other ideas?: 12k tests works, apriori and fpgrowth seems to coincide. Maybe experiments are incorrect?
+          - attempt1: maybe logiset internal memo structure is the problem? No, Logiset is deepcopied from a fresh one everytime we start a new experiment.
+
   ☐ fpgrowth.jl refactoring
     ✔ remove unecessary powerups @done(24-04-28 18:48)
     ☐ the fpgrowth-recursion base case is too cumbersome
