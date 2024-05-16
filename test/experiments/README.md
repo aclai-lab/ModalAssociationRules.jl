@@ -1,7 +1,7 @@
 # ModalAssociationRules.jl experiments
 
 This file is intended to give a general overview of the most remarkable results obtained by extracting association rules from some dataset.
-Currently, only [NATOPS](https://github.com/yalesong/natops/tree/master) dataset is being analysed.
+Currently, only [NATOPS](https://github.com/yalesong/natops) dataset is being analysed.
 
 The following results are a small part of all the extracted rules, and are made by manually picking the literals from which itemsets are extracted.
 To know more about experiments setup, see `<dataset-name>-experiements.jl`.
@@ -32,3 +32,12 @@ Confidence thresholds: $0.5$
 
 ![NATOPS right hand tips plot](./natops-images/natops-all-clear-x-y-z-hand-tips.png)
 ![NATOPS right elbow plot](./natops-images/natops-all-clear-x-y-z-right-elbow.png)
+
+- When the elbow is frontally moved away from the operator's body during its [of the elbow] ascent phase, the arm is outstretched (that is, the hand is frontally moved away, proportionally to the initial elbow X positive acceleration).
+
+    `(min[X[Elbow r]] ≥ 0.6) ∧ ([D]min[Z[Elbow r]] ≥ -0.5) => (min[X[Hand tip r]] ≥ 1)` <br> global confidence: $1.0$
+
+### Spread wings
+![NATOPS left wrist plot](./natops-images/04-left-wrist.png)
+![NATOPS right wrist plot](./natops-images/04-right-wrist.png)
+

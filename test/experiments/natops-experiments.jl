@@ -24,14 +24,14 @@ import ModalAssociationRules.children
 RESULTS_PATH = "test/experiments/results/"
 
 VARIABLE_NAMES = [
-	"X[Hand tip l]", "Y[Hand tip l]", "Z[Hand tip l]",
-	"X[Hand tip r]", "Y[Hand tip r]", "Z[Hand tip r]",
-    "X[Elbow l]", "Y[Elbow l]", "Z[Elbow l]",
-	"X[Elbow r]", "Y[Elbow r]", "Z[Elbow r]",
-    "X[Wrist l]", "Y[Wrist l]", "Z[Wrist l]",
-	"X[Wrist r]", "Y[Wrist r]", "Z[Wrist r]",
-    "X[Thumb l]", "Y[Thumb l]", "Z[Thumb l]",
-	"X[Thumb r]", "Y[Thumb r]", "Z[Thumb r]",
+	"X[Hand tip l]", "Y[Hand tip l]", "Z[Hand tip l]", # 1 3
+	"X[Hand tip r]", "Y[Hand tip r]", "Z[Hand tip r]", # 4 6
+    "X[Elbow l]", "Y[Elbow l]", "Z[Elbow l]",          # 7 9
+	"X[Elbow r]", "Y[Elbow r]", "Z[Elbow r]",          # 10 12
+    "X[Wrist l]", "Y[Wrist l]", "Z[Wrist l]",          # 13 15
+	"X[Wrist r]", "Y[Wrist r]", "Z[Wrist r]",          # 16 18
+    "X[Thumb l]", "Y[Thumb l]", "Z[Thumb l]",          # 19 21
+	"X[Thumb r]", "Y[Thumb r]", "Z[Thumb r]",          # 22 24
 ]
 
 class_names = [
@@ -345,14 +345,14 @@ _3_right_elbow_propositional_items_short = [
     Atom(ScalarCondition(UnivariateMin(12), >=, -0.5))
 ]
 
-_3_right_hand_tip_later_items = vcat(
+_3_right_hand_tip_during_items = vcat(
     _3_right_hand_tip_propositional_items_short,
     _3_right_elbow_propositional_items_short,
     box(IA_D).(_3_right_hand_tip_propositional_items_short),
     box(IA_D).(_3_right_elbow_propositional_items_short),
 ) |> Vector{Formula}
 
-_3_items = _3_right_hand_tip_later_items
+_3_items = _3_right_hand_tip_during_items
 _3_itemsetmeasures = [(gsupport, 0.1, 0.1)]
 _3_rulemeasures = [(gconfidence, 0.1, 0.1)]
 
@@ -363,5 +363,66 @@ runexperiment(
 	_3_itemsetmeasures,
 	_3_rulemeasures;
 	reportname = "03-all-clear-right-hand-and-elbow-during-relation.exp",
+	variable_names = VARIABLE_NAMES,
+)
+
+############################################################################################
+# Experiment #4
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
+# Wrists in Spread wings, using during, overlap and meet relations.
+# V13, V14, V15 - left wrist.
+# V16, V17, V18 - right wrist.
+#
+#=
+plot(collect(X_df_4_spread_wings[1,13:15]),
+    labels=["x" "y" "z"], title="Spread wings - left wrist")
+
+plot(collect(X_df_4_spread_wings[1,16:18]),
+    labels=["x" "y" "z"], title="Spread wings - right wrist")
+=#
+############################################################################################
+
+_4_left_wrist_propositional_items_short = [
+    Atom(ScalarCondition(UnivariateMin(13), >=, -0.5))
+    Atom(ScalarCondition(UnivariateMax(13), <=, -1.0))
+    Atom(ScalarCondition(UnivariateMin(14), >=, -0.5))
+    Atom(ScalarCondition(UnivariateMin(14), >=, -0.5))
+    # no Z here
+]
+
+_4_right_wrist_propositional_items_short = [
+    Atom(ScalarCondition(UnivariateMax(16), <=, 0.6))
+    Atom(ScalarCondition(UnivariateMin(16), >=, 1))
+    Atom(ScalarCondition(UnivariateMin(17), >=, 1))
+    # no z here
+] |> Vector{Item}
+
+
+_4_wrist_lambdas = vcat(
+    _4_left_wrist_propositional_items_short,
+    _4_right_wrist_propositional_items_short,
+
+    diamond(IA_D).(_4_left_wrist_propositional_items_short),
+    box(IA_D).(_4_right_wrist_propositional_items_short),
+
+    diamond(IA_E).(_4_left_wrist_propositional_items_short),
+    box(IA_E).(_4_right_wrist_propositional_items_short),
+
+    diamond(SoleLogics.IA_O).(_4_left_wrist_propositional_items_short),
+    box(SoleLogics.IA_O).(_4_right_wrist_propositional_items_short),
+) |> Vector{Formula}
+
+_4_items = _4_wrist_lambdas
+_4_itemsetmeasures = [(gsupport, 0.1, 0.1)]
+_4_rulemeasures = [(gconfidence, 0.1, 0.1)]
+
+runexperiment(
+	X_4_spread_wings,
+	apriori,
+	_4_items,
+	_4_itemsetmeasures,
+	_4_rulemeasures;
+	reportname = "04-spread-wings-wrists-during-overlap-meet-relations.exp",
 	variable_names = VARIABLE_NAMES,
 )
