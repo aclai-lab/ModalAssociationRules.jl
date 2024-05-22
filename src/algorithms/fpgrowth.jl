@@ -922,12 +922,6 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
         _threshold = getglobalthreshold(miner, gsupport)
         gfrequency = gfrequency_int / ninstances(X)
         if gfrequency >= _threshold
-            # DEBUG:
-            # _gsupport = gsupport(itemset, dataset(miner), _threshold; miner=miner)
-            # if gfrequency != _gsupport
-            #   println("Error: $(gfrequency) vs $(_gsupport) for $(itemset))
-            # end
-
             globalmemo!(miner, GmeasMemoKey((Symbol(gsupport), itemset)), gfrequency)
             push!(freqitems(miner), itemset)
         end

@@ -7,6 +7,8 @@ Critical:
       What really causes the problem: probably how frequencies are summed up in fpgrowth
       Other ideas?: 12k tests works, apriori and fpgrowth seems to coincide. Maybe experiments are incorrect?
           - attempt1: maybe logiset internal memo structure is the problem? No, Logiset is deepcopied from a fresh one everytime we start a new experiment.
+      note:
+        - <L>min[V4] >= 1.8 \wedge <L>max[V6] >= 1 should be counted 23 times (correct answer with apriori) but is counted 8
     ☐ 01-right-hand-tip-only-apriori.exp, 01-right-hand-tip-only.exp, 02-right-hand-tip-later-apriori.exp, 02-right-hand-tip-only.exp
       # check if measures in (max[Z[Hand tip r]] ≥ 0) => (min[Y[Hand tip r]] ≥ -0.5) are always the same
       # see at the end of the file
