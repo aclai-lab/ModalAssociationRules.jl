@@ -232,6 +232,11 @@ function gconfidence(
         ans = num / den
     end
 
+    if (ans > 1.0)
+        # DEBUG:
+        println("ERROR: $(rule) (gconf is $(ans))")
+    end
+
     if !isnothing(miner)
         globalmemo!(miner, memokey, ans)
     end

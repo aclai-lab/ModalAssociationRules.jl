@@ -259,3 +259,14 @@ Cursed configuration to trigger fpgrowth inconsistency:
     reportname = "02-right-hand-tip-with-later.exp",
     variable_names = VARIABLE_NAMES,
   )
+
+Cursed configuration to trigger fpgrowth inconsistency part2:
+runexperiment(
+	X_1_have_command,
+	fpgrowth,
+	_2_items[3:6],
+	_2_itemsetmeasures,
+	_2_rulemeasures;
+	reportname = "02-have-command-hand-tip-with-later-relation.exp",
+	variable_names = VARIABLE_NAMES,
+)
