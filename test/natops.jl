@@ -166,3 +166,30 @@ apriori_miner = Miner(X2, apriori, _4_items, _4_itemsetmeasures, _4_rulemeasures
 fpgrowth_miner = Miner(X2, fpgrowth, _4_items, _4_itemsetmeasures, _4_rulemeasures)
 
 compare(apriori_miner, fpgrowth_miner)
+
+# 5th comparisons
+# print("Debug print: comparison #5\n)
+
+X_df_1_have_command = X_df[1:30, :]
+X_1_have_command = scalarlogiset(X_df_1_have_command)
+
+_5_items_prop = [
+    Atom(ScalarCondition(UnivariateMin(4), >=, 1))
+    Atom(ScalarCondition(UnivariateMin(4), >=, 1.8))
+    Atom(ScalarCondition(UnivariateMin(5), >=, -0.5))
+    Atom(ScalarCondition(UnivariateMax(6), >=, 0))
+] |> Vector{Item}
+_5_items = vcat(
+    _5_items_prop,
+    diamond(IA_L).(_5_items_prop)[1]
+) |> Vector{Formula}
+
+_5_itemsetmeasures = [(gsupport, 0.1, 0.1)]
+_5_rulemeasures = [(gconfidence, 0.1, 0.1)]
+
+apriori_miner = Miner(X_1_have_command,
+    apriori, _5_items, _5_itemsetmeasures, _5_rulemeasures)
+fpgrowth_miner = Miner(X_1_have_command,
+    fpgrowth, _5_items, _5_itemsetmeasures, _5_rulemeasures)
+
+compare(apriori_miner, fpgrowth_miner)

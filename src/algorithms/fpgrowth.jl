@@ -738,25 +738,29 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
             # universally by the miner.
             sort!(items(combo), by=t -> powerups(miner, :lexicographic_ordering)[t])
 
-            #=
-                nothing                  count: 0
-                -min[V3] > -3.6                  count: 1326
-                --[L]min[V3] > -3.6              count: 1326
-                ---[L]min[V1] > -0.5             count: 1311
-                ----*min[V1] > -0.5              count: 990
+            # instance for which we want to update local support
+            current_instance = powerups(miner, :current_instance)
+            memokey = (:lsupport, combo, current_instance)
 
-                if combo contains [L]min[V1] but does not contain min[V1],
-                then we should consider 1311.
-            =#
-
+            # new local support value
             lsupport_value = lsupport_value_calculator(combo)
 
-            localmemo!(miner,
-                (:lsupport, combo, powerups(miner, :current_instance)),
-                lsupport_value
-            )
+            # first time found for this instance
+            first_time_found = !haskey(miner.lmemo, memokey)
 
-            fpgrowth_fragments[combo] += count_increment_strategy(combo)
+            # local support needs to be updated
+            if first_time_found || lsupport_value > miner.lmemo[memokey]
+                localmemo!(miner,
+                    (:lsupport, combo, current_instance),
+                    lsupport_value
+                )
+            end
+
+            # if local support was set from fresh (and not updated), then also update
+            # the information needed to reconstruct global support later.
+            if first_time_found
+                fpgrowth_fragments[combo] += count_increment_strategy(combo)
+            end
         end
     end
 
@@ -787,21 +791,6 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
             survivor_itemset = itemset_from_fplist(fptree)
             leftout_itemset = itemset_from_fplist(leftout_fptree)
 
-            # TODO: remove this
-            # if length(leftout_itemset) > 1
-            #     for combo in combine_items(items(leftout_itemset), Item[])
-            #         sort!(items(combo),
-            #             by=t -> powerups(miner, :lexicographic_ordering)[t])
-#
-            #         fpgrowth_fragments[combo] += 1
-#
-            #         localmemo!(miner,
-            #             (:lsupport, combo, powerups(miner, :current_instance)),
-            #             leftout_count / nworlds(miner)
-            #         )
-            #     end
-            # end
-
             leftout_count_dict = Dict{Item, Float64}()
             if fptree |> children |> length > 0
                 for item in survivor_itemset
@@ -813,6 +802,19 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
             _fpgrowth_count_phase(
                 survivor_itemset,
                 leftout_itemset,
+                #=
+                    `lsupport_value_calculator` lambda function explanation;
+                    consider the following FPTree:
+
+                    nothing                  count: 0
+                    -min[V3] > -3.6                  count: 1326
+                    --[L]min[V3] > -3.6              count: 1326
+                    ---[L]min[V1] > -0.5             count: 1311
+                    ----*min[V1] > -0.5              count: 990
+
+                    if combo contains [L]min[V1] but does not contain min[V1],
+                    then we should consider 1311.
+                =#
                 (combo) -> begin
                     _leftout_count = typemax(Int64)
                     for item in keys(leftout_count_dict)
@@ -823,6 +825,7 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
                     return _leftout_count / nworlds(miner)
                 end,
                 (combo) -> begin
+                    #  we don't want to consider the single item combination case
                     return (length(combo) > 1 ? 1 : 0)
                 end
             )
@@ -831,9 +834,12 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
                 leftout_itemset,
                 Itemset(),
                 (combo) -> begin
+                    # here, computation is simpler than the previous
+                    # `lsupport_value_calculator` lambda function implementation.
                     return count(retrieveleaf(leftout_fptree)) / nworlds(miner)
                 end,
                 (combo) -> begin
+                    # we don't want to consider the single item combination case
                     return (length(combo) > 1 ? 1 : 0)
                 end
             )
