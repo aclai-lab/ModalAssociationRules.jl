@@ -233,8 +233,7 @@ function gconfidence(
     end
 
     if (ans > 1.0)
-        # DEBUG:
-        println("ERROR: $(rule) (gconf is $(ans))")
+        @error "Critical error: global confidence overflow on $(rule). (value is $(ans))"
     end
 
     if !isnothing(miner)

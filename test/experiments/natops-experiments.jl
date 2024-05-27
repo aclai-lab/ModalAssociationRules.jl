@@ -34,7 +34,7 @@ VARIABLE_NAMES = [
 	"X[Thumb r]", "Y[Thumb r]", "Z[Thumb r]",          # 22 24
 ]
 
-class_names = [
+CLASS_NAMES = [
 	"I have command",
 	"All clear",
 	"Not clear",
@@ -42,8 +42,6 @@ class_names = [
 	"Fold wings",
 	"Lock wings",
 ]
-
-coordinate_labels = ["X", "Y", "Z"] # just to prettier the plots below
 
 ############################################################################################
 # Setup & Driver
@@ -73,14 +71,23 @@ X_5_fold_wings = scalarlogiset(X_df_5_fold_wings)
 X_df_6_lock_wings = X_df[151:180, :]
 X_6_lock_wings = scalarlogiset(X_df_6_lock_wings)
 
+LOGISETS = [
+    X_1_have_command,
+    X_2_all_clear,
+    X_3_not_clear,
+    X_4_spread_wings,
+    X_5_fold_wings,
+    X_6_lock_wings
+]
+
 function runexperiment(
 	X::AbstractDataset,
 	algorithm::Function,
 	items::Vector{Item},
 	itemsetmeasures::Vector{<:MeaningfulnessMeasure},
 	rulemeasures::Vector{<:MeaningfulnessMeasure};
-	reportname::Union{Nothing, String} = nothing,
-	variable_names::Union{Nothing, Vector{String}} = nothing
+	reportname::String = "experiment-report.exp",
+	variablenames::Union{Nothing, Vector{String}} = nothing
 )
     # avoid filling the given dataset with infos necessary to optimize future minings,
     # and don't use those metadata if already loaded up!
@@ -108,10 +115,12 @@ function runexperiment(
 			for r in sort(
                 arules(miner), by = x -> miner.gmemo[(:gconfidence, x)], rev=true)
 				ModalAssociationRules.analyze(
-                    r, miner; variable_names=variable_names, itemsets_global_info=true)
+                    r, miner; variablenames=variablenames, itemsets_global_info=true)
 			end
 		end
 	end
+
+    return miner
 end
 
 ############################################################################################
@@ -272,21 +281,21 @@ _1_items = _1_right_hand_tip_propositional_items_short
 _1_itemsetmeasures = [(gsupport, 0.1, 0.1)]
 _1_rulemeasures = [(gconfidence, 0.1, 0.1)]
 
-runexperiment(
+_1_miner = runexperiment(
 	X_1_have_command,
 	fpgrowth,
 	_1_items,
 	_1_itemsetmeasures,
 	_1_rulemeasures;
 	reportname = "01-have-command-right-hand-tip-only.exp",
-	variable_names = VARIABLE_NAMES,
+	variablenames = VARIABLE_NAMES,
 )
 
 ############################################################################################
 # Experiment #2
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
-# Right hand tips with later temporal relation.
+# Right hand tips with later temporal relation in "I have command" class.
 # V4, V5, V6 - right hand tip; X, Y, Z coordinates.
 #
 #=
@@ -305,14 +314,14 @@ _2_items = _2_right_hand_tip_later_items
 _2_itemsetmeasures = [(gsupport, 0.1, 0.1)]
 _2_rulemeasures = [(gconfidence, 0.1, 0.1)]
 
-runexperiment(
+_2_miner = runexperiment(
 	X_1_have_command,
 	apriori,
 	_2_items,
 	_2_itemsetmeasures,
 	_2_rulemeasures;
 	reportname = "02-have-command-hand-tip-with-later-relation.exp",
-	variable_names = VARIABLE_NAMES,
+	variablenames = VARIABLE_NAMES,
 )
 
 ############################################################################################
@@ -355,21 +364,21 @@ _3_items = _3_right_hand_tip_during_items
 _3_itemsetmeasures = [(gsupport, 0.1, 0.1)]
 _3_rulemeasures = [(gconfidence, 0.1, 0.1)]
 
-runexperiment(
+_3_miner = runexperiment(
 	X_2_all_clear,
 	apriori,
 	_3_items,
 	_3_itemsetmeasures,
 	_3_rulemeasures;
 	reportname = "03-all-clear-right-hand-and-elbow-during-relation.exp",
-	variable_names = VARIABLE_NAMES,
+	variablenames = VARIABLE_NAMES,
 )
 
 ############################################################################################
 # Experiment #4
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
-# Wrists in Spread wings, using during, ends-with and overlap relations.
+# Wrists in "Spread wings" class, using during, ends-with and overlap relations.
 # V13, V14, V15 - left wrist.
 # V16, V17, V18 - right wrist.
 #
@@ -416,12 +425,91 @@ _4_items = _4_wrist_lambdas
 _4_itemsetmeasures = [(gsupport, 0.1, 0.1)]
 _4_rulemeasures = [(gconfidence, 0.1, 0.1)]
 
-runexperiment(
+_4_miner = runexperiment(
 	X_4_spread_wings,
 	apriori,
 	_4_items,
 	_4_itemsetmeasures,
 	_4_rulemeasures;
 	reportname = "04-spread-wings-wrists-during-overlap-meet-relations.exp",
-	variable_names = VARIABLE_NAMES,
+	variablenames = VARIABLE_NAMES,
+)
+
+############################################################################################
+# Experiment #5
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
+# Given a list of interesting rules extracted by the previous experiments, do the following:
+# for each rule R extracted from class k, compute the meaningfulness measures of R w.r.t
+# each i-th class, where i != k.
+#
+# The goal is to generate a matrix shaped as follows:
+#
+#    "I have command" "All clear" "Not clear" "Spread wings" "Fold wings" "Lock wings"
+# R1:
+# R2:                    meaningfulness measures at intersections
+# ...
+# RK:
+#
+############################################################################################
+
+function runcomparison(
+    miner::Miner,
+    logisets::Vector{L},
+    confidencebouncer::Function,
+    suppthreshold::Float64;
+    reportname::String = "comparison-report.exp",
+    classnames::Vector{String} = CLASS_NAMES
+) where {L<:SoleData.AbstractLogiset}
+    @assert length(logisets) == length(classnames) "Given number of logisets and " *
+        "variable names mismatch: length(logisets) = $(length(logisets)), while " *
+        "length(classnames) = $(length(classnames))."
+
+    @assert info(miner, :istrained) "Provided miner did not perform mine and is thus empty"
+
+    reportname = RESULTS_PATH * reportname
+
+    open(reportname, "w") do out
+        redirect_stdout(out) do
+            # class names are printed in header row
+            for name in classnames
+                print("$(name)\t\t")
+            end
+            println("")
+
+            # for each rule accepted by `confidencebouncer`
+            for rule in filter(x ->
+                confidencebouncer(globalmemo(miner, (:gconfidence, x))), arules(miner))
+                # consider each class, compute the meaningfulness measures and print them
+                for logiset in logisets
+                    _antecedent, _consequent = antecedent(rule), consequent(rule)
+                    _union = union(_antecedent, _consequent)
+
+                    # confidence
+                    _conf = gconfidence(rule, logiset, suppthreshold)
+                    # antecedent global support
+                    _asupp = gsupport(_antecedent, logiset, suppthreshold)
+                    # consequent global support
+                    _csupp = gsupport(_consequent, logiset, suppthreshold)
+                    # whole-rule global support
+                    _usupp = gsupport(_union, logiset, suppthreshold)
+
+                    # print measures
+                    print("$(_conf)\t$(_asupp)\t$(_csupp)\t$(_usupp)\t")
+                end
+
+                # new rule is a new row
+                println("")
+            end
+        end
+    end
+
+end
+
+runcomparison(
+    _1_miner,
+    LOGISETS,
+    (conf) -> conf >= 0.3,
+    0.1;
+    reportname="01-comparison.exp"
 )
