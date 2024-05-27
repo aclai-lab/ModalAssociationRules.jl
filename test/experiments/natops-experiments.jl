@@ -73,7 +73,6 @@ X_5_fold_wings = scalarlogiset(X_df_5_fold_wings)
 X_df_6_lock_wings = X_df[151:180, :]
 X_6_lock_wings = scalarlogiset(X_df_6_lock_wings)
 
-
 function runexperiment(
 	X::AbstractDataset,
 	algorithm::Function,

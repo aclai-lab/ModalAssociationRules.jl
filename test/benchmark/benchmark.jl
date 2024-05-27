@@ -1,14 +1,4 @@
 #=
-NATOPS downloaded dynamically through HTTP - SoleData.load_arff_dataset("NATOPS")
-Apriori elapsed time:
-mining on fresh logiset -       777.262767117
-leveraging logiset memo -       753.123956295
-
-FPGrowth elapsed time:
-mining on fresh logiset -       50.99628183
-leveraging logiset memo -       22.111844555
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 NATOPS downloaded locally - load_NATOPS()
 Apriori elapsed time:
 mining on fresh logiset -       132.475009557
