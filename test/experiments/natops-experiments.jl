@@ -15,6 +15,7 @@ using Test
 using ModalAssociationRules
 using Dates
 using Plots
+using PrettyTables
 using SoleData
 using StatsBase
 using SoleLogics
@@ -456,8 +457,9 @@ _4_miner = runexperiment(
 function runcomparison(
     miner::Miner,
     logisets::Vector{L},
-    confidencebouncer::Function,
-    suppthreshold::Float64;
+    confidencebouncer::Function;
+    suppthreshold::Float64,
+    sigdigits::Int8=2 |> Int8,
     reportname::String = "comparison-report.exp",
     classnames::Vector{String} = CLASS_NAMES
 ) where {L<:SoleData.AbstractLogiset}
@@ -467,49 +469,66 @@ function runcomparison(
 
     @assert info(miner, :istrained) "Provided miner did not perform mine and is thus empty"
 
+    # report filepath preparation
     reportname = RESULTS_PATH * reportname
+    # pretty table configuration
+    data = []
+    header = vcat("Rule", classnames)
 
-    open(reportname, "w") do out
-        redirect_stdout(out) do
-            # class names are printed in header row
-            for name in classnames
-                print("$(name)\t\t")
-            end
-            println("")
+    # for each rule accepted by `confidencebouncer`
+    for rule in filter(x ->
+        confidencebouncer(globalmemo(miner, (:gconfidence, x))), arules(miner))
 
-            # for each rule accepted by `confidencebouncer`
-            for rule in filter(x ->
-                confidencebouncer(globalmemo(miner, (:gconfidence, x))), arules(miner))
-                # consider each class, compute the meaningfulness measures and print them
-                for logiset in logisets
-                    _antecedent, _consequent = antecedent(rule), consequent(rule)
-                    _union = union(_antecedent, _consequent)
+        # prepare a data fragment, that is a row of the final pretty table
+        _data = Any[rule]
 
-                    # confidence
-                    _conf = gconfidence(rule, logiset, suppthreshold)
-                    # antecedent global support
-                    _asupp = gsupport(_antecedent, logiset, suppthreshold)
-                    # consequent global support
-                    _csupp = gsupport(_consequent, logiset, suppthreshold)
-                    # whole-rule global support
-                    _usupp = gsupport(_union, logiset, suppthreshold)
+        # consider each class, compute the meaningfulness measures and print them
+        for logiset in logisets
+            _antecedent, _consequent = antecedent(rule), consequent(rule)
+            _union = union(_antecedent, _consequent)
 
-                    # print measures
-                    print("$(_conf)\t$(_asupp)\t$(_csupp)\t$(_usupp)\t")
-                end
+            # confidence
+            _conf = round(
+                gconfidence(rule, logiset, suppthreshold), sigdigits=sigdigits)
+            # antecedent global support
+            _asupp = round(
+                gsupport(_antecedent, logiset, suppthreshold), sigdigits=sigdigits)
+            # consequent global support
+            _csupp = round(
+                gsupport(_consequent, logiset, suppthreshold), sigdigits=sigdigits)
+            # whole-rule global support
+            _usupp = round(
+                gsupport(_union, logiset, suppthreshold), sigdigits=sigdigits)
 
-                # new rule is a new row
-                println("")
-            end
+            # new cell is added to the right of current row
+            _cellstring = "confidence: $(_conf)\nantecedent support: $(_asupp)\n" *
+                "consequent support: $(_csupp)\nunion support: $(_usupp)"
+            # push!(_data, [_conf, _asupp, _csupp, _usupp])
+            push!(_data, _cellstring)
         end
+
+        # now, assemble a new row
+        data = isempty(data) ? _data : hcat(data, _data)
     end
 
+    # print data table on file
+    open(reportname, "w") do out
+        redirect_stdout(out) do
+            pretty_table(
+                data |> permutedims;
+                header=header,
+                linebreaks=true,
+                body_hlines=collect(1:(data |> size |> first))
+            )
+        end
+    end
 end
 
 runcomparison(
     _1_miner,
     LOGISETS,
-    (conf) -> conf >= 0.3,
-    0.1;
+    (conf) -> conf >= 0.3;
+    suppthreshold=0.1,
+    sigdigits=2 |> Int8,
     reportname="01-comparison.exp"
 )

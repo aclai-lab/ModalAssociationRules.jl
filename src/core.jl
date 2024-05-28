@@ -298,13 +298,13 @@ end
 function Base.show(
     io::IO,
     arule::ARule;
-    variable_names::Union{Nothing,Vector{String}}=nothing
+    variablenames::Union{Nothing,Vector{String}}=nothing
 )
     _antecedent = arule |> antecedent |> toformula
     _consequent = arule |> consequent |> toformula
 
-    print(io, "$(syntaxstring(_antecedent, variable_names_map=variable_names)) => " *
-        "$(syntaxstring(_consequent, variable_names_map=variable_names))")
+    print(io, "$(syntaxstring(_antecedent, variablenames_map=variablenames)) => " *
+        "$(syntaxstring(_consequent, variablenames_map=variablenames))")
 end
 
 """
@@ -966,7 +966,7 @@ function analyze(
     itemsets_global_info::Bool=false,
     rule_local_info::Bool=false,
     verbose::Bool=false,
-    variable_names::Union{Nothing,Vector{String}}=nothing
+    variablenames::Union{Nothing,Vector{String}}=nothing
 )
     # print constraints
     if verbose
@@ -979,7 +979,7 @@ function analyze(
         itemsets_global_info = true
     end
 
-    Base.show(io, arule; variable_names=variable_names)
+    Base.show(io, arule; variablenames=variablenames)
     println(io, "")
 
     # report global emasures for the rule
