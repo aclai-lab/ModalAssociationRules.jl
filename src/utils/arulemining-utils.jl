@@ -3,14 +3,14 @@
 ############################################################################################
 
 """
-    combine(itemsets::Vector{<:Itemset}, newlength::Integer)
+    combine_items(itemsets::Vector{<:Itemset}, newlength::Integer)
 
 Return a generator which combines [`Itemset`](@ref)s from `itemsets` into new itemsets of
 length `newlength` by taking all combinations of two itemsets and joining them.
 
 See also [`Itemset`](@ref).
 """
-function combine(itemsets::Vector{<:Itemset}, newlength::Integer)
+function combine_items(itemsets::Vector{<:Itemset}, newlength::Integer)
     return Iterators.filter(
         combo -> length(combo) == newlength,
         Iterators.map(
@@ -21,14 +21,14 @@ function combine(itemsets::Vector{<:Itemset}, newlength::Integer)
 end
 
 """
-    combine(variable::Vector{<:Item}, fixed::Vector{<:Item})
+    combine_items(variable::Vector{<:Item}, fixed::Vector{<:Item})
 
 Return a generator of [`Itemset`](@ref), which iterates the combinations of [`Item`](@ref)s
 in `variable` and prepend them to `fixed` vector.
 
 See also [`Item`](@ref), [`Itemset`](@ref).
 """
-function combine(variable::Vector{<:Item}, fixed::Vector{<:Item})
+function combine_items(variable::Vector{<:Item}, fixed::Vector{<:Item})
     return (Itemset(union(combo, fixed)) for combo in combinations(variable))
 end
 
@@ -49,7 +49,7 @@ function grow_prune(candidates::Vector{Itemset}, frequents::Vector{Itemset}, k::
             # each one wrapping one Itemset, but we just need that exact itemset.
             itemset -> all(
                 combo -> Itemset(combo) in frequents, combinations(itemset, k-1)),
-            combine(candidates, k)
+                combine_items(candidates, k)
         )
 end
 
@@ -60,10 +60,13 @@ end
 """
     arules_generator(itemsets::Vector{Itemset}, miner::Miner)
 
-This has be considered a raw version of [`generaterules!(miner::Miner; kwargs...)`](@ref).
+Raw subroutine of [`generaterules!(miner::Miner; kwargs...)`](@ref).
 
-Generates association rules from the given collection of `itemsets` and `miner`.
-Iterates through the powerset of each itemset to generate meaningful [`ARule`](@ref).
+Generates [`ARule`](@ref) from the given collection of `itemsets` and `miner`.
+
+The strategy followed is
+[described here](https://rakesh.agrawal-family.com/papers/sigmod93assoc.pdf)
+at section 2.2.
 
 To establish the meaningfulness of each association rule, check if it meets the global
 constraints specified in `rulemeasures(miner)`, and yields the rule if so.
@@ -74,13 +77,31 @@ See also [`ARule`](@ref), [`Miner`](@ref), [`Itemset`](@ref), [`rulemeasures`](@
     itemsets::Vector{Itemset},
     miner::Miner
 )
-    for itemset in itemsets
+    # From the original paper at 3.4 here:
+    # http://www.rakesh.agrawal-family.com/papers/tkde96passoc_rj.pdf
+
+    # Given a frequent itemset l, rule generation examines each non-empty subset a
+    # and generates the rule a => (l-a) with support = support(l) and
+    # confidence = support(l)/support(a).
+    # This computation can efficiently be done by examining the largest subsets of l first
+    # and only proceeding to smaller subsets if the generated rules have the required
+    # minimum confidence.
+    # For example, given a frequent itemset ABCD, if the rule ABC => D does not have minimum
+    # confidence, neither will AB => CD, and so we need not consider it.
+
+    for itemset in filter(x -> length(x) >= 2, itemsets)
         subsets = powerset(itemset)
 
         for subset in subsets
-            _antecedent = subset |> Itemset
-            _consequent = symdiff(items(itemset), items(_antecedent)) |> Itemset
+            # subsets are built already sorted incrementally;
+            # hence, since we want the antecedent to be longer initially,
+            # the first subset values corresponds to (see comment below)
+            # (l-a)
+            _consequent = subset |> Itemset
+            # a
+            _antecedent = symdiff(items(itemset), items(_consequent)) |> Itemset
 
+            # degenerate case
             if length(_antecedent) < 1 || length(_consequent) != 1
                 continue
             end
@@ -93,15 +114,22 @@ See also [`ARule`](@ref), [`Miner`](@ref), [`Itemset`](@ref), [`rulemeasures`](@
                 gmeas_result = gmeas_algo(
                     currentrule, dataset(miner), lthreshold, miner=miner)
 
+                # some meaningfulness measure test is failed
                 if gmeas_result < gthreshold
                     interesting = false
                     break
                 end
             end
 
+            # all meaningfulness measure tests passed
             if interesting
                 push!(arules(miner), currentrule)
                 @yield currentrule
+            # since a meaningfulness measure test failed,
+            # we don't want to keep generating rules.
+            else
+                # continue to next itemset iteration
+                break
             end
         end
     end

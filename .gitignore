@@ -1,6 +1,10 @@
 *.jl.*.cov
 *.jl.cov
 *.jl.mem
+
 /Manifest.toml
+/test/data/NATOPS/NATOPSDimension*
+/test/experiments/results/*
 /docs/build/
+
 TODO

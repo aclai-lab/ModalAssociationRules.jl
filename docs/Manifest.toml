@@ -860,9 +860,9 @@ git-tree-sha1 = "7ed5007f92eca81f039574bc0344f38cfa32912c"
 uuid = "4249d9c7-3290-4ddd-961c-e1d3ec2467f8"
 version = "0.6.0"
 
-[[deps.SoleRules]]
+[[deps.ModalAssociationRules]]
 deps = ["Accessors", "Combinatorics", "DataFrames", "DataStructures", "IterTools", "Lazy", "MultiData", "Parameters", "Random", "Reexport", "ResumableFunctions", "SoleBase", "SoleData", "SoleLogics", "SoleModels", "StatsBase"]
-path = "/home/mauro/.julia/dev/SoleRules"
+path = "/home/mauro/.julia/dev/ModalAssociationRules"
 uuid = "fb95e5f7-b6b0-4744-a282-88ebeeae65a3"
 version = "0.1.0"
 

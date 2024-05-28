@@ -1,7 +1,7 @@
 # Apriori and FPGrowth comparison on propositional case scenario
 
 using Test
-using SoleRules
+using ModalAssociationRules
 using MLJ
 using Random
 using DataFrames
@@ -27,6 +27,24 @@ _1_items = Vector{Item}(Atom.([
     ScalarCondition(UnivariateMin(4), <=,  2)
 ]))
 
+# utility to compare arules between miners;
+# see compare_arules
+function _compare_arules(miner1::Miner, miner2::Miner, rule::ARule)
+    # global confidence comparison;
+    # here it is implied that rules are already generated using generaterules!
+    @test miner1.gmemo[(:gconfidence, rule)] == miner2.gmemo[(:gconfidence, rule)]
+
+    # local confidence comparison;
+    for ninstance in miner1 |> dataset |> ninstances
+        lconfidence(rule, SoleLogics.getinstance(dataset(miner1), ninstance); miner=miner1)
+        lconfidence(rule, SoleLogics.getinstance(dataset(miner2), ninstance); miner=miner2)
+
+        @test miner1.lmemo[(:lconfidence, rule, ninstance)] ==
+              miner2.lmemo[(:lconfidence, rule, ninstance)]
+    end
+end
+
+# driver to compare arules between miners
 function compare_arules(miner1::Miner, miner2::Miner)
     mine!(miner1)
     mine!(miner2)
@@ -36,17 +54,9 @@ function compare_arules(miner1::Miner, miner2::Miner)
 
     @test length(arules(miner1)) == length(arules(miner2))
 
-    for rule1 in arules(miner1)
-        @test rule1 in arules(miner2)
-    end
-
-    for rule1 in arules(miner1)
-        for rule2 in arules(miner2)
-            if rule1 == rule2
-                @test miner1.gmemo[(:gconfidence, rule1)] ==
-                    miner2.gmemo[(:gconfidence, rule2)]
-            end
-        end
+    for rule in arules(miner1)
+        @test rule in arules(miner2)
+        _compare_arules(miner1, miner2, rule)
     end
 end
 

@@ -2,7 +2,7 @@ using Test
 
 # using SoleLogics
 # using SoleModels
-using SoleRules
+using ModalAssociationRules
 using StatsBase
 
 # Letters making test suite

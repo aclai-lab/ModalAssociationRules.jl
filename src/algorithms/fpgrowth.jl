@@ -82,6 +82,10 @@ mutable struct FPTree
         return fptree
     end
 
+    function FPTree(item::Item, count::Int64)
+        return new(item, nothing, FPTree[], count, nothing)
+    end
+
     function FPTree(enhanceditemset::EnhancedItemset)
         _itemset = itemset(enhanceditemset)
         _count = count(enhanceditemset)
@@ -631,7 +635,7 @@ function patternbase(
         _itemset = Itemset([])                  # prepare the new enhanced itemset content
         ancestorfpt = parent(fptree)            # parent reference to climb up
         fptcount = count(fptree)                # count to be propagated to ancestors
-        leftout_count += fptcount              # count associated with the item lefted out
+        leftout_count += fptcount               # count associated with the item lefted out
 
         # look at ancestors, and collect them keeping count of
         # the leaf node from which we started this vertical visit.
@@ -722,7 +726,45 @@ See also [`Miner`](@ref), [`FPTree`](@ref), [`HeaderTable`](@ref),
 [`SoleBase.AbstractDataset`](@ref)
 """
 function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothing
-    # essentially, modal fpgrowth consists of a iterative application of multiple
+
+    function _fpgrowth_count_phase(
+        survivor_itemset::Itemset,
+        leftout_itemset::Itemset,
+        lsupport_value_calculator::Function,
+        count_increment_strategy::Function
+    )
+        for combo in combine_items(items(survivor_itemset), items(leftout_itemset))
+            # each combo must be reshaped, following a certain order specified
+            # universally by the miner.
+            sort!(items(combo), by=t -> powerups(miner, :lexicographic_ordering)[t])
+
+            # instance for which we want to update local support
+            current_instance = powerups(miner, :current_instance)
+            memokey = (:lsupport, combo, current_instance)
+
+            # new local support value
+            lsupport_value = lsupport_value_calculator(combo)
+
+            # first time found for this instance
+            first_time_found = !haskey(miner.lmemo, memokey)
+
+            # local support needs to be updated
+            if first_time_found || lsupport_value > miner.lmemo[memokey]
+                localmemo!(miner,
+                    (:lsupport, combo, current_instance),
+                    lsupport_value
+                )
+            end
+
+            # if local support was set from fresh (and not updated), then also update
+            # the information needed to reconstruct global support later.
+            if first_time_found
+                fpgrowth_fragments[combo] += count_increment_strategy(combo)
+            end
+        end
+    end
+
+    # essentially, modal fpgrowth consists of an iterative application of multiple
     # "standard" (a.k.a, propositional) fpgrowth calls;
     # this dictionary is necessary to convey all the intermediate results between
     # fpgrowth calls, and is filled up inside the "kernel" of the current procedure.
@@ -734,32 +776,20 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
         fptree::FPTree,
         htable::HeaderTable,
         miner::Miner,
-        leftout_itemset::Itemset,
-        leftout_count::Int64
+        leftout_fptree::FPTree
+#        leftout_itemset::Itemset,
+#        leftout_count::Int64
     )
         # if `fptree` contains only one path (hence, it can be considered a linked list),
         # then combine all the Itemsets collected from previous step with the remained ones.
         if islist(fptree)
-            # TODO: refactor this
-
             verbose &&
                 printstyled("Merging $(leftout_itemset |> length) leftout items with a " *
                 "single-list FPTree of length $(survivor_itemset |> length)\n", color=:blue)
 
-            if length(leftout_itemset) > 1
-                sort!(items(leftout_itemset),
-                    by=t -> powerups(miner, :lexicographic_ordering)[t])
-
-                fpgrowth_fragments[leftout_itemset] += 1
-
-                localmemo!(miner,
-                    (:lsupport, leftout_itemset, powerups(miner, :current_instance)),
-                    leftout_count / nworlds(miner)
-                )
-            end
-
             # all the survived items, from which compose new frequent itemsets
             survivor_itemset = itemset_from_fplist(fptree)
+            leftout_itemset = itemset_from_fplist(leftout_fptree)
 
             leftout_count_dict = Dict{Item, Float64}()
             if fptree |> children |> length > 0
@@ -769,12 +799,13 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
                 end
             end
 
-            for combo in combine(items(survivor_itemset), items(leftout_itemset))
-                # each combo must be reshaped, following a certain order specified
-                # universally by the miner.
-                sort!(items(combo), by=t -> powerups(miner, :lexicographic_ordering)[t])
-
+            _fpgrowth_count_phase(
+                survivor_itemset,
+                leftout_itemset,
                 #=
+                    `lsupport_value_calculator` lambda function explanation;
+                    consider the following FPTree:
+
                     nothing                  count: 0
                     -min[V3] > -3.6                  count: 1326
                     --[L]min[V3] > -3.6              count: 1326
@@ -784,23 +815,34 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
                     if combo contains [L]min[V1] but does not contain min[V1],
                     then we should consider 1311.
                 =#
-                _leftout_count = typemax(Int64)
-                for item in keys(leftout_count_dict)
-                    if item in combo && leftout_count_dict[item] < _leftout_count
-                        _leftout_count = min(_leftout_count, leftout_count_dict[item])
+                (combo) -> begin
+                    _leftout_count = typemax(Int64)
+                    for item in keys(leftout_count_dict)
+                        if item in combo && leftout_count_dict[item] < _leftout_count
+                            _leftout_count = min(_leftout_count, leftout_count_dict[item])
+                        end
                     end
+                    return _leftout_count / nworlds(miner)
+                end,
+                (combo) -> begin
+                    #  we don't want to consider the single item combination case
+                    return (length(combo) > 1 ? 1 : 0)
                 end
+            )
 
-                lsupport_value = _leftout_count / nworlds(miner)
-                localmemo!(miner,
-                    (:lsupport, combo, powerups(miner, :current_instance)),
-                    lsupport_value
-                )
-
-                if (length(combo) > 1)
-                    fpgrowth_fragments[combo] += 1
+            _fpgrowth_count_phase(
+                leftout_itemset,
+                Itemset(),
+                (combo) -> begin
+                    # here, computation is simpler than the previous
+                    # `lsupport_value_calculator` lambda function implementation.
+                    return count(retrieveleaf(leftout_fptree)) / nworlds(miner)
+                end,
+                (combo) -> begin
+                    # we don't want to consider the single item combination case
+                    return (length(combo) > 1 ? 1 : 0)
                 end
-            end
+            )
         else
             for item in reverse(htable)
                 # a (conditional) pattern base is a vector of "enhanced" itemsets
@@ -812,16 +854,21 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
                 conditional_fptree, conditional_htable =
                     projection(_patternbase, miner)
 
+                # update the leftout fptree with a new children
+                _leftout_fptree = deepcopy(leftout_fptree)
+                children!(retrieveleaf(_leftout_fptree), FPTree(item, _leftout_count))
+
                 # if the new fptree is not empty, call this recursively,
                 # considering `item` as a leftout item.
-                _fpgrowth_kernel(conditional_fptree, conditional_htable, miner,
-                    union(leftout_itemset, Itemset(item)), _leftout_count)
+                _fpgrowth_kernel(
+                    conditional_fptree, conditional_htable, miner, _leftout_fptree)
             end
         end
     end
 
     # initialization logic
-    @assert SoleRules.gsupport in reduce(vcat, itemsetmeasures(miner)) "FP-Growth " *
+    @assert ModalAssociationRules.gsupport in reduce(vcat, itemsetmeasures(miner)) "" *
+        "FP-Growth " *
         "requires global support (gsupport) as meaningfulness measure in order to " *
         "work. Please, add a tuple (gsupport, local support threshold, " *
         "global support threshold) to miner.item_constrained_measures field.\n" *
@@ -901,7 +948,7 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
 
         verbose && printstyled("Growing seed FPTree...\n", color=:green)
 
-        SoleRules.grow!(fptree, nworld_to_itemset, miner)
+        ModalAssociationRules.grow!(fptree, nworld_to_itemset, miner)
 
         verbose && printstyled("Linking Header table...\n", color=:green)
 
@@ -911,16 +958,16 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
         verbose && printstyled("Mining frequent itemsets...\n", color=:green)
 
         # call main logic
-        _fpgrowth_kernel(fptree, htable, miner, Itemset(), 0)
+        _fpgrowth_kernel(fptree, htable, miner, FPTree())
 
         verbose && printstyled(
             "Execution for instance $(ninstance) terminated correctly.\n", color=:green)
     end
 
     for (itemset, gfrequency_int) in fpgrowth_fragments
+        _threshold = getglobalthreshold(miner, gsupport)
         gfrequency = gfrequency_int / ninstances(X)
-
-        if gfrequency >= getglobalthreshold(miner, gsupport)
+        if gfrequency >= _threshold
             globalmemo!(miner, GmeasMemoKey((Symbol(gsupport), itemset)), gfrequency)
             push!(freqitems(miner), itemset)
         end
@@ -945,6 +992,7 @@ function initpowerups(::typeof(fpgrowth), ::AbstractDataset)::Powerup
         # A numerical value is obtained, but the exact worlds in which the truth relation
         # holds is not kept in memory by default.
         # Here, however, we want to keep track of the relation.
+        # See `lsupport` implementation.
         :instance_item_toworlds => Dict{Tuple{Int,Itemset}, WorldMask}([]),
 
         # current instance number;

@@ -1,14 +1,14 @@
 # Apriori and FPGrowth comparison on multiple parametrizations
 using Test
 
-using SoleRules
+using ModalAssociationRules
 using SoleData
 using StatsBase
 
-import SoleRules.children
+import ModalAssociationRules.children
 
 # load NATOPS dataset and convert it to a Logiset
-X_df, y = SoleData.load_arff_dataset("NATOPS");
+X_df, y = load_NATOPS();
 X1 = scalarlogiset(X_df)
 
 # different tested algorithms will use different Logiset's copies,
@@ -79,19 +79,33 @@ function compare_freqitems(miner1::Miner, miner2::Miner)
     isequal_lsupp(miner2, miner1)
 end
 
+# utility to compare arules between miners;
+# see compare_arules
+function _compare_arules(miner1::Miner, miner2::Miner, rule::ARule)
+    # global confidence comparison;
+    # here it is implied that rules are already generated using generaterules!
+    @test miner1.gmemo[(:gconfidence, rule)] == miner2.gmemo[(:gconfidence, rule)]
+
+    # local confidence comparison;
+    for ninstance in miner1 |> dataset |> ninstances
+        lconfidence(rule, SoleLogics.getinstance(dataset(miner1), ninstance); miner=miner1)
+        lconfidence(rule, SoleLogics.getinstance(dataset(miner2), ninstance); miner=miner2)
+
+        @test miner1.lmemo[(:lconfidence, rule, ninstance)] ==
+              miner2.lmemo[(:lconfidence, rule, ninstance)]
+    end
+end
+
+# driver to compare arules between miners
 function compare_arules(miner1::Miner, miner2::Miner)
     generaterules!(miner1) |> collect
     generaterules!(miner2) |> collect
 
     @test length(arules(miner1)) == length(arules(miner2))
 
-    for rule1 in arules(miner1)
-        for rule2 in arules(miner2)
-            if rule1 == rule2
-                @test miner1.gmemo[(:gconfidence, rule1)] ==
-                    miner2.gmemo[(:gconfidence), rule2]
-            end
-        end
+    for rule in arules(miner1)
+        @test rule in arules(miner2)
+        _compare_arules(miner1, miner2, rule)
     end
 end
 
@@ -150,5 +164,32 @@ _4_rulemeasures = [(gconfidence, 0.7, 0.7)]
 
 apriori_miner = Miner(X2, apriori, _4_items, _4_itemsetmeasures, _4_rulemeasures)
 fpgrowth_miner = Miner(X2, fpgrowth, _4_items, _4_itemsetmeasures, _4_rulemeasures)
+
+compare(apriori_miner, fpgrowth_miner)
+
+# 5th comparisons
+# print("Debug print: comparison #5\n)
+
+X_df_1_have_command = X_df[1:30, :]
+X_1_have_command = scalarlogiset(X_df_1_have_command)
+
+_5_items_prop = [
+    Atom(ScalarCondition(UnivariateMin(4), >=, 1))
+    Atom(ScalarCondition(UnivariateMin(4), >=, 1.8))
+    Atom(ScalarCondition(UnivariateMin(5), >=, -0.5))
+    Atom(ScalarCondition(UnivariateMax(6), >=, 0))
+] |> Vector{Item}
+_5_items = vcat(
+    _5_items_prop,
+    diamond(IA_L).(_5_items_prop)[1]
+) |> Vector{Formula}
+
+_5_itemsetmeasures = [(gsupport, 0.1, 0.1)]
+_5_rulemeasures = [(gconfidence, 0.1, 0.1)]
+
+apriori_miner = Miner(X_1_have_command,
+    apriori, _5_items, _5_itemsetmeasures, _5_rulemeasures)
+fpgrowth_miner = Miner(X_1_have_command,
+    fpgrowth, _5_items, _5_itemsetmeasures, _5_rulemeasures)
 
 compare(apriori_miner, fpgrowth_miner)

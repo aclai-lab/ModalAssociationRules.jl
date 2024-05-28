@@ -295,8 +295,16 @@ function Base.hash(arule::ARule, h::UInt)
     return hash(vcat(_antecedent, _consequent), h)
 end
 
-function Base.show(io::IO, arule::ARule)
-    print(io, "$(antecedent(arule)) => $(consequent(arule))")
+function Base.show(
+    io::IO,
+    arule::ARule;
+    variable_names::Union{Nothing,Vector{String}}=nothing
+)
+    _antecedent = arule |> antecedent |> toformula
+    _consequent = arule |> consequent |> toformula
+
+    print(io, "$(syntaxstring(_antecedent, variable_names_map=variable_names)) => " *
+        "$(syntaxstring(_consequent, variable_names_map=variable_names))")
 end
 
 """
@@ -491,7 +499,7 @@ Machine learning model interface to perform association rules extraction.
 
 # Examples
 ```julia-repl
-julia> using SoleRules
+julia> using ModalAssociationRules
 julia> using SoleData
 
 # Load NATOPS DataFrame
@@ -526,7 +534,7 @@ julia> miner = Miner(X, fpgrowth(), manual_alphabet,
 # Consider the dataset and learning algorithm wrapped by `miner` (resp., `X` and `fpgrowth`)
 # Mine the frequent itemsets, that is, those for which item measures are large enough.
 # Then iterate the generator returned by [`mine`](@ref) to enumerate association rules.
-julia> for arule in SoleRules.mine!(miner)
+julia> for arule in ModalAssociationRules.mine!(miner)
     println(miner)
 end
 ```
@@ -580,7 +588,7 @@ struct Miner{
             "Please, provide an uniform dataset to guarantee mining correctness."
 
         # gsupport is indispensable to mine association rule
-        @assert SoleRules.gsupport in reduce(
+        @assert ModalAssociationRules.gsupport in reduce(
             vcat, item_constrained_measures) "Miner requires global support " *
             "(gsupport) as meaningfulness measure in order to work properly. " *
             "Please, add a tuple (gsupport, local support threshold, global support " *
@@ -801,7 +809,9 @@ Setter for a specific entry `key` inside the global memoization structure wrappe
 
 See also [`Miner`](@ref), [`GmeasMemo`](@ref), [`GmeasMemoKey`](@ref).
 """
-globalmemo!(miner::Miner, key::GmeasMemoKey, val::Threshold) = miner.gmemo[key] = val
+globalmemo!(miner::Miner, key::GmeasMemoKey, val::Threshold) = begin
+    miner.gmemo[key] = val
+end
 
 ############################################################################################
 #### Miner machines specializations ########################################################
@@ -876,9 +886,9 @@ hasinfo(miner::Miner, key::Symbol) = haskey(miner |> info, key)
 """
     mine!(miner::Miner)
 
-Synonym for `SoleRules.apply!(miner, dataset(miner))`.
+Synonym for `ModalAssociationRules.apply!(miner, dataset(miner))`.
 
-See also [`ARule`](@ref), [`Itemset`](@ref), [`SoleRules.apply`](@ref).
+See also [`ARule`](@ref), [`Itemset`](@ref), [`ModalAssociationRules.apply`](@ref).
 """
 function mine!(miner::Miner; kwargs...)
     return apply!(miner, dataset(miner); kwargs...)
@@ -941,28 +951,81 @@ function Base.show(io::IO, miner::Miner)
 end
 
 """
-    analyze(arule::ARule, miner::Miner)
+    analyze(arule::ARule, miner::Miner; io::IO=stdout, localities=false)
 
 Print an [`ARule`](@ref) analysis to the console, including related meaningfulness measures
 values.
 
 See also [`ARule`](@ref), [`Miner`](@ref).
 """
-function analyze(arule::ARule, miner::Miner; io::IO=stdout)
-    println(io, "$(arule)")
+function analyze(
+    arule::ARule,
+    miner::Miner;
+    io::IO=stdout,
+    itemsets_local_info::Bool=false,
+    itemsets_global_info::Bool=false,
+    rule_local_info::Bool=false,
+    verbose::Bool=false,
+    variable_names::Union{Nothing,Vector{String}}=nothing
+)
+    # print constraints
+    if verbose
+        itemsets_global_info = true
+        itemsets_local_info = true
+        rule_local_info = true
+    end
 
+    if itemsets_local_info
+        itemsets_global_info = true
+    end
+
+    Base.show(io, arule; variable_names=variable_names)
+    println(io, "")
+
+    # report global emasures for the rule
     for measure in rulemeasures(miner)
-        # prepare (global) measure name, and its Symbol casting
-        gmeas = measure[1]
+        gmeas = first(measure)
         gmeassym = gmeas |> Symbol
 
-        # find local measure associated
-        lmeas = localof(gmeas)
-        lmeassym = lmeas |> Symbol
+        println(io, "\t$(gmeassym): $(globalmemo(miner, (gmeassym, arule)))")
 
-        println(io, "$(gmeassym): $(globalmemo(miner, (gmeassym, arule)))")
-        println(io, "$(lmeassym): $(globalmemo(miner, (lmeassym, arule)))")
+        # report local measures for the rule
+        if rule_local_info
+            # find local measure (its name, as Symbol) associated with the global measure
+            lmeassym = ModalAssociationRules.localof(gmeas) |> Symbol
+            for i in 1:ninstances(miner |> dataset)
+                print(io, "$(lmeassym): $(localmemo(miner, (lmeassym, arule, i))) ")
+            end
+            println(io, "")
+        end
     end
+
+    # report global measures for both antecedent and consequent
+    if itemsets_global_info
+        for measure in itemsetmeasures(miner)
+            gmeas = first(measure)
+            gmeassym = gmeas |> Symbol
+
+            println(io, "\t$(gmeassym) - (antecedent): " *
+                "$(globalmemo(miner, (gmeassym, antecedent(arule))))")
+            # if itemsets_local_info
+            # TODO: report local measures for the antecedent (use `itemsets_localities`)
+
+            println(io, "\t$(gmeassym) - (consequent): " *
+                "$(globalmemo(miner, (gmeassym, consequent(arule))))")
+            # if itemsets_local_info
+            # TODO: report local measures for the consequent (use `itemsets_localities`)
+
+            _entire_content = union(antecedent(arule), consequent(arule))
+            println(io, "\t$(gmeassym) - (entire): " *
+                "$(globalmemo(miner, (gmeassym, _entire_content)))")
+            # if itemsets_local_info
+            # TODO: report local measures for the consequent (use `itemsets_localities`)
+
+        end
+    end
+
+    println(io, "")
 end
 
 ############################################################################################

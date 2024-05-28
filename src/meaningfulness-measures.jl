@@ -17,7 +17,8 @@ See also [`Miner`](@ref), [`LogicalInstance`](@ref), [`Itemset`](@ref).
 function lsupport(
     itemset::Itemset,
     logi_instance::LogicalInstance;
-    miner::Union{Nothing,Miner}=nothing
+    miner::Union{Nothing,Miner}=nothing,
+    mymemo_on::Bool=true
 )::Float64
     # retrieve logiset, and the specific instance
     X, i_instance = logi_instance.s, logi_instance.i_instance
@@ -26,9 +27,8 @@ function lsupport(
     memokey = LmeasMemoKey((Symbol(lsupport), itemset, i_instance))
 
     # leverage memoization if a miner is provided, and it already computed the measure
-    if !isnothing(miner)
+    if !isnothing(miner) && mymemo_on
         memoized = localmemo(miner, memokey)
-
         if !isnothing(memoized)
             return memoized
         end
@@ -80,13 +80,15 @@ function gsupport(
     itemset::Itemset,
     X::SupportedLogiset,
     threshold::Threshold;
-    miner::Union{Nothing,Miner}=nothing
+    miner::Union{Nothing,Miner}=nothing,
+    mymemo_on::Bool=true,
+    internalmemo_on::Bool=true
 )::Float64
     # this is needed to access memoization structures
     memokey = GmeasMemoKey((Symbol(gsupport), itemset))
 
     # leverage memoization if a miner is provided, and it already computed the measure
-    if !isnothing(miner)
+    if !isnothing(miner) && mymemo_on
         memoized = globalmemo(miner, memokey)
         if !isnothing(memoized)
             return memoized
@@ -94,8 +96,15 @@ function gsupport(
     end
 
     # compute global measure, then divide it by the dataset total number of instances
-    ans = sum([lsupport(itemset, getinstance(X, i_instance); miner=miner) >= threshold
-        for i_instance in 1:ninstances(X)]) / ninstances(X)
+    ans = sum([
+        lsupport(
+                itemset,
+                getinstance(X, i_instance);
+                miner=miner,
+                mymemo_on=internalmemo_on
+            ) >= threshold
+            for i_instance in 1:ninstances(X)]
+        ) / ninstances(X)
 
     if !isnothing(miner)
         globalmemo!(miner, memokey, ans)
@@ -131,13 +140,15 @@ See also [`antecedent`](@ref), [`ARule`](@ref), [`Miner`](@ref),
 function lconfidence(
     rule::ARule,
     logi_instance::LogicalInstance;
-    miner::Union{Nothing,Miner}=nothing
+    miner::Union{Nothing,Miner}=nothing,
+    mymemo_on::Bool=true,
+    internalmemo_on::Bool=true
 )::Float64
     # this is needed to access memoization structures
     memokey = LmeasMemoKey((Symbol(lconfidence), rule, logi_instance.i_instance))
 
     # leverage memoization if a miner is provided, and it already computed the measure
-    if !isnothing(miner)
+    if !isnothing(miner) && internalmemo_on
         memoized = localmemo(miner, memokey)
         if !isnothing(memoized)
             return memoized
@@ -145,12 +156,17 @@ function lconfidence(
     end
 
     # denominator could be near to zero
-    den = lsupport(antecedent(rule), logi_instance; miner=miner)
+    den = lsupport(antecedent(rule), logi_instance; miner=miner, mymemo_on=internalmemo_on)
+
+    ans = 0.0
     if (den <= 100*eps())
-        return 0
+        ans = 0.0 # illegal denominator
+        # error("Illegal denominator when computing local confidence: (value is $(den))")
+    else
+        num = lsupport(
+            convert(Itemset, rule), logi_instance; miner=miner, mymemo_on=internalmemo_on)
+        ans = num / den
     end
-    num = lsupport(convert(Itemset, rule), logi_instance; miner=miner)
-    ans = num / den
 
 
     if !isnothing(miner)
@@ -184,13 +200,15 @@ function gconfidence(
     rule::ARule,
     X::SupportedLogiset,
     threshold::Threshold;
-    miner::Union{Nothing,Miner}=nothing
+    miner::Union{Nothing,Miner}=nothing,
+    mymemo_on::Bool=true,
+    internalmemo_on::Bool=true
 )::Float64
     # this is needed to access memoization structures
     memokey = GmeasMemoKey((Symbol(gconfidence), rule))
 
     # leverage memoization if a miner is provided, and it already computed the measure
-    if !isnothing(miner)
+    if !isnothing(miner) && internalmemo_on
         memoized = globalmemo(miner, memokey)
         if !isnothing(memoized)
             return memoized
@@ -202,13 +220,21 @@ function gconfidence(
     _union = union(_antecedent, _consequent)
 
     # denominator could be near to zero
-    den = gsupport(_consequent, X, threshold; miner=miner)
+    den = gsupport(_antecedent, X, threshold; miner=miner, mymemo_on=true)
+
+    ans = 0.0
+    num = 0.0
     if (den <= 100*eps())
-        return 0
+        return 0.0 # illegal denominator
+        # error("Illegal denominator when computing global confidence: (value is $(den))")
+    else
+        num = gsupport(_union, X, threshold; miner=miner, mymemo_on=true)
+        ans = num / den
     end
 
-    num = gsupport(_union, X, threshold; miner=miner)
-    ans = num / den
+    if (ans > 1.0)
+        @error "Critical error: global confidence overflow on $(rule). (value is $(ans))"
+    end
 
     if !isnothing(miner)
         globalmemo!(miner, memokey, ans)

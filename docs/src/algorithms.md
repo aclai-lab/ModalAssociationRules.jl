@@ -1,5 +1,5 @@
 ```@meta
-CurrentModule = SoleRules
+CurrentModule = ModalAssociationRules
 ```
 
 ```@contents

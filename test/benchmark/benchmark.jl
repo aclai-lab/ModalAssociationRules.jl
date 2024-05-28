@@ -1,21 +1,21 @@
 #=
+NATOPS downloaded locally - load_NATOPS()
 Apriori elapsed time:
-mining on fresh logiset -       777.262767117
-leveraging logiset memo -       753.123956295
+mining on fresh logiset -       132.475009557
+leveraging logiset memo -       107.724620054
 
-FPGrowth elapsed time:
-mining on fresh logiset -       50.99628183
-leveraging logiset memo -       22.111844555
+FPGrowth elapsed time (in seconds):
+mining on fresh logiset -       55.956303671
+leveraging logiset memo -       24.282045798
 =#
-
 using BenchmarkTools
 
-using SoleRules
+using ModalAssociationRules
 using SoleData
 using StatsBase
 
 # load NATOPS dataset and convert it to a Logiset
-X_df, y = SoleData.load_arff_dataset("NATOPS");
+X_df, y = load_NATOPS();
 X1 = scalarlogiset(X_df)
 
 # different tested algorithms will use different Logiset's copies

@@ -1,5 +1,5 @@
 ```@meta
-CurrentModule = SoleRules
+CurrentModule = ModalAssociationRules
 ```
 
 ```@contents
@@ -8,13 +8,13 @@ Pages = ["getting-started.md"]
 
 # [Getting started](@id man-core)
 
-In this introductory section you will learn about the main building blocks of SoleRules.jl. 
+In this introductory section you will learn about the main building blocks of ModalAssociationRules.jl. 
 Also if a good picture about *association rule mining* (ARM, from now onwards) is given during the documentation, to make the most out of this guide we suggest to read the following articles:
 - [association rule mining introduction and Apriori algorithm](https://ceur-ws.org/Vol-3284/492.pdf)
 - [FPGrowth algorithm](https://www.cs.sfu.ca/~jpei/publications/sigmod00.pdf)
 Those up above introduce two important algorithms, which are also built-in in this package. Moreover, the latter one is the state-of-the-art in the field of ARM.
 
-Further on in the documentation, the potential of SoleRules.jl will emerge: this package's raison d'être is to generalize the already existing ARM algorithms to modal logics, which are more expressive than propositional one and computationally less expensive than first order logic. If you are new to Sole.jl and you want to learn more about modal logic, please have a look at [SoleLogics.jl](https://github.com/aclai-lab/SoleLogics.jl) for a general overview on the topic, or follow this documentation and return to this link if needed.
+Further on in the documentation, the potential of ModalAssociationRules.jl will emerge: this package's raison d'être is to generalize the already existing ARM algorithms to modal logics, which are more expressive than propositional one and computationally less expensive than first order logic. If you are new to Sole.jl and you want to learn more about modal logic, please have a look at [SoleLogics.jl](https://github.com/aclai-lab/SoleLogics.jl) for a general overview on the topic, or follow this documentation and return to this link if needed.
 
 ## Core definitions
 
