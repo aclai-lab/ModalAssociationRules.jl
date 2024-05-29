@@ -574,6 +574,11 @@ struct Miner{
         items::Vector{I},
         item_constrained_measures::Vector{IM} = [(gsupport, 0.1, 0.1)],
         rule_constrained_measures::Vector{RM} = [(gconfidence, 0.2, 0.2)];
+        rulesift::Vector{Function} = Vector{Function}([
+            anchor_rulecheck,
+            non_selfabsorbed_rulecheck
+        ]),
+        disable_rulesifting::Bool = false,
         info::Info = Info(:istrained => false)
     ) where {
         D<:AbstractDataset,
@@ -597,6 +602,9 @@ struct Miner{
             "internally by gsupport."
 
         powerups = initpowerups(algorithm, X)
+        if !disable_rulesifting
+            powerups[:rulesift] = rulesift
+        end
 
         new{D,F,I,IM,RM}(X, algorithm, unique(items),
             item_constrained_measures, rule_constrained_measures,
@@ -913,7 +921,7 @@ function apply!(miner::Miner, X::AbstractDataset; forcemining::Bool=false, kwarg
     miner.algorithm(miner, X; kwargs...)
     info!(miner, :istrained, true)
 
-    return arules_generator(freqitems(miner), miner)
+    return generaterules(freqitems(miner), miner)
 end
 
 """
@@ -928,7 +936,7 @@ function generaterules!(miner::Miner)
         error("Miner should be trained before generating rules. Please, invoke `mine!`.")
     end
 
-    return arules_generator(freqitems(miner), miner)
+    return generaterules(freqitems(miner), miner)
 end
 
 function Base.show(io::IO, miner::Miner)

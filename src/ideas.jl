@@ -98,3 +98,13 @@
 ###     count(i -> i >= lsupp_integer_threshold, min_occurrences) / _nworlds)
 
 ### end
+
+# macro inject_rulesift(call)
+#     if call.head == :call && call.args[1] == :Miner
+#         args = call.args[2:end]
+#         esc(:(Miner($(args...))))
+#     else
+#         error("Invalid macro usage. Use the form @inject_rulesift " *
+#             "Miner(<args here>)")
+#     end
+# end

@@ -117,7 +117,7 @@ mine!(fpgrowth_miner)
 
 function _association_rules_test1(miner::Miner)
     countdown = 3
-    for _temp_arule in arules_generator(freqitems(miner), miner)
+    for _temp_arule in generaterules(freqitems(miner), miner)
         if countdown > 0
             @test _temp_arule in arules(miner)
             @test _temp_arule isa ARule
@@ -208,7 +208,7 @@ _temp_apriori_miner = Miner(X1, apriori, manual_items, _itemsetmeasures, _ruleme
 _temp_lsupport = lsupport(pq, SoleLogics.getinstance(X2, 7); miner=fpgrowth_miner)
 @test _temp_lsupport >= 0.0 && _temp_lsupport <= 1.0
 
-_temp_arule = arules_generator(freqitems(fpgrowth_miner), fpgrowth_miner) |> first
+_temp_arule = generaterules(freqitems(fpgrowth_miner), fpgrowth_miner) |> first
 
 lsupport(Itemset(manual_p), SoleLogics.getinstance(X2, 7); miner=fpgrowth_miner)
 lsupport(Itemset(manual_lr), SoleLogics.getinstance(X2, 7); miner=fpgrowth_miner)
@@ -223,7 +223,7 @@ lsupport(Itemset(manual_lr), SoleLogics.getinstance(X2, 7); miner=fpgrowth_miner
     collect |> first == Itemset([manual_p, manual_r])
 
 @test grow_prune([pq,qr,pr], [pq,qr,pr], 3) |> collect |> unique == [pqr]
-@test arules_generator(freqitems(fpgrowth_miner), fpgrowth_miner) |> first isa ARule
+@test generaterules(freqitems(fpgrowth_miner), fpgrowth_miner) |> first isa ARule
 
 _rulemeasures_just_for_test = [(ModalAssociationRules.gconfidence, 1.1, 1.1)]
 _temp_fpgrowth_miner = Miner(

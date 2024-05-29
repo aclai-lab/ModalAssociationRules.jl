@@ -58,7 +58,58 @@ end
 ############################################################################################
 
 """
-    arules_generator(itemsets::Vector{Itemset}, miner::Miner)
+    function anchor_rulecheck(rule::ARule)::Bool
+
+Return true if the given [`ARule`](@ref) contains a propositional anchor, that is,
+atleast one [`Item`](@ref) in its [`antecedent`](@ref) is a propositional letter.
+
+See [`antecedent`](@ref), [`ARule`](@ref), [`generaterules`](@ref), [`Item`](@ref),
+[`Miner`](@ref).
+"""
+function anchor_rulecheck(rule::ARule)::Bool
+    # not all items in the antecedent are modal
+    return !all(it -> it isa SyntaxBranch && it |> token |> ismodal, antecedent(rule))
+end
+
+"""
+    function non_selfabsorbed_rulecheck(rule::ARule)::Bool
+
+Return true if the given [`ARule`](@ref) is not self-absorbing, that is,
+for each [`Item`](@ref) in its [`antecedent`](@ref) wrapping a variable `V`,
+the other items in the antecedent does not refer to `V`, and
+every item in the [`consequent`](@ref) does not refer to `V` too.
+
+See [`antecedent`](@ref), [`ARule`](@ref), [`consequent`](@ref), [`generaterules`](@ref),
+[`Item`](@ref), [`Miner`](@ref).
+"""
+function non_selfabsorbed_rulecheck(rule::ARule)::Bool
+    # TODO: this could be moved to SoleData
+    function _extract_variable(item::Item)::Int64
+        # extract the Atom wrapped inside a SyntaxTree;
+        # if `item` is already an Atom, do nothing.
+        item = item isa Atom ? item : item.children |> first
+        return item.value.metacond.feature.i_variable
+    end
+
+    return all(
+        # for each antecedent item
+        ant_it ->
+            # no other items in antecedent share the same variable
+            count(
+                _ant_it -> _extract_variable(ant_it) == _extract_variable(_ant_it),
+                antecedent(rule)
+            ) == 1 &&
+            # every consequent item does not share the same variable
+            all(
+                cons_it -> _extract_variable(ant_it) != _extract_variable(cons_it),
+                consequent(rule)
+            ),
+        antecedent(rule)
+    )
+end
+
+"""
+    generaterules(itemsets::Vector{Itemset}, miner::Miner)
 
 Raw subroutine of [`generaterules!(miner::Miner; kwargs...)`](@ref).
 
@@ -73,13 +124,13 @@ constraints specified in `rulemeasures(miner)`, and yields the rule if so.
 
 See also [`ARule`](@ref), [`Miner`](@ref), [`Itemset`](@ref), [`rulemeasures`](@ref).
 """
-@resumable function arules_generator(
+@resumable function generaterules(
     itemsets::Vector{Itemset},
     miner::Miner
 )
     # From the original paper at 3.4 here:
     # http://www.rakesh.agrawal-family.com/papers/tkde96passoc_rj.pdf
-
+    #
     # Given a frequent itemset l, rule generation examines each non-empty subset a
     # and generates the rule a => (l-a) with support = support(l) and
     # confidence = support(l)/support(a).
@@ -106,9 +157,15 @@ See also [`ARule`](@ref), [`Miner`](@ref), [`Itemset`](@ref), [`rulemeasures`](@
                 continue
             end
 
-            interesting = true
             currentrule = ARule((_antecedent, _consequent))
 
+            # sift pipeline to remove unwanted rules;
+            # this can be customized at Miner-construction time.
+            if !all(sift -> sift(currentrule) == true, powerups(miner, :rulesift))
+                continue
+            end
+
+            interesting = true
             for meas in rulemeasures(miner)
                 (gmeas_algo, lthreshold, gthreshold) = meas
                 gmeas_result = gmeas_algo(
@@ -128,7 +185,6 @@ See also [`ARule`](@ref), [`Miner`](@ref), [`Itemset`](@ref), [`rulemeasures`](@
             # since a meaningfulness measure test failed,
             # we don't want to keep generating rules.
             else
-                # continue to next itemset iteration
                 break
             end
         end

@@ -20,5 +20,5 @@ coalesce_contributors(itemset::Itemset, miner::Miner; lmeas::Function=lsupport)
 
 ## Association rules
 ```@docs
-arules_generator(itemsets::Vector{Itemset}, miner::Miner)
+generaterules(itemsets::Vector{Itemset}, miner::Miner)
 ```

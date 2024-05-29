@@ -143,87 +143,9 @@ plot(
 	size = (1500,400)
 )
 =#
+#
+# To further examine data, see the `Useful Plots` section at the end of the file.
 ############################################################################################
-
-# Left hand (V1, V2, V3) ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Involved in: "Spread wings", "Fold wings", "Lock wings".
-#=
-plot(
-	map(i->plot(collect(X_df[i,1:3]), labels=["x" "y" "z"], title=y[i]), 1:30:180)...,
-	layout = (2, 3),
-	size = (1500,400)
-)
-=#
-
-# Right hand ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Involved in: every class.
-#=
-plot(
-	map(i->plot(collect(X_df[i,4:6]), labels=["x" "y" "z"], title=y[i]), 1:30:180)...,
-	layout = (2, 3),
-	size = (1500,400)
-)
-=#
-
-# Left elbow ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Involved in: "All clear", "Spread wings", "Fold wings", "Lock wings".
-#=
-plot(
-	map(i->plot(collect(X_df[i,7:9]), labels=["x" "y" "z"], title=y[i]), 1:30:180)...,
-	layout = (2, 3),
-	size = (1500,400)
-)
-=#
-
-# Right elbow ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Involved in: every class.
-#=
-plot(
-	map(i->plot(collect(X_df[i,10:12]), labels=["x" "y" "z"], title=y[i]), 1:30:180)...,
-	layout = (2, 3),
-	size = (1500,400)
-)
-=#
-
-# Left wrist ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Involved in: "Spread wings", "Fold wings", "Lock wings".
-#=
-plot(
-	map(i->plot(collect(X_df[i,13:15]), labels=["x" "y" "z"], title=y[i]), 1:30:180)...,
-	layout = (2, 3),
-	size = (1500,400)
-)
-=#
-
-# Right wrist ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Involved in: every class
-#=
-plot(
-	map(i->plot(collect(X_df[i,16:18]), labels=["x" "y" "z"], title=y[i]), 1:30:180)...,
-	layout = (2, 3),
-	size = (1500,400)
-)
-=#
-
-# Left thumb ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Involved in: "Spread wings", "Fold wings", "Lock wings".
-#=
-plot(
-	map(i->plot(collect(X_df[i,19:21]), labels=["x" "y" "z"], title=y[i]), 1:30:180)...,
-	layout = (2, 3),
-	size = (1500,400)
-)
-=#
-
-# Right thumb ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Involved in: "Spread wings", "Fold wings", "Lock wings".
-#=
-plot(
-	map(i->plot(collect(X_df[i,22:24]), labels=["x" "y" "z"], title=y[i]), 1:30:180)...,
-	layout = (2, 3),
-	size = (1500,400)
-)
-=#
 
 ############################################################################################
 # Experiment #1
@@ -485,22 +407,41 @@ function runcomparison(
                     _antecedent, _consequent = antecedent(rule), consequent(rule)
                     _union = union(_antecedent, _consequent)
 
-                    # confidence
-                    _conf = gconfidence(rule, logiset, suppthreshold)
-                    # antecedent global support
-                    _asupp = gsupport(_antecedent, logiset, suppthreshold)
-                    # consequent global support
-                    _csupp = gsupport(_consequent, logiset, suppthreshold)
-                    # whole-rule global support
-                    _usupp = gsupport(_union, logiset, suppthreshold)
+            # confidence
+            _conf = round(
+                gconfidence(rule, logiset, suppthreshold), sigdigits=sigdigits)
+            # antecedent global support
+            _asupp = round(
+                gsupport(_antecedent, logiset, suppthreshold), sigdigits=sigdigits)
+            # consequent global support
+            _csupp = round(
+                gsupport(_consequent, logiset, suppthreshold), sigdigits=sigdigits)
+            # whole-rule global support
+            _usupp = round(
+                gsupport(_union, logiset, suppthreshold), sigdigits=sigdigits)
 
-                    # print measures
-                    print("$(_conf)\t$(_asupp)\t$(_csupp)\t$(_usupp)\t")
-                end
+            # new cell is added to the right of current row
+            _cellstring = "confidence: $(_conf)\nantecedent support: $(_asupp)\n" *
+                "consequent support: $(_csupp)\nunion support: $(_usupp)"
 
-                # new rule is a new row
-                println("")
-            end
+            # uncomment to print measures in one line instead of in one paragraph
+            # push!(_data, [_conf, _asupp, _csupp, _usupp])
+            push!(_data, _cellstring)
+        end
+
+        # now, assemble a new row
+        data = isempty(data) ? _data : hcat(data, _data)
+    end
+
+    # print data table on file
+    open(reportname, "w") do out
+        redirect_stdout(out) do
+            pretty_table(
+                data |> permutedims;
+                header=header,
+                linebreaks=true,
+                body_hlines=collect(1:(data |> size |> first))
+            )
         end
     end
 
@@ -513,3 +454,108 @@ runcomparison(
     0.1;
     reportname="01-comparison.exp"
 )
+
+runcomparison(
+    _4_miner,
+    LOGISETS,
+    (conf) -> conf >= 0.89 && conf <= 0.92;
+    suppthreshold=0.1,
+    sigdigits=2 |> Int8,
+    reportname="01-comparison.exp"
+)
+
+runcomparison(
+    _4_miner,
+    LOGISETS,
+    (conf) -> conf >= 0.89 && conf <= 0.92;
+    suppthreshold=0.1,
+    sigdigits=2 |> Int8,
+    reportname="04-comparison.exp"
+)
+
+
+############################################################################################
+# Useful plots
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# More plots, useful to further observe data. See `Data Observation` section.
+############################################################################################
+
+# Left hand (V1, V2, V3) ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Involved in: "Spread wings", "Fold wings", "Lock wings".
+#=
+plot(
+	map(i->plot(collect(X_df[i,1:3]), labels=["x" "y" "z"], title=y[i]), 1:30:180)...,
+	layout = (2, 3),
+	size = (1500,400)
+)
+=#
+
+# Right hand ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Involved in: every class.
+#=
+plot(
+	map(i->plot(collect(X_df[i,4:6]), labels=["x" "y" "z"], title=y[i]), 1:30:180)...,
+	layout = (2, 3),
+	size = (1500,400)
+)
+=#
+
+# Left elbow ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Involved in: "All clear", "Spread wings", "Fold wings", "Lock wings".
+#=
+plot(
+	map(i->plot(collect(X_df[i,7:9]), labels=["x" "y" "z"], title=y[i]), 1:30:180)...,
+	layout = (2, 3),
+	size = (1500,400)
+)
+=#
+
+# Right elbow ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Involved in: every class.
+#=
+plot(
+	map(i->plot(collect(X_df[i,10:12]), labels=["x" "y" "z"], title=y[i]), 1:30:180)...,
+	layout = (2, 3),
+	size = (1500,400)
+)
+=#
+
+# Left wrist ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Involved in: "Spread wings", "Fold wings", "Lock wings".
+#=
+plot(
+	map(i->plot(collect(X_df[i,13:15]), labels=["x" "y" "z"], title=y[i]), 1:30:180)...,
+	layout = (2, 3),
+	size = (1500,400)
+)
+=#
+
+# Right wrist ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Involved in: every class
+#=
+plot(
+	map(i->plot(collect(X_df[i,16:18]), labels=["x" "y" "z"], title=y[i]), 1:30:180)...,
+	layout = (2, 3),
+	size = (1500,400)
+)
+=#
+
+# Left thumb ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Involved in: "Spread wings", "Fold wings", "Lock wings".
+#=
+plot(
+	map(i->plot(collect(X_df[i,19:21]), labels=["x" "y" "z"], title=y[i]), 1:30:180)...,
+	layout = (2, 3),
+	size = (1500,400)
+)
+=#
+
+# Right thumb ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Involved in: "Spread wings", "Fold wings", "Lock wings".
+#=
+plot(
+	map(i->plot(collect(X_df[i,22:24]), labels=["x" "y" "z"], title=y[i]), 1:30:180)...,
+	layout = (2, 3),
+	size = (1500,400)
+)
+=#

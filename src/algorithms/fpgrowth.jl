@@ -777,8 +777,6 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
         htable::HeaderTable,
         miner::Miner,
         leftout_fptree::FPTree
-#        leftout_itemset::Itemset,
-#        leftout_count::Int64
     )
         # if `fptree` contains only one path (hence, it can be considered a linked list),
         # then combine all the Itemsets collected from previous step with the remained ones.
