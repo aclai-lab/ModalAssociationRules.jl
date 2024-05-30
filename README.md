@@ -20,14 +20,13 @@ The following instructions assume `~/.julia/dev/` as the only working directory.
     git clone https://github.com/aclai-lab/SoleModels.jl.git
     git clone https://github.com/aclai-lab/ModalAssociationRules.jl.git
 
-And checkout everything on `dev` branch.
-For each package, open the Julia REPL and install the dependencies by executing the following.
+For each folder, checkout on `dev` branch and open the Julia REPL to install the dpendencies associated:
 
-    SoleBase ->              ]instantiate
-    MultiData ->             ]dev SoleBase
-    SoleLogics ->            ]dev SoleBase
-    SoleData ->              ]dev SoleBase SoleLogics MultiData
-    SoleModels ->            ]dev SoleBase MultiData SoleLogics SoleData
+    SoleBase              -> ]instantiate
+    MultiData             -> ]dev SoleBase
+    SoleLogics            -> ]dev SoleBase
+    SoleData              -> ]dev SoleBase SoleLogics MultiData
+    SoleModels            -> ]dev SoleBase MultiData SoleLogics SoleData
     ModalAssociationRules -> ]dev SoleBase MultiData SoleLogics SoleData SoleModels
 
 When not specified (every time but in SoleBase), also execute ```]instantiate```.
