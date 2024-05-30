@@ -471,19 +471,19 @@ const Info = Dict{Symbol,Any}
 
 """
     struct Miner{
-        D<:AbstractDataset,
-        F<:Function,
+        DATA<:AbstractDataset,
+        MINALGO<:Function,
         I<:Item,
-        IM<:MeaningfulnessMeasure,
-        RM<:MeaningfulnessMeasure
+        IMEAS<:MeaningfulnessMeasure,
+        RMEAS<:MeaningfulnessMeasure
     }
-        X::D                            # target dataset
-        algorithm::F                    # algorithm used to perform extraction
+        X::DATA                            # target dataset
+        algorithm::MINALGO                    # algorithm used to perform extraction
         items::Vector{I}
 
                                         # meaningfulness measures
-        item_constrained_measures::Vector{IM}
-        rule_constrained_measures::Vector{RM}
+        item_constrained_measures::Vector{IMEAS}
+        rule_constrained_measures::Vector{RMEAS}
 
         freqitems::Vector{Itemset}      # collected frequent itemsets
         arules::Vector{ARule}           # collected association rules
@@ -543,21 +543,21 @@ See also  [`ARule`](@ref), [`apriori`](@ref), [`MeaningfulnessMeasure`](@ref),
 [`Itemset`](@ref), [`GmeasMemo`](@ref), [`LmeasMemo`](@ref).
 """
 struct Miner{
-    D<:AbstractDataset,
-    F<:Function,
+    DATA<:AbstractDataset,
+    MINALGO<:Function,
     I<:Item,
-    IM<:MeaningfulnessMeasure,
-    RM<:MeaningfulnessMeasure
+    IMEAS<:MeaningfulnessMeasure,
+    RMEAS<:MeaningfulnessMeasure
 }
     # target dataset
-    X::D
+    X::DATA
     # algorithm used to perform extraction
-    algorithm::F
+    algorithm::MINALGO
     items::Vector{I}
 
     # meaningfulness measures
-    item_constrained_measures::Vector{IM}
-    rule_constrained_measures::Vector{RM}
+    item_constrained_measures::Vector{IMEAS}
+    rule_constrained_measures::Vector{RMEAS}
 
     freqitems::Vector{Itemset}      # collected frequent itemsets
     arules::Vector{ARule}           # collected association rules
@@ -569,18 +569,23 @@ struct Miner{
     info::Info                      # general informations
 
     function Miner(
-        X::D,
-        algorithm::F,
+        X::DATA,
+        algorithm::MINALGO,
         items::Vector{I},
-        item_constrained_measures::Vector{IM} = [(gsupport, 0.1, 0.1)],
-        rule_constrained_measures::Vector{RM} = [(gconfidence, 0.2, 0.2)];
+        item_constrained_measures::Vector{IMEAS} = [(gsupport, 0.1, 0.1)],
+        rule_constrained_measures::Vector{RMEAS} = [(gconfidence, 0.2, 0.2)];
+        rulesift::Vector{<:Function} = Vector{Function}([
+            anchor_rulecheck,
+            non_selfabsorbed_rulecheck
+        ]),
+        disable_rulesifting::Bool = false,
         info::Info = Info(:istrained => false)
     ) where {
-        D<:AbstractDataset,
-        F<:Function,
+        DATA<:AbstractDataset,
+        MINALGO<:Function,
         I<:Item,
-        IM<:MeaningfulnessMeasure,
-        RM<:MeaningfulnessMeasure
+        IMEAS<:MeaningfulnessMeasure,
+        RMEAS<:MeaningfulnessMeasure
     }
         # dataset frames must be equal
         @assert allequal([SoleLogics.frame(X, i_instance)
@@ -597,8 +602,11 @@ struct Miner{
             "internally by gsupport."
 
         powerups = initpowerups(algorithm, X)
+        if !disable_rulesifting
+            powerups[:rulesift] = rulesift
+        end
 
-        new{D,F,I,IM,RM}(X, algorithm, unique(items),
+        new{DATA,MINALGO,I,IMEAS,RMEAS}(X, algorithm, unique(items),
             item_constrained_measures, rule_constrained_measures,
             Vector{Itemset}([]), Vector{ARule}([]),
             LmeasMemo(), GmeasMemo(), powerups, info
@@ -913,7 +921,7 @@ function apply!(miner::Miner, X::AbstractDataset; forcemining::Bool=false, kwarg
     miner.algorithm(miner, X; kwargs...)
     info!(miner, :istrained, true)
 
-    return arules_generator(freqitems(miner), miner)
+    return generaterules(freqitems(miner), miner)
 end
 
 """
@@ -928,7 +936,7 @@ function generaterules!(miner::Miner)
         error("Miner should be trained before generating rules. Please, invoke `mine!`.")
     end
 
-    return arules_generator(freqitems(miner), miner)
+    return generaterules(freqitems(miner), miner)
 end
 
 function Base.show(io::IO, miner::Miner)
