@@ -145,14 +145,32 @@ end
     function runcomparison(
         miner::Miner,
         logisets::Vector{L},
-        confidencebouncer::Function,
-        suppthreshold::Float64;
+        rulebouncer::Function;
+        targetclass::Int8 = 1 |> Int8,
+        suppthreshold::Float64,
+        sortby::Symbol=:confmean,
         reportname::String = "comparison-report.exp",
         classnames::Vector{String} =  [
             "I have command", "All clear", "Not clear",
             "Spread wings", "Fold wings", "Lock wings",
         ]
     ) where {L<:SoleData.AbstractLogiset}
+
+# Arguments
+* `miner`: the (already used) miner from which association rules are taken;
+* `logisets`: vector of logisets, one for each class;
+* `rulebouncer`: function taking a float value (between 0 and 1), that represents
+    a confidence level: this can be tweaked to limit the size of this comparison;
+* `targetclass`: the class on which miner was originally used;
+* `suppthreshold`: local support threshold used by global support calls invoked inside
+    this function, when measuring the meaningfulness measures of an association rule on
+    the other classes (those who are not `targetclass`),
+* `sortby`: either `:confmean` or `:entropy`, establishes how rows are sorted:
+    in the former case, they are sorted w.r.t. lower mean confidence on classes which are
+    not `targetclass`, while in the latter they are sorted in ascending order
+    w.r.t `1-entropy(confidences)`;
+* `reportname`: name of the file where output is stored;
+* `classnames`: labels to associated with each class.
 
 Given a consumed [`Miner`](@ref), that is, a miner which already performed mining,
 print in a file (placed in `results/reportname`) a report regarding the mined
@@ -193,6 +211,7 @@ function runcomparison(
     rulebouncer::Function;
     targetclass::Int8 = 1 |> Int8,
     suppthreshold::Float64,
+    sortby::Symbol=:confmean,
     sigdigits::Int8=2 |> Int8,
     reportname::String = "comparison-report.exp",
     classnames::Vector{String} = CLASS_NAMES,
@@ -310,8 +329,11 @@ function runcomparison(
     end
 
     # `datavals` is ready to be sorted
-    sort!(datavals, by=t -> t[2])       # sort by ◐
-    # sort!(datavals, by=t -> t[3])     # sort by entropy
+    if sortby == :confmean
+        sort!(datavals, by=t -> t[2])   # sort by ◐
+    elseif sortby == :entropy
+        sort!(datavals, by=t -> t[3])   # sort by entropy
+    end
 
     # digest `datavals`, converting useful information into strings and shaping them
     # in order to make a table using PrettyTables.jl
@@ -343,13 +365,6 @@ function runcomparison(
         data = isempty(data) ? row_cellstrings : hcat(data, row_cellstrings)
     end
 
-    #=
-    # assemble data rows
-    for row in datarows
-        data = isempty(data) ? row : hcat(data, row)
-    end
-    =#
-
     # print data table on file
     open(reportname, "w") do out
         redirect_stdout(out) do
@@ -360,7 +375,7 @@ function runcomparison(
             println("\nLegend")
             println("$(MEAN_GCONF_EXCLUDING_TARGETCLASS_STRING): " *
                 "mean of global confidences, excluding current target class")
-            println("$(ONE_MINUS_ENTROPY_STRING): purity measure " *
+            println("$(ONE_MINUS_ENTROPY_STRING): confidences purity measures " *
                 "(higher means that target class is more pure)")
 
             println()
@@ -423,8 +438,8 @@ plot(collect(X_df_1_have_command[1,4:6]),
 _1_right_hand_tip_X_items = [
     Atom(ScalarCondition(UnivariateMin(4), >=, 1))
     Atom(ScalarCondition(UnivariateMax(4), <=, 1))
-    Atom(ScalarCondition(UnivariateMin(4), >=, 2))
-    Atom(ScalarCondition(UnivariateMax(4), <=, 2))
+    Atom(ScalarCondition(UnivariateMin(4), >=, 1.8))
+    Atom(ScalarCondition(UnivariateMax(4), <=, 1.8))
 ]
 
 _1_right_hand_tip_Y_items = [
@@ -433,8 +448,8 @@ _1_right_hand_tip_Y_items = [
 ]
 
 _1_right_hand_tip_Z_items = [
-    Atom(ScalarCondition(UnivariateMax(6), >=, -1))
-    Atom(ScalarCondition(UnivariateMin(6), <=, -1))
+    Atom(ScalarCondition(UnivariateMax(6), >=, 0))
+    Atom(ScalarCondition(UnivariateMin(6), <=, 0))
     Atom(ScalarCondition(UnivariateMin(6), <=, 1))
     Atom(ScalarCondition(UnivariateMax(6), >=, 1))
 ]
@@ -614,6 +629,42 @@ _4_miner = runexperiment(
 # Experiment #5
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
+# Wrists in "Spread wings" class, using during, ends-with and overlap relations.
+# V13, V14, V15 - left wrist.
+# V16, V17, V18 - right wrist.
+#
+#=
+plot(collect(X_df_4_spread_wings[1,13:15]),
+    labels=["x" "y" "z"], title="Spread wings - left wrist")
+
+plot(collect(X_df_4_spread_wings[1,16:18]),
+    labels=["x" "y" "z"], title="Spread wings - right wrist")
+=#
+############################################################################################
+
+_1_right_hand_tip_X_items = [
+    Atom(ScalarCondition(UnivariateMin(4), >=, 1))
+    Atom(ScalarCondition(UnivariateMax(4), <=, 1))
+    Atom(ScalarCondition(UnivariateMin(4), >=, 1.8))
+    Atom(ScalarCondition(UnivariateMax(4), <=, 1.8))
+]
+
+_1_right_hand_tip_Y_items = [
+    Atom(ScalarCondition(UnivariateMin(5), >=, -0.5))
+    Atom(ScalarCondition(UnivariateMax(5), <=, -0.5))
+]
+
+_1_right_hand_tip_Z_items = [
+    Atom(ScalarCondition(UnivariateMax(6), >=, 0))
+    Atom(ScalarCondition(UnivariateMin(6), <=, 0))
+    Atom(ScalarCondition(UnivariateMin(6), <=, 1))
+    Atom(ScalarCondition(UnivariateMax(6), >=, 1))
+]
+
+############################################################################################
+# Experiment #6
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
 # Given a list of interesting rules extracted by the previous experiments, do the following:
 # for each rule R extracted from class k, compute the meaningfulness measures of R w.r.t
 # each i-th class, where i != k.
@@ -626,6 +677,12 @@ _4_miner = runexperiment(
 # ...
 # RK:
 #
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Two more columns are added, which can be used to establish how rows in the matrix must
+# be sorted:
+#   ◐       : mean of global confidences, excluding current target class
+#   1 - 𝑆   : confidence purity measures; higher means that target class is more pure
+# See also `runcomparison` documentation.
 ############################################################################################
 
 runcomparison(
