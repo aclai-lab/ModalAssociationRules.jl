@@ -15,6 +15,7 @@ using Test
 using ModalAssociationRules
 using Dates
 using Plots
+using PrettyTables
 using SoleData
 using StatsBase
 using SoleLogics
@@ -80,6 +81,23 @@ LOGISETS = [
     X_6_lock_wings
 ]
 
+"""
+    function runexperiment(
+        X::AbstractDataset,
+        algorithm::Function,
+        items::Vector{Item},
+        itemsetmeasures::Vector{<:MeaningfulnessMeasure},
+        rulemeasures::Vector{<:MeaningfulnessMeasure};
+        reportname::String = "experiment-report.exp",
+        variablenames::Union{Nothing, Vector{String}} = nothing
+    )
+
+Mine frequent [`Itemset`](@ref)s and [`ARule`](@ref) from dataset `X` using `algorithm`.
+Return the [`Miner`](@ref) used to perform mining.
+
+See also [`ARule`](@ref), [`Itemset`](@ref), [`MeaningfulnessMeasure`](@ref),
+[`Miner`](@ref).
+"""
 function runexperiment(
 	X::AbstractDataset,
 	algorithm::Function,
@@ -121,6 +139,195 @@ function runexperiment(
 	end
 
     return miner
+end
+
+"""
+    function runcomparison(
+        miner::Miner,
+        logisets::Vector{L},
+        confidencebouncer::Function,
+        suppthreshold::Float64;
+        reportname::String = "comparison-report.exp",
+        classnames::Vector{String} =  [
+            "I have command", "All clear", "Not clear",
+            "Spread wings", "Fold wings", "Lock wings",
+        ]
+    ) where {L<:SoleData.AbstractLogiset}
+
+Given a consumed [`Miner`](@ref), that is, a miner which already performed mining,
+print in a file (placed in `results/reportname`) a report regarding the mined
+[`ARule`](@ref) whose global confidence is in a range established by `confidencebouncer`.
+
+# Example
+```julia-repl
+julia> runcomparison(
+    _1_miner,
+    LOGISETS,
+    (conf) -> conf >= 0.3,
+    0.1;
+    reportname="01-comparison.exp",
+    classnames=
+)
+
+# in results/01-comparison.exp
+┌──────────────────────────────────────────────────────────────┬──────────────────────────┐
+│                              Rule │           I have command │                All clear │
+├──────────────────────────────────────────────────────────────┼──────────────────────────┤
+│ (min[V5] ≥ -0.5) => (max[V6] ≥ 0) │         confidence: 0.86 │         confidence: 0.57 │
+│                                   │ antecedent support: 0.97 │ antecedent support: 0.47 │
+│                                   │ consequent support: 0.87 │ consequent support: 0.63 │
+│                                   │      union support: 0.83 │      union support: 0.27 │
+├───────────────────────────────────┼──────────────────────────┼──────────────────────────┤
+│ (min[V4] ≥ 1) => (min[V5] ≥ -0.5) │         confidence: 0.36 │         confidence: 0.43 │
+│                                   │ antecedent support: 0.47 │  antecedent support: 1.0 │
+│                                   │ consequent support: 0.97 │ consequent support: 0.47 │
+│                                   │      union support: 0.17 │      union support: 0.43 │
+└───────────────────────────────────┴──────────────────────────┴──────────────────────────┘
+```
+
+See also [`ARule`](@ref), [`gconfidence`](@ref), [`Miner`](@ref).
+"""
+function runcomparison(
+    miner::Miner,
+    logisets::Vector{L},
+    rulebouncer::Function;
+    targetclass::Int8 = 1 |> Int8,
+    suppthreshold::Float64,
+    sigdigits::Int8=2 |> Int8,
+    reportname::String = "comparison-report.exp",
+    classnames::Vector{String} = CLASS_NAMES
+) where {L<:SoleData.AbstractLogiset}
+    @assert length(logisets) == length(classnames) "Given number of logisets and " *
+        "variable names mismatch: length(logisets) = $(length(logisets)), while " *
+        "length(classnames) = $(length(classnames))."
+
+    @assert info(miner, :istrained) "Provided miner did not perform mine and is thus empty"
+
+    # report filepath preparation
+    reportname = RESULTS_PATH * reportname
+
+    # pretty table header row
+    header = vcat("Rule", "◐", classnames)
+
+    # partial data (numeric) that has to be be manipulated,
+    # before being converted to string format.
+    # Each element in this collection is of type
+    # Tuple{ARule, Float64, Vector{Tuple{Int64, Vector{Float64}}}}
+    # (A::ARule, B::Float64, C::Tuple{Int64, Vector{Flaot64}})
+    # where A is association rule,
+    # B is the confidence measured considering all classes apart from `targetclass`,
+    # and C is a vector of associations between i-th class and meaningfulness measures.
+    # Meaningfulness measures are sorted like so:
+    # global confidence,
+    # antecedent global support,
+    # consequent global support,
+    # antecedent and consequent global support.
+    datavals = Tuple{ARule, Float64, Vector{Tuple{Int64, Vector{Float64}}}}[]
+
+    # final collection taht will be passed to PrettyTables.jl
+    data = Any[]
+
+    # for each rule accepted by `rulebouncer`
+    for rule in filter(
+                _rule -> rulebouncer(globalmemo(miner, (:gconfidence, _rule))),
+                arules(miner)
+            )
+
+        # prepare a data value fragment, that is,
+        # a vector of tuples (logiset-index, [measures])
+        dataval = Tuple{Int64, Vector{Float64}}[]
+
+        # consider each class, compute the meaningfulness measures and print them
+        for (i, logiset) in Iterators.enumerate(logisets)
+            _antecedent, _consequent = antecedent(rule), consequent(rule)
+            _union = union(_antecedent, _consequent)
+
+            # confidence
+            _conf = round(
+                gconfidence(rule, logiset, suppthreshold), sigdigits=sigdigits)
+            # antecedent global support
+            _asupp = round(
+                gsupport(_antecedent, logiset, suppthreshold), sigdigits=sigdigits)
+            # consequent global support
+            _csupp = round(
+                gsupport(_consequent, logiset, suppthreshold), sigdigits=sigdigits)
+            # whole-rule global support
+            _usupp = round(
+                gsupport(_union, logiset, suppthreshold), sigdigits=sigdigits)
+
+            push!(dataval, (i, [_conf, _asupp, _csupp, _usupp]))
+        end
+
+        # compute the mean of global confidences, excluding the `targetclass`
+        # from which association rules where initially mined.
+        mean_gconf_excluding_targetclass = begin
+            _accumulator = 0.0
+            for (i, measures) in dataval
+                if i != targetclass
+                    _accumulator += measures[1]
+                end
+            end
+            round(_accumulator / (length(logisets)-1), sigdigits=sigdigits+1)
+        end
+
+        # later, after all the insertions, we will sort `datavals` in ascending order
+        # by the mean of global confidences;
+        # when the mean is low, this means that the associated rule is good to uniquely
+        # identify the class `targetclass`.
+        push!(datavals, (rule, mean_gconf_excluding_targetclass, dataval))
+    end
+
+    # `datavals` is ready to be sorted
+    sort!(datavals, by=t -> t[2])
+
+    # digest `datavals`, converting useful information into strings and shaping them
+    # in order to make a table using PrettyTables.jl
+    for val in datavals
+        # consider a certain row
+        # val[1] is the rule associated with the row
+        # val[2] is ◐ parameter
+        # val[3] is a vector of pairs; in particular:
+        #   val[3] |> first is an integer i, indicating that measures refers to ith-logiset
+        #   val[3] |> last is a vector of length 4, containing all the measures
+        row_cellstrings = String[val[1] |> syntaxstring, val[2] |> string]
+
+        # insert measures
+        for (_, measures) in val[3]
+            push!(row_cellstrings, "confidence: $(measures[1])\n"*
+                "antecedent support: $(measures[2])\n" *
+                "consequent support: $(measures[3])\n"*
+                "union support: $(measures[4])")
+        end
+
+        data = isempty(data) ? row_cellstrings : hcat(data, row_cellstrings)
+    end
+
+    #=
+    # assemble data rows
+    for row in datarows
+        data = isempty(data) ? row : hcat(data, row)
+    end
+    =#
+
+    # print data table on file
+    open(reportname, "w") do out
+        redirect_stdout(out) do
+            println("Metadata")
+            println("Selected target class id: $(targetclass)")
+            println("Selected target class name: $(classnames[targetclass])")
+
+            println("Legend")
+            println("◐: mean of global confidences, excluding current target class")
+
+            pretty_table(
+                data |> permutedims;
+                header=header,
+                linebreaks=true,
+                # the number of horizontal separators is equal to rows after `permutedims`
+                body_hlines=collect(1:(data |> size |> last))
+            )
+        end
+    end
 end
 
 ############################################################################################
@@ -375,92 +582,12 @@ _4_miner = runexperiment(
 #
 ############################################################################################
 
-function runcomparison(
-    miner::Miner,
-    logisets::Vector{L},
-    confidencebouncer::Function,
-    suppthreshold::Float64;
-    reportname::String = "comparison-report.exp",
-    classnames::Vector{String} = CLASS_NAMES
-) where {L<:SoleData.AbstractLogiset}
-    @assert length(logisets) == length(classnames) "Given number of logisets and " *
-        "variable names mismatch: length(logisets) = $(length(logisets)), while " *
-        "length(classnames) = $(length(classnames))."
-
-    @assert info(miner, :istrained) "Provided miner did not perform mine and is thus empty"
-
-    reportname = RESULTS_PATH * reportname
-
-    open(reportname, "w") do out
-        redirect_stdout(out) do
-            # class names are printed in header row
-            for name in classnames
-                print("$(name)\t\t")
-            end
-            println("")
-
-            # for each rule accepted by `confidencebouncer`
-            for rule in filter(x ->
-                confidencebouncer(globalmemo(miner, (:gconfidence, x))), arules(miner))
-                # consider each class, compute the meaningfulness measures and print them
-                for logiset in logisets
-                    _antecedent, _consequent = antecedent(rule), consequent(rule)
-                    _union = union(_antecedent, _consequent)
-
-            # confidence
-            _conf = round(
-                gconfidence(rule, logiset, suppthreshold), sigdigits=sigdigits)
-            # antecedent global support
-            _asupp = round(
-                gsupport(_antecedent, logiset, suppthreshold), sigdigits=sigdigits)
-            # consequent global support
-            _csupp = round(
-                gsupport(_consequent, logiset, suppthreshold), sigdigits=sigdigits)
-            # whole-rule global support
-            _usupp = round(
-                gsupport(_union, logiset, suppthreshold), sigdigits=sigdigits)
-
-            # new cell is added to the right of current row
-            _cellstring = "confidence: $(_conf)\nantecedent support: $(_asupp)\n" *
-                "consequent support: $(_csupp)\nunion support: $(_usupp)"
-
-            # uncomment to print measures in one line instead of in one paragraph
-            # push!(_data, [_conf, _asupp, _csupp, _usupp])
-            push!(_data, _cellstring)
-        end
-
-        # now, assemble a new row
-        data = isempty(data) ? _data : hcat(data, _data)
-    end
-
-    # print data table on file
-    open(reportname, "w") do out
-        redirect_stdout(out) do
-            pretty_table(
-                data |> permutedims;
-                header=header,
-                linebreaks=true,
-                body_hlines=collect(1:(data |> size |> first))
-            )
-        end
-    end
-
-end
-
 runcomparison(
     _1_miner,
     LOGISETS,
-    (conf) -> conf >= 0.3,
-    0.1;
-    reportname="01-comparison.exp"
-)
-
-runcomparison(
-    _4_miner,
-    LOGISETS,
-    (conf) -> conf >= 0.89 && conf <= 0.92;
+    (conf) -> conf >= 0.3;
+    targetclass=1,
     suppthreshold=0.1,
-    sigdigits=2 |> Int8,
     reportname="01-comparison.exp"
 )
 

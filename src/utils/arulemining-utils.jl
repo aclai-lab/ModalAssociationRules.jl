@@ -160,9 +160,14 @@ See also [`ARule`](@ref), [`Miner`](@ref), [`Itemset`](@ref), [`rulemeasures`](@
             currentrule = ARule((_antecedent, _consequent))
 
             # sift pipeline to remove unwanted rules;
-            # this can be customized at Miner-construction time.
-            if !all(sift -> sift(currentrule) == true, powerups(miner, :rulesift))
-                continue
+            # this can be customized at construction time - see Miner constructor kwargs.
+            # NOTE: for some reason, the equivalent expression
+            # `if !all(sift -> sift(currentrule), powerups(miner, :rulesift)) continue end`
+            # does not work, since `currentrule` is not identified from external scope.
+            for sift in powerups(miner, :rulesift)
+                if !sift(currentrule)
+                    continue
+                end
             end
 
             interesting = true
