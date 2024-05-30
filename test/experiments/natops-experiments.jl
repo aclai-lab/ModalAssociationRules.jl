@@ -195,7 +195,8 @@ function runcomparison(
     suppthreshold::Float64,
     sigdigits::Int8=2 |> Int8,
     reportname::String = "comparison-report.exp",
-    classnames::Vector{String} = CLASS_NAMES
+    classnames::Vector{String} = CLASS_NAMES,
+    variablenames::Union{Nothing, Vector{String}} = VARIABLE_NAMES
 ) where {L<:SoleData.AbstractLogiset}
     @assert length(logisets) == length(classnames) "Given number of logisets and " *
         "variable names mismatch: length(logisets) = $(length(logisets)), while " *
@@ -206,8 +207,15 @@ function runcomparison(
     # report filepath preparation
     reportname = RESULTS_PATH * reportname
 
+    MEAN_GCONF_EXCLUDING_TARGETCLASS_STRING = "◐"
+    ONE_MINUS_ENTROPY_STRING = "1 - 𝑆"
+
     # pretty table header row
-    header = vcat("Rule", "◐", classnames)
+    header = vcat("Rule",
+        MEAN_GCONF_EXCLUDING_TARGETCLASS_STRING,
+        ONE_MINUS_ENTROPY_STRING,
+        classnames
+    )
 
     # partial data (numeric) that has to be be manipulated,
     # before being converted to string format.
@@ -222,7 +230,7 @@ function runcomparison(
     # antecedent global support,
     # consequent global support,
     # antecedent and consequent global support.
-    datavals = Tuple{ARule, Float64, Vector{Tuple{Int64, Vector{Float64}}}}[]
+    datavals = Tuple{ARule, Float64, Float64, Vector{Tuple{Int64, Vector{Float64}}}}[]
 
     # final collection taht will be passed to PrettyTables.jl
     data = Any[]
@@ -267,18 +275,43 @@ function runcomparison(
                     _accumulator += measures[1]
                 end
             end
-            round(_accumulator / (length(logisets)-1), sigdigits=sigdigits+1)
+            round(_accumulator / (length(logisets)-1), sigdigits=sigdigits)
+        end
+
+        one_minus_entropy = begin
+            # ith-confidence divided by `confidences_sum`
+            # gives us the probability that must be used in entropy formula.
+            confidences_sum = 0.0
+            for (i, measures) in dataval
+                confidences_sum += measures[1]
+            end
+
+            # compute entropy
+            nofclasses = length(CLASS_NAMES)
+            probabilities = fill(0.0, nofclasses)
+            for (i, measures) in dataval
+                probabilities[i] = measures[1] / confidences_sum
+            end
+
+            round(1 - entropy(probabilities, nofclasses), sigdigits=sigdigits)
         end
 
         # later, after all the insertions, we will sort `datavals` in ascending order
         # by the mean of global confidences;
         # when the mean is low, this means that the associated rule is good to uniquely
         # identify the class `targetclass`.
-        push!(datavals, (rule, mean_gconf_excluding_targetclass, dataval))
+        push!(datavals, (
+                rule,
+                mean_gconf_excluding_targetclass,
+                one_minus_entropy,
+                dataval
+            )
+        )
     end
 
     # `datavals` is ready to be sorted
-    sort!(datavals, by=t -> t[2])
+    sort!(datavals, by=t -> t[2])       # sort by ◐
+    # sort!(datavals, by=t -> t[3])     # sort by entropy
 
     # digest `datavals`, converting useful information into strings and shaping them
     # in order to make a table using PrettyTables.jl
@@ -289,10 +322,18 @@ function runcomparison(
         # val[3] is a vector of pairs; in particular:
         #   val[3] |> first is an integer i, indicating that measures refers to ith-logiset
         #   val[3] |> last is a vector of length 4, containing all the measures
-        row_cellstrings = String[val[1] |> syntaxstring, val[2] |> string]
+        row_cellstrings = String[
+            # rule
+            "$(syntaxstring(val[1] |> antecedent, variablenames_map=variablenames))" *
+            " => $(syntaxstring(val[1] |> consequent, variablenames_map=variablenames))",
+            # mean gconf without considering `targetclass`
+            val[2] |> string,
+            # 1 - entropy
+            val[3] |> string
+        ]
 
         # insert measures
-        for (_, measures) in val[3]
+        for (_, measures) in val[4]
             push!(row_cellstrings, "confidence: $(measures[1])\n"*
                 "antecedent support: $(measures[2])\n" *
                 "consequent support: $(measures[3])\n"*
@@ -316,8 +357,13 @@ function runcomparison(
             println("Selected target class id: $(targetclass)")
             println("Selected target class name: $(classnames[targetclass])")
 
-            println("Legend")
-            println("◐: mean of global confidences, excluding current target class")
+            println("\nLegend")
+            println("$(MEAN_GCONF_EXCLUDING_TARGETCLASS_STRING): " *
+                "mean of global confidences, excluding current target class")
+            println("$(ONE_MINUS_ENTROPY_STRING): purity measure " *
+                "(higher means that target class is more pure)")
+
+            println()
 
             pretty_table(
                 data |> permutedims;
@@ -586,6 +632,7 @@ runcomparison(
     _1_miner,
     LOGISETS,
     (conf) -> conf >= 0.3;
+    sigdigits=3 |> Int8,
     targetclass=1,
     suppthreshold=0.1,
     reportname="01-comparison.exp"
