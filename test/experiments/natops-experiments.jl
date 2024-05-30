@@ -20,6 +20,7 @@ using SoleData
 using StatsBase
 using SoleLogics
 
+using SoleLogics: IA_B, IA_Bi, IA_E, IA_Ei, IA_D, IA_Di, IA_O
 import ModalAssociationRules.children
 
 RESULTS_PATH = "test/experiments/results/"
@@ -88,6 +89,8 @@ LOGISETS = [
         items::Vector{Item},
         itemsetmeasures::Vector{<:MeaningfulnessMeasure},
         rulemeasures::Vector{<:MeaningfulnessMeasure};
+        returnminer::Bool = false,
+        tracktime::Bool = true,
         reportname::String = "experiment-report.exp",
         variablenames::Union{Nothing, Vector{String}} = nothing
     )
@@ -104,6 +107,8 @@ function runexperiment(
 	items::Vector{Item},
 	itemsetmeasures::Vector{<:MeaningfulnessMeasure},
 	rulemeasures::Vector{<:MeaningfulnessMeasure};
+    returnminer::Bool = false,
+    tracktime::Bool = true,
 	reportname::String = "experiment-report.exp",
 	variablenames::Union{Nothing, Vector{String}} = nothing
 )
@@ -113,8 +118,8 @@ function runexperiment(
     _X = deepcopy(X)
 
 	miner = Miner(_X, algorithm, items, itemsetmeasures, rulemeasures)
-	mine!(miner)
-	generaterules!(miner) |> collect
+	miningtime = @elapsed mine!(miner)
+	generationtime = @elapsed collect(generaterules!(miner))
 
 	if isnothing(reportname)
 		reportname = now() |> string
@@ -129,6 +134,13 @@ function runexperiment(
             println(miner.item_constrained_measures)
             println(miner.rule_constrained_measures)
 
+            if tracktime
+                println("Running time:\n")
+                println("Frequent itemsets extraction: $(miningtime)")
+                println("Association rules generation (w. sift engine): $(generationtime)")
+                println("Total elapsed time: $(miningtime + generationtime)")
+            end
+
             println("\nResults:\n")
 			for r in sort(
                 arules(miner), by = x -> miner.gmemo[(:gconfidence, x)], rev=true)
@@ -138,7 +150,8 @@ function runexperiment(
 		end
 	end
 
-    return miner
+    # free RAM if returnminer is unset
+    return (returnminer) ? miner : nothing
 end
 
 """
@@ -211,9 +224,10 @@ function runcomparison(
     rulebouncer::Function;
     targetclass::Int8 = 1 |> Int8,
     suppthreshold::Float64,
-    sortby::Symbol=:confmean,
-    sigdigits::Int8=2 |> Int8,
+    sortby::Symbol = :confmean,
+    sigdigits::Int8 = 2 |> Int8,
     reportname::String = "comparison-report.exp",
+    tracktime::Bool = true,
     classnames::Vector{String} = CLASS_NAMES,
     variablenames::Union{Nothing, Vector{String}} = VARIABLE_NAMES
 ) where {L<:SoleData.AbstractLogiset}
@@ -253,6 +267,11 @@ function runcomparison(
 
     # final collection taht will be passed to PrettyTables.jl
     data = Any[]
+
+    elapsedtime = "Not tracked"
+    if tracktime
+        elapsedtime = time()
+    end
 
     # for each rule accepted by `rulebouncer`
     for rule in filter(
@@ -371,6 +390,7 @@ function runcomparison(
             println("Metadata")
             println("Selected target class id: $(targetclass)")
             println("Selected target class name: $(classnames[targetclass])")
+            println("Elapsed time to perform comparisons: $(time() - elapsedtime)")
 
             println("\nLegend")
             println("$(MEAN_GCONF_EXCLUDING_TARGETCLASS_STRING): " *
@@ -418,7 +438,9 @@ plot(
 ############################################################################################
 # Experiment #1
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
 # Right hand tips without temporal relations.
+#
 # V4, V5, V6 - right hand tip
 # V4:   X, the hand is below, then in front, then up (slightly below the head);
 #       then the movement is reversed.
@@ -519,6 +541,7 @@ _2_miner = runexperiment(
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 # Right hand tips with during temporal relation.
+#
 # V4, V5, V6 - right hand tip.
 # V10, V11, V12 - right elbow.
 #
@@ -569,6 +592,7 @@ _3_miner = runexperiment(
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 # Wrists in "Spread wings" class, using during, ends-with and overlap relations.
+#
 # V13, V14, V15 - left wrist.
 # V16, V17, V18 - right wrist.
 #
@@ -629,37 +653,82 @@ _4_miner = runexperiment(
 # Experiment #5
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
-# Wrists in "Spread wings" class, using during, ends-with and overlap relations.
-# V13, V14, V15 - left wrist.
-# V16, V17, V18 - right wrist.
+# Right hand tips with B, E, D, O relations (and inverses).
+#
+# V4, V5, V6 - right hand tip
+# V4:   X, the hand is below, then in front, then up (slightly below the head);
+#       then the movement is reversed.
+# V5:   Y, not affected; operator is not waving the hand.
+# V6:   Z, tip is going up in the first phase, then goes down.
 #
 #=
-plot(collect(X_df_4_spread_wings[1,13:15]),
-    labels=["x" "y" "z"], title="Spread wings - left wrist")
-
-plot(collect(X_df_4_spread_wings[1,16:18]),
-    labels=["x" "y" "z"], title="Spread wings - right wrist")
+plot(collect(X_df_1_have_command[1,4:6]),
+    labels=["x" "y" "z"], title="I have command - right hand tips")
 =#
 ############################################################################################
 
-_1_right_hand_tip_X_items = [
+_5_right_hand_tip_X_items = [
     Atom(ScalarCondition(UnivariateMin(4), >=, 1))
     Atom(ScalarCondition(UnivariateMax(4), <=, 1))
     Atom(ScalarCondition(UnivariateMin(4), >=, 1.8))
     Atom(ScalarCondition(UnivariateMax(4), <=, 1.8))
 ]
 
-_1_right_hand_tip_Y_items = [
+_5_right_hand_tip_Y_items = [
     Atom(ScalarCondition(UnivariateMin(5), >=, -0.5))
     Atom(ScalarCondition(UnivariateMax(5), <=, -0.5))
 ]
 
-_1_right_hand_tip_Z_items = [
+_5_right_hand_tip_Z_items = [
     Atom(ScalarCondition(UnivariateMax(6), >=, 0))
     Atom(ScalarCondition(UnivariateMin(6), <=, 0))
     Atom(ScalarCondition(UnivariateMin(6), <=, 1))
     Atom(ScalarCondition(UnivariateMax(6), >=, 1))
 ]
+
+_5_propositional_items = vcat(
+    _5_right_hand_tip_X_items,
+    _5_right_hand_tip_Y_items,
+    _5_right_hand_tip_Z_items
+)
+
+_5_items = vcat(
+    _5_propositional_items,
+    box(IA_B).(_5_propositional_items),
+    diamond(IA_Bi).(_5_propositional_items),
+
+    box(IA_E).(_5_propositional_items),
+    diamond(IA_Ei).(_5_propositional_items),
+
+    box(IA_D).(_5_propositional_items),
+    diamond(IA_Di).(_5_propositional_items),
+
+    diamond(IA_O).(_5_propositional_items),
+) |> Vector{Formula}
+
+_5_itemsetmeasures = [(gsupport, 0.2, 0.1)]
+_5_rulemeasures = [(gconfidence, 0.2, 0.1)]
+
+_5_miner = runexperiment(
+	X_1_have_command,
+	fpgrowth,
+	_5_items,
+	_5_itemsetmeasures,
+	_5_rulemeasures;
+    returnminer = true,
+	reportname = "tc-1-have-command-rhand-BEDO.exp",
+	variablenames = VARIABLE_NAMES,
+)
+
+runcomparison(
+    _5_miner,
+    LOGISETS,
+    (conf) -> conf >= 0.3;
+    sigdigits=3 |> Int8,
+    targetclass=1,
+    suppthreshold=0.1,
+    reportname="tc-1-have-command-rhand-BEDO-comparison.exp"
+)
 
 ############################################################################################
 # Experiment #6
@@ -685,6 +754,11 @@ _1_right_hand_tip_Z_items = [
 # See also `runcomparison` documentation.
 ############################################################################################
 
+# The following visualizations are momentarily commented out, since to run them
+# you must assert the miners associated exists, that is, `runexperiment` was invoked
+# getting them as parameter.
+
+#=
 runcomparison(
     _1_miner,
     LOGISETS,
@@ -703,7 +777,7 @@ runcomparison(
     sigdigits=2 |> Int8,
     reportname="04-comparison.exp"
 )
-
+=#
 
 ############################################################################################
 # Useful plots
