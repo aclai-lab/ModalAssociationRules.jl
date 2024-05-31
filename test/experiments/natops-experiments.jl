@@ -725,7 +725,7 @@ runcomparison(
     LOGISETS,
     (conf) -> conf >= 0.3;
     sigdigits=3 |> Int8,
-    targetclass=1,
+    targetclass=1 |> Int8,
     suppthreshold=0.1,
     reportname="tc-1-have-command-rhand-BEDO-comparison.exp"
 )
