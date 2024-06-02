@@ -876,13 +876,17 @@ end
 # Experiment #8
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
-# Left and right hand tips with D, O relations (and inverses).
+# Right hand tips and elbows with D, O relations in "Lock wings" class.
 #
 #=
-plot(collect(X_df_1_have_command[1,1:3]),
-    labels=["x" "y" "z"], title="I have command - right hand tips") # left hand plot
-plot(collect(X_df_1_have_command[1,4:6]),
-    labels=["x" "y" "z"], title="I have command - right hand tips") # right hand plot
+plot(collect(X_df_6_lock_wings[1,1:3]),
+    labels=["x" "y" "z"], title="Lock wings - left hand tips") # left hand tips plot
+plot(collect(X_df_6_lock_wings[6,4:6]),
+    labels=["x" "y" "z"], title="Lock wings - right hand tips") # right hand tips plot
+plot(collect(X_df_6_lock_wings[6,7:9]),
+    labels=["x" "y" "z"], title="Lock wings - left elbow") # left elbow plot
+plot(collect(X_df_6_lock_wings[6,10:12]),
+    labels=["x" "y" "z"], title="Lock wings - right elbow") # right elbow plot
 =#
 ############################################################################################
 
@@ -891,25 +895,49 @@ if 8 in EXPERIMENTS_IDS
         Atom(ScalarCondition(UnivariateMin(1), >=, 0))
     ]
     _8_right_hand_tip_X_items = [
-        Atom(ScalarCondition(UnivariateMin(4), >=, 1))
+        Atom(ScalarCondition(UnivariateMin(4), >=, 0.55))
+        Atom(ScalarCondition(UnivariateMax(4), <=, 0.5))
     ]
 
     _8_left_hand_tip_Y_items = [
-        Atom(ScalarCondition(UnivariateMax(2), <=, -1))
-        Atom(ScalarCondition(UnivariateMin(2), <=, -1))
+        Atom(ScalarCondition(UnivariateMin(2), >=, -1.25))
     ]
     _8_right_hand_tip_Y_items = [
-        # not interesting
+        Atom(ScalarCondition(UnivariateMin(5), >=, -0.25))
     ]
 
     _8_left_hand_tip_Z_items = [
-        Atom(ScalarCondition(UnivariateMin(6), >=, -1))
+        Atom(ScalarCondition(UnivariateMax(3), <=, -1))
     ]
     _8_right_hand_tip_Z_items = [
-        Atom(ScalarCondition(UnivariateMin(6), >=, -1))
+        Atom(ScalarCondition(UnivariateMin(6), >=, -0.5))
+        Atom(ScalarCondition(UnivariateMax(6), >=, -0.9))
+    ]
+
+    _8_left_elbow_X_items = [
+        Atom(ScalarCondition(UnivariateMin(7), >=, 0.6))
+        Atom(ScalarCondition(UnivariateMax(7), <=, 0.6))
+    ]
+    _8_right_elbow_X_items = [
+        Atom(ScalarCondition(UnivariateMin(10), >=, 0.7))
+    ]
+
+    _8_left_elbow_Y_items = [
+        Atom(ScalarCondition(UnivariateMin(8), >=, 0))
+    ]
+    _8_right_elbow_Y_items = [
+        Atom(ScalarCondition(UnivariateMin(11), >=, -0.5))
+    ]
+
+    _8_left_elbow_Z_items = [
+        Atom(ScalarCondition(UnivariateMax(9), <=, -0.25))
+    ]
+    _8_right_elbow_Z_items = [
+        Atom(ScalarCondition(UnivariateMax(12), >=, -0.4))
     ]
 
     _8_propositional_items = vcat(
+        # hands
         _8_left_hand_tip_X_items,
         _8_right_hand_tip_X_items,
 
@@ -917,7 +945,17 @@ if 8 in EXPERIMENTS_IDS
         _8_right_hand_tip_Y_items,
 
         _8_left_hand_tip_Z_items,
-        _8_right_hand_tip_Z_items
+        _8_right_hand_tip_Z_items,
+
+        # elbows
+        _8_left_elbow_X_items,
+        _8_right_elbow_X_items,
+
+        _8_left_elbow_Y_items,
+        _8_right_elbow_Y_items,
+
+        _8_left_elbow_Z_items,
+        _8_right_elbow_Z_items
     )
 
     _8_items = vcat(
@@ -936,7 +974,7 @@ if 8 in EXPERIMENTS_IDS
         _8_itemsetmeasures,
         _8_rulemeasures;
         returnminer = true,
-        reportname = "tc-6-lock-wings-lhand-rhand-DO.exp",
+        reportname = "tc-6-lock-wings-hands-elbows-DO.exp",
         variablenames = VARIABLE_NAMES,
     )
 
@@ -947,7 +985,46 @@ if 8 in EXPERIMENTS_IDS
         sigdigits=3 |> Int8,
         targetclass=6 |> Int8,
         suppthreshold=0.1,
-        reportname="tc-6-lock-wings-lhand-rhand-DO-comparison.exp"
+        reportname="tc-6-lock-wings-hands-elbows-DO-comparison.exp"
+    )
+end
+
+
+############################################################################################
+# Experiment #9
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
+# Lighter version of Experiment #8, using only during relation.
+############################################################################################
+
+if 9 in EXPERIMENTS_IDS
+    _8_items = vcat(
+        _8_propositional_items,
+        box(IA_D).(_8_propositional_items),
+    ) |> Vector{Formula}
+
+    _8_itemsetmeasures = [(gsupport, 0.2, 0.1)]
+    _8_rulemeasures = [(gconfidence, 0.2, 0.1)]
+
+    _8_miner = runexperiment(
+        X_6_lock_wings,
+        fpgrowth,
+        _8_items,
+        _8_itemsetmeasures,
+        _8_rulemeasures;
+        returnminer = true,
+        reportname = "tc-6-lock-wings-hands-elbows-D.exp",
+        variablenames = VARIABLE_NAMES,
+    )
+
+    runcomparison(
+        _8_miner,
+        LOGISETS,
+        (conf) -> conf >= 0.2;
+        sigdigits=3 |> Int8,
+        targetclass=6 |> Int8,
+        suppthreshold=0.1,
+        reportname="tc-6-lock-wings-hands-elbows-D-comparison.exp"
     )
 end
 
