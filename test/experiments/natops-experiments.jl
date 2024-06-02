@@ -84,7 +84,7 @@ LOGISETS = [
 
 # Each experiment is identified by an ID;
 # put here the ids of the experiments you want to run.
-EXPERIMENTS_IDS = [6]
+EXPERIMENTS_IDS = [8]
 
 """
     function runexperiment(
@@ -869,6 +869,86 @@ if 7 in EXPERIMENTS_IDS
         @warn "Requirements not satisfied for Experiment #7: Undefined miners.\n" *
             "Experiments will proceed skipping this."
     end
+end
+
+
+############################################################################################
+# Experiment #8
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
+# Left and right hand tips with D, O relations (and inverses).
+#
+#=
+plot(collect(X_df_1_have_command[1,1:3]),
+    labels=["x" "y" "z"], title="I have command - right hand tips") # left hand plot
+plot(collect(X_df_1_have_command[1,4:6]),
+    labels=["x" "y" "z"], title="I have command - right hand tips") # right hand plot
+=#
+############################################################################################
+
+if 8 in EXPERIMENTS_IDS
+    _8_left_hand_tip_X_items = [
+        Atom(ScalarCondition(UnivariateMin(1), >=, 0))
+    ]
+    _8_right_hand_tip_X_items = [
+        Atom(ScalarCondition(UnivariateMin(4), >=, 1))
+    ]
+
+    _8_left_hand_tip_Y_items = [
+        Atom(ScalarCondition(UnivariateMax(2), <=, -1))
+        Atom(ScalarCondition(UnivariateMin(2), <=, -1))
+    ]
+    _8_right_hand_tip_Y_items = [
+        # not interesting
+    ]
+
+    _8_left_hand_tip_Z_items = [
+        Atom(ScalarCondition(UnivariateMin(6), >=, -1))
+    ]
+    _8_right_hand_tip_Z_items = [
+        Atom(ScalarCondition(UnivariateMin(6), >=, -1))
+    ]
+
+    _8_propositional_items = vcat(
+        _8_left_hand_tip_X_items,
+        _8_right_hand_tip_X_items,
+
+        _8_left_hand_tip_Y_items,
+        _8_right_hand_tip_Y_items,
+
+        _8_left_hand_tip_Z_items,
+        _8_right_hand_tip_Z_items
+    )
+
+    _8_items = vcat(
+        _8_propositional_items,
+        box(IA_B).(_8_propositional_items),
+        box(IA_D).(_8_propositional_items),
+    ) |> Vector{Formula}
+
+    _8_itemsetmeasures = [(gsupport, 0.2, 0.1)]
+    _8_rulemeasures = [(gconfidence, 0.2, 0.1)]
+
+    _8_miner = runexperiment(
+        X_6_lock_wings,
+        fpgrowth,
+        _8_items,
+        _8_itemsetmeasures,
+        _8_rulemeasures;
+        returnminer = true,
+        reportname = "tc-6-lock-wings-lhand-rhand-DO.exp",
+        variablenames = VARIABLE_NAMES,
+    )
+
+    runcomparison(
+        _8_miner,
+        LOGISETS,
+        (conf) -> conf >= 0.2;
+        sigdigits=3 |> Int8,
+        targetclass=6 |> Int8,
+        suppthreshold=0.1,
+        reportname="tc-6-lock-wings-lhand-rhand-DO-comparison.exp"
+    )
 end
 
 ############################################################################################
