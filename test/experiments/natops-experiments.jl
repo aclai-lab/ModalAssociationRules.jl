@@ -845,28 +845,30 @@ end
 # See also `runcomparison` documentation.
 ############################################################################################
 
-if 7 in EXPERIMENTS_IDS && !isnothing(_1_miner) && !isnothing(_4_miner)
-    runcomparison(
-        _1_miner,
-        LOGISETS,
-        (conf) -> conf >= 0.3;
-        sigdigits=3 |> Int8,
-        targetclass=1,
-        suppthreshold=0.1,
-        reportname="01-comparison.exp"
-    )
+if 7 in EXPERIMENTS_IDS
+    if !isnothing(_1_miner) && !isnothing(_4_miner)
+        runcomparison(
+            _1_miner,
+            LOGISETS,
+            (conf) -> conf >= 0.3;
+            sigdigits=3 |> Int8,
+            targetclass=1,
+            suppthreshold=0.1,
+            reportname="01-comparison.exp"
+        )
 
-    runcomparison(
-        _4_miner,
-        LOGISETS,
-        (conf) -> conf >= 0.89 && conf <= 0.92;
-        suppthreshold=0.1,
-        sigdigits=2 |> Int8,
-        reportname="04-comparison.exp"
-    )
-else
-    @warn "Requirements not satisfied for Experiment #7: Undefined miners.\n" *
-        "Experiments will proceed skipping this."
+        runcomparison(
+            _4_miner,
+            LOGISETS,
+            (conf) -> conf >= 0.89 && conf <= 0.92;
+            suppthreshold=0.1,
+            sigdigits=2 |> Int8,
+            reportname="04-comparison.exp"
+        )
+    else
+        @warn "Requirements not satisfied for Experiment #7: Undefined miners.\n" *
+            "Experiments will proceed skipping this."
+    end
 end
 
 ############################################################################################
