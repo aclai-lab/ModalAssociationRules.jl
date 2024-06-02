@@ -164,10 +164,17 @@ See also [`ARule`](@ref), [`Miner`](@ref), [`Itemset`](@ref), [`rulemeasures`](@
             # NOTE: for some reason, the equivalent expression
             # `if !all(sift -> sift(currentrule), powerups(miner, :rulesift)) continue end`
             # does not work, since `currentrule` is not identified from external scope.
+            sifted = false
             for sift in powerups(miner, :rulesift)
                 if !sift(currentrule)
-                    continue
+                    sifted = true
+                    break
                 end
+            end
+
+            # this rule is unwanted, w.r.t sifting mechanism
+            if sifted
+                continue
             end
 
             interesting = true
