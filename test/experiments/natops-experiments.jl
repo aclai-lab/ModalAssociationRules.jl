@@ -84,7 +84,7 @@ LOGISETS = [
 
 # Each experiment is identified by an ID;
 # put here the ids of the experiments you want to run.
-EXPERIMENTS_IDS = [8]
+EXPERIMENTS_IDS = [1,2,3,4,6,8,9]
 
 """
     function runexperiment(
@@ -504,7 +504,7 @@ if 1 in EXPERIMENTS_IDS
         _1_items,
         _1_itemsetmeasures,
         _1_rulemeasures;
-        reportname = "01-have-command-right-hand-tip-only.exp",
+        reportname = "e01-tc-1-have-command-rhand.exp",
         variablenames = VARIABLE_NAMES,
     )
 end
@@ -539,7 +539,7 @@ if 2 in EXPERIMENTS_IDS
         _2_items,
         _2_itemsetmeasures,
         _2_rulemeasures;
-        reportname = "02-have-command-hand-tip-with-later-relation.exp",
+        reportname = "e02-tc-1-have-command-hand-tip-L.exp",
         variablenames = VARIABLE_NAMES,
     )
 end
@@ -592,7 +592,7 @@ if 3 in EXPERIMENTS_IDS
         _3_items,
         _3_itemsetmeasures,
         _3_rulemeasures;
-        reportname = "03-all-clear-right-hand-and-elbow-during-relation.exp",
+        reportname = "e03-tc-2-all-clear-rhand-elbow-D-relation.exp",
         variablenames = VARIABLE_NAMES,
     )
 end
@@ -656,7 +656,7 @@ if 4 in EXPERIMENTS_IDS
         _4_items,
         _4_itemsetmeasures,
         _4_rulemeasures;
-        reportname = "04-spread-wings-wrists-during-overlap-meet-relations.exp",
+        reportname = "e04-tc-4-spread-wings-wrists-DEO-relations.exp",
         variablenames = VARIABLE_NAMES,
     )
 end
@@ -729,7 +729,7 @@ if 5 in EXPERIMENTS_IDS
         _5_itemsetmeasures,
         _5_rulemeasures;
         returnminer = true,
-        reportname = "tc-1-have-command-rhand-BEDO.exp",
+        reportname = "e05-tc-1-have-command-rhand-BEDO.exp",
         variablenames = VARIABLE_NAMES,
     )
 
@@ -740,7 +740,7 @@ if 5 in EXPERIMENTS_IDS
         sigdigits=3 |> Int8,
         targetclass=1 |> Int8,
         suppthreshold=0.1,
-        reportname="tc-1-have-command-rhand-BEDO-comparison.exp"
+        reportname="e05-tc-1-have-command-rhand-BEDO-comparison.exp"
     )
 end
 
@@ -805,7 +805,7 @@ if 6 in EXPERIMENTS_IDS
         _6_itemsetmeasures,
         _6_rulemeasures;
         returnminer = true,
-        reportname = "tc-1-have-command-rhand-BD.exp",
+        reportname = "e06-tc-1-have-command-rhand-BD.exp",
         variablenames = VARIABLE_NAMES,
     )
 
@@ -816,7 +816,7 @@ if 6 in EXPERIMENTS_IDS
         sigdigits=3 |> Int8,
         targetclass=1 |> Int8,
         suppthreshold=0.1,
-        reportname="tc-1-have-command-rhand-BD-comparison.exp"
+        reportname="e06-tc-1-have-command-rhand-BD-comparison.exp"
     )
 end
 
@@ -854,7 +854,7 @@ if 7 in EXPERIMENTS_IDS
             sigdigits=3 |> Int8,
             targetclass=1,
             suppthreshold=0.1,
-            reportname="01-comparison.exp"
+            reportname="e07-from-exp01-comparison.exp"
         )
 
         runcomparison(
@@ -863,7 +863,7 @@ if 7 in EXPERIMENTS_IDS
             (conf) -> conf >= 0.89 && conf <= 0.92;
             suppthreshold=0.1,
             sigdigits=2 |> Int8,
-            reportname="04-comparison.exp"
+            reportname="e07-from-exp04-comparison.exp"
         )
     else
         @warn "Requirements not satisfied for Experiment #7: Undefined miners.\n" *
@@ -960,7 +960,7 @@ if 8 in EXPERIMENTS_IDS
 
     _8_items = vcat(
         _8_propositional_items,
-        box(IA_B).(_8_propositional_items),
+        diamond(IA_B).(_8_propositional_items),
         box(IA_D).(_8_propositional_items),
     ) |> Vector{Formula}
 
@@ -974,7 +974,7 @@ if 8 in EXPERIMENTS_IDS
         _8_itemsetmeasures,
         _8_rulemeasures;
         returnminer = true,
-        reportname = "tc-6-lock-wings-hands-elbows-DO.exp",
+        reportname = "e08-tc-6-lock-wings-hands-elbows-BD.exp",
         variablenames = VARIABLE_NAMES,
     )
 
@@ -985,7 +985,7 @@ if 8 in EXPERIMENTS_IDS
         sigdigits=3 |> Int8,
         targetclass=6 |> Int8,
         suppthreshold=0.1,
-        reportname="tc-8-lock-wings-hands-elbows-DO-comparison.exp"
+        reportname="e08-tc-6-lock-wings-hands-elbows-BD-comparison.exp"
     )
 end
 
@@ -1067,15 +1067,6 @@ if 9 in EXPERIMENTS_IDS
 
     _9_items = vcat(
         _9_propositional_items,
-        box(IA_B).(_9_propositional_items),
-        box(IA_D).(_9_propositional_items),
-    ) |> Vector{Formula}
-
-    _9_itemsetmeasures = [(gsupport, 0.2, 0.1)]
-    _9_rulemeasures = [(gconfidence, 0.2, 0.1)]
-
-    _9_items = vcat(
-        _9_propositional_items,
         box(IA_D).(_9_propositional_items),
     ) |> Vector{Formula}
 
@@ -1089,7 +1080,7 @@ if 9 in EXPERIMENTS_IDS
         _9_itemsetmeasures,
         _9_rulemeasures;
         returnminer = true,
-        reportname = "tc-9-lock-wings-hands-elbows-D.exp",
+        reportname = "e09-tc-6-lock-wings-hands-elbows-D.exp",
         variablenames = VARIABLE_NAMES,
     )
 
@@ -1100,7 +1091,7 @@ if 9 in EXPERIMENTS_IDS
         sigdigits=3 |> Int8,
         targetclass=6 |> Int8,
         suppthreshold=0.1,
-        reportname="tc-9-lock-wings-hands-elbows-D-comparison.exp"
+        reportname="e09-tc-6-lock-wings-hands-elbows-D-comparison.exp"
     )
 end
 
