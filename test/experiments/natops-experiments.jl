@@ -84,7 +84,7 @@ LOGISETS = [
 
 # Each experiment is identified by an ID;
 # put here the ids of the experiments you want to run.
-EXPERIMENTS_IDS = [1,2,3,4,6,8,9]
+EXPERIMENTS_IDS = [6]
 
 """
     function runexperiment(
@@ -239,7 +239,21 @@ function runcomparison(
         "variable names mismatch: length(logisets) = $(length(logisets)), while " *
         "length(classnames) = $(length(classnames))."
 
-    @assert info(miner, :istrained) "Provided miner did not perform mine and is thus empty"
+    miners = [
+        Miner( # random Miner, its only purpose is to leverage memoization
+            LOGISETS[i],
+            fpgrowth,
+            Item[],
+            [(gsupport, 0.0, 0.0)],
+            [(gconfidence, 0.0, 0.0)]
+        )
+        for i in 1:length(classnames)
+    ]
+    miners[targetclass] = miner
+
+    targetminer = miners[targetclass]
+    @assert info(targetminer, :istrained) "Provided miner did not perform mine " *
+        "and is thus  empty."
 
     # report filepath preparation
     reportname = RESULTS_PATH * reportname
@@ -279,8 +293,8 @@ function runcomparison(
 
     # for each rule accepted by `rulebouncer`
     for rule in filter(
-                _rule -> rulebouncer(globalmemo(miner, (:gconfidence, _rule))),
-                arules(miner)
+                _rule -> rulebouncer(globalmemo(targetminer, (:gconfidence, _rule))),
+                arules(targetminer)
             )
 
         # prepare a data value fragment, that is,
@@ -294,16 +308,24 @@ function runcomparison(
 
             # confidence
             _conf = round(
-                gconfidence(rule, logiset, suppthreshold), sigdigits=sigdigits)
+                gconfidence(rule, logiset, suppthreshold; miner=miners[i]),
+                sigdigits=sigdigits
+            )
             # antecedent global support
             _asupp = round(
-                gsupport(_antecedent, logiset, suppthreshold), sigdigits=sigdigits)
+                gsupport(_antecedent, logiset, suppthreshold; miner=miners[i]),
+                sigdigits=sigdigits
+            )
             # consequent global support
             _csupp = round(
-                gsupport(_consequent, logiset, suppthreshold), sigdigits=sigdigits)
+                gsupport(_consequent, logiset, suppthreshold; miner=miners[i]),
+                sigdigits=sigdigits
+            )
             # whole-rule global support
             _usupp = round(
-                gsupport(_union, logiset, suppthreshold), sigdigits=sigdigits)
+                gsupport(_union, logiset, suppthreshold; miner=miners[i]),
+                sigdigits=sigdigits
+            )
 
             push!(dataval, (i, [_conf, _asupp, _csupp, _usupp]))
         end

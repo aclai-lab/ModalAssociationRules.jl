@@ -12,15 +12,15 @@ Critical:
     ✔ 01-right-hand-tip-only-apriori.exp, 01-right-hand-tip-only.exp, 02-right-hand-tip-later-apriori.exp, 02-right-hand-tip-only.exp @done(24-05-27 12:18)
       # check if measures in (max[Z[Hand tip r]] ≥ 0) => (min[Y[Hand tip r]] ≥ -0.5) are always the same
       # see at the end of the file
-  ☐ fpgrowth.jl refactoring
+  ✔ fpgrowth.jl refactoring @done(24-06-03 23:52)
     ✔ remove unecessary powerups @done(24-04-28 18:48)
-    ☐ recursion base case is too cumbersome
-    ☐ remove `fpgrowth_fragments` support structure and clean deprecated code in the section at the end of fpgrowth function (where global supports are computed)
+    ✔ recursion base case is too cumbersome @done(24-06-03 23:52)
+    ✔ remove `fpgrowth_fragments` support structure and clean deprecated code in the section at the end of fpgrowth function (where global supports are computed) @done(24-06-03 23:52)
   ✔ more tests, better organized @done(24-04-29 12:34)
     ✔ redundant mining with apriori-based miner removed - tests are too slow @done(24-04-29 12:34)
   ✔ leverage Itemset and ARule hashing to avoid missing entries in dictionary (e.g., itemsets given with different item sorting must have same hash) @done(24-05-06 15:40)
   ✔ implement a smarter method for arules generation @done(24-05-16 09:40)
-  ☐ consider high gsupport and gconfidence. consider O,B,E,D (+ inverses). Extract arules from one class, then model-check them with other class.
+  ✔ consider high gsupport and gconfidence. consider O,B,E,D (+ inverses). Extract arules from one class, then model-check them with other class. @done(24-06-03 23:52)
   #= obtain the following matrix
                         tested on:          
   rule extracted from:  
@@ -73,6 +73,7 @@ Main:
   ☐ user custom meaningfulness measures should be checked too
   ☐ parallelize apriori and fpgrowth
   ☐ write a loader for NATOPS, in order to execute experiments also if timeseriesclassification.com is offline
+  ☐ @assert in Miner (when miner is used to compute a meaningfulness measure about some item it does not know)
 
 Generic:
   ✔ move memoization accountability to Miner @done(24-02-07 23:58)
