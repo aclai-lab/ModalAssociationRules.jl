@@ -84,7 +84,7 @@ LOGISETS = [
 
 # Each experiment is identified by an ID;
 # put here the ids of the experiments you want to run.
-EXPERIMENTS_IDS = [10]
+EXPERIMENTS_IDS = [1,2,3,4,5,6,7,8,9,10]
 
 """
     function runexperiment(
@@ -136,7 +136,7 @@ function runexperiment(
             # a MethodError here (maybe this is caused by stdout redirection?).
             println("Parameterization:\n")
             map(item -> println(
-                syntaxstring(item, variable_names_map=VARIABLE_NAMES)) , _5_items)
+                syntaxstring(item, variable_names_map=VARIABLE_NAMES)) , items)
             println(miner.item_constrained_measures)
             println(miner.rule_constrained_measures)
 
