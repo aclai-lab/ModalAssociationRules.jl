@@ -84,7 +84,7 @@ LOGISETS = [
 
 # Each experiment is identified by an ID;
 # put here the ids of the experiments you want to run.
-EXPERIMENTS_IDS = [6]
+EXPERIMENTS_IDS = [10]
 
 """
     function runexperiment(
@@ -135,11 +135,13 @@ function runexperiment(
             # For some reason, `itemsetmeasures` and `rulemeasures` getters triggers
             # a MethodError here (maybe this is caused by stdout redirection?).
             println("Parameterization:\n")
+            map(item -> println(
+                syntaxstring(item, variable_names_map=VARIABLE_NAMES)) , _5_items)
             println(miner.item_constrained_measures)
             println(miner.rule_constrained_measures)
 
             if tracktime
-                println("Running time:\n")
+                println("\nRunning time:\n")
                 println("Frequent itemsets extraction: $(miningtime)")
                 println("Association rules generation (w. sift engine): $(generationtime)")
                 println("Total elapsed time: $(miningtime + generationtime)")
@@ -391,8 +393,8 @@ function runcomparison(
         #   val[3] |> last is a vector of length 4, containing all the measures
         row_cellstrings = String[
             # rule
-            "$(syntaxstring(val[1] |> antecedent, variablenames_map=variablenames))" *
-            " => $(syntaxstring(val[1] |> consequent, variablenames_map=variablenames))",
+            "$(syntaxstring(val[1] |> antecedent, variable_names_map=variablenames))" *
+            " => $(syntaxstring(val[1] |> consequent, variable_names_map=variablenames))",
             # mean gconf without considering `targetclass`
             val[2] |> string,
             # 1 - entropy
@@ -687,7 +689,7 @@ end
 # Experiment #5
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
-# Right hand tips with B, E, D, O relations (and inverses).
+# Right hand tips with B, E, D, O relations (and inverses) in I have command.
 #
 # V4, V5, V6 - right hand tip
 # V4:   X, the hand is below, then in front, then up (slightly below the head);
@@ -704,21 +706,21 @@ plot(collect(X_df_1_have_command[1,4:6]),
 if 5 in EXPERIMENTS_IDS
     _5_right_hand_tip_X_items = [
         Atom(ScalarCondition(UnivariateMin(4), >=, 1))
-        Atom(ScalarCondition(UnivariateMax(4), <=, 1))
+        # Atom(ScalarCondition(UnivariateMax(4), <=, 1))
         Atom(ScalarCondition(UnivariateMin(4), >=, 1.8))
-        Atom(ScalarCondition(UnivariateMax(4), <=, 1.8))
+        # Atom(ScalarCondition(UnivariateMax(4), <=, 1.8))
     ]
 
     _5_right_hand_tip_Y_items = [
         Atom(ScalarCondition(UnivariateMin(5), >=, -0.5))
-        Atom(ScalarCondition(UnivariateMax(5), <=, -0.5))
+        # Atom(ScalarCondition(UnivariateMax(5), <=, -0.5))
     ]
 
     _5_right_hand_tip_Z_items = [
-        Atom(ScalarCondition(UnivariateMax(6), >=, 0))
-        Atom(ScalarCondition(UnivariateMin(6), <=, 0))
-        Atom(ScalarCondition(UnivariateMin(6), <=, 1))
-        Atom(ScalarCondition(UnivariateMax(6), >=, 1))
+        Atom(ScalarCondition(UnivariateMin(6), >=, 0))
+        # Atom(ScalarCondition(UnivariateMax(6), <=, 0))
+        Atom(ScalarCondition(UnivariateMin(6), >=, 1))
+        # Atom(ScalarCondition(UnivariateMax(6), <=, 1))
     ]
 
     _5_propositional_items = vcat(
@@ -730,13 +732,13 @@ if 5 in EXPERIMENTS_IDS
     _5_items = vcat(
         _5_propositional_items,
         box(IA_B).(_5_propositional_items),
-        diamond(IA_Bi).(_5_propositional_items),
+        # diamond(IA_Bi).(_5_propositional_items),
 
-        box(IA_E).(_5_propositional_items),
-        diamond(IA_Ei).(_5_propositional_items),
+        diamond(IA_E).(_5_propositional_items),
+        # diamond(IA_Ei).(_5_propositional_items),
 
         box(IA_D).(_5_propositional_items),
-        diamond(IA_Di).(_5_propositional_items),
+        # diamond(IA_Di).(_5_propositional_items),
 
         diamond(IA_O).(_5_propositional_items),
     ) |> Vector{Formula}
@@ -758,7 +760,7 @@ if 5 in EXPERIMENTS_IDS
     runcomparison(
         _5_miner,
         LOGISETS,
-        (conf) -> conf >= 0.2;
+        (conf) -> conf >= 0.6;
         sigdigits=3 |> Int8,
         targetclass=1 |> Int8,
         suppthreshold=0.1,
@@ -834,7 +836,7 @@ if 6 in EXPERIMENTS_IDS
     runcomparison(
         _6_miner,
         LOGISETS,
-        (conf) -> conf >= 0.2;
+        (conf) -> conf >= 0.6;
         sigdigits=3 |> Int8,
         targetclass=1 |> Int8,
         suppthreshold=0.1,
@@ -1003,7 +1005,7 @@ if 8 in EXPERIMENTS_IDS
     runcomparison(
         _8_miner,
         LOGISETS,
-        (conf) -> conf >= 0.2;
+        (conf) -> conf >= 0.6;
         sigdigits=3 |> Int8,
         targetclass=6 |> Int8,
         suppthreshold=0.1,
@@ -1109,11 +1111,100 @@ if 9 in EXPERIMENTS_IDS
     runcomparison(
         _9_miner,
         LOGISETS,
-        (conf) -> conf >= 0.2;
+        (conf) -> conf >= 0.6;
         sigdigits=3 |> Int8,
         targetclass=6 |> Int8,
         suppthreshold=0.1,
         reportname="e09-tc-6-lock-wings-hands-elbows-D-comparison.exp"
+    )
+end
+
+
+############################################################################################
+# Experiment #10
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
+# Right hand tips and elbow with B, E, D, O relations (and inverses) in All clear.
+#
+#=
+plot(collect(X_df_1_have_command[30,4:6]),
+    labels=["x" "y" "z"], title="All clear - right hand tips")
+
+plot(collect(X_df_1_have_command[30,16:18]),
+    labels=["x" "y" "z"], title="All clear - right elbow")
+=#
+############################################################################################
+
+if 10 in EXPERIMENTS_IDS
+    _10_right_hand_tip_X_items = [
+        Atom(ScalarCondition(UnivariateMin(4), >=, 1))
+    ]
+
+    _10_right_hand_tip_Y_items = [
+        Atom(ScalarCondition(UnivariateMin(5), >=, 1))
+    ]
+
+    _10_right_hand_tip_Z_items = [
+        Atom(ScalarCondition(UnivariateMin(6), >=, 0.25))
+    ]
+
+    _10_right_elbow_X_items = [
+        Atom(ScalarCondition(UnivariateMin(16), >=, 0.7))
+    ]
+
+    _10_right_elbow_Y_items = [
+        Atom(ScalarCondition(UnivariateMin(17), >=, -0.75))
+    ]
+
+    _10_right_elbow_Z_items = [
+        Atom(ScalarCondition(UnivariateMin(18), >=, 0.3))
+    ]
+
+    _10_propositional_items = vcat(
+        _10_right_hand_tip_X_items,
+        _10_right_hand_tip_Y_items,
+        _10_right_hand_tip_Z_items,
+        _10_right_elbow_X_items,
+        _10_right_elbow_Y_items,
+        _10_right_elbow_Z_items
+    )
+
+    _10_items = vcat(
+        _10_propositional_items,
+        # box(IA_B).(_10_propositional_items),
+        diamond(IA_Bi).(_10_propositional_items),
+
+        diamond(IA_E).(_10_propositional_items),
+        # diamond(IA_Ei).(_10_propositional_items),
+
+        box(IA_D).(_10_propositional_items),
+        # diamond(IA_Di).(_10_propositional_items),
+
+        diamond(IA_O).(_10_propositional_items),
+    ) |> Vector{Formula}
+
+    _10_itemsetmeasures = [(gsupport, 0.2, 0.1)]
+    _10_rulemeasures = [(gconfidence, 0.2, 0.1)]
+
+    _10_miner = runexperiment(
+        X_1_have_command,
+        fpgrowth,
+        _10_items,
+        _10_itemsetmeasures,
+        _10_rulemeasures;
+        returnminer = true,
+        reportname = "e10-tc-2-all-clear-rhand-BEDO.exp",
+        variablenames = VARIABLE_NAMES,
+    )
+
+    runcomparison(
+        _10_miner,
+        LOGISETS,
+        (conf) -> conf >= 0.6;
+        sigdigits=3 |> Int8,
+        targetclass=1 |> Int8,
+        suppthreshold=0.1,
+        reportname="e10-tc-2-all-clear-rhand-BEDO-comparison.exp"
     )
 end
 
