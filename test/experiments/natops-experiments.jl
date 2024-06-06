@@ -906,7 +906,7 @@ end
 # Experiment #8
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
-# left and right hand tips and elbows with D, O relations in "Lock wings" class.
+# left and right hand tips and elbows with O relation in "Lock wings" class.
 #
 #=
 plot(collect(X_df_6_lock_wings[1,1:3]),
@@ -937,7 +937,8 @@ if 8 in EXPERIMENTS_IDS
         Atom(ScalarCondition(UnivariateMin(2), >=, -1.0))
     ]
     _8_right_hand_tip_Y_items = [
-        Atom(ScalarCondition(UnivariateMin(5), >=, -0.5))
+        Atom(ScalarCondition(UnivariateMin(5), >=, 0.2))
+        Atom(ScalarCondition(UnivariateMin(5), >=, 0.5))
     ]
 
     _8_left_hand_tip_Z_items = [
@@ -971,20 +972,20 @@ if 8 in EXPERIMENTS_IDS
 
     _8_propositional_items = vcat(
         # hands
-        _8_left_hand_tip_X_items,
-        _8_right_hand_tip_X_items,
+        # _8_left_hand_tip_X_items,
+        # _8_right_hand_tip_X_items,
 
         _8_left_hand_tip_Y_items,
         _8_right_hand_tip_Y_items,
 
         _8_left_hand_tip_Z_items,
-        _8_right_hand_tip_Z_items,
+        # _8_right_hand_tip_Z_items,
 
         # elbows
-        _8_left_elbow_X_items,
+        # _8_left_elbow_X_items,
         _8_right_elbow_X_items,
 
-        _8_left_elbow_Y_items,
+        # _8_left_elbow_Y_items,
         _8_right_elbow_Y_items,
 
         _8_left_elbow_Z_items,
@@ -993,12 +994,12 @@ if 8 in EXPERIMENTS_IDS
 
     _8_items = vcat(
         _8_propositional_items,
-        diamond(IA_B).(_8_propositional_items),
-        box(IA_D).(_8_propositional_items),
+        # diamond(IA_B).(_8_propositional_items),
+        diamond(IA_O).(_8_propositional_items),
     ) |> Vector{Formula}
 
     _8_itemsetmeasures = [(gsupport, 0.2, 0.2)]
-    _8_rulemeasures = [(gconfidence, 0.3, 0.3)]
+    _8_rulemeasures = [(gconfidence, 0.1, 0.1)]
 
     _8_miner = runexperiment(
         X_6_lock_wings,
@@ -1218,18 +1219,85 @@ end
 # Experiment #11
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
-# Right hand tips and thumb in All clear
+# Right hand tips and thumb in Not clear
 #
 #=
 plot(collect(X_df_2_all_clear[30,4:6]),
-    labels=["x" "y" "z"], title="All clear - right hand tips")
-plot(collect(X_df_2_all_clear[30,22:24]),
-    labels=["x" "y" "z"], title="All clear - right hand thumb")
-
-plot(collect(X_df_2_all_clear[30,19:24]),
-    labels=["x" "y" "z"], title="All clear - all variables")
+    labels=["x" "y" "z"], title="Not clear - right hand tips")
+plot(collect(X_df_2_all_clear[30,19:21]),
+    labels=["x" "y" "z"], title="Not clear - right hand thumb")
 =#
 ############################################################################################
+_11_right_hand_tip_X_items = [
+    Atom(ScalarCondition(UnivariateMin(4), >=, 1.1))
+]
+
+_11_right_hand_tip_Y_items = [
+    Atom(ScalarCondition(UnivariateMin(5), >=, -1.2))
+]
+
+_11_right_hand_tip_Z_items = [
+    Atom(ScalarCondition(UnivariateMin(6), >=, -0.0))
+]
+
+_11_right_thumb_X_items = [
+    Atom(ScalarCondition(UnivariateMin(22), >=, 1))
+]
+
+_11_right_thumb_Y_items = [
+    Atom(ScalarCondition(UnivariateMin(23), >=, -1))
+]
+
+_11_right_thumb_Z_items = [
+    Atom(ScalarCondition(UnivariateMin(24), >=, 0.0))
+]
+
+_11_propositional_items = vcat(
+    _11_right_hand_tip_X_items,
+    _11_right_hand_tip_Y_items,
+    _11_right_hand_tip_Z_items,
+    _11_right_thumb_X_items,
+    _11_right_thumb_Y_items,
+    _11_right_thumb_Z_items
+)
+
+_11_items = vcat(
+    _11_propositional_items,
+    diamond(IA_B).(_11_propositional_items),
+    # diamond(IA_Bi).(_11_propositional_items),
+
+    box(IA_E).(_11_propositional_items),
+    # diamond(IA_Ei).(_11_propositional_items),
+
+    diamond(IA_D).(_11_propositional_items),
+    # diamond(IA_Di).(_11_propositional_items),
+
+    box(IA_O).(_11_propositional_items),
+) |> Vector{Formula}
+
+_11_itemsetmeasures = [(gsupport, 0.2, 0.15)]
+_11_rulemeasures = [(gconfidence, 0.2, 0.2)]
+
+_11_miner = runexperiment(
+    X_3_not_clear,
+    fpgrowth,
+    _11_items,
+    _11_itemsetmeasures,
+    _11_rulemeasures;
+    returnminer = true,
+    reportname = "e11-tc-3-not-clear-rhand-rthumb-BEDO.exp",
+    variablenames = VARIABLE_NAMES,
+)
+
+runcomparison(
+    _11_miner,
+    LOGISETS,
+    (conf) -> conf >= 0.6;
+    sigdigits=3 |> Int8,
+    targetclass=3 |> Int8,
+    suppthreshold=0.1,
+    reportname="e11-tc-3-not-clear-rhand-rthumb-BEDO-comparison.exp"
+)
 
 ############################################################################################
 # Useful plots
