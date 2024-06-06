@@ -303,8 +303,8 @@ function Base.show(
     _antecedent = arule |> antecedent |> toformula
     _consequent = arule |> consequent |> toformula
 
-    print(io, "$(syntaxstring(_antecedent, variablenames_map=variablenames)) => " *
-        "$(syntaxstring(_consequent, variablenames_map=variablenames))")
+    print(io, "$(syntaxstring(_antecedent, variable_names_map=variablenames)) => " *
+        "$(syntaxstring(_consequent, variable_names_map=variablenames))")
 end
 
 """

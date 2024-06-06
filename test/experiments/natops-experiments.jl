@@ -84,7 +84,7 @@ LOGISETS = [
 
 # Each experiment is identified by an ID;
 # put here the ids of the experiments you want to run.
-EXPERIMENTS_IDS = [1,2,3,4,5,6,7,8,9,10]
+EXPERIMENTS_IDS = [8]
 
 """
     function runexperiment(
@@ -391,10 +391,12 @@ function runcomparison(
         # val[3] is a vector of pairs; in particular:
         #   val[3] |> first is an integer i, indicating that measures refers to ith-logiset
         #   val[3] |> last is a vector of length 4, containing all the measures
+        _antecedent = val[1] |> antecedent |> toformula
+        _consequent = val[1] |> consequent |> toformula
         row_cellstrings = String[
             # rule
-            "$(syntaxstring(val[1] |> antecedent, variable_names_map=variablenames))" *
-            " => $(syntaxstring(val[1] |> consequent, variable_names_map=variablenames))",
+            "$(syntaxstring(_antecedent, variable_names_map=variablenames))" *
+            " => $(syntaxstring(_consequent, variable_names_map=variablenames))",
             # mean gconf without considering `targetclass`
             val[2] |> string,
             # 1 - entropy
@@ -426,7 +428,11 @@ function runcomparison(
             println("$(ONE_MINUS_ENTROPY_STRING): confidences purity measures " *
                 "(higher means that target class is more pure)")
 
-            println()
+            println("Parameterization:\n")
+            map(item -> println(
+                syntaxstring(item, variable_names_map=VARIABLE_NAMES)) , items(miner))
+            println(miner.item_constrained_measures)
+            println(miner.rule_constrained_measures)
 
             pretty_table(
                 data |> permutedims;
@@ -712,15 +718,15 @@ if 5 in EXPERIMENTS_IDS
     ]
 
     _5_right_hand_tip_Y_items = [
-        Atom(ScalarCondition(UnivariateMin(5), >=, -0.5))
-        # Atom(ScalarCondition(UnivariateMax(5), <=, -0.5))
+        Atom(ScalarCondition(UnivariateMin(5), >=, 0))
+        # Atom(ScalarCondition(UnivariateMax(5), <=, 0))
+        Atom(ScalarCondition(UnivariateMin(5), >=, 1))
+        # Atom(ScalarCondition(UnivariateMax(5), <=, 1))
     ]
 
     _5_right_hand_tip_Z_items = [
-        Atom(ScalarCondition(UnivariateMin(6), >=, 0))
-        # Atom(ScalarCondition(UnivariateMax(6), <=, 0))
-        Atom(ScalarCondition(UnivariateMin(6), >=, 1))
-        # Atom(ScalarCondition(UnivariateMax(6), <=, 1))
+        Atom(ScalarCondition(UnivariateMin(6), >=, -0.5))
+        # Atom(ScalarCondition(UnivariateMax(6), <=, -0.5))
     ]
 
     _5_propositional_items = vcat(
@@ -743,8 +749,8 @@ if 5 in EXPERIMENTS_IDS
         diamond(IA_O).(_5_propositional_items),
     ) |> Vector{Formula}
 
-    _5_itemsetmeasures = [(gsupport, 0.2, 0.1)]
-    _5_rulemeasures = [(gconfidence, 0.2, 0.1)]
+    _5_itemsetmeasures = [(gsupport, 0.1, 0.1)]
+    _5_rulemeasures = [(gconfidence, 0.3, 0.3)]
 
     _5_miner = runexperiment(
         X_1_have_command,
@@ -790,21 +796,21 @@ plot(collect(X_df_1_have_command[1,4:6]),
 if 6 in EXPERIMENTS_IDS
     _6_right_hand_tip_X_items = [
         Atom(ScalarCondition(UnivariateMin(4), >=, 1))
-        Atom(ScalarCondition(UnivariateMax(4), <=, 1))
+        # Atom(ScalarCondition(UnivariateMax(4), <=, 1))
         Atom(ScalarCondition(UnivariateMin(4), >=, 1.8))
-        Atom(ScalarCondition(UnivariateMax(4), <=, 1.8))
+        # Atom(ScalarCondition(UnivariateMax(4), <=, 1.8))
     ]
 
     _6_right_hand_tip_Y_items = [
-        Atom(ScalarCondition(UnivariateMin(5), >=, -0.5))
-        Atom(ScalarCondition(UnivariateMax(5), <=, -0.5))
+        Atom(ScalarCondition(UnivariateMin(5), >=, 0))
+        # Atom(ScalarCondition(UnivariateMax(5), <=, 0))
+        Atom(ScalarCondition(UnivariateMin(5), >=, 1))
+        # Atom(ScalarCondition(UnivariateMax(5), <=, 1))
     ]
 
     _6_right_hand_tip_Z_items = [
-        Atom(ScalarCondition(UnivariateMax(6), >=, 0))
-        Atom(ScalarCondition(UnivariateMin(6), <=, 0))
-        Atom(ScalarCondition(UnivariateMin(6), <=, 1))
-        Atom(ScalarCondition(UnivariateMax(6), >=, 1))
+        Atom(ScalarCondition(UnivariateMin(6), >=, -0.5))
+        # Atom(ScalarCondition(UnivariateMax(6), <=, -0.5))
     ]
 
     _6_propositional_items = vcat(
@@ -819,8 +825,8 @@ if 6 in EXPERIMENTS_IDS
         box(IA_D).(_6_propositional_items),
     ) |> Vector{Formula}
 
-    _6_itemsetmeasures = [(gsupport, 0.2, 0.1)]
-    _6_rulemeasures = [(gconfidence, 0.2, 0.1)]
+    _6_itemsetmeasures = [(gsupport, 0.4, 0.2)]
+    _6_rulemeasures = [(gconfidence, 0.4, 0.4)]
 
     _6_miner = runexperiment(
         X_1_have_command,
@@ -900,7 +906,7 @@ end
 # Experiment #8
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
-# Right hand tips and elbows with D, O relations in "Lock wings" class.
+# left and right hand tips and elbows with D, O relations in "Lock wings" class.
 #
 #=
 plot(collect(X_df_6_lock_wings[1,1:3]),
@@ -911,6 +917,10 @@ plot(collect(X_df_6_lock_wings[6,7:9]),
     labels=["x" "y" "z"], title="Lock wings - left elbow") # left elbow plot
 plot(collect(X_df_6_lock_wings[6,10:12]),
     labels=["x" "y" "z"], title="Lock wings - right elbow") # right elbow plot
+
+
+plot(collect(X_df_6_lock_wings[6,1:12]),
+    labels=["x" "y" "z"], title="Lock wings - right elbow") # all variables
 =#
 ############################################################################################
 
@@ -920,14 +930,14 @@ if 8 in EXPERIMENTS_IDS
     ]
     _8_right_hand_tip_X_items = [
         Atom(ScalarCondition(UnivariateMin(4), >=, 0.55))
-        Atom(ScalarCondition(UnivariateMax(4), <=, 0.5))
+        Atom(ScalarCondition(UnivariateMax(4), <=, 0.55))
     ]
 
     _8_left_hand_tip_Y_items = [
-        Atom(ScalarCondition(UnivariateMin(2), >=, -1.25))
+        Atom(ScalarCondition(UnivariateMin(2), >=, -1.0))
     ]
     _8_right_hand_tip_Y_items = [
-        Atom(ScalarCondition(UnivariateMin(5), >=, -0.25))
+        Atom(ScalarCondition(UnivariateMin(5), >=, -0.5))
     ]
 
     _8_left_hand_tip_Z_items = [
@@ -935,19 +945,18 @@ if 8 in EXPERIMENTS_IDS
     ]
     _8_right_hand_tip_Z_items = [
         Atom(ScalarCondition(UnivariateMin(6), >=, -0.5))
-        Atom(ScalarCondition(UnivariateMax(6), >=, -0.9))
     ]
 
     _8_left_elbow_X_items = [
-        Atom(ScalarCondition(UnivariateMin(7), >=, 0.6))
-        Atom(ScalarCondition(UnivariateMax(7), <=, 0.6))
+        Atom(ScalarCondition(UnivariateMax(7), <=, -0.75))
     ]
     _8_right_elbow_X_items = [
         Atom(ScalarCondition(UnivariateMin(10), >=, 0.7))
+        Atom(ScalarCondition(UnivariateMax(10), <=, 0.7))
     ]
 
     _8_left_elbow_Y_items = [
-        Atom(ScalarCondition(UnivariateMin(8), >=, 0))
+        Atom(ScalarCondition(UnivariateMin(8), >=, -0.6))
     ]
     _8_right_elbow_Y_items = [
         Atom(ScalarCondition(UnivariateMin(11), >=, -0.5))
@@ -957,7 +966,7 @@ if 8 in EXPERIMENTS_IDS
         Atom(ScalarCondition(UnivariateMax(9), <=, -0.25))
     ]
     _8_right_elbow_Z_items = [
-        Atom(ScalarCondition(UnivariateMax(12), >=, -0.4))
+        Atom(ScalarCondition(UnivariateMax(12), >=, -0.3))
     ]
 
     _8_propositional_items = vcat(
@@ -988,8 +997,8 @@ if 8 in EXPERIMENTS_IDS
         box(IA_D).(_8_propositional_items),
     ) |> Vector{Formula}
 
-    _8_itemsetmeasures = [(gsupport, 0.2, 0.1)]
-    _8_rulemeasures = [(gconfidence, 0.2, 0.1)]
+    _8_itemsetmeasures = [(gsupport, 0.2, 0.2)]
+    _8_rulemeasures = [(gconfidence, 0.3, 0.3)]
 
     _8_miner = runexperiment(
         X_6_lock_wings,
@@ -1027,14 +1036,13 @@ if 9 in EXPERIMENTS_IDS
     ]
     _9_right_hand_tip_X_items = [
         Atom(ScalarCondition(UnivariateMin(4), >=, 0.55))
-        Atom(ScalarCondition(UnivariateMax(4), <=, 0.5))
     ]
 
     _9_left_hand_tip_Y_items = [
-        Atom(ScalarCondition(UnivariateMin(2), >=, -1.25))
+        Atom(ScalarCondition(UnivariateMin(2), >=, -1.0))
     ]
     _9_right_hand_tip_Y_items = [
-        Atom(ScalarCondition(UnivariateMin(5), >=, -0.25))
+        Atom(ScalarCondition(UnivariateMin(5), >=, -0.5))
     ]
 
     _9_left_hand_tip_Z_items = [
@@ -1042,19 +1050,17 @@ if 9 in EXPERIMENTS_IDS
     ]
     _9_right_hand_tip_Z_items = [
         Atom(ScalarCondition(UnivariateMin(6), >=, -0.5))
-        Atom(ScalarCondition(UnivariateMax(6), >=, -0.9))
     ]
 
     _9_left_elbow_X_items = [
-        Atom(ScalarCondition(UnivariateMin(7), >=, 0.6))
-        Atom(ScalarCondition(UnivariateMax(7), <=, 0.6))
+        Atom(ScalarCondition(UnivariateMax(7), <=, -0.75))
     ]
     _9_right_elbow_X_items = [
         Atom(ScalarCondition(UnivariateMin(10), >=, 0.7))
     ]
 
     _9_left_elbow_Y_items = [
-        Atom(ScalarCondition(UnivariateMin(8), >=, 0))
+        Atom(ScalarCondition(UnivariateMin(8), >=, -0.6))
     ]
     _9_right_elbow_Y_items = [
         Atom(ScalarCondition(UnivariateMin(11), >=, -0.5))
@@ -1064,7 +1070,7 @@ if 9 in EXPERIMENTS_IDS
         Atom(ScalarCondition(UnivariateMax(9), <=, -0.25))
     ]
     _9_right_elbow_Z_items = [
-        Atom(ScalarCondition(UnivariateMax(12), >=, -0.4))
+        Atom(ScalarCondition(UnivariateMax(12), >=, -0.3))
     ]
 
     _9_propositional_items = vcat(
@@ -1127,37 +1133,37 @@ end
 # Right hand tips and elbow with B, E, D, O relations (and inverses) in All clear.
 #
 #=
-plot(collect(X_df_1_have_command[30,4:6]),
+plot(collect(X_df_2_all_clear[30,4:6]),
     labels=["x" "y" "z"], title="All clear - right hand tips")
 
-plot(collect(X_df_1_have_command[30,16:18]),
-    labels=["x" "y" "z"], title="All clear - right elbow")
+plot(collect(X_df_2_all_clear[30,22:24]),
+    labels=["x" "y" "z"], title="All clear - right hand thumb")
 =#
 ############################################################################################
 
 if 10 in EXPERIMENTS_IDS
     _10_right_hand_tip_X_items = [
-        Atom(ScalarCondition(UnivariateMin(4), >=, 1))
+        Atom(ScalarCondition(UnivariateMin(4), >=, 1.1))
     ]
 
     _10_right_hand_tip_Y_items = [
-        Atom(ScalarCondition(UnivariateMin(5), >=, 1))
+        Atom(ScalarCondition(UnivariateMin(5), >=, -1))
     ]
 
     _10_right_hand_tip_Z_items = [
-        Atom(ScalarCondition(UnivariateMin(6), >=, 0.25))
+        Atom(ScalarCondition(UnivariateMin(6), >=, 0.1))
     ]
 
     _10_right_elbow_X_items = [
-        Atom(ScalarCondition(UnivariateMin(16), >=, 0.7))
+        Atom(ScalarCondition(UnivariateMin(16), >=, 1.1))
     ]
 
     _10_right_elbow_Y_items = [
-        Atom(ScalarCondition(UnivariateMin(17), >=, -0.75))
+        Atom(ScalarCondition(UnivariateMin(17), >=, -1))
     ]
 
     _10_right_elbow_Z_items = [
-        Atom(ScalarCondition(UnivariateMin(18), >=, 0.3))
+        Atom(ScalarCondition(UnivariateMin(18), >=, 0.1))
     ]
 
     _10_propositional_items = vcat(
@@ -1171,8 +1177,8 @@ if 10 in EXPERIMENTS_IDS
 
     _10_items = vcat(
         _10_propositional_items,
-        # box(IA_B).(_10_propositional_items),
-        diamond(IA_Bi).(_10_propositional_items),
+        box(IA_B).(_10_propositional_items),
+        # diamond(IA_Bi).(_10_propositional_items),
 
         diamond(IA_E).(_10_propositional_items),
         # diamond(IA_Ei).(_10_propositional_items),
@@ -1183,8 +1189,8 @@ if 10 in EXPERIMENTS_IDS
         diamond(IA_O).(_10_propositional_items),
     ) |> Vector{Formula}
 
-    _10_itemsetmeasures = [(gsupport, 0.2, 0.1)]
-    _10_rulemeasures = [(gconfidence, 0.2, 0.1)]
+    _10_itemsetmeasures = [(gsupport, 0.2, 0.2)]
+    _10_rulemeasures = [(gconfidence, 0.2, 0.2)]
 
     _10_miner = runexperiment(
         X_1_have_command,
@@ -1207,6 +1213,23 @@ if 10 in EXPERIMENTS_IDS
         reportname="e10-tc-2-all-clear-rhand-BEDO-comparison.exp"
     )
 end
+
+############################################################################################
+# Experiment #11
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
+# Right hand tips and thumb in All clear
+#
+#=
+plot(collect(X_df_2_all_clear[30,4:6]),
+    labels=["x" "y" "z"], title="All clear - right hand tips")
+plot(collect(X_df_2_all_clear[30,22:24]),
+    labels=["x" "y" "z"], title="All clear - right hand thumb")
+
+plot(collect(X_df_2_all_clear[30,19:24]),
+    labels=["x" "y" "z"], title="All clear - all variables")
+=#
+############################################################################################
 
 ############################################################################################
 # Useful plots
