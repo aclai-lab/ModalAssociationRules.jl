@@ -28,7 +28,7 @@ This process is driven by a parameterization composed of initial items, meaningf
 ### Results
 The following rules unambiguously describe the class "I have command".
 Confidence is 1.0, while it is 0.0 in the other classes.
-In other words, $1-Entropy(rules\_confidences)$ is 1.0.
+In other words, $1-Entropy(rules confidences)$ is 1.0.
 
 The following rules are similar to each other (actually, more combinations are generated, but are not listed here).
 
