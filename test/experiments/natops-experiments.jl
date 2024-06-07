@@ -84,7 +84,7 @@ LOGISETS = [
 
 # Each experiment is identified by an ID;
 # put here the ids of the experiments you want to run.
-EXPERIMENTS_IDS = [8]
+EXPERIMENTS_IDS = [11]
 
 """
     function runexperiment(
@@ -1224,8 +1224,15 @@ end
 #=
 plot(collect(X_df_2_all_clear[30,4:6]),
     labels=["x" "y" "z"], title="Not clear - right hand tips")
-plot(collect(X_df_2_all_clear[30,19:21]),
+plot(collect(X_df_2_all_clear[30,22:24]),
     labels=["x" "y" "z"], title="Not clear - right hand thumb")
+
+# Right thumb visualization in each class
+plot(
+    map(i->plot(collect(X_df[i,22:24]), labels=nothing,title=y[i]), 1:30:180)...,
+    layout = (2, 3),
+    size = (1500,400)
+)
 =#
 ############################################################################################
 _11_right_hand_tip_X_items = [
@@ -1245,7 +1252,7 @@ _11_right_thumb_X_items = [
 ]
 
 _11_right_thumb_Y_items = [
-    Atom(ScalarCondition(UnivariateMin(23), >=, -1))
+    Atom(ScalarCondition(UnivariateMin(23), >=, -1.0))
 ]
 
 _11_right_thumb_Z_items = [
@@ -1266,17 +1273,17 @@ _11_items = vcat(
     diamond(IA_B).(_11_propositional_items),
     # diamond(IA_Bi).(_11_propositional_items),
 
-    box(IA_E).(_11_propositional_items),
+    # box(IA_E).(_11_propositional_items),
     # diamond(IA_Ei).(_11_propositional_items),
 
-    diamond(IA_D).(_11_propositional_items),
+    # diamond(IA_D).(_11_propositional_items),
     # diamond(IA_Di).(_11_propositional_items),
 
-    box(IA_O).(_11_propositional_items),
+    diamond(IA_O).(_11_propositional_items),
 ) |> Vector{Formula}
 
-_11_itemsetmeasures = [(gsupport, 0.2, 0.15)]
-_11_rulemeasures = [(gconfidence, 0.2, 0.2)]
+_11_itemsetmeasures = [(gsupport, 0.2, 0.2)]
+_11_rulemeasures = [(gconfidence, 0.1, 0.1)]
 
 _11_miner = runexperiment(
     X_3_not_clear,

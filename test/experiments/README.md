@@ -1,66 +1,98 @@
-# ModalAssociationRules.jl experiments
+# Experiments report
+This file intends to summarise the results of experiments reproducible by executing the following command (from the root folder of this project):
+```julia
+julia --project=. test/experiments/natops-experiments.jl
+```
 
-This file is intended to give a general overview of the most remarkable results obtained by extracting association rules from some dataset.
-Currently, only [NATOPS](https://github.com/yalesong/natops) dataset is being analysed.
+In particular, this is a summary of the most interesting results. To know more about how experiments are organized, and details about the experiments not listed here, see ```natops-experiments.jl```. You can ```CTRL+F``` and search for the ```Data Observation``` section, or ```Experiment #N``` where $N$ is the experiment number you are interested in.
 
-The following results are a small part of all the extracted rules, and are made by manually picking the literals from which itemsets are extracted.
-To know more about experiments setup, see `<dataset-name>-experiments.jl`.
+The experiments are organized as follows.
+Initially, a target class is chosen.
+Frequent itemsets related to the target class are extracted, and association rules are generated.
+This process is driven by a parameterization composed of initial items, meaningfulness measures thresholds and modal relations. In addition, the association rules generation process is deliberately not complete: rules where the antecedent only contains modal literals, and those where the same variable is considered both in antecedent and consequent, are discarded (see ```anchor_rulecheck``` and ```non_selfabsorbed_rulecheck``` in ```src/utils/arulemining-utils.jl```).
 
-## NATOPS
+# 1 - Right hand in "I have command"
 
-### I have command
-Support thresholds: $0.1$<br>
-Confidence thresholds: $0.5$
+### Parameterization
+- Target class is "I have command" (1st class).
+- Only right hand is considered. In particular, the propositional literals expresses the following things:
+    * ```min[X[Hand tip r]] ≥ 1``` : hand is far from the body (forward)
+    * ```min[X[Hand tip r]] ≥ 1.8``` : the entire arm is stretched frontally
+    * ```min[Y[Hand tip r]] ≥ 0``` : hand is up (shoulders)
+    * ```min[Y[Hand tip r]] ≥ 1``` : hand is up (head)
+    * ```min[Z[Hand tip r]] ≥ -0.5``` : hand is sideways (right) from the hips
+- B, E, D, O relations. No inverses. 2 box and 2 diamonds.
+- At the time of writing this report, supports are both set to $0.1$, and global confidence is set to be $0.3$, while local confidence is ignored.
+- To know more, run the experiments and check the files "e05-tc-1-have-command-rhand-BEDO" and "e05-tc-1-have-command-rhand-BEDO-comparison.exp".
 
-<p align="center">
-  <img src="./natops-images/natops-have-command-x-y-z-hand-tips.png" alt="NATOPS plot of right hand tips"/>
-</p>
+### Results
+The following rules unambiguously describe the class "I have command".
+Confidence is 1.0, while it is 0.0 in the other classes.
+In other words, $1-Entropy(rules\_confidences)$ is 1.0.
 
-- When the operator's right hand is at the height of his shoulders, then it's palm is rotated in front of him.
+The following rules are similar to each other (actually, more combinations are generated, but are not listed here).
 
-    `(max[Z[Hand tip r]] ≥ 0) => (min[Y[Hand tip r]] ≥ -0.5)` <br> gconfidence: 0.95
+- ```(min[X[Hand tip r]] ≥ 1) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 1) => ([B]min[Z[Hand tip r]] ≥ -0.5)```
 
-- When the operator's right hand is away from his body, and is also rotated, then this means that it is not low.
+- ```(min[X[Hand tip r]] ≥ 1) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 1) => ([D]min[Z[Hand tip r]] ≥ -0.5)```
 
-    `(min[X[Hand tip r]] ≥ 1) ∧ (min[Y[Hand tip r]] ≥ -0.5) => (max[Z[Hand tip r]] ≥ 0)` <br> gconfidence: $1.0$
+- ```(min[X[Hand tip r]] ≥ 1) ∧ (⟨E⟩min[Y[Hand tip r]] ≥ 1) => (⟨E⟩min[Z[Hand tip r]] ≥ -0.5)```
 
-- When operator's right hand terminated the movement ascending phase (it is "close to its body" in the X axis, but also further away from the ground), then it is rotated.
+- ```(min[X[Hand tip r]] ≥ 1) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 1) => (⟨O⟩min[Z[Hand tip r]] ≥ -0.5)```
 
-    `(min[X[Hand tip r]] ≤ 1) ∧ (min[Z[Hand tip r]] ≥ 0) => (min[Y[Hand tip r]] ≥ -0.5)` <br> global confidence: $0.92$
+- ```(min[X[Hand tip r]] ≥ 1) ∧ ([D]min[Y[Hand tip r]] ≥ 1) => ([B]min[Z[Hand tip r]] ≥ -0.5)```
 
-### All clear
-Support thresholds: $0.1$<br>
-Confidence thresholds: $0.5$
+The following three rules are representative for "I have command" (confidence is between $0.8$ and $0.68$). They are also, to a small extent, representative for the class "Lock wings" (here, confidence swings around $0.2$ for both the rules below). Considering the other classes, confidence is exactly $0.0$.
 
-<p align="center">
-  <img src="./natops-images/natops-all-clear-x-y-z-hand-tips.png" alt="NATOPS right hand tips plot"/>
-  <img src="./natops-images/natops-all-clear-x-y-z-right-elbow.png" alt="NATOPS right elbow plot"/>
-</p>
+- ```(min[Z[Hand tip r]] ≥ -0.5) => (⟨O⟩min[Y[Hand tip r]] ≥ 1)```
+- ```(min[Z[Hand tip r]] ≥ -0.5) => (⟨E⟩min[Y[Hand tip r]] ≥ 1)```
+- ```(min[Z[Hand tip r]] ≥ -0.5) => ([D]min[Y[Hand tip r]] ≥ 1)```
 
-- When the elbow is frontally moved away from the operator's body during its [of the elbow] ascent phase, the arm is outstretched (that is, the hand is frontally moved away, proportionally to the initial elbow X positive acceleration).
+The following rule has confidence $0.6$ on the target class, but is also more representative than the previous ones w.r.t. "Lock wings" class. This is due to the fact that the rule expresses the entire vertical movement of the right hand: this is common between "I have command" and "Lock wings" classes, while is not peculiar of the other movements. 
 
-    `(min[X[Elbow r]] ≥ 0.6) ∧ ([D]min[Z[Elbow r]] ≥ -0.5) => (min[X[Hand tip r]] ≥ 1)` <br> global confidence: $1.0$
+- ```(min[Z[Hand tip r]] ≥ -0.5) ∧ (⟨E⟩min[X[Hand tip r]] ≥ 1) => ([D]min[Y[Hand tip r]] ≥ 0)```
 
-- Extra example #1
+In the following rule, confidence is $1.0$ for both "I have command" and "Lock wings" classes, while is $0.0$ on the rest.
 
-    `(min[X[Elbow r]] ≥ 0.6) ∧ (min[Z[Elbow r]] ≥ -0.5) ∧ ([D]min[X[Hand tip r]] ≥ 1) ∧ ([D]min[Y[Hand tip r]] ≥ 0.5) ∧ ([D]min[X[Elbow r]] ≥ 0.6) => ([D]min[Z[Elbow r]] ≥ -0.5)` <br> global confidence: $1.0$
+- ```(min[Y[Hand tip r]] ≥ 1) => ([B]min[Z[Hand tip r]] ≥ -0.5)```
 
-- Extra example #1
+# 2 - Both hands and elbows in "Lock wings" movement.
 
-    `(min[Z[Elbow r]] ≥ -0.5) ∧ ([D]min[Y[Hand tip r]] ≥ 0.5) => (min[X[Elbow r]] ≥ 0.6)` <br> global confidence: $0.8$
+### Parameterization
+- Target class is "Lock wings" (6th class).
+- Some of the propositional literals are:
+    * ```min[Y[Hand tip l]] ≥ -1.0``` : left hand is up (between ankles and belly)
+    * ```min[Y[Hand tip r]] ≥ 0.2``` : right hand is up (shoulders)
+    * ```min[Y[Hand tip r]] ≥ 0.5``` : right hand is up (chin, ears)
+    * ```max[Z[Elbow l]] ≤ -0.25``` : left elbow is tightened in the body (navel)
+    * ```min[Y[Elbow r]] ≥ -0.5``` : right elbow is  up (shoulders)
+- O relation, using diamond.
+- At the time of writing this report, supports are both set to $0.2$, and global confidence is set to be $0.1$
 
+### Results
 
-### Spread wings
+The following rules are good for discerning "Lock wings" from all the other classes. Each one is followed by a comment.
 
-<p align="center">
-  <img src="./natops-images/04-left-wrist.png" alt="NATOPS left wrist plot"/>
-  <img src="./natops-images/04-right-wrist.png" alt="NATOPS right wrist plot"/>
-</p>
+- ```(max[Z[Elbow l]] ≤ -0.25) ∧ (⟨O⟩min[Y[Hand tip l]] ≥ -1.0) ∧ (⟨O⟩min[Y[Elbow r]] ≥ -0.5) ∧ (⟨O⟩max[Z[Elbow r]] ≥ -0.3) => (⟨O⟩min[Y[Hand tip r]] ≥ 0.5)```; this rule and its fragments (that is, those sharing the same consequent but only a subset of the antecedent) always have confidence $\geq 0.7$, while is $0.0952$ at most in the other classes.
 
-- While left-wrist blue line is low in the first plot, the right-wrist blue line is high in the second one. 
+- ```(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Hand tip l]] ≥ -1.0) ∧ (⟨O⟩min[X[Elbow r]] ≥ 0.7) ∧ (⟨O⟩min[Y[Elbow r]] ≥ -0.5) ∧ (⟨O⟩max[Z[Elbow l]] ≤ -0.25) => (⟨O⟩min[Y[Hand tip r]] ≥ 0.2)```; this is similar to the one before, but is slightly less pure. Confidence is $0.85$, but it is also $0.47$ on "Spread wings" and $0.36$ on "Fold wings".
 
-    `(max[X[Wrist l]] ≤ -1.0) => ([D]min[X[Wrist r]] ≥ 1)` <br> global confidence $1.0$
+- ```(max[Z[Elbow l]] ≤ -0.25) ∧ (⟨O⟩min[X[Elbow r]] ≥ 0.7) ∧ (⟨O⟩min[Y[Elbow r]] ≥ -0.5) ∧ (⟨O⟩max[Z[Elbow r]] ≥ -0.3) => (⟨O⟩min[Y[Hand tip r]] ≥ 0.5)```; this might be similar to the one before, but has some important differences (see z on right elbow and the consequent threshold). This rule has confidence $1.0$ for "Lock wings", but also $0.93$ for "I have command": the insight between this similarity, is that both movement lead to having the right hand very high.
 
-- Extra example #1
+- ```(min[Y[Hand tip l]] ≥ -1.0) => (max[Z[Elbow l]] ≤ -0.25)```; this short rule has confidence $0.85$ on our target class, but also respectively $0.76$ and $0.73$ on "Spread wings" and "Fold wings". It is however interesting because it is minimal and is capable to instantly filter out the other classes (e.g., during a classification task).
 
-    `(⟨D⟩max[X[Wrist l]] ≤ -1.0) ∧ (⟨D⟩min[Y[Wrist l]] ≥ -0.5) ∧ (⟨E⟩max[X[Wrist l]] ≤ -1.0) ∧ (⟨E⟩min[Y[Wrist l]] ≥ -0.5) ∧ (⟨O⟩max[X[Wrist l]] ≤ -1.0) => (min[Y[Wrist l]] ≥ -0.5)` <br> global confidence $0.7666$
+# 3 - Right hand and thumb in "Not clear" movement.
+
+This experiment did not bring considerable results, as "Not clear" movement seems almost identical to "All clear".
+
+This can be visualized by plotting
+
+```
+plot(
+    map(i->plot(collect(X_df[i,22:24]), labels=nothing,title=y[i]), 1:30:180)...,
+    layout = (2, 3),
+    size = (1500,400)
+)
+```
+
+for each possible triple (X,Y,Z) of variables, and comparing the two classes. Some instances are slightly different, but the vast majority of the times the two cases are indistiguishable to the eye.
