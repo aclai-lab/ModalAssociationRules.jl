@@ -11,6 +11,13 @@ Initially, a target class is chosen.
 Frequent itemsets related to the target class are extracted, and association rules are generated.
 This process is driven by a parameterization composed of initial items, meaningfulness measures thresholds and modal relations. In addition, the association rules generation process is deliberately not complete: rules where the antecedent only contains modal literals, and those where the same variable is considered both in antecedent and consequent, are discarded (see ```anchor_rulecheck``` and ```non_selfabsorbed_rulecheck``` in ```src/utils/arulemining-utils.jl```).
 
+Each experiment generates 2 files in ```results``` folder.
+Each filename is organized following the pattern
+```eNN```-```tc-N```-```tc string```-```variables```-```relations``` [```.exp``` or ```-comparison.exp```]
+where all the pieces are, respectively, the number of the experiment, the target class id, the target class as string, the variables which are considered and finally the relations.
+If the filename ends with ```-comparison```, then this means that the file contains a comparison matrix between the best rules extracted from the target class, and all the other class.
+Otherwise, the file only contains only a list of extracted association rules.
+
 # 1 - Right hand in "I have command"
 
 ### Parameterization
