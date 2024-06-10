@@ -83,7 +83,7 @@ end
 Return the atoms wrapping all the possible conditions shaped as
     condition(feature(nvariable) testop threshold)
 such as
-    `ScalarCondition(UnivariateMin(1), >, -0.5)`
+    `ScalarCondition(VariableMin(1), >, -0.5)`
 whose [`syntaxstring`](@ref) is
     `min[V3] > 1.1`
 

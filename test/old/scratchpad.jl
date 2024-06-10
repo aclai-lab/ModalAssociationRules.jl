@@ -19,7 +19,7 @@ fr = SoleLogics.frame(X_df, 1)
 
 # Let's consider the first variable in X_df, that is, "hand tip l"
 # and compute its minimum.
-feature = UnivariateMin(1)
+feature = VariableMin(1)
 
 # min[V1] of the 7th instance on the interval (10,30)
 # Sole.featvalue(feature, X_df, 7, Interval(10,30)) |> print
@@ -37,8 +37,8 @@ p = Atom(ScalarCondition(feature, >, -0.3))
 check(p, X, 1, Interval(10,30))
 
 # check min[V1] > -0.5 ∨ min[V2] <= 10
-p = Atom(ScalarCondition(UnivariateMin(1), >, -0.5))
-q = Atom(ScalarCondition(UnivariateMin(2), <=, -2.2))
+p = Atom(ScalarCondition(VariableMin(1), >, -0.5))
+q = Atom(ScalarCondition(VariableMin(2), <=, -2.2))
 φ = p ∨ q
 println(syntaxstring(φ))
 

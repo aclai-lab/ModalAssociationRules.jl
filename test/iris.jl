@@ -12,19 +12,19 @@ X1 = DataFrame(hcat(values(_X)...), collect(keys(_X)))
 X = scalarlogiset(X1; relations = AbstractRelation[], conditions =
     Vector{ScalarMetaCondition}(
         collect(Iterators.flatten([
-            [ScalarMetaCondition(f, <=) for f in UnivariateMin.(1:4)],
-            [ScalarMetaCondition(f, >=) for f in UnivariateMin.(1:4)],
-            [ScalarMetaCondition(f, <=) for f in UnivariateMax.(1:4)],
-            [ScalarMetaCondition(f, >=) for f in UnivariateMax.(1:4)],
+            [ScalarMetaCondition(f, <=) for f in VariableMin.(1:4)],
+            [ScalarMetaCondition(f, >=) for f in VariableMin.(1:4)],
+            [ScalarMetaCondition(f, <=) for f in VariableMax.(1:4)],
+            [ScalarMetaCondition(f, >=) for f in VariableMax.(1:4)],
         ]))
     )
 )
 
 _1_items = Vector{Item}(Atom.([
-    ScalarCondition(UnivariateMin(1), >=,  5)
-    ScalarCondition(UnivariateMin(2), <=,  4)
-    ScalarCondition(UnivariateMin(3), <=,  4)
-    ScalarCondition(UnivariateMin(4), <=,  2)
+    ScalarCondition(VariableMin(1), >=,  5)
+    ScalarCondition(VariableMin(2), <=,  4)
+    ScalarCondition(VariableMin(3), <=,  4)
+    ScalarCondition(VariableMin(4), <=,  2)
 ]))
 
 # utility to compare arules between miners;
@@ -92,18 +92,18 @@ compare_arules(apriori_miner, fpgrowth_miner)
 
 # X = scalarlogiset(X1)
 # _1_items = Vector{Item}(Atom.([
-#     ScalarCondition(UnivariateMin(1), >,  5.84)
-#     ScalarCondition(UnivariateMin(1), >,  4.0)
-#     ScalarCondition(UnivariateMin(2), <=, 3.05)
-#     ScalarCondition(UnivariateMin(2), <=, 2.0)
-#     ScalarCondition(UnivariateMin(3), <=, 3.75)
-#     ScalarCondition(UnivariateMin(3), <=, 2.0)
-#     ScalarCondition(UnivariateMin(4), <=, 1.19)
-#     ScalarCondition(UnivariateMin(4), <=, 0.0)
+#     ScalarCondition(VariableMin(1), >,  5.84)
+#     ScalarCondition(VariableMin(1), >,  4.0)
+#     ScalarCondition(VariableMin(2), <=, 3.05)
+#     ScalarCondition(VariableMin(2), <=, 2.0)
+#     ScalarCondition(VariableMin(3), <=, 3.75)
+#     ScalarCondition(VariableMin(3), <=, 2.0)
+#     ScalarCondition(VariableMin(4), <=, 1.19)
+#     ScalarCondition(VariableMin(4), <=, 0.0)
 # ]))
 
 # # The following has to be fixed in SoleData
-# # could not find feature UnivariateMin: min[V1] in memoset of type
+# # could not find feature VariableMin: min[V1] in memoset of type
 # # SoleData.DimensionalDatasets.UniformFullDimensionalLogiset ...
 # fpgrowth_miner = Miner(X, fpgrowth, _1_items, _itemsetmeasures, _rulemeasures)
 # @test_broken mine!(fpgrowth_miner)

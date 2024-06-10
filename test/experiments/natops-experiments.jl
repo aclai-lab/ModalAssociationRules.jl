@@ -463,22 +463,22 @@ plot(collect(X_df_1_have_command[1,4:6]),
 
 if 1 in EXPERIMENTS_IDS
     _1_right_hand_tip_X_items = [
-        Atom(ScalarCondition(UnivariateMin(4), >=, 1))
-        Atom(ScalarCondition(UnivariateMax(4), <=, 1))
-        Atom(ScalarCondition(UnivariateMin(4), >=, 1.8))
-        Atom(ScalarCondition(UnivariateMax(4), <=, 1.8))
+        Atom(ScalarCondition(VariableMin(4), >=, 1))
+        Atom(ScalarCondition(VariableMax(4), <=, 1))
+        Atom(ScalarCondition(VariableMin(4), >=, 1.8))
+        Atom(ScalarCondition(VariableMax(4), <=, 1.8))
     ]
 
     _1_right_hand_tip_Y_items = [
-        Atom(ScalarCondition(UnivariateMin(5), >=, -0.5))
-        Atom(ScalarCondition(UnivariateMax(5), <=, -0.5))
+        Atom(ScalarCondition(VariableMin(5), >=, -0.5))
+        Atom(ScalarCondition(VariableMax(5), <=, -0.5))
     ]
 
     _1_right_hand_tip_Z_items = [
-        Atom(ScalarCondition(UnivariateMax(6), >=, 0))
-        Atom(ScalarCondition(UnivariateMin(6), <=, 0))
-        Atom(ScalarCondition(UnivariateMin(6), <=, 1))
-        Atom(ScalarCondition(UnivariateMax(6), >=, 1))
+        Atom(ScalarCondition(VariableMax(6), >=, 0))
+        Atom(ScalarCondition(VariableMin(6), <=, 0))
+        Atom(ScalarCondition(VariableMin(6), <=, 1))
+        Atom(ScalarCondition(VariableMax(6), >=, 1))
     ]
 
     _1_right_hand_tip_propositional_items = vcat(
@@ -488,10 +488,10 @@ if 1 in EXPERIMENTS_IDS
     ) |> Vector{Item}
 
     _1_right_hand_tip_propositional_items_short = [
-        Atom(ScalarCondition(UnivariateMin(4), >=, 1))
-        Atom(ScalarCondition(UnivariateMin(4), >=, 1.8))
-        Atom(ScalarCondition(UnivariateMin(5), >=, -0.5))
-        Atom(ScalarCondition(UnivariateMax(6), >=, 0))
+        Atom(ScalarCondition(VariableMin(4), >=, 1))
+        Atom(ScalarCondition(VariableMin(4), >=, 1.8))
+        Atom(ScalarCondition(VariableMin(5), >=, -0.5))
+        Atom(ScalarCondition(VariableMax(6), >=, 0))
     ] |> Vector{Item}
 
     _1_items = _1_right_hand_tip_propositional_items_short
@@ -564,15 +564,15 @@ plot(collect(X_df_2_all_clear[1,10:12]),
 
 if 3 in EXPERIMENTS_IDS
     _3_right_hand_tip_propositional_items_short = [
-        Atom(ScalarCondition(UnivariateMin(4), >=, 1))
-        Atom(ScalarCondition(UnivariateMin(5), >=, 0.5))
-        Atom(ScalarCondition(UnivariateMin(6), >=, 1))
+        Atom(ScalarCondition(VariableMin(4), >=, 1))
+        Atom(ScalarCondition(VariableMin(5), >=, 0.5))
+        Atom(ScalarCondition(VariableMin(6), >=, 1))
     ] |> Vector{Item}
 
     _3_right_elbow_propositional_items_short = [
-        Atom(ScalarCondition(UnivariateMin(10), >=, 0.6))
-        Atom(ScalarCondition(UnivariateMin(11), >=, 0.5))
-        Atom(ScalarCondition(UnivariateMin(12), >=, -0.5))
+        Atom(ScalarCondition(VariableMin(10), >=, 0.6))
+        Atom(ScalarCondition(VariableMin(11), >=, 0.5))
+        Atom(ScalarCondition(VariableMin(12), >=, -0.5))
     ]
 
     _3_right_hand_tip_during_items = vcat(
@@ -617,17 +617,17 @@ plot(collect(X_df_4_spread_wings[1,16:18]),
 
 if 4 in EXPERIMENTS_IDS
     _4_left_wrist_propositional_items_short = [
-        Atom(ScalarCondition(UnivariateMin(13), >=, -0.5))
-        Atom(ScalarCondition(UnivariateMax(13), <=, -1.0))
-        Atom(ScalarCondition(UnivariateMin(14), >=, -0.5))
-        Atom(ScalarCondition(UnivariateMin(14), >=, -0.5))
+        Atom(ScalarCondition(VariableMin(13), >=, -0.5))
+        Atom(ScalarCondition(VariableMax(13), <=, -1.0))
+        Atom(ScalarCondition(VariableMin(14), >=, -0.5))
+        Atom(ScalarCondition(VariableMin(14), >=, -0.5))
         # no Z here
     ]
 
     _4_right_wrist_propositional_items_short = [
-        Atom(ScalarCondition(UnivariateMax(16), <=, 0.6))
-        Atom(ScalarCondition(UnivariateMin(16), >=, 1))
-        Atom(ScalarCondition(UnivariateMin(17), >=, 1))
+        Atom(ScalarCondition(VariableMax(16), <=, 0.6))
+        Atom(ScalarCondition(VariableMin(16), >=, 1))
+        Atom(ScalarCondition(VariableMin(17), >=, 1))
         # no z here
     ] |> Vector{Item}
 
@@ -681,22 +681,22 @@ plot(collect(X_df_1_have_command[1,4:6]),
 
 if 5 in EXPERIMENTS_IDS
     _5_right_hand_tip_X_items = [
-        Atom(ScalarCondition(UnivariateMin(4), >=, 1))
-        Atom(ScalarCondition(UnivariateMax(4), <=, 1))
-        Atom(ScalarCondition(UnivariateMin(4), >=, 1.8))
-        Atom(ScalarCondition(UnivariateMax(4), <=, 1.8))
+        Atom(ScalarCondition(VariableMin(4), >=, 1))
+        Atom(ScalarCondition(VariableMax(4), <=, 1))
+        Atom(ScalarCondition(VariableMin(4), >=, 1.8))
+        Atom(ScalarCondition(VariableMax(4), <=, 1.8))
     ]
 
     _5_right_hand_tip_Y_items = [
-        Atom(ScalarCondition(UnivariateMin(5), >=, -0.5))
-        Atom(ScalarCondition(UnivariateMax(5), <=, -0.5))
+        Atom(ScalarCondition(VariableMin(5), >=, -0.5))
+        Atom(ScalarCondition(VariableMax(5), <=, -0.5))
     ]
 
     _5_right_hand_tip_Z_items = [
-        Atom(ScalarCondition(UnivariateMax(6), >=, 0))
-        Atom(ScalarCondition(UnivariateMin(6), <=, 0))
-        Atom(ScalarCondition(UnivariateMin(6), <=, 1))
-        Atom(ScalarCondition(UnivariateMax(6), >=, 1))
+        Atom(ScalarCondition(VariableMax(6), >=, 0))
+        Atom(ScalarCondition(VariableMin(6), <=, 0))
+        Atom(ScalarCondition(VariableMin(6), <=, 1))
+        Atom(ScalarCondition(VariableMax(6), >=, 1))
     ]
 
     _5_propositional_items = vcat(
@@ -765,22 +765,22 @@ plot(collect(X_df_1_have_command[1,4:6]),
 
 if 6 in EXPERIMENTS_IDS
     _6_right_hand_tip_X_items = [
-        Atom(ScalarCondition(UnivariateMin(4), >=, 1))
-        Atom(ScalarCondition(UnivariateMax(4), <=, 1))
-        Atom(ScalarCondition(UnivariateMin(4), >=, 1.8))
-        Atom(ScalarCondition(UnivariateMax(4), <=, 1.8))
+        Atom(ScalarCondition(VariableMin(4), >=, 1))
+        Atom(ScalarCondition(VariableMax(4), <=, 1))
+        Atom(ScalarCondition(VariableMin(4), >=, 1.8))
+        Atom(ScalarCondition(VariableMax(4), <=, 1.8))
     ]
 
     _6_right_hand_tip_Y_items = [
-        Atom(ScalarCondition(UnivariateMin(5), >=, -0.5))
-        Atom(ScalarCondition(UnivariateMax(5), <=, -0.5))
+        Atom(ScalarCondition(VariableMin(5), >=, -0.5))
+        Atom(ScalarCondition(VariableMax(5), <=, -0.5))
     ]
 
     _6_right_hand_tip_Z_items = [
-        Atom(ScalarCondition(UnivariateMax(6), >=, 0))
-        Atom(ScalarCondition(UnivariateMin(6), <=, 0))
-        Atom(ScalarCondition(UnivariateMin(6), <=, 1))
-        Atom(ScalarCondition(UnivariateMax(6), >=, 1))
+        Atom(ScalarCondition(VariableMax(6), >=, 0))
+        Atom(ScalarCondition(VariableMin(6), <=, 0))
+        Atom(ScalarCondition(VariableMin(6), <=, 1))
+        Atom(ScalarCondition(VariableMax(6), >=, 1))
     ]
 
     _6_propositional_items = vcat(
@@ -1028,25 +1028,25 @@ plot(collect(X_df_1_have_command[1,4:6]),
 
 if 8 in EXPERIMENTS_IDS
     _8_left_hand_tip_X_items = [
-        Atom(ScalarCondition(UnivariateMin(1), >=, 0))
+        Atom(ScalarCondition(VariableMin(1), >=, 0))
     ]
     _8_right_hand_tip_X_items = [
-        Atom(ScalarCondition(UnivariateMin(4), >=, 1))
+        Atom(ScalarCondition(VariableMin(4), >=, 1))
     ]
 
     _8_left_hand_tip_Y_items = [
-        Atom(ScalarCondition(UnivariateMax(2), <=, -1))
-        Atom(ScalarCondition(UnivariateMin(2), <=, -1))
+        Atom(ScalarCondition(VariableMax(2), <=, -1))
+        Atom(ScalarCondition(VariableMin(2), <=, -1))
     ]
     _8_right_hand_tip_Y_items = [
         # not interesting
     ]
 
     _8_left_hand_tip_Z_items = [
-        Atom(ScalarCondition(UnivariateMin(6), >=, -1))
+        Atom(ScalarCondition(VariableMin(6), >=, -1))
     ]
     _8_right_hand_tip_Z_items = [
-        Atom(ScalarCondition(UnivariateMin(6), >=, -1))
+        Atom(ScalarCondition(VariableMin(6), >=, -1))
     ]
 
     _8_propositional_items = vcat(

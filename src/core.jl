@@ -509,9 +509,9 @@ julia> X_df, y = load_arff_dataset("NATOPS");
 julia> X = scalarlogiset(X_df)
 
 # Prepare some propositional atoms
-julia> p = Atom(ScalarCondition(UnivariateMin(1), >, -0.5))
-julia> q = Atom(ScalarCondition(UnivariateMin(2), <=, -2.2))
-julia> r = Atom(ScalarCondition(UnivariateMin(3), >, -3.6))
+julia> p = Atom(ScalarCondition(VariableMin(1), >, -0.5))
+julia> q = Atom(ScalarCondition(VariableMin(2), <=, -2.2))
+julia> r = Atom(ScalarCondition(VariableMin(3), >, -3.6))
 
 # Prepare modal atoms using later relationship - see [`SoleLogics.IntervalRelation`](@ref))
 julia> lp = box(IA_L)(p)
