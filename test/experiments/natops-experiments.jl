@@ -34,6 +34,7 @@ VARIABLE_NAMES = [
 	"X[Wrist r]", "Y[Wrist r]", "Z[Wrist r]",          # 16 18
     "X[Thumb l]", "Y[Thumb l]", "Z[Thumb l]",          # 19 21
 	"X[Thumb r]", "Y[Thumb r]", "Z[Thumb r]",          # 22 24
+    "ΔY[Hand tip r and thumb r]"                       # 25
 ]
 
 CLASS_NAMES = [
@@ -53,6 +54,7 @@ CLASS_NAMES = [
 ############################################################################################
 
 X_df, y = load_NATOPS();
+insertcols!(X_df, 25, "ΔY[Thumb r and Hand tip r]" => X_df[:,5]-X_df[:,23])
 X = scalarlogiset(X_df)
 
 X_df_1_have_command = X_df[1:30, :]
@@ -1219,13 +1221,21 @@ end
 # Experiment #11
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
-# Right hand tips and thumb in Not clear
+# Right thumb and wrist in Not clear
 #
 #=
-plot(collect(X_df_2_all_clear[30,4:6]),
-    labels=["x" "y" "z"], title="Not clear - right hand tips")
-plot(collect(X_df_2_all_clear[30,22:24]),
+plot(collect(X_df_3_not_clear[30,16:18]),
     labels=["x" "y" "z"], title="Not clear - right hand thumb")
+plot(collect(X_df_3_not_clear[30,22:24]),
+    labels=["x" "y" "z"], title="Not clear - right hand thumb")
+
+# Δy in "All clear"
+plot(collect(X_df_2_all_clear[30,22:25]),
+    labels=["x" "y" "z" "Δy"], title="All clear - right hand Δy between fingers and thumb")
+
+# Δy in "Not clear"
+plot(collect(X_df_3_not_clear[30,22:25]),
+    labels=["x" "y" "z" "Δy"], title="Not clear - right hand Δy between fingers and thumb")
 
 # Right thumb visualization in each class
 plot(
@@ -1235,54 +1245,28 @@ plot(
 )
 =#
 ############################################################################################
-_11_right_hand_tip_X_items = [
-    Atom(ScalarCondition(UnivariateMin(4), >=, 1.1))
-]
-
 _11_right_hand_tip_Y_items = [
-    Atom(ScalarCondition(UnivariateMin(5), >=, -1.2))
+    Atom(ScalarCondition(UnivariateMin(5), >=, -0.5))
 ]
 
-_11_right_hand_tip_Z_items = [
-    Atom(ScalarCondition(UnivariateMin(6), >=, -0.0))
-]
-
-_11_right_thumb_X_items = [
-    Atom(ScalarCondition(UnivariateMin(22), >=, 1))
-]
-
-_11_right_thumb_Y_items = [
-    Atom(ScalarCondition(UnivariateMin(23), >=, -1.0))
-]
-
-_11_right_thumb_Z_items = [
-    Atom(ScalarCondition(UnivariateMin(24), >=, 0.0))
+_11_right_hand_delta_items = [
+    Atom(ScalarCondition(UnivariateMax(25), <=, 0.0))
 ]
 
 _11_propositional_items = vcat(
-    _11_right_hand_tip_X_items,
     _11_right_hand_tip_Y_items,
-    _11_right_hand_tip_Z_items,
-    _11_right_thumb_X_items,
-    _11_right_thumb_Y_items,
-    _11_right_thumb_Z_items
+    _11_right_hand_delta_items
 )
 
 _11_items = vcat(
     _11_propositional_items,
     diamond(IA_B).(_11_propositional_items),
-    # diamond(IA_Bi).(_11_propositional_items),
-
-    # box(IA_E).(_11_propositional_items),
-    # diamond(IA_Ei).(_11_propositional_items),
-
-    # diamond(IA_D).(_11_propositional_items),
-    # diamond(IA_Di).(_11_propositional_items),
-
-    diamond(IA_O).(_11_propositional_items),
+    box(IA_E).(_11_propositional_items),
+    diamond(IA_D).(_11_propositional_items),
+    box(IA_O).(_11_propositional_items),
 ) |> Vector{Formula}
 
-_11_itemsetmeasures = [(gsupport, 0.2, 0.2)]
+_11_itemsetmeasures = [(gsupport, 0.01, 0.01)]
 _11_rulemeasures = [(gconfidence, 0.1, 0.1)]
 
 _11_miner = runexperiment(
@@ -1299,7 +1283,7 @@ _11_miner = runexperiment(
 runcomparison(
     _11_miner,
     LOGISETS,
-    (conf) -> conf >= 0.6;
+    (conf) -> conf >= 0.5;
     sigdigits=3 |> Int8,
     targetclass=3 |> Int8,
     suppthreshold=0.1,
