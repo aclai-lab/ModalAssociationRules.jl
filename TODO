@@ -72,8 +72,9 @@ Main:
     ☐ is this really necessary? try to remove :lexicographic_ordering powerup field from fpgrowth
   ☐ user custom meaningfulness measures should be checked too
   ☐ parallelize apriori and fpgrowth
-  ☐ write a loader for NATOPS, in order to execute experiments also if timeseriesclassification.com is offline
+  ✔ write a loader for NATOPS, in order to execute experiments also if timeseriesclassification.com is offline @done(24-07-26 22:35)
   ☐ @assert in Miner (when miner is used to compute a meaningfulness measure about some item it does not know)
+  ☐ 
 
 Generic:
   ✔ move memoization accountability to Miner @done(24-02-07 23:58)
@@ -94,16 +95,18 @@ Generic:
   ✔ remove nonfreqitems from Miner (this could be an optional info field?) @done(24-02-27 11:36)
   ✔ miner.algo and algorithm(miner) should coincide @done(24-02-27 11:37)
   ✔ ARuleMiner to Miner @done(24-02-25 16:18)
-  ☐ test on iris dataset
+  ✔ test on iris dataset @done(24-07-26 22:36)
   ✔ change mine to mine! and apply to apply! @done(24-03-08 00:16)
   ✔ make an Itemset struct instead of Vector{Item} @done(24-03-08 00:25)
-  ☐ use make_lmeas and make_gmeas decorators in idea.jl, to define meaningfulness measures in a more compact and robust way
   ☐ move `isless` between `Item`s to SoleLogics
-  ☐ rename getglobalthreshold_integer to global_threshold_integer; do the same for local support
+  ☐ use make_lmeas and make_gmeas decorators in idea.jl, to define meaningfulness measures in a more compact and robust way
+    ☐ a make_lmeas idea is ready (called just "lmeas") but it needs to be converted from builder function to macro
+      because the generated function name has to be the one request by the user (e.g., lsupport) and not a strange codification
 
-Renamings:
-  ☐ link property to nextcousin
-  ✔ push to grow or something similar @done(24-04-03 17:30)
+  Renamings:
+    ☐ link property to nextcousin
+    ✔ push to grow or something similar @done(24-04-03 17:30)
+    ☐ rename getglobalthreshold_integer to global_threshold_integer; do the same for local support
 
 Optimizations:
   ☐ miner.items should be treated as a generator

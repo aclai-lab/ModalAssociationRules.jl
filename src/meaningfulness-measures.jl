@@ -1,11 +1,78 @@
 """
+Collection of [`powerups`](@ref) references which are injected when creating a generic
+local meaningfulness measure using [`lmeas`](@ref).
+"""
+LOCAL_POWERUP_SYMBOLS = [:instance_item_toworlds]
+
+"""
+    function lmeas(
+        itemset::Itemset,
+        instance::LogicalInstance,
+        miner::Miner,
+        measlogic::Function
+    )
+
+Build a generic local meaningfulness measure.
+By default, internal `miner`'s memoization is leveraged.
+To specialize an already existent measure, take a look at [`powerups`](@ref) system.
+
+See also [`haspowerups`](@ref), [`Miner`](@ref), [`powerups`](@ref).
+
+TODO: this function should be a macro;
+its usage could me "@lmeas lsupport <lambda-expression>".
+"""
+# function lmeas(
+#     measname::Symbol,
+#     measlogic::Function
+# )
+#     function _lmeas(itemset::Itemset, instance::LogicalInstance, miner::Miner)
+#         # retrieve logiset and the specific instance
+#         X, i_instance = instance.s, instance.i_instance
+#
+#         # key to access memoization structures
+#         memokey = LmeasMemoKey(measname, itemset, instance)
+#
+#         # leverage memoization if possible
+#         memoized = localmemo(miner, memokey)
+#         if !isnothing(memoized)
+#             return memoized
+#         end
+#
+#         # compute local measure
+#         meas = measlogic(itemset, X, i_instance)
+#
+#         # save measure in memoization structure;
+#         # also, do more stuff depending on `powerups` dispatch (see the documentation).
+#         localmemo!(miner, memokey, meas)
+#         for powerup in LOCAL_POWERUP_SYMBOLS
+#             if haspowerup(miner, powerup)
+#                 powerups(miner, powerup)
+#             end
+#         end
+#
+#         return meas
+#     end
+#
+#     return _lmeas
+# end
+
+# lsupport = lmeas(:lsupport, (itemset, X, i_instance) ->
+#     begin
+#         return count([
+#             check(toformula(itemset), X, i_instance, w)
+#             for w in allworlds(X, i_instance)
+#         ]) / nworlds(X, i_instance)
+#     end
+# )
+
+"""
     function lsupport(
         itemset::Itemset,
-        logi_instance::LogicalInstance;
+        instance::LogicalInstance;
         miner::Union{Nothing,Miner}=nothing
     )::Float64
 
-Compute the local support for the given `itemset` in the given `logi_instance`.
+Compute the local support for the given `itemset` in the given `instance`.
 
 Local support is the ratio between the number of worlds in a [`LogicalInstance`](@ref) where
 and [`Itemset`](@ref) is true and the total number of worlds in the same instance.
@@ -16,12 +83,12 @@ See also [`Miner`](@ref), [`LogicalInstance`](@ref), [`Itemset`](@ref).
 """
 function lsupport(
     itemset::Itemset,
-    logi_instance::LogicalInstance;
+    instance::LogicalInstance;
     miner::Union{Nothing,Miner}=nothing,
     mymemo_on::Bool=true
 )::Float64
     # retrieve logiset, and the specific instance
-    X, i_instance = logi_instance.s, logi_instance.i_instance
+    X, i_instance = instance.s, instance.i_instance
 
     # this is needed to access memoization structures
     memokey = LmeasMemoKey((Symbol(lsupport), itemset, i_instance))
@@ -122,11 +189,11 @@ globalof(::typeof(lsupport)) = gsupport
 """
     function lconfidence(
         rule::ARule,
-        logi_instance::LogicalInstance;
+        instance::LogicalInstance;
         miner::Union{Nothing,Miner}=nothing
     )::Float64
 
-Compute the local confidence for the given `rule` in the given `logi_instance`.
+Compute the local confidence for the given `rule` in the given `instance`.
 
 Local confidence is the ratio between [`lsupport`](@ref) of an [`ARule`](@ref) on
 a [`LogicalInstance`](@ref) and the [`lsupport`](@ref) of the [`antecedent`](@ref) of the
@@ -139,13 +206,13 @@ See also [`antecedent`](@ref), [`ARule`](@ref), [`Miner`](@ref),
 """
 function lconfidence(
     rule::ARule,
-    logi_instance::LogicalInstance;
+    instance::LogicalInstance;
     miner::Union{Nothing,Miner}=nothing,
     mymemo_on::Bool=true,
     internalmemo_on::Bool=true
 )::Float64
     # this is needed to access memoization structures
-    memokey = LmeasMemoKey((Symbol(lconfidence), rule, logi_instance.i_instance))
+    memokey = LmeasMemoKey((Symbol(lconfidence), rule, instance.i_instance))
 
     # leverage memoization if a miner is provided, and it already computed the measure
     if !isnothing(miner) && internalmemo_on
@@ -156,7 +223,7 @@ function lconfidence(
     end
 
     # denominator could be near to zero
-    den = lsupport(antecedent(rule), logi_instance; miner=miner, mymemo_on=internalmemo_on)
+    den = lsupport(antecedent(rule), instance; miner=miner, mymemo_on=internalmemo_on)
 
     ans = 0.0
     if (den <= 100*eps())
@@ -164,7 +231,7 @@ function lconfidence(
         # error("Illegal denominator when computing local confidence: (value is $(den))")
     else
         num = lsupport(
-            convert(Itemset, rule), logi_instance; miner=miner, mymemo_on=internalmemo_on)
+            convert(Itemset, rule), instance; miner=miner, mymemo_on=internalmemo_on)
         ans = num / den
     end
 
