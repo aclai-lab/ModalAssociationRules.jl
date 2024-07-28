@@ -74,7 +74,6 @@ Main:
   ☐ parallelize apriori and fpgrowth
   ✔ write a loader for NATOPS, in order to execute experiments also if timeseriesclassification.com is offline @done(24-07-26 22:35)
   ☐ @assert in Miner (when miner is used to compute a meaningfulness measure about some item it does not know)
-  ☐ 
 
 Generic:
   ✔ move memoization accountability to Miner @done(24-02-07 23:58)
@@ -99,9 +98,12 @@ Generic:
   ✔ change mine to mine! and apply to apply! @done(24-03-08 00:16)
   ✔ make an Itemset struct instead of Vector{Item} @done(24-03-08 00:25)
   ☐ move `isless` between `Item`s to SoleLogics
-  ☐ use make_lmeas and make_gmeas decorators in idea.jl, to define meaningfulness measures in a more compact and robust way
-    ☐ a make_lmeas idea is ready (called just "lmeas") but it needs to be converted from builder function to macro
+  ✔ use make_lmeas and make_gmeas decorators in idea.jl, to define meaningfulness measures in a more compact and robust way @done(24-07-28 14:39)
+    ✔ a make_lmeas idea is ready (called just "lmeas") but it needs to be converted from builder function to macro @done(24-07-28 14:39)
       because the generated function name has to be the one request by the user (e.g., lsupport) and not a strange codification
+      ✔ a first implementation is ready and tested for local support, now use it also for local confidence and repeat for global measures @done(24-07-28 15:58)
+      ☐ remove miner keywords from lconfidence calls, since now the interface has changed
+      ☐ define lift and conviction measures
 
   Renamings:
     ☐ link property to nextcousin
@@ -113,6 +115,7 @@ Optimizations:
   ☐ global memoization should check if memoized treshold is larger than requested one
   ☐ check whether sum between two vectors in addcontributors!(fptree::FPTree, contribution::WorldMask) is optimized
   ☐ give the possiblity to consider a dataset slice to extract rules without trivial items (see `EnhancedItemset`)
+  ☐ Why is WorldMask an integer vector? Make it a Bool vector, or atleast a Vector{Int8}
 
 Utility:
   ✔ Base.in between two itemsets @done(24-02-19 14:18)

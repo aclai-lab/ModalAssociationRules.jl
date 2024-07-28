@@ -917,7 +917,7 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
         frequents = [candidate
             for (gmeas_algo, lthreshold, gthreshold) in itemsetmeasures(miner)
             for candidate in Itemset.(items(miner))
-            if lsupport(candidate, getinstance(X, ninstance); miner=miner) >= lthreshold
+            if lsupport(candidate, getinstance(X, ninstance), miner) >= lthreshold
         ] |> unique
 
         for itemset in frequents
@@ -991,7 +991,7 @@ function initpowerups(::typeof(fpgrowth), ::AbstractDataset)::Powerup
         # holds is not kept in memory by default.
         # Here, however, we want to keep track of the relation.
         # See `lsupport` implementation.
-        :instance_item_toworlds => Dict{Tuple{Int,Itemset}, WorldMask}([]),
+        :instance_item_toworlds => Dict{Tuple{Int, Itemset}, WorldMask}([]),
 
         # current instance number;
         # needed when computing local support to remember which
