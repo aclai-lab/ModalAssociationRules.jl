@@ -105,7 +105,9 @@ Generic:
       ✔ remove miner keywords from lconfidence calls, since now the interface has changed @done(24-07-29 13:57)
       ☐ define lift and conviction measures
       ☐ maybe @generated macro is what we needed in the first place? Take a look
-      ☐ define a @linkmeas macro to automatically generate linkings between a global measure and its associated local one
+      ✔ define a @linkmeas macro to automatically generate linkings between a global measure and its associated local one @done(24-07-29 15:37)
+      ☐ returned collection from Dict to NamedTuple
+      ☐ there is no need to pair localof/globalof and islocalof/isglobalof: one dispatch is enough
 
   Renamings:
     ☐ link property to nextcousin

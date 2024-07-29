@@ -121,6 +121,25 @@ macro gmeas(measname, measlogic)
     end
 end
 
+"""
+    macro linkmeas(gmeasname, lmeasname)
+
+Link together two [`MeaningfulnessMeasure`](@ref), automatically defining
+[`globalof`](@ref)/[`localof`](@ref) and [`isglobalof`](@ref)/[`islocalof`](@ref).
+
+See also [`globalof`](@ref), [`localof`](@ref), [`isglobalof`](@ref), [`islocalof`](@ref).
+"""
+macro linkmeas(gmeasname, lmeasname)
+
+    quote
+        ModalAssociationRules.islocalof(::typeof($(lmeasname)), ::typeof($(gmeasname))) = true
+        ModalAssociationRules.isglobalof(::typeof($(gmeasname)), ::typeof($(lmeasname))) = true
+        ModalAssociationRules.localof(::typeof($(gmeasname))) = $(lmeasname)
+        ModalAssociationRules.globalof(::typeof($(lmeasname))) = $(gmeasname)
+    end
+end
+
+
 _lsupport_logic = (itemset, instance, miner) -> begin
     X, i_instance = instance.s, instance.i_instance # dataset(miner)
 
@@ -130,7 +149,7 @@ _lsupport_logic = (itemset, instance, miner) -> begin
     # Return the result, and eventually the information needed to support powerups
     return Dict(
         :measure => count(wmask) / nworlds(X, i_instance),
-        :instance_item_toworlds => wmask
+        :instance_item_toworlds => wmask,
     )
 end
 
@@ -244,14 +263,5 @@ See also [`antecedent`](@ref), [`ARule`](@ref), [`Miner`](@ref), [`gsupport`](@r
 """
 @gmeas gconfidence _gconfidence_logic
 
-islocalof(::typeof(lsupport), ::typeof(gsupport)) = true
-isglobalof(::typeof(gsupport), ::typeof(lsupport)) = true
-
-localof(::typeof(gsupport)) = lsupport
-globalof(::typeof(lsupport)) = gsupport
-
-islocalof(::typeof(lconfidence), ::typeof(gconfidence)) = true
-isglobalof(::typeof(gconfidence), ::typeof(lconfidence)) = true
-
-localof(::typeof(gconfidence)) = lconfidence
-globalof(::typeof(lconfidence)) = gconfidence
+@linkmeas gsupport lsupport
+@linkmeas gconfidence lconfidence
