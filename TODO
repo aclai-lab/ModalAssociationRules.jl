@@ -65,7 +65,7 @@ Main:
     ☐ threshold must be considered when memoizing
     ✔ clean fpgrowth algorithm, removing contributors powerup system since it is not necessary to write a correct fpgrowth @done(24-04-23 09:35)
     ✔ remove all the unecessary dependencies from miner inside all fpgrowth subroutine calls @done(24-04-24 18:42)
-      ☐ is the current global reference to miner inside sort! calls correct? I don't think so, since the order of the frequent items could change depending on which instance it's currently being fixed
+      ☐ is the current global reference to miner inside `sort!` calls correct? I don't think so, since the order of the frequent items could change depending on which instance it's currently being fixed
     ☐ considering local support, frequent itemsets are identified but it is also necessary to compute the measure exact value.
   ☐ a miner should expose which lexicographic ordering he is using, and the same ordering has to ALWAYS be used when changing miner's internal state
     # maybe he could save it in the info field when is created?
@@ -102,8 +102,10 @@ Generic:
     ✔ a make_lmeas idea is ready (called just "lmeas") but it needs to be converted from builder function to macro @done(24-07-28 14:39)
       because the generated function name has to be the one request by the user (e.g., lsupport) and not a strange codification
       ✔ a first implementation is ready and tested for local support, now use it also for local confidence and repeat for global measures @done(24-07-28 15:58)
-      ☐ remove miner keywords from lconfidence calls, since now the interface has changed
+      ✔ remove miner keywords from lconfidence calls, since now the interface has changed @done(24-07-29 13:57)
       ☐ define lift and conviction measures
+      ☐ maybe @generated macro is what we needed in the first place? Take a look
+      ☐ define a @linkmeas macro to automatically generate linkings between a global measure and its associated local one
 
   Renamings:
     ☐ link property to nextcousin

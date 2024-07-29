@@ -134,8 +134,8 @@ _association_rules_test1(fpgrowth_miner)
 function _dummy_gsupport(
     itemset::Itemset,
     X::SupportedLogiset,
-    threshold::Threshold;
-    miner::Union{Nothing,Miner} = nothing
+    threshold::Threshold,
+    miner::Union{Nothing,Miner}
 )::Float64
     return 1.0
 end

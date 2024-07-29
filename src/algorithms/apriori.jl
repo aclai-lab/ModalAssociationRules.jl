@@ -18,7 +18,7 @@ function apriori(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothing
             for candidate in candidates
             # specifically, global support also calls local support and updates
             # contributors
-            if gmeas_algo(candidate, X, lthreshold, miner=miner) >= gthreshold
+            if gmeas_algo(candidate, X, lthreshold, miner) >= gthreshold
         ]
 
         # save frequent itemsets inside the miner machine

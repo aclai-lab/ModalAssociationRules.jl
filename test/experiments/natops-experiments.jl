@@ -312,22 +312,22 @@ function runcomparison(
 
             # confidence
             _conf = round(
-                gconfidence(rule, logiset, suppthreshold; miner=miners[i]),
+                gconfidence(rule, logiset, suppthreshold, miners[i]),
                 sigdigits=sigdigits
             )
             # antecedent global support
             _asupp = round(
-                gsupport(_antecedent, logiset, suppthreshold; miner=miners[i]),
+                gsupport(_antecedent, logiset, suppthreshold, miners[i]),
                 sigdigits=sigdigits
             )
             # consequent global support
             _csupp = round(
-                gsupport(_consequent, logiset, suppthreshold; miner=miners[i]),
+                gsupport(_consequent, logiset, suppthreshold, miners[i]),
                 sigdigits=sigdigits
             )
             # whole-rule global support
             _usupp = round(
-                gsupport(_union, logiset, suppthreshold; miner=miners[i]),
+                gsupport(_union, logiset, suppthreshold, miners[i]),
                 sigdigits=sigdigits
             )
 
