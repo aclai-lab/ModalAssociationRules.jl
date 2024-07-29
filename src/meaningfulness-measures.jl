@@ -1,11 +1,156 @@
 """
+Collection of [`powerups`](@ref) references which are injected when creating a generic
+local meaningfulness measure using [`lmeas`](@ref).
+"""
+LOCAL_POWERUP_SYMBOLS = [
+    :instance_item_toworlds
+]
+"""
+Collection of [`powerups`](@ref) references which are injected when creating a generic
+local meaningfulness measure using [`gmeas`](@ref).
+"""
+GLOBAL_POWERUP_SYMBOLS = []
+
+"""
+    macro lmeas(measname, measlogic)
+
+Build a generic local meaningfulness measure.
+By default, internal `miner`'s memoization is leveraged.
+To specialize an already existent measure, take a look at [`powerups`](@ref) system.
+
+See also [`haspowerups`](@ref), [`Miner`](@ref), [`powerups`](@ref).
+"""
+macro lmeas(measname, measlogic)
+    fname = Symbol(measname)
+
+    quote
+        # wrap the given `measlogic` to leverage memoization and document it
+        Core.@__doc__ function $(esc(fname))(
+            subject::ARMSubject,
+            instance::LogicalInstance,
+            miner::Miner
+        )
+            # retrieve logiset and the specific instance
+            X, i_instance = instance.s, instance.i_instance
+
+            # key to access memoization structures
+            memokey = LmeasMemoKey((Symbol($(esc(fname))), subject, i_instance))
+
+            # leverage memoization if possible
+            memoized = localmemo(miner, memokey)
+            if !isnothing(memoized)
+                return memoized
+            end
+
+            # compute local measure
+            response = $(esc(measlogic))(subject, instance, miner)
+            measure = response[:measure]
+
+            # save measure in memoization structure;
+            # also, do more stuff depending on `powerups` dispatch (see the documentation).
+            localmemo!(miner, memokey, measure)
+            for powerup in LOCAL_POWERUP_SYMBOLS
+                # the numerical value necessary to save more informations about the relation
+                # between an instance and an subject must be obtained by the internal logic
+                # of the meaningfulness measure callback.
+                if haspowerup(miner, powerup) && haskey(response, powerup)
+                    powerups(miner, powerup)[(i_instance, subject)] = response[powerup]
+                end
+            end
+            # Note that the powerups system could potentially irrorate the entire package
+            # and could be expandend/specialized;
+            # for example, a category of powerups is necessary to fill (i_instance, subject)
+            # fields, other are necessary to save informations about something else.
+
+            return measure
+        end
+
+        # export the generated function
+        export $(esc(fname))
+    end
+end
+
+"""
+    macro gmeas(measname, measlogic)
+
+Build a generic global meaningfulness measure.
+By default, internal `miner`'s memoization is leveraged.
+To specialize an already existent measure, take a look at [`powerups`](@ref) system.
+
+See also [`haspowerups`](@ref), [`Miner`](@ref), [`powerups`](@ref).
+"""
+macro gmeas(measname, measlogic)
+    fname = Symbol(measname)
+
+    quote
+        # wrap the given `measlogic` to leverage memoization
+        Core.@__doc__ function $(esc(fname))(
+            subject::ARMSubject,
+            X::SupportedLogiset,
+            threshold::Threshold,
+            miner::Miner
+        )
+            # key to access memoization structures
+            memokey = GmeasMemoKey((Symbol($(esc(fname))), subject))
+
+            # leverage memoization if possible
+            memoized = globalmemo(miner, memokey)
+            if !isnothing(memoized)
+                return memoized
+            end
+
+            # compute local measure
+            response = $(esc(measlogic))(subject, X, threshold, miner)
+            measure = response[:measure]
+
+            # save measure in memoization structure;
+            # also, do more stuff depending on `powerups` dispatch (see the documentation).
+            # to know more, see `lmeas` comments.
+            globalmemo!(miner, memokey, measure)
+            for powerup in GLOBAL_POWERUP_SYMBOLS
+                if haspowerup(miner, powerup) && haskey(response, powerup)
+                    powerups(miner, powerup)[(subject)] = response[powerup]
+                end
+            end
+
+            return measure
+        end
+
+        # export the generated function
+        export $(esc(fname))
+    end
+end
+
+_lsupport_logic = (itemset, instance, miner) -> begin
+    X, i_instance = instance.s, instance.i_instance # dataset(miner)
+
+    # Bool vector, representing on which world an Itemset holds
+    wmask = [check(toformula(itemset), X, i_instance, w) for w in allworlds(X, i_instance)]
+
+    # Return the result, and eventually the information needed to support powerups
+    return Dict(
+        :measure => count(wmask) / nworlds(X, i_instance),
+        :instance_item_toworlds => wmask
+    )
+end
+
+_gsupport_logic = (itemset, X, threshold, miner) -> begin
+    _measure = sum([
+        lsupport(itemset, getinstance(X, i_instance), miner) >= threshold
+        for i_instance in 1:ninstances(X)
+    ]) / ninstances(X)
+
+    return Dict(:measure => _measure)
+end
+
+"""
     function lsupport(
         itemset::Itemset,
-        logi_instance::LogicalInstance;
+        instance::LogicalInstance;
         miner::Union{Nothing,Miner}=nothing
     )::Float64
 
-Compute the local support for the given `itemset` in the given `logi_instance`.
+Compute the local support for the given `itemset` in the given `instance`.
 
 Local support is the ratio between the number of worlds in a [`LogicalInstance`](@ref) where
 and [`Itemset`](@ref) is true and the total number of worlds in the same instance.
@@ -14,47 +159,7 @@ If a miner is provided, then its internal state is updated and used to leverage 
 
 See also [`Miner`](@ref), [`LogicalInstance`](@ref), [`Itemset`](@ref).
 """
-function lsupport(
-    itemset::Itemset,
-    logi_instance::LogicalInstance;
-    miner::Union{Nothing,Miner}=nothing,
-    mymemo_on::Bool=true
-)::Float64
-    # retrieve logiset, and the specific instance
-    X, i_instance = logi_instance.s, logi_instance.i_instance
-
-    # this is needed to access memoization structures
-    memokey = LmeasMemoKey((Symbol(lsupport), itemset, i_instance))
-
-    # leverage memoization if a miner is provided, and it already computed the measure
-    if !isnothing(miner) && mymemo_on
-        memoized = localmemo(miner, memokey)
-        if !isnothing(memoized)
-            return memoized
-        end
-    end
-
-    # keep track of which worlds contributes to compute local support, then compute it
-    _contributors = WorldMask([
-        check(toformula(itemset), X, i_instance, w)
-        for w in allworlds(X, i_instance)
-    ])
-
-    ans = sum(_contributors) / nworlds(X, i_instance)
-
-    if !isnothing(miner)
-        localmemo!(miner, memokey, ans)
-
-        # IDEA: call two methods here. One is built-in in Sole, and checks every equippable
-        # attribute that `miner` can have in its info named tuple.
-        # The other dispatch is empty, but customizable by the user to check his things.
-        if haspowerup(miner, :instance_item_toworlds)
-            powerups(miner, :instance_item_toworlds)[(i_instance, itemset)] = _contributors
-        end
-    end
-
-    return ans
-end
+@lmeas lsupport _lsupport_logic
 
 """
     function gsupport(
@@ -76,57 +181,34 @@ If a miner is provided, then its internal state is updated and used to leverage 
 See also [`Miner`](@ref), [`LogicalInstance`](@ref), [`Itemset`](@ref),
 [`SupportedLogiset`](@ref), [`Threshold`](@ref).
 """
-function gsupport(
-    itemset::Itemset,
-    X::SupportedLogiset,
-    threshold::Threshold;
-    miner::Union{Nothing,Miner}=nothing,
-    mymemo_on::Bool=true,
-    internalmemo_on::Bool=true
-)::Float64
-    # this is needed to access memoization structures
-    memokey = GmeasMemoKey((Symbol(gsupport), itemset))
+@gmeas gsupport _gsupport_logic
 
-    # leverage memoization if a miner is provided, and it already computed the measure
-    if !isnothing(miner) && mymemo_on
-        memoized = globalmemo(miner, memokey)
-        if !isnothing(memoized)
-            return memoized
-        end
-    end
+_lconfidence_logic = (rule, instance, miner) -> begin
+    den = lsupport(antecedent(rule), instance, miner)
+    num = lsupport(convert(Itemset, rule), instance, miner)
 
-    # compute global measure, then divide it by the dataset total number of instances
-    ans = sum([
-        lsupport(
-                itemset,
-                getinstance(X, i_instance);
-                miner=miner,
-                mymemo_on=internalmemo_on
-            ) >= threshold
-            for i_instance in 1:ninstances(X)]
-        ) / ninstances(X)
-
-    if !isnothing(miner)
-        globalmemo!(miner, memokey, ans)
-    end
-
-    return ans
+    # Return the result, and eventually the information needed to support powerups
+    return Dict(:measure => num/den)
 end
 
-islocalof(::typeof(lsupport), ::typeof(gsupport)) = true
-isglobalof(::typeof(gsupport), ::typeof(lsupport)) = true
+_gconfidence_logic = (rule, X, threshold, miner) -> begin
+    _antecedent = antecedent(rule)
+    _consequent = consequent(rule)
+    _union = union(_antecedent, _consequent)
 
-localof(::typeof(gsupport)) = lsupport
-globalof(::typeof(lsupport)) = gsupport
+    num = gsupport(_union, X, threshold, miner)
+    den = gsupport(_antecedent, X, threshold, miner)
+    return Dict(:measure => num/den)
+end
 
 """
     function lconfidence(
         rule::ARule,
-        logi_instance::LogicalInstance;
+        instance::LogicalInstance;
         miner::Union{Nothing,Miner}=nothing
     )::Float64
 
-Compute the local confidence for the given `rule` in the given `logi_instance`.
+Compute the local confidence for the given `rule` in the given `instance`.
 
 Local confidence is the ratio between [`lsupport`](@ref) of an [`ARule`](@ref) on
 a [`LogicalInstance`](@ref) and the [`lsupport`](@ref) of the [`antecedent`](@ref) of the
@@ -137,44 +219,7 @@ If a miner is provided, then its internal state is updated and used to leverage 
 See also [`antecedent`](@ref), [`ARule`](@ref), [`Miner`](@ref),
 [`LogicalInstance`](@ref), [`lsupport`](@ref).
 """
-function lconfidence(
-    rule::ARule,
-    logi_instance::LogicalInstance;
-    miner::Union{Nothing,Miner}=nothing,
-    mymemo_on::Bool=true,
-    internalmemo_on::Bool=true
-)::Float64
-    # this is needed to access memoization structures
-    memokey = LmeasMemoKey((Symbol(lconfidence), rule, logi_instance.i_instance))
-
-    # leverage memoization if a miner is provided, and it already computed the measure
-    if !isnothing(miner) && internalmemo_on
-        memoized = localmemo(miner, memokey)
-        if !isnothing(memoized)
-            return memoized
-        end
-    end
-
-    # denominator could be near to zero
-    den = lsupport(antecedent(rule), logi_instance; miner=miner, mymemo_on=internalmemo_on)
-
-    ans = 0.0
-    if (den <= 100*eps())
-        ans = 0.0 # illegal denominator
-        # error("Illegal denominator when computing local confidence: (value is $(den))")
-    else
-        num = lsupport(
-            convert(Itemset, rule), logi_instance; miner=miner, mymemo_on=internalmemo_on)
-        ans = num / den
-    end
-
-
-    if !isnothing(miner)
-        localmemo!(miner, memokey, ans)
-    end
-
-    return ans
-end
+@lmeas lconfidence _lconfidence_logic
 
 """
     function gconfidence(
@@ -184,64 +229,26 @@ end
         miner::Union{Nothing,Miner}=nothing
     )::Float64
 
-Compute the global confidence for the given `rule` on a logiset `X`, considering `threshold`
-as the threshold for the global support called internally.
+Compute the global confidence for the given `rule` on a logiset `X`, considering
+`threshold` as the threshold for the global support called internally.
 
 Global confidence is the ratio between [`gsupport`](@ref) of an [`ARule`](@ref) on
-a [`SupportedLogiset`](@ref) and the [`gsupport`](@ref) of the [`antecedent`](@ref) of the
-same rule.
+a [`SupportedLogiset`](@ref) and the [`gsupport`](@ref) of the [`antecedent`](@ref) of
+the same rule.
 
-If a miner is provided, then its internal state is updated and used to leverage memoization.
+If a miner is provided, then its internal state is updated and used to leverage
+memoization.
 
-See also [`antecedent`](@ref), [`ARule`](@ref), [`Miner`](@ref),
-[`gsupport`](@ref), [`SupportedLogiset`](@ref).
+See also [`antecedent`](@ref), [`ARule`](@ref), [`Miner`](@ref), [`gsupport`](@ref),
+[`SupportedLogiset`](@ref).
 """
-function gconfidence(
-    rule::ARule,
-    X::SupportedLogiset,
-    threshold::Threshold;
-    miner::Union{Nothing,Miner}=nothing,
-    mymemo_on::Bool=true,
-    internalmemo_on::Bool=true
-)::Float64
-    # this is needed to access memoization structures
-    memokey = GmeasMemoKey((Symbol(gconfidence), rule))
+@gmeas gconfidence _gconfidence_logic
 
-    # leverage memoization if a miner is provided, and it already computed the measure
-    if !isnothing(miner) && internalmemo_on
-        memoized = globalmemo(miner, memokey)
-        if !isnothing(memoized)
-            return memoized
-        end
-    end
+islocalof(::typeof(lsupport), ::typeof(gsupport)) = true
+isglobalof(::typeof(gsupport), ::typeof(lsupport)) = true
 
-    _antecedent = antecedent(rule)
-    _consequent = consequent(rule)
-    _union = union(_antecedent, _consequent)
-
-    # denominator could be near to zero
-    den = gsupport(_antecedent, X, threshold; miner=miner, mymemo_on=true)
-
-    ans = 0.0
-    num = 0.0
-    if (den <= 100*eps())
-        return 0.0 # illegal denominator
-        # error("Illegal denominator when computing global confidence: (value is $(den))")
-    else
-        num = gsupport(_union, X, threshold; miner=miner, mymemo_on=true)
-        ans = num / den
-    end
-
-    if (ans > 1.0)
-        @error "Critical error: global confidence overflow on $(rule). (value is $(ans))"
-    end
-
-    if !isnothing(miner)
-        globalmemo!(miner, memokey, ans)
-    end
-
-    return ans
-end
+localof(::typeof(gsupport)) = lsupport
+globalof(::typeof(lsupport)) = gsupport
 
 islocalof(::typeof(lconfidence), ::typeof(gconfidence)) = true
 isglobalof(::typeof(gconfidence), ::typeof(lconfidence)) = true

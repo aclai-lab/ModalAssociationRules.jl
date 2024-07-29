@@ -134,8 +134,8 @@ _association_rules_test1(fpgrowth_miner)
 function _dummy_gsupport(
     itemset::Itemset,
     X::SupportedLogiset,
-    threshold::Threshold;
-    miner::Union{Nothing,Miner} = nothing
+    threshold::Threshold,
+    miner::Union{Nothing,Miner}
 )::Float64
     return 1.0
 end
@@ -203,15 +203,15 @@ _temp_apriori_miner = Miner(X1, apriori, manual_items, _itemsetmeasures, _ruleme
 @test isglobalof(gconfidence, lconfidence) == true
 @test isglobalof(gconfidence, gconfidence) == false
 
-@test lsupport(pq, SoleLogics.getinstance(X2, 1); miner=fpgrowth_miner) == 0.0
+@test lsupport(pq, SoleLogics.getinstance(X2, 1), fpgrowth_miner) == 0.0
 
-_temp_lsupport = lsupport(pq, SoleLogics.getinstance(X2, 7); miner=fpgrowth_miner)
+_temp_lsupport = lsupport(pq, SoleLogics.getinstance(X2, 7), fpgrowth_miner)
 @test _temp_lsupport >= 0.0 && _temp_lsupport <= 1.0
 
 _temp_arule = generaterules(freqitems(fpgrowth_miner), fpgrowth_miner) |> first
 
-lsupport(Itemset(manual_p), SoleLogics.getinstance(X2, 7); miner=fpgrowth_miner)
-lsupport(Itemset(manual_lr), SoleLogics.getinstance(X2, 7); miner=fpgrowth_miner)
+lsupport(Itemset(manual_p), SoleLogics.getinstance(X2, 7), fpgrowth_miner)
+lsupport(Itemset(manual_lr), SoleLogics.getinstance(X2, 7), fpgrowth_miner)
 
 # more on Miner powerups (a.k.a, "customization system")
 @test ModalAssociationRules.initpowerups(apriori, dataset(apriori_miner)) == Powerup()

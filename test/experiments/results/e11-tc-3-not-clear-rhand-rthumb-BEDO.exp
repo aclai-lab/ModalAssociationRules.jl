@@ -1,0 +1,83 @@
+Parameterization:
+
+min[Y[Hand tip r]] ≥ -0.5
+max[ΔY[Hand tip r and thumb r]] ≤ 0.0
+⟨B⟩min[Y[Hand tip r]] ≥ -0.5
+⟨B⟩max[ΔY[Hand tip r and thumb r]] ≤ 0.0
+[E]min[Y[Hand tip r]] ≥ -0.5
+[E]max[ΔY[Hand tip r and thumb r]] ≤ 0.0
+⟨D⟩min[Y[Hand tip r]] ≥ -0.5
+⟨D⟩max[ΔY[Hand tip r and thumb r]] ≤ 0.0
+[O]min[Y[Hand tip r]] ≥ -0.5
+[O]max[ΔY[Hand tip r and thumb r]] ≤ 0.0
+[(ModalAssociationRules.gsupport, 0.01, 0.01)]
+[(ModalAssociationRules.gconfidence, 0.1, 0.1)]
+
+Running time:
+
+Frequent itemsets extraction: 10.342508225
+Association rules generation (w. sift engine): 0.294482523
+Total elapsed time: 10.636990747999999
+
+Results:
+
+(max[ΔY[Hand tip r and thumb r]] ≤ 0.0) => ([O]min[Y[Hand tip r]] ≥ -0.5)
+	gconfidence: 1.0
+	gsupport - (antecedent): 1.0
+	gsupport - (consequent): 1.0
+	gsupport - (entire): 1.0
+
+(max[ΔY[Hand tip r and thumb r]] ≤ 0.0) => ([E]min[Y[Hand tip r]] ≥ -0.5)
+	gconfidence: 1.0
+	gsupport - (antecedent): 1.0
+	gsupport - (consequent): 1.0
+	gsupport - (entire): 1.0
+
+(min[Y[Hand tip r]] ≥ -0.5) => ([E]max[ΔY[Hand tip r and thumb r]] ≤ 0.0)
+	gconfidence: 0.8333333333333334
+	gsupport - (antecedent): 1.0
+	gsupport - (consequent): 1.0
+	gsupport - (entire): 0.8333333333333334
+
+(min[Y[Hand tip r]] ≥ -0.5) => ([O]max[ΔY[Hand tip r and thumb r]] ≤ 0.0)
+	gconfidence: 0.8
+	gsupport - (antecedent): 1.0
+	gsupport - (consequent): 1.0
+	gsupport - (entire): 0.8
+
+(min[Y[Hand tip r]] ≥ -0.5) => (⟨B⟩max[ΔY[Hand tip r and thumb r]] ≤ 0.0)
+	gconfidence: 0.5666666666666667
+	gsupport - (antecedent): 1.0
+	gsupport - (consequent): 1.0
+	gsupport - (entire): 0.5666666666666667
+
+(max[ΔY[Hand tip r and thumb r]] ≤ 0.0) => (⟨B⟩min[Y[Hand tip r]] ≥ -0.5)
+	gconfidence: 0.4666666666666667
+	gsupport - (antecedent): 1.0
+	gsupport - (consequent): 1.0
+	gsupport - (entire): 0.4666666666666667
+
+(min[Y[Hand tip r]] ≥ -0.5) => (⟨D⟩max[ΔY[Hand tip r and thumb r]] ≤ 0.0)
+	gconfidence: 0.43333333333333335
+	gsupport - (antecedent): 1.0
+	gsupport - (consequent): 1.0
+	gsupport - (entire): 0.43333333333333335
+
+(max[ΔY[Hand tip r and thumb r]] ≤ 0.0) => (⟨D⟩min[Y[Hand tip r]] ≥ -0.5)
+	gconfidence: 0.4
+	gsupport - (antecedent): 1.0
+	gsupport - (consequent): 1.0
+	gsupport - (entire): 0.4
+
+(max[ΔY[Hand tip r and thumb r]] ≤ 0.0) => (min[Y[Hand tip r]] ≥ -0.5)
+	gconfidence: 0.3333333333333333
+	gsupport - (antecedent): 1.0
+	gsupport - (consequent): 1.0
+	gsupport - (entire): 0.3333333333333333
+
+(min[Y[Hand tip r]] ≥ -0.5) => (max[ΔY[Hand tip r and thumb r]] ≤ 0.0)
+	gconfidence: 0.3333333333333333
+	gsupport - (antecedent): 1.0
+	gsupport - (consequent): 1.0
+	gsupport - (entire): 0.3333333333333333
+

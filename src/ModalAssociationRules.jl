@@ -69,6 +69,7 @@ export frame, allworlds, nworlds
 
 include("meaningfulness-measures.jl")
 
+export @lmeas, @gmeas
 export lsupport, gsupport
 export lconfidence, gconfidence
 

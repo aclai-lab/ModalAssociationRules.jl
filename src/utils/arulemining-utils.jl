@@ -181,7 +181,7 @@ See also [`ARule`](@ref), [`Miner`](@ref), [`Itemset`](@ref), [`rulemeasures`](@
             for meas in rulemeasures(miner)
                 (gmeas_algo, lthreshold, gthreshold) = meas
                 gmeas_result = gmeas_algo(
-                    currentrule, dataset(miner), lthreshold, miner=miner)
+                    currentrule, dataset(miner), lthreshold, miner)
 
                 # some meaningfulness measure test is failed
                 if gmeas_result < gthreshold

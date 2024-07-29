@@ -1,0 +1,1591 @@
+Parameterization:
+
+min[Y[Hand tip l]] ≥ -1.0
+min[Y[Hand tip r]] ≥ 0.2
+min[Y[Hand tip r]] ≥ 0.5
+max[Z[Hand tip l]] ≤ -1
+min[X[Elbow r]] ≥ 0.7
+max[X[Elbow r]] ≤ 0.7
+min[Y[Elbow r]] ≥ -0.5
+max[Z[Elbow l]] ≤ -0.25
+max[Z[Elbow r]] ≥ -0.3
+⟨O⟩min[Y[Hand tip l]] ≥ -1.0
+⟨O⟩min[Y[Hand tip r]] ≥ 0.2
+⟨O⟩min[Y[Hand tip r]] ≥ 0.5
+⟨O⟩max[Z[Hand tip l]] ≤ -1
+⟨O⟩min[X[Elbow r]] ≥ 0.7
+⟨O⟩max[X[Elbow r]] ≤ 0.7
+⟨O⟩min[Y[Elbow r]] ≥ -0.5
+⟨O⟩max[Z[Elbow l]] ≤ -0.25
+⟨O⟩max[Z[Elbow r]] ≥ -0.3
+[(ModalAssociationRules.gsupport, 0.2, 0.2)]
+[(ModalAssociationRules.gconfidence, 0.1, 0.1)]
+
+Running time:
+
+Frequent itemsets extraction: 23.893924023
+Association rules generation (w. sift engine): 1.381362148
+Total elapsed time: 25.275286171
+
+Results:
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (⟨O⟩min[X[Elbow r]] ≥ 0.7) ∧ (⟨O⟩min[Y[Elbow r]] ≥ -0.5) ∧ (⟨O⟩max[Z[Elbow r]] ≥ -0.3) => (⟨O⟩min[Y[Hand tip r]] ≥ 0.2)
+	gconfidence: 1.0
+	gsupport - (antecedent): 0.2
+	gsupport - (consequent): 0.9333333333333333
+	gsupport - (entire): 0.2
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.2) ∧ (⟨O⟩min[X[Elbow r]] ≥ 0.7) ∧ (⟨O⟩max[Z[Elbow r]] ≥ -0.3) => (⟨O⟩min[Y[Elbow r]] ≥ -0.5)
+	gconfidence: 1.0
+	gsupport - (antecedent): 0.2
+	gsupport - (consequent): 0.9666666666666667
+	gsupport - (entire): 0.2
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.2) ∧ (⟨O⟩min[X[Elbow r]] ≥ 0.7) ∧ (⟨O⟩min[Y[Elbow r]] ≥ -0.5) => (⟨O⟩max[Z[Elbow r]] ≥ -0.3)
+	gconfidence: 1.0
+	gsupport - (antecedent): 0.2
+	gsupport - (consequent): 0.9666666666666667
+	gsupport - (entire): 0.2
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.5) => (⟨O⟩min[Y[Elbow r]] ≥ -0.5)
+	gconfidence: 1.0
+	gsupport - (antecedent): 0.3
+	gsupport - (consequent): 0.9666666666666667
+	gsupport - (entire): 0.3
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.2) ∧ (⟨O⟩min[X[Elbow r]] ≥ 0.7) => (⟨O⟩max[Z[Elbow r]] ≥ -0.3)
+	gconfidence: 1.0
+	gsupport - (antecedent): 0.2
+	gsupport - (consequent): 0.9666666666666667
+	gsupport - (entire): 0.2
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (⟨O⟩min[Y[Hand tip l]] ≥ -1.0) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.5) => (⟨O⟩max[Z[Elbow r]] ≥ -0.3)
+	gconfidence: 1.0
+	gsupport - (antecedent): 0.23333333333333334
+	gsupport - (consequent): 0.9666666666666667
+	gsupport - (entire): 0.23333333333333334
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.5) ∧ (⟨O⟩min[X[Elbow r]] ≥ 0.7) ∧ (⟨O⟩max[Z[Elbow l]] ≤ -0.25) => (⟨O⟩min[Y[Elbow r]] ≥ -0.5)
+	gconfidence: 1.0
+	gsupport - (antecedent): 0.23333333333333334
+	gsupport - (consequent): 0.9666666666666667
+	gsupport - (entire): 0.23333333333333334
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (⟨O⟩min[Y[Hand tip l]] ≥ -1.0) => (⟨O⟩max[Z[Elbow r]] ≥ -0.3)
+	gconfidence: 1.0
+	gsupport - (antecedent): 0.3333333333333333
+	gsupport - (consequent): 0.9666666666666667
+	gsupport - (entire): 0.3333333333333333
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (⟨O⟩min[Y[Elbow r]] ≥ -0.5) => (⟨O⟩max[Z[Elbow r]] ≥ -0.3)
+	gconfidence: 1.0
+	gsupport - (antecedent): 0.3333333333333333
+	gsupport - (consequent): 0.9666666666666667
+	gsupport - (entire): 0.3333333333333333
+
+(min[X[Elbow r]] ≥ 0.7) ∧ (⟨O⟩max[Z[Elbow l]] ≤ -0.25) => (⟨O⟩max[Z[Elbow r]] ≥ -0.3)
+	gconfidence: 1.0
+	gsupport - (antecedent): 0.2
+	gsupport - (consequent): 0.9666666666666667
+	gsupport - (entire): 0.2
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (⟨O⟩min[Y[Hand tip l]] ≥ -1.0) ∧ (⟨O⟩min[Y[Elbow r]] ≥ -0.5) => (⟨O⟩max[Z[Elbow r]] ≥ -0.3)
+	gconfidence: 1.0
+	gsupport - (antecedent): 0.3
+	gsupport - (consequent): 0.9666666666666667
+	gsupport - (entire): 0.3
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (⟨O⟩min[Y[Hand tip l]] ≥ -1.0) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.5) => (⟨O⟩min[Y[Elbow r]] ≥ -0.5)
+	gconfidence: 1.0
+	gsupport - (antecedent): 0.23333333333333334
+	gsupport - (consequent): 0.9666666666666667
+	gsupport - (entire): 0.23333333333333334
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.5) => (⟨O⟩min[Y[Elbow r]] ≥ -0.5)
+	gconfidence: 1.0
+	gsupport - (antecedent): 0.2
+	gsupport - (consequent): 0.9666666666666667
+	gsupport - (entire): 0.2
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Hand tip l]] ≥ -1.0) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.2) ∧ (⟨O⟩min[X[Elbow r]] ≥ 0.7) ∧ (⟨O⟩max[Z[Elbow l]] ≤ -0.25) => (⟨O⟩min[Y[Elbow r]] ≥ -0.5)
+	gconfidence: 1.0
+	gsupport - (antecedent): 0.2
+	gsupport - (consequent): 0.9666666666666667
+	gsupport - (entire): 0.2
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (⟨O⟩min[Y[Hand tip l]] ≥ -1.0) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.5) ∧ (⟨O⟩max[Z[Elbow r]] ≥ -0.3) => (⟨O⟩min[Y[Elbow r]] ≥ -0.5)
+	gconfidence: 1.0
+	gsupport - (antecedent): 0.23333333333333334
+	gsupport - (consequent): 0.9666666666666667
+	gsupport - (entire): 0.23333333333333334
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (⟨O⟩min[Y[Hand tip l]] ≥ -1.0) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.5) ∧ (⟨O⟩min[Y[Elbow r]] ≥ -0.5) => (⟨O⟩max[Z[Elbow r]] ≥ -0.3)
+	gconfidence: 1.0
+	gsupport - (antecedent): 0.23333333333333334
+	gsupport - (consequent): 0.9666666666666667
+	gsupport - (entire): 0.23333333333333334
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Hand tip l]] ≥ -1.0) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.2) ∧ (⟨O⟩min[X[Elbow r]] ≥ 0.7) => (⟨O⟩min[Y[Elbow r]] ≥ -0.5)
+	gconfidence: 1.0
+	gsupport - (antecedent): 0.23333333333333334
+	gsupport - (consequent): 0.9666666666666667
+	gsupport - (entire): 0.23333333333333334
+
+(min[X[Elbow r]] ≥ 0.7) ∧ (max[Z[Elbow l]] ≤ -0.25) => (⟨O⟩max[Z[Elbow r]] ≥ -0.3)
+	gconfidence: 1.0
+	gsupport - (antecedent): 0.2
+	gsupport - (consequent): 0.9666666666666667
+	gsupport - (entire): 0.2
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (⟨O⟩min[Y[Hand tip l]] ≥ -1.0) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.2) => (⟨O⟩max[Z[Elbow r]] ≥ -0.3)
+	gconfidence: 1.0
+	gsupport - (antecedent): 0.26666666666666666
+	gsupport - (consequent): 0.9666666666666667
+	gsupport - (entire): 0.26666666666666666
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (⟨O⟩min[X[Elbow r]] ≥ 0.7) ∧ (⟨O⟩min[Y[Elbow r]] ≥ -0.5) ∧ (⟨O⟩max[Z[Elbow r]] ≥ -0.3) => (⟨O⟩min[Y[Hand tip r]] ≥ 0.5)
+	gconfidence: 1.0
+	gsupport - (antecedent): 0.2
+	gsupport - (consequent): 0.9
+	gsupport - (entire): 0.2
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.5) ∧ (⟨O⟩min[X[Elbow r]] ≥ 0.7) ∧ (⟨O⟩max[Z[Elbow r]] ≥ -0.3) => (⟨O⟩min[Y[Elbow r]] ≥ -0.5)
+	gconfidence: 1.0
+	gsupport - (antecedent): 0.2
+	gsupport - (consequent): 0.9666666666666667
+	gsupport - (entire): 0.2
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.5) ∧ (⟨O⟩min[X[Elbow r]] ≥ 0.7) ∧ (⟨O⟩min[Y[Elbow r]] ≥ -0.5) => (⟨O⟩max[Z[Elbow r]] ≥ -0.3)
+	gconfidence: 1.0
+	gsupport - (antecedent): 0.2
+	gsupport - (consequent): 0.9666666666666667
+	gsupport - (entire): 0.2
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.2) => (⟨O⟩min[Y[Elbow r]] ≥ -0.5)
+	gconfidence: 1.0
+	gsupport - (antecedent): 0.6333333333333333
+	gsupport - (consequent): 0.9666666666666667
+	gsupport - (entire): 0.6333333333333333
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.2) ∧ (⟨O⟩min[X[Elbow r]] ≥ 0.7) ∧ (⟨O⟩max[Z[Elbow l]] ≤ -0.25) => (⟨O⟩min[Y[Elbow r]] ≥ -0.5)
+	gconfidence: 1.0
+	gsupport - (antecedent): 0.23333333333333334
+	gsupport - (consequent): 0.9666666666666667
+	gsupport - (entire): 0.23333333333333334
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.2) ∧ (⟨O⟩min[X[Elbow r]] ≥ 0.7) => (⟨O⟩min[Y[Elbow r]] ≥ -0.5)
+	gconfidence: 1.0
+	gsupport - (antecedent): 0.3333333333333333
+	gsupport - (consequent): 0.9666666666666667
+	gsupport - (entire): 0.3333333333333333
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (⟨O⟩min[X[Elbow r]] ≥ 0.7) ∧ (⟨O⟩min[Y[Elbow r]] ≥ -0.5) => (⟨O⟩max[Z[Elbow r]] ≥ -0.3)
+	gconfidence: 1.0
+	gsupport - (antecedent): 0.2
+	gsupport - (consequent): 0.9666666666666667
+	gsupport - (entire): 0.2
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (⟨O⟩min[X[Elbow r]] ≥ 0.7) => (⟨O⟩max[Z[Elbow r]] ≥ -0.3)
+	gconfidence: 1.0
+	gsupport - (antecedent): 0.23333333333333334
+	gsupport - (consequent): 0.9666666666666667
+	gsupport - (entire): 0.23333333333333334
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.5) => (⟨O⟩min[Y[Elbow r]] ≥ -0.5)
+	gconfidence: 1.0
+	gsupport - (antecedent): 0.6333333333333333
+	gsupport - (consequent): 0.9666666666666667
+	gsupport - (entire): 0.6333333333333333
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (⟨O⟩min[X[Elbow r]] ≥ 0.7) => (max[Z[Elbow r]] ≥ -0.3)
+	gconfidence: 1.0
+	gsupport - (antecedent): 0.23333333333333334
+	gsupport - (consequent): 0.9333333333333333
+	gsupport - (entire): 0.23333333333333334
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.2) => (⟨O⟩max[Z[Elbow r]] ≥ -0.3)
+	gconfidence: 1.0
+	gsupport - (antecedent): 0.3
+	gsupport - (consequent): 0.9666666666666667
+	gsupport - (entire): 0.3
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.2) ∧ (⟨O⟩max[Z[Elbow r]] ≥ -0.3) => (⟨O⟩min[Y[Elbow r]] ≥ -0.5)
+	gconfidence: 1.0
+	gsupport - (antecedent): 0.3
+	gsupport - (consequent): 0.9666666666666667
+	gsupport - (entire): 0.3
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.2) ∧ (⟨O⟩min[Y[Elbow r]] ≥ -0.5) => (⟨O⟩max[Z[Elbow r]] ≥ -0.3)
+	gconfidence: 1.0
+	gsupport - (antecedent): 0.3
+	gsupport - (consequent): 0.9666666666666667
+	gsupport - (entire): 0.3
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Hand tip l]] ≥ -1.0) ∧ (⟨O⟩min[X[Elbow r]] ≥ 0.7) ∧ (⟨O⟩max[Z[Elbow l]] ≤ -0.25) => (⟨O⟩min[Y[Elbow r]] ≥ -0.5)
+	gconfidence: 1.0
+	gsupport - (antecedent): 0.23333333333333334
+	gsupport - (consequent): 0.9666666666666667
+	gsupport - (entire): 0.23333333333333334
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Hand tip l]] ≥ -1.0) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.5) ∧ (⟨O⟩min[X[Elbow r]] ≥ 0.7) => (⟨O⟩min[Y[Elbow r]] ≥ -0.5)
+	gconfidence: 1.0
+	gsupport - (antecedent): 0.2
+	gsupport - (consequent): 0.9666666666666667
+	gsupport - (entire): 0.2
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.5) ∧ (⟨O⟩max[Z[Elbow r]] ≥ -0.3) => (⟨O⟩min[Y[Elbow r]] ≥ -0.5)
+	gconfidence: 1.0
+	gsupport - (antecedent): 0.3
+	gsupport - (consequent): 0.9666666666666667
+	gsupport - (entire): 0.3
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.5) ∧ (⟨O⟩min[Y[Elbow r]] ≥ -0.5) => (⟨O⟩max[Z[Elbow r]] ≥ -0.3)
+	gconfidence: 1.0
+	gsupport - (antecedent): 0.3
+	gsupport - (consequent): 0.9666666666666667
+	gsupport - (entire): 0.3
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (⟨O⟩min[X[Elbow r]] ≥ 0.7) ∧ (⟨O⟩min[Y[Elbow r]] ≥ -0.5) => (⟨O⟩min[Y[Hand tip r]] ≥ 0.5)
+	gconfidence: 1.0
+	gsupport - (antecedent): 0.2
+	gsupport - (consequent): 0.9
+	gsupport - (entire): 0.2
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.5) ∧ (⟨O⟩min[X[Elbow r]] ≥ 0.7) => (⟨O⟩min[Y[Elbow r]] ≥ -0.5)
+	gconfidence: 1.0
+	gsupport - (antecedent): 0.2
+	gsupport - (consequent): 0.9666666666666667
+	gsupport - (entire): 0.2
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (⟨O⟩min[Y[Hand tip l]] ≥ -1.0) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.2) => (⟨O⟩min[Y[Elbow r]] ≥ -0.5)
+	gconfidence: 1.0
+	gsupport - (antecedent): 0.26666666666666666
+	gsupport - (consequent): 0.9666666666666667
+	gsupport - (entire): 0.26666666666666666
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.5) ∧ (⟨O⟩min[X[Elbow r]] ≥ 0.7) => (⟨O⟩max[Z[Elbow r]] ≥ -0.3)
+	gconfidence: 1.0
+	gsupport - (antecedent): 0.2
+	gsupport - (consequent): 0.9666666666666667
+	gsupport - (entire): 0.2
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.5) ∧ (⟨O⟩max[Z[Elbow l]] ≤ -0.25) => (⟨O⟩min[Y[Elbow r]] ≥ -0.5)
+	gconfidence: 1.0
+	gsupport - (antecedent): 0.4666666666666667
+	gsupport - (consequent): 0.9666666666666667
+	gsupport - (entire): 0.4666666666666667
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Hand tip l]] ≥ -1.0) ∧ (⟨O⟩min[X[Elbow r]] ≥ 0.7) => (⟨O⟩min[Y[Elbow r]] ≥ -0.5)
+	gconfidence: 1.0
+	gsupport - (antecedent): 0.26666666666666666
+	gsupport - (consequent): 0.9666666666666667
+	gsupport - (entire): 0.26666666666666666
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.2) => (⟨O⟩min[Y[Elbow r]] ≥ -0.5)
+	gconfidence: 1.0
+	gsupport - (antecedent): 0.3
+	gsupport - (consequent): 0.9666666666666667
+	gsupport - (entire): 0.3
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (⟨O⟩min[X[Elbow r]] ≥ 0.7) ∧ (⟨O⟩min[Y[Elbow r]] ≥ -0.5) => (max[Z[Elbow r]] ≥ -0.3)
+	gconfidence: 1.0
+	gsupport - (antecedent): 0.2
+	gsupport - (consequent): 0.9333333333333333
+	gsupport - (entire): 0.2
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.2) ∧ (⟨O⟩max[Z[Elbow l]] ≤ -0.25) => (⟨O⟩min[Y[Elbow r]] ≥ -0.5)
+	gconfidence: 1.0
+	gsupport - (antecedent): 0.4666666666666667
+	gsupport - (consequent): 0.9666666666666667
+	gsupport - (entire): 0.4666666666666667
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (⟨O⟩min[X[Elbow r]] ≥ 0.7) ∧ (⟨O⟩min[Y[Elbow r]] ≥ -0.5) => (⟨O⟩min[Y[Hand tip r]] ≥ 0.2)
+	gconfidence: 1.0
+	gsupport - (antecedent): 0.2
+	gsupport - (consequent): 0.9333333333333333
+	gsupport - (entire): 0.2
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.2) ∧ (⟨O⟩min[X[Elbow r]] ≥ 0.7) => (⟨O⟩min[Y[Elbow r]] ≥ -0.5)
+	gconfidence: 1.0
+	gsupport - (antecedent): 0.2
+	gsupport - (consequent): 0.9666666666666667
+	gsupport - (entire): 0.2
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (⟨O⟩max[X[Elbow r]] ≤ 0.7) => (⟨O⟩max[Z[Elbow r]] ≥ -0.3)
+	gconfidence: 1.0
+	gsupport - (antecedent): 0.26666666666666666
+	gsupport - (consequent): 0.9666666666666667
+	gsupport - (entire): 0.26666666666666666
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (⟨O⟩min[Y[Hand tip l]] ≥ -1.0) ∧ (⟨O⟩min[X[Elbow r]] ≥ 0.7) => (⟨O⟩max[Z[Elbow r]] ≥ -0.3)
+	gconfidence: 1.0
+	gsupport - (antecedent): 0.2
+	gsupport - (consequent): 0.9666666666666667
+	gsupport - (entire): 0.2
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (⟨O⟩min[Y[Hand tip l]] ≥ -1.0) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.2) ∧ (⟨O⟩max[Z[Elbow r]] ≥ -0.3) => (⟨O⟩min[Y[Elbow r]] ≥ -0.5)
+	gconfidence: 1.0
+	gsupport - (antecedent): 0.26666666666666666
+	gsupport - (consequent): 0.9666666666666667
+	gsupport - (entire): 0.26666666666666666
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (⟨O⟩min[Y[Hand tip l]] ≥ -1.0) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.2) ∧ (⟨O⟩min[Y[Elbow r]] ≥ -0.5) => (⟨O⟩max[Z[Elbow r]] ≥ -0.3)
+	gconfidence: 1.0
+	gsupport - (antecedent): 0.26666666666666666
+	gsupport - (consequent): 0.9666666666666667
+	gsupport - (entire): 0.26666666666666666
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.5) => (⟨O⟩max[Z[Elbow r]] ≥ -0.3)
+	gconfidence: 1.0
+	gsupport - (antecedent): 0.3
+	gsupport - (consequent): 0.9666666666666667
+	gsupport - (entire): 0.3
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.2) => (⟨O⟩min[Y[Elbow r]] ≥ -0.5)
+	gconfidence: 1.0
+	gsupport - (antecedent): 0.2
+	gsupport - (consequent): 0.9666666666666667
+	gsupport - (entire): 0.2
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.5) ∧ (⟨O⟩min[X[Elbow r]] ≥ 0.7) => (⟨O⟩min[Y[Elbow r]] ≥ -0.5)
+	gconfidence: 1.0
+	gsupport - (antecedent): 0.3
+	gsupport - (consequent): 0.9666666666666667
+	gsupport - (entire): 0.3
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Hand tip l]] ≥ -1.0) => (⟨O⟩min[Y[Elbow r]] ≥ -0.5)
+	gconfidence: 0.9375
+	gsupport - (antecedent): 0.5333333333333333
+	gsupport - (consequent): 0.9666666666666667
+	gsupport - (entire): 0.5
+
+(max[Z[Elbow r]] ≥ -0.3) => (⟨O⟩max[X[Elbow r]] ≤ 0.7)
+	gconfidence: 0.9285714285714286
+	gsupport - (antecedent): 0.9333333333333333
+	gsupport - (consequent): 0.9666666666666667
+	gsupport - (entire): 0.8666666666666667
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Hand tip l]] ≥ -1.0) ∧ (⟨O⟩max[Z[Elbow l]] ≤ -0.25) => (⟨O⟩min[Y[Elbow r]] ≥ -0.5)
+	gconfidence: 0.9285714285714286
+	gsupport - (antecedent): 0.4666666666666667
+	gsupport - (consequent): 0.9666666666666667
+	gsupport - (entire): 0.43333333333333335
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Hand tip l]] ≥ -1.0) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.2) => (⟨O⟩min[Y[Elbow r]] ≥ -0.5)
+	gconfidence: 0.9285714285714286
+	gsupport - (antecedent): 0.4666666666666667
+	gsupport - (consequent): 0.9666666666666667
+	gsupport - (entire): 0.43333333333333335
+
+(max[Z[Elbow l]] ≤ -0.25) => (⟨O⟩max[Z[Elbow r]] ≥ -0.3)
+	gconfidence: 0.9230769230769231
+	gsupport - (antecedent): 0.43333333333333335
+	gsupport - (consequent): 0.9666666666666667
+	gsupport - (entire): 0.4
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Hand tip l]] ≥ -1.0) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.5) => (⟨O⟩min[Y[Elbow r]] ≥ -0.5)
+	gconfidence: 0.9230769230769231
+	gsupport - (antecedent): 0.43333333333333335
+	gsupport - (consequent): 0.9666666666666667
+	gsupport - (entire): 0.4
+
+(min[X[Elbow r]] ≥ 0.7) => (⟨O⟩max[Z[Elbow r]] ≥ -0.3)
+	gconfidence: 0.9166666666666665
+	gsupport - (antecedent): 0.4
+	gsupport - (consequent): 0.9666666666666667
+	gsupport - (entire): 0.36666666666666664
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Hand tip l]] ≥ -1.0) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.2) ∧ (⟨O⟩max[Z[Elbow l]] ≤ -0.25) => (⟨O⟩min[Y[Elbow r]] ≥ -0.5)
+	gconfidence: 0.9166666666666665
+	gsupport - (antecedent): 0.4
+	gsupport - (consequent): 0.9666666666666667
+	gsupport - (entire): 0.36666666666666664
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Hand tip l]] ≥ -1.0) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.5) ∧ (⟨O⟩max[Z[Elbow l]] ≤ -0.25) => (⟨O⟩min[Y[Elbow r]] ≥ -0.5)
+	gconfidence: 0.9090909090909091
+	gsupport - (antecedent): 0.36666666666666664
+	gsupport - (consequent): 0.9666666666666667
+	gsupport - (entire): 0.3333333333333333
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (⟨O⟩min[Y[Elbow r]] ≥ -0.5) => (⟨O⟩min[Y[Hand tip r]] ≥ 0.5)
+	gconfidence: 0.9
+	gsupport - (antecedent): 0.3333333333333333
+	gsupport - (consequent): 0.9
+	gsupport - (entire): 0.3
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (⟨O⟩min[Y[Elbow r]] ≥ -0.5) ∧ (⟨O⟩max[Z[Elbow r]] ≥ -0.3) => (⟨O⟩min[Y[Hand tip l]] ≥ -1.0)
+	gconfidence: 0.9
+	gsupport - (antecedent): 0.3333333333333333
+	gsupport - (consequent): 0.8666666666666667
+	gsupport - (entire): 0.3
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (⟨O⟩min[Y[Hand tip l]] ≥ -1.0) ∧ (⟨O⟩max[Z[Elbow r]] ≥ -0.3) => (⟨O⟩min[Y[Elbow r]] ≥ -0.5)
+	gconfidence: 0.9
+	gsupport - (antecedent): 0.3333333333333333
+	gsupport - (consequent): 0.9666666666666667
+	gsupport - (entire): 0.3
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (⟨O⟩min[Y[Elbow r]] ≥ -0.5) ∧ (⟨O⟩max[Z[Elbow r]] ≥ -0.3) => (⟨O⟩min[Y[Hand tip r]] ≥ 0.2)
+	gconfidence: 0.9
+	gsupport - (antecedent): 0.3333333333333333
+	gsupport - (consequent): 0.9333333333333333
+	gsupport - (entire): 0.3
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (⟨O⟩min[Y[Elbow r]] ≥ -0.5) ∧ (⟨O⟩max[Z[Elbow r]] ≥ -0.3) => (⟨O⟩min[Y[Hand tip r]] ≥ 0.5)
+	gconfidence: 0.9
+	gsupport - (antecedent): 0.3333333333333333
+	gsupport - (consequent): 0.9
+	gsupport - (entire): 0.3
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (⟨O⟩min[Y[Elbow r]] ≥ -0.5) => (⟨O⟩min[Y[Hand tip r]] ≥ 0.2)
+	gconfidence: 0.9
+	gsupport - (antecedent): 0.3333333333333333
+	gsupport - (consequent): 0.9333333333333333
+	gsupport - (entire): 0.3
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (⟨O⟩min[Y[Elbow r]] ≥ -0.5) => (⟨O⟩min[Y[Hand tip l]] ≥ -1.0)
+	gconfidence: 0.9
+	gsupport - (antecedent): 0.3333333333333333
+	gsupport - (consequent): 0.8666666666666667
+	gsupport - (entire): 0.3
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (⟨O⟩min[Y[Hand tip l]] ≥ -1.0) => (⟨O⟩min[Y[Elbow r]] ≥ -0.5)
+	gconfidence: 0.9
+	gsupport - (antecedent): 0.3333333333333333
+	gsupport - (consequent): 0.9666666666666667
+	gsupport - (entire): 0.3
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.2) ∧ (⟨O⟩max[Z[Elbow r]] ≥ -0.3) => (⟨O⟩min[Y[Hand tip l]] ≥ -1.0)
+	gconfidence: 0.888888888888889
+	gsupport - (antecedent): 0.3
+	gsupport - (consequent): 0.8666666666666667
+	gsupport - (entire): 0.26666666666666666
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.2) => (⟨O⟩min[Y[Hand tip l]] ≥ -1.0)
+	gconfidence: 0.888888888888889
+	gsupport - (antecedent): 0.3
+	gsupport - (consequent): 0.8666666666666667
+	gsupport - (entire): 0.26666666666666666
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.2) ∧ (⟨O⟩min[Y[Elbow r]] ≥ -0.5) => (⟨O⟩min[Y[Hand tip l]] ≥ -1.0)
+	gconfidence: 0.888888888888889
+	gsupport - (antecedent): 0.3
+	gsupport - (consequent): 0.8666666666666667
+	gsupport - (entire): 0.26666666666666666
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (⟨O⟩min[Y[Hand tip l]] ≥ -1.0) ∧ (⟨O⟩min[Y[Elbow r]] ≥ -0.5) => (⟨O⟩min[Y[Hand tip r]] ≥ 0.2)
+	gconfidence: 0.888888888888889
+	gsupport - (antecedent): 0.3
+	gsupport - (consequent): 0.9333333333333333
+	gsupport - (entire): 0.26666666666666666
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.2) ∧ (⟨O⟩min[Y[Elbow r]] ≥ -0.5) ∧ (⟨O⟩max[Z[Elbow r]] ≥ -0.3) => (⟨O⟩min[Y[Hand tip l]] ≥ -1.0)
+	gconfidence: 0.888888888888889
+	gsupport - (antecedent): 0.3
+	gsupport - (consequent): 0.8666666666666667
+	gsupport - (entire): 0.26666666666666666
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (⟨O⟩min[Y[Hand tip l]] ≥ -1.0) ∧ (⟨O⟩min[Y[Elbow r]] ≥ -0.5) ∧ (⟨O⟩max[Z[Elbow r]] ≥ -0.3) => (⟨O⟩min[Y[Hand tip r]] ≥ 0.2)
+	gconfidence: 0.888888888888889
+	gsupport - (antecedent): 0.3
+	gsupport - (consequent): 0.9333333333333333
+	gsupport - (entire): 0.26666666666666666
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (⟨O⟩max[X[Elbow r]] ≤ 0.7) => (max[Z[Elbow r]] ≥ -0.3)
+	gconfidence: 0.875
+	gsupport - (antecedent): 0.26666666666666666
+	gsupport - (consequent): 0.9333333333333333
+	gsupport - (entire): 0.23333333333333334
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Hand tip l]] ≥ -1.0) => (⟨O⟩min[Y[Hand tip r]] ≥ 0.2)
+	gconfidence: 0.875
+	gsupport - (antecedent): 0.5333333333333333
+	gsupport - (consequent): 0.9333333333333333
+	gsupport - (entire): 0.4666666666666667
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Hand tip l]] ≥ -1.0) ∧ (⟨O⟩min[X[Elbow r]] ≥ 0.7) ∧ (⟨O⟩min[Y[Elbow r]] ≥ -0.5) => (⟨O⟩min[Y[Hand tip r]] ≥ 0.2)
+	gconfidence: 0.875
+	gsupport - (antecedent): 0.26666666666666666
+	gsupport - (consequent): 0.9333333333333333
+	gsupport - (entire): 0.23333333333333334
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Hand tip l]] ≥ -1.0) ∧ (⟨O⟩min[X[Elbow r]] ≥ 0.7) => (⟨O⟩min[Y[Hand tip r]] ≥ 0.2)
+	gconfidence: 0.875
+	gsupport - (antecedent): 0.26666666666666666
+	gsupport - (consequent): 0.9333333333333333
+	gsupport - (entire): 0.23333333333333334
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Hand tip l]] ≥ -1.0) => (⟨O⟩max[Z[Elbow l]] ≤ -0.25)
+	gconfidence: 0.875
+	gsupport - (antecedent): 0.5333333333333333
+	gsupport - (consequent): 0.9
+	gsupport - (entire): 0.4666666666666667
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Hand tip l]] ≥ -1.0) ∧ (⟨O⟩min[X[Elbow r]] ≥ 0.7) ∧ (⟨O⟩min[Y[Elbow r]] ≥ -0.5) => (⟨O⟩max[Z[Elbow l]] ≤ -0.25)
+	gconfidence: 0.875
+	gsupport - (antecedent): 0.26666666666666666
+	gsupport - (consequent): 0.9
+	gsupport - (entire): 0.23333333333333334
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Hand tip l]] ≥ -1.0) ∧ (⟨O⟩min[X[Elbow r]] ≥ 0.7) => (⟨O⟩max[Z[Elbow l]] ≤ -0.25)
+	gconfidence: 0.875
+	gsupport - (antecedent): 0.26666666666666666
+	gsupport - (consequent): 0.9
+	gsupport - (entire): 0.23333333333333334
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Hand tip l]] ≥ -1.0) ∧ (⟨O⟩min[Y[Elbow r]] ≥ -0.5) => (⟨O⟩max[Z[Elbow l]] ≤ -0.25)
+	gconfidence: 0.8666666666666667
+	gsupport - (antecedent): 0.5
+	gsupport - (consequent): 0.9
+	gsupport - (entire): 0.43333333333333335
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Hand tip l]] ≥ -1.0) ∧ (⟨O⟩min[Y[Elbow r]] ≥ -0.5) => (⟨O⟩min[Y[Hand tip r]] ≥ 0.2)
+	gconfidence: 0.8666666666666667
+	gsupport - (antecedent): 0.5
+	gsupport - (consequent): 0.9333333333333333
+	gsupport - (entire): 0.43333333333333335
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩max[Z[Elbow l]] ≤ -0.25) => (⟨O⟩min[Y[Elbow r]] ≥ -0.5)
+	gconfidence: 0.8636363636363636
+	gsupport - (antecedent): 0.7333333333333333
+	gsupport - (consequent): 0.9666666666666667
+	gsupport - (entire): 0.6333333333333333
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (⟨O⟩min[X[Elbow r]] ≥ 0.7) ∧ (⟨O⟩max[Z[Elbow r]] ≥ -0.3) => (⟨O⟩min[Y[Hand tip r]] ≥ 0.2)
+	gconfidence: 0.8571428571428572
+	gsupport - (antecedent): 0.23333333333333334
+	gsupport - (consequent): 0.9333333333333333
+	gsupport - (entire): 0.2
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Elbow r]] ≥ -0.5) => (⟨O⟩min[Y[Hand tip r]] ≥ 0.5)
+	gconfidence: 0.8571428571428572
+	gsupport - (antecedent): 0.23333333333333334
+	gsupport - (consequent): 0.9
+	gsupport - (entire): 0.2
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.2) ∧ (⟨O⟩min[X[Elbow r]] ≥ 0.7) ∧ (⟨O⟩min[Y[Elbow r]] ≥ -0.5) ∧ (⟨O⟩max[Z[Elbow l]] ≤ -0.25) => (⟨O⟩min[Y[Hand tip l]] ≥ -1.0)
+	gconfidence: 0.8571428571428572
+	gsupport - (antecedent): 0.23333333333333334
+	gsupport - (consequent): 0.8666666666666667
+	gsupport - (entire): 0.2
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Hand tip l]] ≥ -1.0) ∧ (⟨O⟩min[X[Elbow r]] ≥ 0.7) ∧ (⟨O⟩min[Y[Elbow r]] ≥ -0.5) ∧ (⟨O⟩max[Z[Elbow l]] ≤ -0.25) => (⟨O⟩min[Y[Hand tip r]] ≥ 0.2)
+	gconfidence: 0.8571428571428572
+	gsupport - (antecedent): 0.23333333333333334
+	gsupport - (consequent): 0.9333333333333333
+	gsupport - (entire): 0.2
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Hand tip l]] ≥ -1.0) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.2) ∧ (⟨O⟩min[X[Elbow r]] ≥ 0.7) ∧ (⟨O⟩min[Y[Elbow r]] ≥ -0.5) => (⟨O⟩max[Z[Elbow l]] ≤ -0.25)
+	gconfidence: 0.8571428571428572
+	gsupport - (antecedent): 0.23333333333333334
+	gsupport - (consequent): 0.9
+	gsupport - (entire): 0.2
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (⟨O⟩min[X[Elbow r]] ≥ 0.7) => (⟨O⟩min[Y[Hand tip l]] ≥ -1.0)
+	gconfidence: 0.8571428571428572
+	gsupport - (antecedent): 0.23333333333333334
+	gsupport - (consequent): 0.8666666666666667
+	gsupport - (entire): 0.2
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.2) ∧ (⟨O⟩max[Z[Elbow l]] ≤ -0.25) => (⟨O⟩min[Y[Hand tip l]] ≥ -1.0)
+	gconfidence: 0.8571428571428572
+	gsupport - (antecedent): 0.4666666666666667
+	gsupport - (consequent): 0.8666666666666667
+	gsupport - (entire): 0.4
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Hand tip l]] ≥ -1.0) ∧ (⟨O⟩max[Z[Elbow l]] ≤ -0.25) => (⟨O⟩min[Y[Hand tip r]] ≥ 0.2)
+	gconfidence: 0.8571428571428572
+	gsupport - (antecedent): 0.4666666666666667
+	gsupport - (consequent): 0.9333333333333333
+	gsupport - (entire): 0.4
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Hand tip l]] ≥ -1.0) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.2) => (⟨O⟩max[Z[Elbow l]] ≤ -0.25)
+	gconfidence: 0.8571428571428572
+	gsupport - (antecedent): 0.4666666666666667
+	gsupport - (consequent): 0.9
+	gsupport - (entire): 0.4
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (⟨O⟩min[X[Elbow r]] ≥ 0.7) ∧ (⟨O⟩max[Z[Elbow r]] ≥ -0.3) => (⟨O⟩min[Y[Elbow r]] ≥ -0.5)
+	gconfidence: 0.8571428571428572
+	gsupport - (antecedent): 0.23333333333333334
+	gsupport - (consequent): 0.9666666666666667
+	gsupport - (entire): 0.2
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (⟨O⟩min[X[Elbow r]] ≥ 0.7) => (⟨O⟩min[Y[Elbow r]] ≥ -0.5)
+	gconfidence: 0.8571428571428572
+	gsupport - (antecedent): 0.23333333333333334
+	gsupport - (consequent): 0.9666666666666667
+	gsupport - (entire): 0.2
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.2) ∧ (⟨O⟩min[X[Elbow r]] ≥ 0.7) ∧ (⟨O⟩max[Z[Elbow l]] ≤ -0.25) => (⟨O⟩min[Y[Hand tip l]] ≥ -1.0)
+	gconfidence: 0.8571428571428572
+	gsupport - (antecedent): 0.23333333333333334
+	gsupport - (consequent): 0.8666666666666667
+	gsupport - (entire): 0.2
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Hand tip l]] ≥ -1.0) ∧ (⟨O⟩min[X[Elbow r]] ≥ 0.7) ∧ (⟨O⟩max[Z[Elbow l]] ≤ -0.25) => (⟨O⟩min[Y[Hand tip r]] ≥ 0.2)
+	gconfidence: 0.8571428571428572
+	gsupport - (antecedent): 0.23333333333333334
+	gsupport - (consequent): 0.9333333333333333
+	gsupport - (entire): 0.2
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Hand tip l]] ≥ -1.0) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.2) ∧ (⟨O⟩min[X[Elbow r]] ≥ 0.7) => (⟨O⟩max[Z[Elbow l]] ≤ -0.25)
+	gconfidence: 0.8571428571428572
+	gsupport - (antecedent): 0.23333333333333334
+	gsupport - (consequent): 0.9
+	gsupport - (entire): 0.2
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (⟨O⟩min[X[Elbow r]] ≥ 0.7) ∧ (⟨O⟩max[Z[Elbow r]] ≥ -0.3) => (⟨O⟩min[Y[Hand tip r]] ≥ 0.5)
+	gconfidence: 0.8571428571428572
+	gsupport - (antecedent): 0.23333333333333334
+	gsupport - (consequent): 0.9
+	gsupport - (entire): 0.2
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Elbow r]] ≥ -0.5) => (⟨O⟩min[X[Elbow r]] ≥ 0.7)
+	gconfidence: 0.8571428571428572
+	gsupport - (antecedent): 0.23333333333333334
+	gsupport - (consequent): 0.7666666666666667
+	gsupport - (entire): 0.2
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[X[Elbow r]] ≥ 0.7) => (⟨O⟩min[Y[Elbow r]] ≥ -0.5)
+	gconfidence: 0.8571428571428572
+	gsupport - (antecedent): 0.23333333333333334
+	gsupport - (consequent): 0.9666666666666667
+	gsupport - (entire): 0.2
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (⟨O⟩min[X[Elbow r]] ≥ 0.7) ∧ (⟨O⟩max[Z[Elbow r]] ≥ -0.3) => (⟨O⟩min[Y[Hand tip l]] ≥ -1.0)
+	gconfidence: 0.8571428571428572
+	gsupport - (antecedent): 0.23333333333333334
+	gsupport - (consequent): 0.8666666666666667
+	gsupport - (entire): 0.2
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (⟨O⟩min[X[Elbow r]] ≥ 0.7) => (⟨O⟩min[Y[Hand tip r]] ≥ 0.5)
+	gconfidence: 0.8571428571428572
+	gsupport - (antecedent): 0.23333333333333334
+	gsupport - (consequent): 0.9
+	gsupport - (entire): 0.2
+
+(min[Y[Hand tip l]] ≥ -1.0) => (max[Z[Elbow l]] ≤ -0.25)
+	gconfidence: 0.8571428571428572
+	gsupport - (antecedent): 0.23333333333333334
+	gsupport - (consequent): 0.43333333333333335
+	gsupport - (entire): 0.2
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (⟨O⟩min[X[Elbow r]] ≥ 0.7) => (⟨O⟩min[Y[Hand tip r]] ≥ 0.2)
+	gconfidence: 0.8571428571428572
+	gsupport - (antecedent): 0.23333333333333334
+	gsupport - (consequent): 0.9333333333333333
+	gsupport - (entire): 0.2
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Elbow r]] ≥ -0.5) => (⟨O⟩min[Y[Hand tip r]] ≥ 0.2)
+	gconfidence: 0.8571428571428572
+	gsupport - (antecedent): 0.23333333333333334
+	gsupport - (consequent): 0.9333333333333333
+	gsupport - (entire): 0.2
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Hand tip l]] ≥ -1.0) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.5) => (⟨O⟩max[Z[Elbow l]] ≤ -0.25)
+	gconfidence: 0.846153846153846
+	gsupport - (antecedent): 0.43333333333333335
+	gsupport - (consequent): 0.9
+	gsupport - (entire): 0.36666666666666664
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Hand tip l]] ≥ -1.0) ∧ (⟨O⟩min[Y[Elbow r]] ≥ -0.5) ∧ (⟨O⟩max[Z[Elbow l]] ≤ -0.25) => (⟨O⟩min[Y[Hand tip r]] ≥ 0.2)
+	gconfidence: 0.846153846153846
+	gsupport - (antecedent): 0.43333333333333335
+	gsupport - (consequent): 0.9333333333333333
+	gsupport - (entire): 0.36666666666666664
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Hand tip l]] ≥ -1.0) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.2) ∧ (⟨O⟩min[Y[Elbow r]] ≥ -0.5) => (⟨O⟩max[Z[Elbow l]] ≤ -0.25)
+	gconfidence: 0.846153846153846
+	gsupport - (antecedent): 0.43333333333333335
+	gsupport - (consequent): 0.9
+	gsupport - (entire): 0.36666666666666664
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (⟨O⟩max[Z[Elbow r]] ≥ -0.3) => (⟨O⟩min[Y[Hand tip l]] ≥ -1.0)
+	gconfidence: 0.8333333333333333
+	gsupport - (antecedent): 0.4
+	gsupport - (consequent): 0.8666666666666667
+	gsupport - (entire): 0.3333333333333333
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (⟨O⟩max[Z[Elbow r]] ≥ -0.3) => (⟨O⟩min[Y[Elbow r]] ≥ -0.5)
+	gconfidence: 0.8333333333333333
+	gsupport - (antecedent): 0.4
+	gsupport - (consequent): 0.9666666666666667
+	gsupport - (entire): 0.3333333333333333
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Hand tip l]] ≥ -1.0) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.5) ∧ (⟨O⟩min[Y[Elbow r]] ≥ -0.5) => (⟨O⟩max[Z[Elbow l]] ≤ -0.25)
+	gconfidence: 0.8333333333333333
+	gsupport - (antecedent): 0.4
+	gsupport - (consequent): 0.9
+	gsupport - (entire): 0.3333333333333333
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Elbow r]] ≥ -0.5) => (⟨O⟩max[Z[Elbow l]] ≤ -0.25)
+	gconfidence: 0.826086956521739
+	gsupport - (antecedent): 0.7666666666666667
+	gsupport - (consequent): 0.9
+	gsupport - (entire): 0.6333333333333333
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Elbow r]] ≥ -0.5) => (⟨O⟩min[Y[Hand tip r]] ≥ 0.2)
+	gconfidence: 0.826086956521739
+	gsupport - (antecedent): 0.7666666666666667
+	gsupport - (consequent): 0.9333333333333333
+	gsupport - (entire): 0.6333333333333333
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Elbow r]] ≥ -0.5) => (⟨O⟩min[Y[Hand tip r]] ≥ 0.5)
+	gconfidence: 0.826086956521739
+	gsupport - (antecedent): 0.7666666666666667
+	gsupport - (consequent): 0.9
+	gsupport - (entire): 0.6333333333333333
+
+(max[Z[Elbow r]] ≥ -0.3) => (⟨O⟩min[Y[Elbow r]] ≥ -0.5)
+	gconfidence: 0.8214285714285715
+	gsupport - (antecedent): 0.9333333333333333
+	gsupport - (consequent): 0.9666666666666667
+	gsupport - (entire): 0.7666666666666667
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Hand tip l]] ≥ -1.0) => (⟨O⟩min[Y[Hand tip r]] ≥ 0.5)
+	gconfidence: 0.8125
+	gsupport - (antecedent): 0.5333333333333333
+	gsupport - (consequent): 0.9
+	gsupport - (entire): 0.43333333333333335
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (⟨O⟩min[Y[Hand tip l]] ≥ -1.0) ∧ (⟨O⟩max[Z[Elbow r]] ≥ -0.3) => (⟨O⟩min[Y[Hand tip r]] ≥ 0.2)
+	gconfidence: 0.8
+	gsupport - (antecedent): 0.3333333333333333
+	gsupport - (consequent): 0.9333333333333333
+	gsupport - (entire): 0.26666666666666666
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (⟨O⟩min[Y[Hand tip l]] ≥ -1.0) => (⟨O⟩min[Y[Hand tip r]] ≥ 0.2)
+	gconfidence: 0.8
+	gsupport - (antecedent): 0.3333333333333333
+	gsupport - (consequent): 0.9333333333333333
+	gsupport - (entire): 0.26666666666666666
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Hand tip l]] ≥ -1.0) ∧ (⟨O⟩min[Y[Elbow r]] ≥ -0.5) => (⟨O⟩min[Y[Hand tip r]] ≥ 0.5)
+	gconfidence: 0.8
+	gsupport - (antecedent): 0.5
+	gsupport - (consequent): 0.9
+	gsupport - (entire): 0.4
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.5) ∧ (⟨O⟩max[Z[Elbow l]] ≤ -0.25) => (⟨O⟩min[Y[Hand tip l]] ≥ -1.0)
+	gconfidence: 0.7857142857142857
+	gsupport - (antecedent): 0.4666666666666667
+	gsupport - (consequent): 0.8666666666666667
+	gsupport - (entire): 0.36666666666666664
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Hand tip l]] ≥ -1.0) ∧ (⟨O⟩max[Z[Elbow l]] ≤ -0.25) => (⟨O⟩min[Y[Hand tip r]] ≥ 0.5)
+	gconfidence: 0.7857142857142857
+	gsupport - (antecedent): 0.4666666666666667
+	gsupport - (consequent): 0.9
+	gsupport - (entire): 0.36666666666666664
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.2) ∧ (⟨O⟩min[Y[Elbow r]] ≥ -0.5) ∧ (⟨O⟩max[Z[Elbow l]] ≤ -0.25) => (⟨O⟩min[Y[Hand tip l]] ≥ -1.0)
+	gconfidence: 0.7857142857142857
+	gsupport - (antecedent): 0.4666666666666667
+	gsupport - (consequent): 0.8666666666666667
+	gsupport - (entire): 0.36666666666666664
+
+(max[Z[Elbow r]] ≥ -0.3) => (⟨O⟩max[Z[Elbow l]] ≤ -0.25)
+	gconfidence: 0.7857142857142857
+	gsupport - (antecedent): 0.9333333333333333
+	gsupport - (consequent): 0.9
+	gsupport - (entire): 0.7333333333333333
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.5) ∧ (⟨O⟩max[Z[Elbow r]] ≥ -0.3) => (⟨O⟩min[Y[Hand tip l]] ≥ -1.0)
+	gconfidence: 0.7777777777777778
+	gsupport - (antecedent): 0.3
+	gsupport - (consequent): 0.8666666666666667
+	gsupport - (entire): 0.23333333333333334
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.5) ∧ (⟨O⟩min[X[Elbow r]] ≥ 0.7) ∧ (⟨O⟩min[Y[Elbow r]] ≥ -0.5) => (⟨O⟩max[Z[Elbow l]] ≤ -0.25)
+	gconfidence: 0.7777777777777778
+	gsupport - (antecedent): 0.3
+	gsupport - (consequent): 0.9
+	gsupport - (entire): 0.23333333333333334
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.5) => (⟨O⟩min[Y[Hand tip l]] ≥ -1.0)
+	gconfidence: 0.7777777777777778
+	gsupport - (antecedent): 0.3
+	gsupport - (consequent): 0.8666666666666667
+	gsupport - (entire): 0.23333333333333334
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.5) ∧ (⟨O⟩min[Y[Elbow r]] ≥ -0.5) => (⟨O⟩min[Y[Hand tip l]] ≥ -1.0)
+	gconfidence: 0.7777777777777778
+	gsupport - (antecedent): 0.3
+	gsupport - (consequent): 0.8666666666666667
+	gsupport - (entire): 0.23333333333333334
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (⟨O⟩min[Y[Hand tip l]] ≥ -1.0) ∧ (⟨O⟩min[Y[Elbow r]] ≥ -0.5) => (⟨O⟩min[Y[Hand tip r]] ≥ 0.5)
+	gconfidence: 0.7777777777777778
+	gsupport - (antecedent): 0.3
+	gsupport - (consequent): 0.9
+	gsupport - (entire): 0.23333333333333334
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.5) ∧ (⟨O⟩min[Y[Elbow r]] ≥ -0.5) ∧ (⟨O⟩max[Z[Elbow r]] ≥ -0.3) => (⟨O⟩min[Y[Hand tip l]] ≥ -1.0)
+	gconfidence: 0.7777777777777778
+	gsupport - (antecedent): 0.3
+	gsupport - (consequent): 0.8666666666666667
+	gsupport - (entire): 0.23333333333333334
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (⟨O⟩min[Y[Hand tip l]] ≥ -1.0) ∧ (⟨O⟩min[Y[Elbow r]] ≥ -0.5) ∧ (⟨O⟩max[Z[Elbow r]] ≥ -0.3) => (⟨O⟩min[Y[Hand tip r]] ≥ 0.5)
+	gconfidence: 0.7777777777777778
+	gsupport - (antecedent): 0.3
+	gsupport - (consequent): 0.9
+	gsupport - (entire): 0.23333333333333334
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.5) ∧ (⟨O⟩min[X[Elbow r]] ≥ 0.7) => (⟨O⟩max[Z[Elbow l]] ≤ -0.25)
+	gconfidence: 0.7777777777777778
+	gsupport - (antecedent): 0.3
+	gsupport - (consequent): 0.9
+	gsupport - (entire): 0.23333333333333334
+
+(max[Z[Elbow l]] ≤ -0.25) => (max[Z[Elbow r]] ≥ -0.3)
+	gconfidence: 0.7692307692307692
+	gsupport - (antecedent): 0.43333333333333335
+	gsupport - (consequent): 0.9333333333333333
+	gsupport - (entire): 0.3333333333333333
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[X[Elbow r]] ≥ 0.7) ∧ (⟨O⟩min[Y[Elbow r]] ≥ -0.5) => (⟨O⟩min[Y[Hand tip r]] ≥ 0.2)
+	gconfidence: 0.7692307692307692
+	gsupport - (antecedent): 0.43333333333333335
+	gsupport - (consequent): 0.9333333333333333
+	gsupport - (entire): 0.3333333333333333
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[X[Elbow r]] ≥ 0.7) ∧ (⟨O⟩max[Z[Elbow l]] ≤ -0.25) => (⟨O⟩min[Y[Elbow r]] ≥ -0.5)
+	gconfidence: 0.7692307692307692
+	gsupport - (antecedent): 0.43333333333333335
+	gsupport - (consequent): 0.9666666666666667
+	gsupport - (entire): 0.3333333333333333
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[X[Elbow r]] ≥ 0.7) ∧ (⟨O⟩min[Y[Elbow r]] ≥ -0.5) => (⟨O⟩max[Z[Elbow l]] ≤ -0.25)
+	gconfidence: 0.7692307692307692
+	gsupport - (antecedent): 0.43333333333333335
+	gsupport - (consequent): 0.9
+	gsupport - (entire): 0.3333333333333333
+
+(max[Z[Elbow l]] ≤ -0.25) => (⟨O⟩min[Y[Elbow r]] ≥ -0.5)
+	gconfidence: 0.7692307692307692
+	gsupport - (antecedent): 0.43333333333333335
+	gsupport - (consequent): 0.9666666666666667
+	gsupport - (entire): 0.3333333333333333
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Hand tip l]] ≥ -1.0) ∧ (⟨O⟩min[Y[Elbow r]] ≥ -0.5) ∧ (⟨O⟩max[Z[Elbow l]] ≤ -0.25) => (⟨O⟩min[Y[Hand tip r]] ≥ 0.5)
+	gconfidence: 0.7692307692307692
+	gsupport - (antecedent): 0.43333333333333335
+	gsupport - (consequent): 0.9
+	gsupport - (entire): 0.3333333333333333
+
+(max[Z[Elbow l]] ≤ -0.25) => (⟨O⟩min[Y[Hand tip l]] ≥ -1.0)
+	gconfidence: 0.7692307692307692
+	gsupport - (antecedent): 0.43333333333333335
+	gsupport - (consequent): 0.8666666666666667
+	gsupport - (entire): 0.3333333333333333
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩max[Z[Hand tip l]] ≤ -1) => (⟨O⟩min[X[Elbow r]] ≥ 0.7)
+	gconfidence: 0.75
+	gsupport - (antecedent): 0.26666666666666666
+	gsupport - (consequent): 0.7666666666666667
+	gsupport - (entire): 0.2
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Hand tip l]] ≥ -1.0) ∧ (⟨O⟩min[X[Elbow r]] ≥ 0.7) => (⟨O⟩min[Y[Hand tip r]] ≥ 0.5)
+	gconfidence: 0.75
+	gsupport - (antecedent): 0.26666666666666666
+	gsupport - (consequent): 0.9
+	gsupport - (entire): 0.2
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Hand tip l]] ≥ -1.0) ∧ (⟨O⟩min[X[Elbow r]] ≥ 0.7) ∧ (⟨O⟩min[Y[Elbow r]] ≥ -0.5) => (⟨O⟩min[Y[Hand tip r]] ≥ 0.5)
+	gconfidence: 0.75
+	gsupport - (antecedent): 0.26666666666666666
+	gsupport - (consequent): 0.9
+	gsupport - (entire): 0.2
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (⟨O⟩max[Z[Elbow r]] ≥ -0.3) => (⟨O⟩min[Y[Hand tip r]] ≥ 0.2)
+	gconfidence: 0.7499999999999999
+	gsupport - (antecedent): 0.4
+	gsupport - (consequent): 0.9333333333333333
+	gsupport - (entire): 0.3
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (⟨O⟩max[Z[Elbow r]] ≥ -0.3) => (⟨O⟩min[Y[Hand tip r]] ≥ 0.5)
+	gconfidence: 0.7499999999999999
+	gsupport - (antecedent): 0.4
+	gsupport - (consequent): 0.9
+	gsupport - (entire): 0.3
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.2) => (⟨O⟩max[Z[Elbow l]] ≤ -0.25)
+	gconfidence: 0.736842105263158
+	gsupport - (antecedent): 0.6333333333333333
+	gsupport - (consequent): 0.9
+	gsupport - (entire): 0.4666666666666667
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.2) => (⟨O⟩min[Y[Hand tip l]] ≥ -1.0)
+	gconfidence: 0.736842105263158
+	gsupport - (antecedent): 0.6333333333333333
+	gsupport - (consequent): 0.8666666666666667
+	gsupport - (entire): 0.4666666666666667
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Elbow r]] ≥ -0.5) ∧ (⟨O⟩max[Z[Elbow l]] ≤ -0.25) => (⟨O⟩min[Y[Hand tip r]] ≥ 0.5)
+	gconfidence: 0.736842105263158
+	gsupport - (antecedent): 0.6333333333333333
+	gsupport - (consequent): 0.9
+	gsupport - (entire): 0.4666666666666667
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.5) ∧ (⟨O⟩min[Y[Elbow r]] ≥ -0.5) => (⟨O⟩max[Z[Elbow l]] ≤ -0.25)
+	gconfidence: 0.736842105263158
+	gsupport - (antecedent): 0.6333333333333333
+	gsupport - (consequent): 0.9
+	gsupport - (entire): 0.4666666666666667
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.5) => (⟨O⟩max[Z[Elbow l]] ≤ -0.25)
+	gconfidence: 0.736842105263158
+	gsupport - (antecedent): 0.6333333333333333
+	gsupport - (consequent): 0.9
+	gsupport - (entire): 0.4666666666666667
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Elbow r]] ≥ -0.5) ∧ (⟨O⟩max[Z[Elbow l]] ≤ -0.25) => (⟨O⟩min[Y[Hand tip r]] ≥ 0.2)
+	gconfidence: 0.736842105263158
+	gsupport - (antecedent): 0.6333333333333333
+	gsupport - (consequent): 0.9333333333333333
+	gsupport - (entire): 0.4666666666666667
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.2) ∧ (⟨O⟩min[Y[Elbow r]] ≥ -0.5) => (⟨O⟩max[Z[Elbow l]] ≤ -0.25)
+	gconfidence: 0.736842105263158
+	gsupport - (antecedent): 0.6333333333333333
+	gsupport - (consequent): 0.9
+	gsupport - (entire): 0.4666666666666667
+
+(max[Z[Elbow r]] ≥ -0.3) => (⟨O⟩min[X[Elbow r]] ≥ 0.7)
+	gconfidence: 0.7142857142857142
+	gsupport - (antecedent): 0.9333333333333333
+	gsupport - (consequent): 0.7666666666666667
+	gsupport - (entire): 0.6666666666666666
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.5) ∧ (⟨O⟩min[Y[Elbow r]] ≥ -0.5) ∧ (⟨O⟩max[Z[Elbow l]] ≤ -0.25) => (⟨O⟩min[Y[Hand tip l]] ≥ -1.0)
+	gconfidence: 0.7142857142857142
+	gsupport - (antecedent): 0.4666666666666667
+	gsupport - (consequent): 0.8666666666666667
+	gsupport - (entire): 0.3333333333333333
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (⟨O⟩min[Y[Hand tip l]] ≥ -1.0) ∧ (⟨O⟩max[Z[Elbow r]] ≥ -0.3) => (⟨O⟩min[Y[Hand tip r]] ≥ 0.5)
+	gconfidence: 0.7000000000000001
+	gsupport - (antecedent): 0.3333333333333333
+	gsupport - (consequent): 0.9
+	gsupport - (entire): 0.23333333333333334
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[X[Elbow r]] ≥ 0.7) ∧ (⟨O⟩min[Y[Elbow r]] ≥ -0.5) ∧ (⟨O⟩max[Z[Elbow l]] ≤ -0.25) => (⟨O⟩min[Y[Hand tip r]] ≥ 0.5)
+	gconfidence: 0.7000000000000001
+	gsupport - (antecedent): 0.3333333333333333
+	gsupport - (consequent): 0.9
+	gsupport - (entire): 0.23333333333333334
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (max[Z[Elbow r]] ≥ -0.3) => (⟨O⟩max[X[Elbow r]] ≤ 0.7)
+	gconfidence: 0.7000000000000001
+	gsupport - (antecedent): 0.3333333333333333
+	gsupport - (consequent): 0.9666666666666667
+	gsupport - (entire): 0.23333333333333334
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.2) ∧ (⟨O⟩min[X[Elbow r]] ≥ 0.7) => (⟨O⟩max[Z[Elbow l]] ≤ -0.25)
+	gconfidence: 0.7000000000000001
+	gsupport - (antecedent): 0.3333333333333333
+	gsupport - (consequent): 0.9
+	gsupport - (entire): 0.23333333333333334
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (⟨O⟩min[Y[Hand tip l]] ≥ -1.0) => (⟨O⟩min[Y[Hand tip r]] ≥ 0.5)
+	gconfidence: 0.7000000000000001
+	gsupport - (antecedent): 0.3333333333333333
+	gsupport - (consequent): 0.9
+	gsupport - (entire): 0.23333333333333334
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.2) ∧ (⟨O⟩min[X[Elbow r]] ≥ 0.7) ∧ (⟨O⟩min[Y[Elbow r]] ≥ -0.5) => (⟨O⟩min[Y[Hand tip l]] ≥ -1.0)
+	gconfidence: 0.7000000000000001
+	gsupport - (antecedent): 0.3333333333333333
+	gsupport - (consequent): 0.8666666666666667
+	gsupport - (entire): 0.23333333333333334
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.2) ∧ (⟨O⟩min[X[Elbow r]] ≥ 0.7) => (⟨O⟩min[Y[Hand tip l]] ≥ -1.0)
+	gconfidence: 0.7000000000000001
+	gsupport - (antecedent): 0.3333333333333333
+	gsupport - (consequent): 0.8666666666666667
+	gsupport - (entire): 0.23333333333333334
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (⟨O⟩min[Y[Elbow r]] ≥ -0.5) => (max[Z[Elbow r]] ≥ -0.3)
+	gconfidence: 0.7000000000000001
+	gsupport - (antecedent): 0.3333333333333333
+	gsupport - (consequent): 0.9333333333333333
+	gsupport - (entire): 0.23333333333333334
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (max[Z[Elbow r]] ≥ -0.3) => (⟨O⟩min[Y[Elbow r]] ≥ -0.5)
+	gconfidence: 0.7000000000000001
+	gsupport - (antecedent): 0.3333333333333333
+	gsupport - (consequent): 0.9666666666666667
+	gsupport - (entire): 0.23333333333333334
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[X[Elbow r]] ≥ 0.7) ∧ (⟨O⟩min[Y[Elbow r]] ≥ -0.5) ∧ (⟨O⟩max[Z[Elbow l]] ≤ -0.25) => (⟨O⟩min[Y[Hand tip r]] ≥ 0.2)
+	gconfidence: 0.7000000000000001
+	gsupport - (antecedent): 0.3333333333333333
+	gsupport - (consequent): 0.9333333333333333
+	gsupport - (entire): 0.23333333333333334
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.2) ∧ (⟨O⟩min[X[Elbow r]] ≥ 0.7) ∧ (⟨O⟩min[Y[Elbow r]] ≥ -0.5) => (⟨O⟩max[Z[Elbow l]] ≤ -0.25)
+	gconfidence: 0.7000000000000001
+	gsupport - (antecedent): 0.3333333333333333
+	gsupport - (consequent): 0.9
+	gsupport - (entire): 0.23333333333333334
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (max[Z[Elbow r]] ≥ -0.3) => (⟨O⟩min[X[Elbow r]] ≥ 0.7)
+	gconfidence: 0.7000000000000001
+	gsupport - (antecedent): 0.3333333333333333
+	gsupport - (consequent): 0.7666666666666667
+	gsupport - (entire): 0.23333333333333334
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[X[Elbow r]] ≥ 0.7) ∧ (⟨O⟩min[Y[Elbow r]] ≥ -0.5) ∧ (⟨O⟩max[Z[Elbow l]] ≤ -0.25) => (⟨O⟩min[Y[Hand tip l]] ≥ -1.0)
+	gconfidence: 0.7000000000000001
+	gsupport - (antecedent): 0.3333333333333333
+	gsupport - (consequent): 0.8666666666666667
+	gsupport - (entire): 0.23333333333333334
+
+(max[Z[Elbow l]] ≤ -0.25) => (⟨O⟩min[Y[Hand tip r]] ≥ 0.5)
+	gconfidence: 0.6923076923076923
+	gsupport - (antecedent): 0.43333333333333335
+	gsupport - (consequent): 0.9
+	gsupport - (entire): 0.3
+
+(max[Z[Elbow l]] ≤ -0.25) => (⟨O⟩min[Y[Hand tip r]] ≥ 0.2)
+	gconfidence: 0.6923076923076923
+	gsupport - (antecedent): 0.43333333333333335
+	gsupport - (consequent): 0.9333333333333333
+	gsupport - (entire): 0.3
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[X[Elbow r]] ≥ 0.7) ∧ (⟨O⟩min[Y[Elbow r]] ≥ -0.5) => (⟨O⟩min[Y[Hand tip r]] ≥ 0.5)
+	gconfidence: 0.6923076923076923
+	gsupport - (antecedent): 0.43333333333333335
+	gsupport - (consequent): 0.9
+	gsupport - (entire): 0.3
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.5) => (⟨O⟩min[Y[Hand tip l]] ≥ -1.0)
+	gconfidence: 0.6842105263157895
+	gsupport - (antecedent): 0.6333333333333333
+	gsupport - (consequent): 0.8666666666666667
+	gsupport - (entire): 0.43333333333333335
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Elbow r]] ≥ -0.5) ∧ (⟨O⟩max[Z[Elbow l]] ≤ -0.25) => (⟨O⟩min[Y[Hand tip l]] ≥ -1.0)
+	gconfidence: 0.6842105263157895
+	gsupport - (antecedent): 0.6333333333333333
+	gsupport - (consequent): 0.8666666666666667
+	gsupport - (entire): 0.43333333333333335
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.2) ∧ (⟨O⟩min[Y[Elbow r]] ≥ -0.5) => (⟨O⟩min[Y[Hand tip l]] ≥ -1.0)
+	gconfidence: 0.6842105263157895
+	gsupport - (antecedent): 0.6333333333333333
+	gsupport - (consequent): 0.8666666666666667
+	gsupport - (entire): 0.43333333333333335
+
+(max[Z[Elbow r]] ≥ -0.3) => (⟨O⟩min[Y[Hand tip r]] ≥ 0.2)
+	gconfidence: 0.6785714285714285
+	gsupport - (antecedent): 0.9333333333333333
+	gsupport - (consequent): 0.9333333333333333
+	gsupport - (entire): 0.6333333333333333
+
+(max[Z[Elbow r]] ≥ -0.3) => (⟨O⟩min[Y[Hand tip r]] ≥ 0.5)
+	gconfidence: 0.6785714285714285
+	gsupport - (antecedent): 0.9333333333333333
+	gsupport - (consequent): 0.9
+	gsupport - (entire): 0.6333333333333333
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.2) ∧ (⟨O⟩min[Y[Elbow r]] ≥ -0.5) ∧ (⟨O⟩max[Z[Elbow r]] ≥ -0.3) => (⟨O⟩min[X[Elbow r]] ≥ 0.7)
+	gconfidence: 0.6666666666666667
+	gsupport - (antecedent): 0.3
+	gsupport - (consequent): 0.7666666666666667
+	gsupport - (entire): 0.2
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.2) ∧ (⟨O⟩max[Z[Elbow r]] ≥ -0.3) => (⟨O⟩min[X[Elbow r]] ≥ 0.7)
+	gconfidence: 0.6666666666666667
+	gsupport - (antecedent): 0.3
+	gsupport - (consequent): 0.7666666666666667
+	gsupport - (entire): 0.2
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.5) => (max[Z[Elbow r]] ≥ -0.3)
+	gconfidence: 0.6666666666666667
+	gsupport - (antecedent): 0.3
+	gsupport - (consequent): 0.9333333333333333
+	gsupport - (entire): 0.2
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.5) ∧ (⟨O⟩min[Y[Elbow r]] ≥ -0.5) => (max[Z[Elbow r]] ≥ -0.3)
+	gconfidence: 0.6666666666666667
+	gsupport - (antecedent): 0.3
+	gsupport - (consequent): 0.9333333333333333
+	gsupport - (entire): 0.2
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.5) ∧ (⟨O⟩min[Y[Elbow r]] ≥ -0.5) ∧ (⟨O⟩max[Z[Elbow r]] ≥ -0.3) => (⟨O⟩min[X[Elbow r]] ≥ 0.7)
+	gconfidence: 0.6666666666666667
+	gsupport - (antecedent): 0.3
+	gsupport - (consequent): 0.7666666666666667
+	gsupport - (entire): 0.2
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.5) ∧ (⟨O⟩min[X[Elbow r]] ≥ 0.7) => (⟨O⟩min[Y[Hand tip l]] ≥ -1.0)
+	gconfidence: 0.6666666666666667
+	gsupport - (antecedent): 0.3
+	gsupport - (consequent): 0.8666666666666667
+	gsupport - (entire): 0.2
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.5) ∧ (⟨O⟩min[X[Elbow r]] ≥ 0.7) ∧ (⟨O⟩min[Y[Elbow r]] ≥ -0.5) => (⟨O⟩min[Y[Hand tip l]] ≥ -1.0)
+	gconfidence: 0.6666666666666667
+	gsupport - (antecedent): 0.3
+	gsupport - (consequent): 0.8666666666666667
+	gsupport - (entire): 0.2
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.5) ∧ (⟨O⟩min[Y[Elbow r]] ≥ -0.5) => (⟨O⟩min[X[Elbow r]] ≥ 0.7)
+	gconfidence: 0.6666666666666667
+	gsupport - (antecedent): 0.3
+	gsupport - (consequent): 0.7666666666666667
+	gsupport - (entire): 0.2
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.5) ∧ (⟨O⟩max[Z[Elbow r]] ≥ -0.3) => (⟨O⟩min[X[Elbow r]] ≥ 0.7)
+	gconfidence: 0.6666666666666667
+	gsupport - (antecedent): 0.3
+	gsupport - (consequent): 0.7666666666666667
+	gsupport - (entire): 0.2
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.2) ∧ (⟨O⟩min[Y[Elbow r]] ≥ -0.5) => (⟨O⟩min[X[Elbow r]] ≥ 0.7)
+	gconfidence: 0.6666666666666667
+	gsupport - (antecedent): 0.3
+	gsupport - (consequent): 0.7666666666666667
+	gsupport - (entire): 0.2
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.5) => (⟨O⟩min[X[Elbow r]] ≥ 0.7)
+	gconfidence: 0.6666666666666667
+	gsupport - (antecedent): 0.3
+	gsupport - (consequent): 0.7666666666666667
+	gsupport - (entire): 0.2
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.2) => (max[Z[Elbow r]] ≥ -0.3)
+	gconfidence: 0.6666666666666667
+	gsupport - (antecedent): 0.3
+	gsupport - (consequent): 0.9333333333333333
+	gsupport - (entire): 0.2
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.2) => (⟨O⟩min[X[Elbow r]] ≥ 0.7)
+	gconfidence: 0.6666666666666667
+	gsupport - (antecedent): 0.3
+	gsupport - (consequent): 0.7666666666666667
+	gsupport - (entire): 0.2
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.2) ∧ (⟨O⟩min[Y[Elbow r]] ≥ -0.5) => (max[Z[Elbow r]] ≥ -0.3)
+	gconfidence: 0.6666666666666667
+	gsupport - (antecedent): 0.3
+	gsupport - (consequent): 0.9333333333333333
+	gsupport - (entire): 0.2
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (⟨O⟩max[Z[Elbow r]] ≥ -0.3) => (⟨O⟩max[X[Elbow r]] ≤ 0.7)
+	gconfidence: 0.6666666666666666
+	gsupport - (antecedent): 0.4
+	gsupport - (consequent): 0.9666666666666667
+	gsupport - (entire): 0.26666666666666666
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Elbow r]] ≥ -0.5) => (⟨O⟩min[Y[Hand tip l]] ≥ -1.0)
+	gconfidence: 0.6521739130434783
+	gsupport - (antecedent): 0.7666666666666667
+	gsupport - (consequent): 0.8666666666666667
+	gsupport - (entire): 0.5
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[X[Elbow r]] ≥ 0.7) => (⟨O⟩max[Z[Elbow l]] ≤ -0.25)
+	gconfidence: 0.65
+	gsupport - (antecedent): 0.6666666666666666
+	gsupport - (consequent): 0.9
+	gsupport - (entire): 0.43333333333333335
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[X[Elbow r]] ≥ 0.7) => (⟨O⟩min[Y[Elbow r]] ≥ -0.5)
+	gconfidence: 0.65
+	gsupport - (antecedent): 0.6666666666666666
+	gsupport - (consequent): 0.9666666666666667
+	gsupport - (entire): 0.43333333333333335
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩max[Z[Elbow l]] ≤ -0.25) => (⟨O⟩min[Y[Hand tip r]] ≥ 0.2)
+	gconfidence: 0.6363636363636365
+	gsupport - (antecedent): 0.7333333333333333
+	gsupport - (consequent): 0.9333333333333333
+	gsupport - (entire): 0.4666666666666667
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩max[Z[Elbow l]] ≤ -0.25) => (⟨O⟩min[Y[Hand tip l]] ≥ -1.0)
+	gconfidence: 0.6363636363636365
+	gsupport - (antecedent): 0.7333333333333333
+	gsupport - (consequent): 0.8666666666666667
+	gsupport - (entire): 0.4666666666666667
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩max[Z[Elbow l]] ≤ -0.25) => (⟨O⟩min[Y[Hand tip r]] ≥ 0.5)
+	gconfidence: 0.6363636363636365
+	gsupport - (antecedent): 0.7333333333333333
+	gsupport - (consequent): 0.9
+	gsupport - (entire): 0.4666666666666667
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.5) ∧ (⟨O⟩min[Y[Elbow r]] ≥ -0.5) => (⟨O⟩min[Y[Hand tip l]] ≥ -1.0)
+	gconfidence: 0.6315789473684211
+	gsupport - (antecedent): 0.6333333333333333
+	gsupport - (consequent): 0.8666666666666667
+	gsupport - (entire): 0.4
+
+(max[Z[Elbow l]] ≤ -0.25) => (⟨O⟩max[X[Elbow r]] ≤ 0.7)
+	gconfidence: 0.6153846153846153
+	gsupport - (antecedent): 0.43333333333333335
+	gsupport - (consequent): 0.9666666666666667
+	gsupport - (entire): 0.26666666666666666
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[X[Elbow r]] ≥ 0.7) ∧ (⟨O⟩min[Y[Elbow r]] ≥ -0.5) => (⟨O⟩min[Y[Hand tip l]] ≥ -1.0)
+	gconfidence: 0.6153846153846153
+	gsupport - (antecedent): 0.43333333333333335
+	gsupport - (consequent): 0.8666666666666667
+	gsupport - (entire): 0.26666666666666666
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (max[Z[Elbow r]] ≥ -0.3) => (⟨O⟩min[Y[Hand tip r]] ≥ 0.5)
+	gconfidence: 0.6000000000000001
+	gsupport - (antecedent): 0.3333333333333333
+	gsupport - (consequent): 0.9
+	gsupport - (entire): 0.2
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (⟨O⟩min[Y[Hand tip l]] ≥ -1.0) => (⟨O⟩min[X[Elbow r]] ≥ 0.7)
+	gconfidence: 0.6000000000000001
+	gsupport - (antecedent): 0.3333333333333333
+	gsupport - (consequent): 0.7666666666666667
+	gsupport - (entire): 0.2
+
+(min[Y[Elbow r]] ≥ -0.5) => (⟨O⟩max[Z[Elbow r]] ≥ -0.3)
+	gconfidence: 0.6000000000000001
+	gsupport - (antecedent): 0.3333333333333333
+	gsupport - (consequent): 0.9666666666666667
+	gsupport - (entire): 0.2
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (⟨O⟩min[Y[Elbow r]] ≥ -0.5) ∧ (⟨O⟩max[Z[Elbow r]] ≥ -0.3) => (⟨O⟩min[X[Elbow r]] ≥ 0.7)
+	gconfidence: 0.6000000000000001
+	gsupport - (antecedent): 0.3333333333333333
+	gsupport - (consequent): 0.7666666666666667
+	gsupport - (entire): 0.2
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (⟨O⟩min[Y[Elbow r]] ≥ -0.5) => (⟨O⟩min[X[Elbow r]] ≥ 0.7)
+	gconfidence: 0.6000000000000001
+	gsupport - (antecedent): 0.3333333333333333
+	gsupport - (consequent): 0.7666666666666667
+	gsupport - (entire): 0.2
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (⟨O⟩min[Y[Hand tip l]] ≥ -1.0) ∧ (⟨O⟩max[Z[Elbow r]] ≥ -0.3) => (⟨O⟩min[X[Elbow r]] ≥ 0.7)
+	gconfidence: 0.6000000000000001
+	gsupport - (antecedent): 0.3333333333333333
+	gsupport - (consequent): 0.7666666666666667
+	gsupport - (entire): 0.2
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (max[Z[Elbow r]] ≥ -0.3) => (⟨O⟩min[Y[Hand tip r]] ≥ 0.2)
+	gconfidence: 0.6000000000000001
+	gsupport - (antecedent): 0.3333333333333333
+	gsupport - (consequent): 0.9333333333333333
+	gsupport - (entire): 0.2
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩max[Z[Elbow l]] ≤ -0.25) => (⟨O⟩min[X[Elbow r]] ≥ 0.7)
+	gconfidence: 0.5909090909090909
+	gsupport - (antecedent): 0.7333333333333333
+	gsupport - (consequent): 0.7666666666666667
+	gsupport - (entire): 0.43333333333333335
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (⟨O⟩max[Z[Elbow r]] ≥ -0.3) => (⟨O⟩min[X[Elbow r]] ≥ 0.7)
+	gconfidence: 0.5833333333333333
+	gsupport - (antecedent): 0.4
+	gsupport - (consequent): 0.7666666666666667
+	gsupport - (entire): 0.23333333333333334
+
+(min[X[Elbow r]] ≥ 0.7) => (max[Z[Elbow r]] ≥ -0.3)
+	gconfidence: 0.5833333333333333
+	gsupport - (antecedent): 0.4
+	gsupport - (consequent): 0.9333333333333333
+	gsupport - (entire): 0.23333333333333334
+
+(max[Z[Elbow r]] ≥ -0.3) => (⟨O⟩min[Y[Hand tip l]] ≥ -1.0)
+	gconfidence: 0.5714285714285714
+	gsupport - (antecedent): 0.9333333333333333
+	gsupport - (consequent): 0.8666666666666667
+	gsupport - (entire): 0.5333333333333333
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Elbow r]] ≥ -0.5) => (⟨O⟩min[X[Elbow r]] ≥ 0.7)
+	gconfidence: 0.5652173913043478
+	gsupport - (antecedent): 0.7666666666666667
+	gsupport - (consequent): 0.7666666666666667
+	gsupport - (entire): 0.43333333333333335
+
+(min[X[Elbow r]] ≥ 0.7) ∧ (⟨O⟩max[Z[Elbow r]] ≥ -0.3) => (⟨O⟩max[Z[Elbow l]] ≤ -0.25)
+	gconfidence: 0.5454545454545455
+	gsupport - (antecedent): 0.36666666666666664
+	gsupport - (consequent): 0.9
+	gsupport - (entire): 0.2
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Hand tip l]] ≥ -1.0) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.2) ∧ (⟨O⟩min[Y[Elbow r]] ≥ -0.5) ∧ (⟨O⟩max[Z[Elbow l]] ≤ -0.25) => (⟨O⟩min[X[Elbow r]] ≥ 0.7)
+	gconfidence: 0.5454545454545455
+	gsupport - (antecedent): 0.36666666666666664
+	gsupport - (consequent): 0.7666666666666667
+	gsupport - (entire): 0.2
+
+(min[X[Elbow r]] ≥ 0.7) ∧ (⟨O⟩max[Z[Elbow r]] ≥ -0.3) => (max[Z[Elbow l]] ≤ -0.25)
+	gconfidence: 0.5454545454545455
+	gsupport - (antecedent): 0.36666666666666664
+	gsupport - (consequent): 0.43333333333333335
+	gsupport - (entire): 0.2
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[X[Elbow r]] ≥ 0.7) ∧ (⟨O⟩max[Z[Elbow l]] ≤ -0.25) => (⟨O⟩min[Y[Hand tip r]] ≥ 0.2)
+	gconfidence: 0.5384615384615384
+	gsupport - (antecedent): 0.43333333333333335
+	gsupport - (consequent): 0.9333333333333333
+	gsupport - (entire): 0.23333333333333334
+
+(max[Z[Elbow l]] ≤ -0.25) => (⟨O⟩min[X[Elbow r]] ≥ 0.7)
+	gconfidence: 0.5384615384615384
+	gsupport - (antecedent): 0.43333333333333335
+	gsupport - (consequent): 0.7666666666666667
+	gsupport - (entire): 0.23333333333333334
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Hand tip l]] ≥ -1.0) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.2) ∧ (⟨O⟩min[Y[Elbow r]] ≥ -0.5) => (⟨O⟩min[X[Elbow r]] ≥ 0.7)
+	gconfidence: 0.5384615384615384
+	gsupport - (antecedent): 0.43333333333333335
+	gsupport - (consequent): 0.7666666666666667
+	gsupport - (entire): 0.23333333333333334
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Hand tip l]] ≥ -1.0) ∧ (⟨O⟩min[Y[Elbow r]] ≥ -0.5) ∧ (⟨O⟩max[Z[Elbow l]] ≤ -0.25) => (⟨O⟩min[X[Elbow r]] ≥ 0.7)
+	gconfidence: 0.5384615384615384
+	gsupport - (antecedent): 0.43333333333333335
+	gsupport - (consequent): 0.7666666666666667
+	gsupport - (entire): 0.23333333333333334
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[X[Elbow r]] ≥ 0.7) ∧ (⟨O⟩max[Z[Elbow l]] ≤ -0.25) => (⟨O⟩min[Y[Hand tip r]] ≥ 0.5)
+	gconfidence: 0.5384615384615384
+	gsupport - (antecedent): 0.43333333333333335
+	gsupport - (consequent): 0.9
+	gsupport - (entire): 0.23333333333333334
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[X[Elbow r]] ≥ 0.7) ∧ (⟨O⟩max[Z[Elbow l]] ≤ -0.25) => (⟨O⟩min[Y[Hand tip l]] ≥ -1.0)
+	gconfidence: 0.5384615384615384
+	gsupport - (antecedent): 0.43333333333333335
+	gsupport - (consequent): 0.8666666666666667
+	gsupport - (entire): 0.23333333333333334
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Hand tip l]] ≥ -1.0) ∧ (⟨O⟩min[Y[Elbow r]] ≥ -0.5) => (⟨O⟩min[X[Elbow r]] ≥ 0.7)
+	gconfidence: 0.5333333333333333
+	gsupport - (antecedent): 0.5
+	gsupport - (consequent): 0.7666666666666667
+	gsupport - (entire): 0.26666666666666666
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.2) ∧ (⟨O⟩min[Y[Elbow r]] ≥ -0.5) => (⟨O⟩min[X[Elbow r]] ≥ 0.7)
+	gconfidence: 0.5263157894736842
+	gsupport - (antecedent): 0.6333333333333333
+	gsupport - (consequent): 0.7666666666666667
+	gsupport - (entire): 0.3333333333333333
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Elbow r]] ≥ -0.5) ∧ (⟨O⟩max[Z[Elbow l]] ≤ -0.25) => (⟨O⟩min[X[Elbow r]] ≥ 0.7)
+	gconfidence: 0.5263157894736842
+	gsupport - (antecedent): 0.6333333333333333
+	gsupport - (consequent): 0.7666666666666667
+	gsupport - (entire): 0.3333333333333333
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.2) => (⟨O⟩min[X[Elbow r]] ≥ 0.7)
+	gconfidence: 0.5263157894736842
+	gsupport - (antecedent): 0.6333333333333333
+	gsupport - (consequent): 0.7666666666666667
+	gsupport - (entire): 0.3333333333333333
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.5) ∧ (⟨O⟩min[Y[Elbow r]] ≥ -0.5) ∧ (⟨O⟩max[Z[Elbow l]] ≤ -0.25) => (⟨O⟩min[X[Elbow r]] ≥ 0.7)
+	gconfidence: 0.5
+	gsupport - (antecedent): 0.4666666666666667
+	gsupport - (consequent): 0.7666666666666667
+	gsupport - (entire): 0.23333333333333334
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.2) ∧ (⟨O⟩max[Z[Elbow l]] ≤ -0.25) => (⟨O⟩min[X[Elbow r]] ≥ 0.7)
+	gconfidence: 0.5
+	gsupport - (antecedent): 0.4666666666666667
+	gsupport - (consequent): 0.7666666666666667
+	gsupport - (entire): 0.23333333333333334
+
+(max[Z[Elbow l]] ≤ -0.25) ∧ (⟨O⟩max[Z[Elbow r]] ≥ -0.3) => (min[X[Elbow r]] ≥ 0.7)
+	gconfidence: 0.5
+	gsupport - (antecedent): 0.4
+	gsupport - (consequent): 0.4
+	gsupport - (entire): 0.2
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Hand tip l]] ≥ -1.0) => (⟨O⟩min[X[Elbow r]] ≥ 0.7)
+	gconfidence: 0.5
+	gsupport - (antecedent): 0.5333333333333333
+	gsupport - (consequent): 0.7666666666666667
+	gsupport - (entire): 0.26666666666666666
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Hand tip l]] ≥ -1.0) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.2) => (⟨O⟩min[X[Elbow r]] ≥ 0.7)
+	gconfidence: 0.5
+	gsupport - (antecedent): 0.4666666666666667
+	gsupport - (consequent): 0.7666666666666667
+	gsupport - (entire): 0.23333333333333334
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.2) ∧ (⟨O⟩min[Y[Elbow r]] ≥ -0.5) ∧ (⟨O⟩max[Z[Elbow l]] ≤ -0.25) => (⟨O⟩min[X[Elbow r]] ≥ 0.7)
+	gconfidence: 0.5
+	gsupport - (antecedent): 0.4666666666666667
+	gsupport - (consequent): 0.7666666666666667
+	gsupport - (entire): 0.23333333333333334
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Hand tip l]] ≥ -1.0) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.2) ∧ (⟨O⟩max[Z[Elbow l]] ≤ -0.25) => (⟨O⟩min[X[Elbow r]] ≥ 0.7)
+	gconfidence: 0.5
+	gsupport - (antecedent): 0.4
+	gsupport - (consequent): 0.7666666666666667
+	gsupport - (entire): 0.2
+
+(min[X[Elbow r]] ≥ 0.7) => (max[Z[Elbow l]] ≤ -0.25)
+	gconfidence: 0.5
+	gsupport - (antecedent): 0.4
+	gsupport - (consequent): 0.43333333333333335
+	gsupport - (entire): 0.2
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Hand tip l]] ≥ -1.0) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.5) ∧ (⟨O⟩min[Y[Elbow r]] ≥ -0.5) => (⟨O⟩min[X[Elbow r]] ≥ 0.7)
+	gconfidence: 0.5
+	gsupport - (antecedent): 0.4
+	gsupport - (consequent): 0.7666666666666667
+	gsupport - (entire): 0.2
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[X[Elbow r]] ≥ 0.7) => (⟨O⟩min[Y[Hand tip r]] ≥ 0.2)
+	gconfidence: 0.5
+	gsupport - (antecedent): 0.6666666666666666
+	gsupport - (consequent): 0.9333333333333333
+	gsupport - (entire): 0.3333333333333333
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.5) ∧ (⟨O⟩max[Z[Elbow l]] ≤ -0.25) => (⟨O⟩min[X[Elbow r]] ≥ 0.7)
+	gconfidence: 0.5
+	gsupport - (antecedent): 0.4666666666666667
+	gsupport - (consequent): 0.7666666666666667
+	gsupport - (entire): 0.23333333333333334
+
+(min[X[Elbow r]] ≥ 0.7) => (⟨O⟩max[Z[Elbow l]] ≤ -0.25)
+	gconfidence: 0.5
+	gsupport - (antecedent): 0.4
+	gsupport - (consequent): 0.9
+	gsupport - (entire): 0.2
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩max[Z[Elbow l]] ≤ -0.25) => (⟨O⟩max[X[Elbow r]] ≤ 0.7)
+	gconfidence: 0.5
+	gsupport - (antecedent): 0.7333333333333333
+	gsupport - (consequent): 0.9666666666666667
+	gsupport - (entire): 0.36666666666666664
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Hand tip l]] ≥ -1.0) ∧ (⟨O⟩max[Z[Elbow l]] ≤ -0.25) => (⟨O⟩min[X[Elbow r]] ≥ 0.7)
+	gconfidence: 0.5
+	gsupport - (antecedent): 0.4666666666666667
+	gsupport - (consequent): 0.7666666666666667
+	gsupport - (entire): 0.23333333333333334
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.5) => (⟨O⟩min[X[Elbow r]] ≥ 0.7)
+	gconfidence: 0.4736842105263158
+	gsupport - (antecedent): 0.6333333333333333
+	gsupport - (consequent): 0.7666666666666667
+	gsupport - (entire): 0.3
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.5) ∧ (⟨O⟩min[Y[Elbow r]] ≥ -0.5) => (⟨O⟩min[X[Elbow r]] ≥ 0.7)
+	gconfidence: 0.4736842105263158
+	gsupport - (antecedent): 0.6333333333333333
+	gsupport - (consequent): 0.7666666666666667
+	gsupport - (entire): 0.3
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Hand tip l]] ≥ -1.0) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.5) => (⟨O⟩min[X[Elbow r]] ≥ 0.7)
+	gconfidence: 0.46153846153846156
+	gsupport - (antecedent): 0.43333333333333335
+	gsupport - (consequent): 0.7666666666666667
+	gsupport - (entire): 0.2
+
+(max[Z[Elbow l]] ≤ -0.25) => (min[X[Elbow r]] ≥ 0.7)
+	gconfidence: 0.46153846153846156
+	gsupport - (antecedent): 0.43333333333333335
+	gsupport - (consequent): 0.4
+	gsupport - (entire): 0.2
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[X[Elbow r]] ≥ 0.7) ∧ (⟨O⟩min[Y[Elbow r]] ≥ -0.5) => (max[Z[Elbow l]] ≤ -0.25)
+	gconfidence: 0.46153846153846156
+	gsupport - (antecedent): 0.43333333333333335
+	gsupport - (consequent): 0.43333333333333335
+	gsupport - (entire): 0.2
+
+(max[Z[Elbow l]] ≤ -0.25) => (min[Y[Hand tip l]] ≥ -1.0)
+	gconfidence: 0.46153846153846156
+	gsupport - (antecedent): 0.43333333333333335
+	gsupport - (consequent): 0.23333333333333334
+	gsupport - (entire): 0.2
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[X[Elbow r]] ≥ 0.7) => (⟨O⟩min[Y[Hand tip r]] ≥ 0.5)
+	gconfidence: 0.45
+	gsupport - (antecedent): 0.6666666666666666
+	gsupport - (consequent): 0.9
+	gsupport - (entire): 0.3
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩max[X[Elbow r]] ≤ 0.7) => (⟨O⟩max[Z[Elbow l]] ≤ -0.25)
+	gconfidence: 0.423076923076923
+	gsupport - (antecedent): 0.8666666666666667
+	gsupport - (consequent): 0.9
+	gsupport - (entire): 0.36666666666666664
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[X[Elbow r]] ≥ 0.7) => (⟨O⟩min[Y[Hand tip l]] ≥ -1.0)
+	gconfidence: 0.4
+	gsupport - (antecedent): 0.6666666666666666
+	gsupport - (consequent): 0.8666666666666667
+	gsupport - (entire): 0.26666666666666666
+
+(max[Z[Elbow r]] ≥ -0.3) => (max[Z[Elbow l]] ≤ -0.25)
+	gconfidence: 0.3571428571428571
+	gsupport - (antecedent): 0.9333333333333333
+	gsupport - (consequent): 0.43333333333333335
+	gsupport - (entire): 0.3333333333333333
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[X[Elbow r]] ≥ 0.7) => (max[Z[Elbow l]] ≤ -0.25)
+	gconfidence: 0.35000000000000003
+	gsupport - (antecedent): 0.6666666666666666
+	gsupport - (consequent): 0.43333333333333335
+	gsupport - (entire): 0.23333333333333334
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.5) => (max[Z[Elbow l]] ≤ -0.25)
+	gconfidence: 0.31578947368421056
+	gsupport - (antecedent): 0.6333333333333333
+	gsupport - (consequent): 0.43333333333333335
+	gsupport - (entire): 0.2
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.5) ∧ (⟨O⟩min[Y[Elbow r]] ≥ -0.5) => (max[Z[Elbow l]] ≤ -0.25)
+	gconfidence: 0.31578947368421056
+	gsupport - (antecedent): 0.6333333333333333
+	gsupport - (consequent): 0.43333333333333335
+	gsupport - (entire): 0.2
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.2) => (max[Z[Elbow l]] ≤ -0.25)
+	gconfidence: 0.31578947368421056
+	gsupport - (antecedent): 0.6333333333333333
+	gsupport - (consequent): 0.43333333333333335
+	gsupport - (entire): 0.2
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Hand tip r]] ≥ 0.2) ∧ (⟨O⟩min[Y[Elbow r]] ≥ -0.5) => (max[Z[Elbow l]] ≤ -0.25)
+	gconfidence: 0.31578947368421056
+	gsupport - (antecedent): 0.6333333333333333
+	gsupport - (consequent): 0.43333333333333335
+	gsupport - (entire): 0.2
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[Y[Elbow r]] ≥ -0.5) => (max[Z[Elbow l]] ≤ -0.25)
+	gconfidence: 0.3043478260869565
+	gsupport - (antecedent): 0.7666666666666667
+	gsupport - (consequent): 0.43333333333333335
+	gsupport - (entire): 0.23333333333333334
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩min[X[Elbow r]] ≥ 0.7) => (⟨O⟩max[Z[Hand tip l]] ≤ -1)
+	gconfidence: 0.30000000000000004
+	gsupport - (antecedent): 0.6666666666666666
+	gsupport - (consequent): 0.3333333333333333
+	gsupport - (entire): 0.2
+
+(max[Z[Elbow r]] ≥ -0.3) => (⟨O⟩max[Z[Hand tip l]] ≤ -1)
+	gconfidence: 0.2857142857142857
+	gsupport - (antecedent): 0.9333333333333333
+	gsupport - (consequent): 0.3333333333333333
+	gsupport - (entire): 0.26666666666666666
+
+(max[Z[Elbow r]] ≥ -0.3) ∧ (⟨O⟩max[X[Elbow r]] ≤ 0.7) => (max[Z[Elbow l]] ≤ -0.25)
+	gconfidence: 0.2692307692307692
+	gsupport - (antecedent): 0.8666666666666667
+	gsupport - (consequent): 0.43333333333333335
+	gsupport - (entire): 0.23333333333333334
+
+(max[Z[Elbow r]] ≥ -0.3) => (min[X[Elbow r]] ≥ 0.7)
+	gconfidence: 0.25
+	gsupport - (antecedent): 0.9333333333333333
+	gsupport - (consequent): 0.4
+	gsupport - (entire): 0.23333333333333334
+
