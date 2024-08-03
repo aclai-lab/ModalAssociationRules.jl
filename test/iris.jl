@@ -6,6 +6,8 @@ using MLJ
 using Random
 using DataFrames
 
+using SoleData: UnivariateMin, UnivariateMax
+
 _X, y = @load_iris
 X1 = DataFrame(hcat(values(_X)...), collect(keys(_X)))
 

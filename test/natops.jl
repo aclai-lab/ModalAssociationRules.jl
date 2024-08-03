@@ -3,6 +3,7 @@ using Test
 
 using ModalAssociationRules
 using SoleData
+using SoleData: UnivariateMin, UnivariateMax
 using StatsBase
 
 import ModalAssociationRules.children
