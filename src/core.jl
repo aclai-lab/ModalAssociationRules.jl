@@ -477,22 +477,22 @@ const Info = Dict{Symbol,Any}
         IMEAS<:MeaningfulnessMeasure,
         RMEAS<:MeaningfulnessMeasure
     }
-        X::DATA                            # target dataset
-        algorithm::MINALGO                    # algorithm used to perform extraction
-        items::Vector{I}
+        X::DATA                             # target dataset
+        algorithm::MINALGO                  # algorithm used to perform extraction
+        items::Vector{I}                    # items considered during the extraction
 
-                                        # meaningfulness measures
+                                            # meaningfulness measures
         item_constrained_measures::Vector{IMEAS}
         rule_constrained_measures::Vector{RMEAS}
 
-        freqitems::Vector{Itemset}      # collected frequent itemsets
-        arules::Vector{ARule}           # collected association rules
+        freqitems::Vector{Itemset}          # collected frequent itemsets
+        arules::Vector{ARule}               # collected association rules
 
-        lmemo::LmeasMemo                # local memoization structure
-        gmemo::GmeasMemo                # global memoization structure
+        lmemo::LmeasMemo                    # local memoization structure
+        gmemo::GmeasMemo                    # global memoization structure
 
-        powerups::Powerup               # mining algorithm powerups (see documentation)
-        info::Info                      # general informations
+        powerups::Powerup                   # mining algorithm powerups (see documentation)
+        info::Info                          # general informations
     end
 
 Machine learning model interface to perform association rules extraction.
@@ -553,6 +553,7 @@ struct Miner{
     X::DATA
     # algorithm used to perform extraction
     algorithm::MINALGO
+    # items considered during the extraction
     items::Vector{I}
 
     # meaningfulness measures

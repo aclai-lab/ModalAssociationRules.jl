@@ -74,7 +74,7 @@ GmeasMemo
 ```
 
 What follows is a list of the already built-in meaningfulness measures.
-In the [`hands-on`](@ref) section you will learn how to implement your own measure.
+In the [`Hands on`](@hands-on) section you will learn how to implement your own measure.
 
 ```@docs
 lsupport(itemset::Itemset, logi_instance::LogicalInstance; miner::Union{Nothing,Miner}=nothing)

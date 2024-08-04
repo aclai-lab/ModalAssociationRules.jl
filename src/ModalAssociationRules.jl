@@ -19,13 +19,13 @@ using Reexport
 @reexport using SoleLogics
 @reexport using MultiData
 @reexport using SoleData
-using SoleModels
-# export SoleModels.evaluate
+@reexport using SoleModels
 
 using SoleLogics: AbstractInterpretation, getinstance, LogicalInstance
 using SoleLogics: nworlds, frame, allworlds, nworlds
 
 using SoleData: SupportedLogiset
+using SoleData: UnivariateMin, UnivariateMax
 
 using StatsBase
 
@@ -105,11 +105,9 @@ include("utils/natops-loader.jl")
 
 export load_NATOPS
 
-include("utils/literals-selector.jl")   # IDEA: move this in SoleData
+include("utils/literals-selector.jl")   # TODO: move this in SoleData
 
 export equicut, quantilecut
 export makeconditions
-
-include("ideas.jl")
 
 end
