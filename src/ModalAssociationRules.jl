@@ -19,13 +19,13 @@ using Reexport
 @reexport using SoleLogics
 @reexport using MultiData
 @reexport using SoleData
-using SoleModels
-# export SoleModels.evaluate
+@reexport using SoleModels
 
 using SoleLogics: AbstractInterpretation, getinstance, LogicalInstance
 using SoleLogics: nworlds, frame, allworlds, nworlds
 
 using SoleData: SupportedLogiset
+using SoleData: UnivariateMin, UnivariateMax
 
 using StatsBase
 

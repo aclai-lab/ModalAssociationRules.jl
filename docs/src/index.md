@@ -18,10 +18,10 @@ Pkg.add("ModalAssociationRules")
 
 ## Feature Summary
 
-* Define your own meaningfulness measures to work with modal datasets, by simply calling the macros `lmeas` and `gmeas`.
-* Construct and manipulate `Itemset`s and `Association rules` that support custom modal logic, such as [Halpern Shoham Interval Logic](https://dl.acm.org/doi/pdf/10.1145/115234.115351).
-* Configure and start your mining by easily creating a `Miner` object, containing the initial items, a list of meaningfulness measures and a reference to the underlying algorithm.
-* Mine using state-of-the-art algorithm `FP-Growth`, optimized to leverage parallelization, or simply make your own by following an interface. 
+* Construct and manipulate conjunctions of facts (*items*) called *itemsets*, eventually supporting specific modal logic to suit your data (e.g., [Halpern Shoham Interval Logic](https://dl.acm.org/doi/pdf/10.1145/115234.115351) to work with time series).
+* Extract the *association rules* hidden in a dataset, starting from a set of items and a list of *meaningfulness measures*.
+* Define your own meaningfulness measures to work with both propositional and modal datasets, by simply calling the macros `lmeas` and `gmeas`.
+* Configure an experiment by creating as `Miner` object, and start your mining by choosing an extraction algorithm. We provide the state-of-the-art algorithm `FP-Growth`, optimized to leverage parallelization, but you can easily write your own algorithm by following a simple interface. 
 
 ## Package potential at a glance
 Consider a time series dataset obtained by recording the hand movements of an operator. Instead of working it through propositional logic, we decide to segment each time serie in intervals, and we build relationships between intervals through a certain modal logic.
