@@ -3,7 +3,7 @@ using Test
 
 using ModalAssociationRules
 using SoleData
-using SoleData: UnivariateMin, UnivariateMax
+using SoleData: VariableMin, VariableMax
 using StatsBase
 
 import ModalAssociationRules.children
@@ -18,9 +18,9 @@ X2 = deepcopy(X1)
 X3 = deepcopy(X1)
 
 # make a vector of item, that will be the initial state of the mining machine
-manual_p = Atom(ScalarCondition(UnivariateMin(1), >, -0.5))
-manual_q = Atom(ScalarCondition(UnivariateMin(2), <=, -2.2))
-manual_r = Atom(ScalarCondition(UnivariateMin(3), >, -3.6))
+manual_p = Atom(ScalarCondition(VariableMin(1), >, -0.5))
+manual_q = Atom(ScalarCondition(VariableMin(2), <=, -2.2))
+manual_r = Atom(ScalarCondition(VariableMin(3), >, -3.6))
 
 manual_lp = box(IA_L)(manual_p)
 manual_lq = diamond(IA_L)(manual_q)
@@ -175,10 +175,10 @@ X_df_1_have_command = X_df[1:30, :]
 X_1_have_command = scalarlogiset(X_df_1_have_command)
 
 _5_items_prop = [
-    Atom(ScalarCondition(UnivariateMin(4), >=, 1))
-    Atom(ScalarCondition(UnivariateMin(4), >=, 1.8))
-    Atom(ScalarCondition(UnivariateMin(5), >=, -0.5))
-    Atom(ScalarCondition(UnivariateMax(6), >=, 0))
+    Atom(ScalarCondition(VariableMin(4), >=, 1))
+    Atom(ScalarCondition(VariableMin(4), >=, 1.8))
+    Atom(ScalarCondition(VariableMin(5), >=, -0.5))
+    Atom(ScalarCondition(VariableMax(6), >=, 0))
 ] |> Vector{Item}
 _5_items = vcat(
     _5_items_prop,

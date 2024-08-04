@@ -25,7 +25,7 @@ using SoleLogics: AbstractInterpretation, getinstance, LogicalInstance
 using SoleLogics: nworlds, frame, allworlds, nworlds
 
 using SoleData: SupportedLogiset
-using SoleData: UnivariateMin, UnivariateMax
+using SoleData: VariableMin, VariableMax
 
 using StatsBase
 

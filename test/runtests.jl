@@ -4,7 +4,7 @@ using Random
 using SoleLogics
 
 using SoleData
-using SoleData: UnivariateMin, UnivariateMax
+using SoleData: VariableMin, VariableMax
 
 function run_tests(list)
     println("\n" * ("#"^50))

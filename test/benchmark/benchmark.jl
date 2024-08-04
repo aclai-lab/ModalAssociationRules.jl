@@ -22,9 +22,9 @@ X1 = scalarlogiset(X_df)
 X2 = deepcopy(X1)
 
 # make a vector of item, that will be the initial state of the mining machine
-manual_p = Atom(ScalarCondition(UnivariateMin(1), >, -0.5))
-manual_q = Atom(ScalarCondition(UnivariateMin(2), <=, -2.2))
-manual_r = Atom(ScalarCondition(UnivariateMin(3), >, -3.6))
+manual_p = Atom(ScalarCondition(VariableMin(1), >, -0.5))
+manual_q = Atom(ScalarCondition(VariableMin(2), <=, -2.2))
+manual_r = Atom(ScalarCondition(VariableMin(3), >, -3.6))
 
 manual_lp = box(IA_L)(manual_p)
 manual_lq = diamond(IA_L)(manual_q)
