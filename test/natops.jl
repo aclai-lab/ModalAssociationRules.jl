@@ -92,7 +92,7 @@ function _compare_arules(miner1::Miner, miner2::Miner, rule::ARule)
         lconfidence(rule, SoleLogics.getinstance(dataset(miner1), ninstance), miner1)
         lconfidence(rule, SoleLogics.getinstance(dataset(miner2), ninstance), miner2)
 
-        @test miner1.lmemo[(:lconfidence, rule, ninstance)] ==
+        @test miner1.lmemo[(:lconfidence, rule, ninstance)] ===
               miner2.lmemo[(:lconfidence, rule, ninstance)]
     end
 end
