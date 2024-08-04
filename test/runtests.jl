@@ -1,6 +1,10 @@
-using SoleLogics
 using Test
 using Random
+
+using SoleLogics
+
+using SoleData
+using SoleData: UnivariateMin, UnivariateMax
 
 function run_tests(list)
     println("\n" * ("#"^50))
