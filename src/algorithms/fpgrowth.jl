@@ -478,7 +478,7 @@ doc_fptree_push = """
 
     grow!(
         fptree::FPTree,
-        enhanceditemsets::ConditionalPatternBase,
+        enhanceditemsets::Union{ConditionalPatternBase,Vector{Itemset}},
         miner::Miner;
         htable::Union{Nothing,HeaderTable}=nothing
     )
@@ -486,63 +486,11 @@ doc_fptree_push = """
 Push one or more [`Itemset`](@ref)s/[`EnhancedItemset`](@ref) to an [`FPTree`](@ref).
 If an [`HeaderTable`](@ref) is provided, it is leveraged to develop internal links.
 
-!!! warning
-    To optimally leverage the compression capabilities of [`FPTree`](@ref)s, the
-    [`Itemset`](@ref)s provided should be sorted decreasingly by [`gsupport`](@ref).
-    By default, to improve performances, this check is not performed inside this method.
-
 See also [`EnhancedItemset`](@ref), [`FPTree`](@ref), [`gsupport`](@ref),
 [`HeaderTable`](@ref), [`Itemset`](@ref).
 """
 
-# # IDEA: write uniquely the following dispatch, merging Itemset and EnhancedItemset cases
-# function grow!(
-#     fptree::FPTree,
-#     itemsets::Vector{T},
-#     miner::Miner;
-#     htable::HeaderTable
-# ) where {T <: Union{Itemset, EnhancedItemset}}
-
 """$(doc_fptree_push)"""
-function grow!(
-    fptree::FPTree,
-    itemset::Itemset,
-    miner::Miner
-)
-    # base case
-    if length(itemset) == 0
-        return
-    end
-
-    # sorting must be guaranteed: remember an FPTree essentially is a prefix tree
-    sort!(items(itemset),
-        by=t -> powerups(miner, :current_items_frequency)[Itemset(t)], rev=true)
-
-    # retrieve the item to grow the tree;
-    item = first(itemset)
-
-    # check if a subtree whose content is the first item in `itemset` already exists
-    _children = children(fptree)
-    _children_idx = findfirst(child -> content(child) == item, _children)
-    if !isnothing(_children_idx)
-        # a child containing item already exist: grow deeper in this direction
-        subfptree = _children[_children_idx]
-        addcount!(subfptree, 1)
-        grow!(subfptree, itemset[2:end], miner)
-    else
-        # if it does not, then create a new children FPTree, and set this as its parent
-        subfptree = FPTree(itemset; isroot=false)
-        children!(fptree, subfptree)
-    end
-end
-
-grow!(
-    fptree::FPTree,
-    itemsets::Vector{Itemset},
-    miner::Miner;
-    kwargs...
-) = map(i -> grow!(fptree, itemsets[i], miner; kwargs...), 1:length(itemsets))
-
 function grow!(
     fptree::FPTree,
     enhanceditemset::EnhancedItemset,
@@ -581,13 +529,24 @@ function grow!(
     end
 end
 
-grow!(
+"""$(doc_fptree_push)"""
+function grow!(
     fptree::FPTree,
-    enhanceditemsets::ConditionalPatternBase,
+    itemset::Itemset,
+    miner::Miner
+)
+    grow!(fptree, convert(EnhancedItemset, itemset, 1), miner)
+end
+
+"""$(doc_fptree_push)"""
+function grow!(
+    fptree::FPTree,
+    collection::Union{ConditionalPatternBase,Vector{Itemset}},
     miner::Miner;
     kwargs...
-) = [grow!(fptree, enhanceditemset, miner; kwargs...)
-        for enhanceditemset in enhanceditemsets]
+)
+    map(element -> grow!(fptree, element, miner; kwargs...), collection)
+end
 
 """
     Base.reverse(htable::HeaderTable)

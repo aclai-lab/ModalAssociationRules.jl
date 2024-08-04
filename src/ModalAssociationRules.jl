@@ -61,7 +61,6 @@ export globalmemo, globalmemo!
 
 export powerups, powerups!, haspowerup, initpowerups
 export info, info!, hasinfo
-export contributors, contributors!
 export mine!, apply!, generaterules!
 export analyze
 
@@ -90,7 +89,7 @@ include("algorithms/fpgrowth.jl")
 export FPTree
 export content, parent, children, count
 export content!, parent!, children!
-export count!, addcount!, addcontributors!
+export count!, addcount!
 export isroot, islist
 export itemset_from_fplist, retrieveleaf
 export grow!
