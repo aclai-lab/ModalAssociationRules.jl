@@ -684,8 +684,28 @@ but generalized to also work with modal logic.
 See also [`Miner`](@ref), [`FPTree`](@ref), [`HeaderTable`](@ref),
 [`SoleBase.AbstractDataset`](@ref)
 """
-function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothing
+function fpgrowth(
+    miner::Miner,
+    X::AbstractDataset;
+    parallelize::Bool=true,
+    verbose::Bool=false
+)::Nothing
+    # How does ModalFP-Growth work?
+    # Consider the dataset rearranged as follows:
+    #
+    #       w0  w1  ... wN
+    #   I0
+    #   I1
+    #   ..
+    #   IN
+    #
+    # For each instance I, apply fpgrowth horizontally across worlds to find all the
+    # locally frequent itemsets associated with I;
+    # then, merge all the results together to compute the global support of each generated
+    # itemset (that is, how many times an itemset appear as the result of an FP-Growth
+    # application on an Instance)
 
+    # utility function; see `_fpgrowth_kernel`
     function _fpgrowth_count_phase(
         survivor_itemset::Itemset,
         leftout_itemset::Itemset,
@@ -723,13 +743,6 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
         end
     end
 
-    # essentially, modal fpgrowth consists of an iterative application of multiple
-    # "standard" (a.k.a, propositional) fpgrowth calls;
-    # this dictionary is necessary to convey all the intermediate results between
-    # fpgrowth calls, and is filled up inside the "kernel" of the current procedure.
-    # See `_fpgrowth_kernel` subroutine
-    fpgrowth_fragments = DefaultDict{Itemset, Int}(0)
-
     # `fpgrowth` recursive logic piece; scroll down to see initialization section.
     function _fpgrowth_kernel(
         fptree::FPTree,
@@ -740,10 +753,6 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
         # if `fptree` contains only one path (hence, it can be considered a linked list),
         # then combine all the Itemsets collected from previous step with the remained ones.
         if islist(fptree)
-            verbose &&
-                printstyled("Merging $(leftout_itemset |> length) leftout items with a " *
-                "single-list FPTree of length $(survivor_itemset |> length)\n", color=:blue)
-
             # all the survived items, from which compose new frequent itemsets
             survivor_itemset = itemset_from_fplist(fptree)
             leftout_itemset = itemset_from_fplist(leftout_fptree)
@@ -832,19 +841,17 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
         "Note that local support is needed too, but it is already considered internally " *
         "by global support."
 
-    # consider the dataset rearranged as follows:
-    #=
-            w0      w1      ...     wN
-        I0
-        I1
-        ..
-        IN
-    =#
-    # for each instance I, apply fpgrowth horizontally across worlds to find all the
-    # locally frequent itemsets associated with I;
-    # then, merge all the results together to compute the global support of each generated
-    # itemset (that is, how many times an itemset appear as the result of an FP-Growth
-    # application on an Instance)
+    if Threads.nthreads() > 1
+        verbose && parallelize && printstyled("Multithreading enabled with " *
+            "#$(Threads.nthreads()) threads\n")
+    end
+
+    # essentially, modal fpgrowth consists of an iterative application of multiple
+    # "standard" (a.k.a, propositional) fpgrowth calls;
+    # this dictionary is necessary to convey all the intermediate results between
+    # fpgrowth calls, and is filled up inside the "kernel" of the current procedure.
+    # See `_fpgrowth_kernel` subroutine
+    fpgrowth_fragments = DefaultDict{Itemset, Int}(0)
 
     # arbitrary general lexicographic ordering
     incremental = 0
@@ -854,10 +861,6 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
     end
 
     for ninstance in 1:ninstances(X)
-        verbose && printstyled("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n", color=:green)
-        verbose && printstyled(
-            "Starting execution for $(ninstance) instance...\n", color=:green)
-
         # the instance we are applying fpgrowth to has to be remembered to properly store
         # local support at the end of each sub-fpgrowth execution.
         powerups!(miner, :current_instance, ninstance)
@@ -898,27 +901,16 @@ function fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothin
             end
         end
 
-        verbose && printstyled("Initializing seed FPTree...\n", color=:green)
-
         # create an initial fptree
         fptree = FPTree()
 
-        verbose && printstyled("Growing seed FPTree...\n", color=:green)
-
         ModalAssociationRules.grow!(fptree, nworld_to_itemset, miner)
-
-        verbose && printstyled("Linking Header table...\n", color=:green)
 
         # create and fill an header table, necessary to traverse FPTrees horizontally
         htable = HeaderTable(fptree; miner=miner)
 
-        verbose && printstyled("Mining frequent itemsets...\n", color=:green)
-
         # call main logic
         _fpgrowth_kernel(fptree, htable, miner, FPTree())
-
-        verbose && printstyled(
-            "Execution for instance $(ninstance) terminated correctly.\n", color=:green)
     end
 
     for (itemset, gfrequency_int) in fpgrowth_fragments

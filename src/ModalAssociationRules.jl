@@ -8,6 +8,7 @@ import Base.firstindex, Base.lastindex
 
 using Combinatorics
 using DataStructures
+using Distributed
 using IterTools
 using Lazy: @forward
 using Parameters
