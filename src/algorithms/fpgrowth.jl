@@ -670,6 +670,19 @@ function projection(
     return fptree, HeaderTable(fptree; miner=miner)
 end
 
+"""
+    TODO: comment this
+"""
+function _fragments_reducer(a::DefaultDict{Itemset, Int},  b::DefaultDict{Itemset, Int})
+    c = deepcopy(a) # TODO: deepcopy should not be needed here
+
+    for k in keys(b)
+        c[k] += b[k]
+    end
+
+    return c
+end
+
 ############################################################################################
 #### Main FP-Growth logic ##################################################################
 ############################################################################################
@@ -719,13 +732,6 @@ function fpgrowth(
             "#$(Threads.nthreads()) threads\n")
     end
 
-    # essentially, modal fpgrowth consists of an iterative application of multiple
-    # "standard" (a.k.a, propositional) fpgrowth calls;
-    # this dictionary is necessary to convey all the intermediate results between
-    # fpgrowth calls, and is filled up inside the "kernel" of the current procedure.
-    # See `_fpgrowth_kernel` subroutine
-    fpgrowth_fragments = DefaultDict{Itemset, Int}(0)
-
     # arbitrary general lexicographic ordering
     incremental = 0
     for candidate in items(miner)
@@ -733,58 +739,14 @@ function fpgrowth(
         incremental += 1
     end
 
-    for ninstance in 1:ninstances(X)
-        # the instance we are applying fpgrowth to has to be remembered to properly store
-        # local support at the end of each sub-fpgrowth execution.
-        powerups!(miner, :current_instance, ninstance)
+    fpgrowth_fragments = reduce(
+        _fragments_reducer,
+        Distributed.pmap(ninstance -> _fpgrowth(ninstance, miner), 1:ninstances(X))
+    )
 
-        # the frequency of each 1-length frequent itemset is tracked in a fresh dictionary;
-        # this may vary between each iteration of this cycle (each sub-fpgrowth execution).
-        powerups!(miner, :current_items_frequency, DefaultDict{Itemset, Int}(0))
-
-        # from now on, the instance is fixed and we apply fpgrowth horizontally;
-        # the assumption here is that all the frames are shaped equally.
-        kripkeframe = SoleLogics.frame(X, 1)
-        _nworlds = kripkeframe |> SoleLogics.nworlds
-        nworld_to_itemset = [Itemset() for _ in 1:_nworlds]
-
-        # get the frequent 1-length itemsets from the first candidates set;
-        frequents = [candidate
-            for (gmeas_algo, lthreshold, gthreshold) in itemsetmeasures(miner)
-            for candidate in Itemset.(items(miner))
-            if lsupport(candidate, getinstance(X, ninstance), miner) >= lthreshold
-        ] |> unique
-
-        for itemset in frequents
-            fpgrowth_fragments[itemset] += 1
-        end
-
-        for (nworld, w) in enumerate(kripkeframe |> SoleLogics.allworlds)
-            nworld_to_itemset[nworld] = [
-                itemset
-                for itemset in frequents
-                if powerups(
-                    miner, :instance_item_toworlds)[(ninstance, itemset)][nworld] > 0
-            ] |> union
-
-            # count 1-length frequent itemsets frequency;
-            # a.k.a prepare miner internal powerups state to handle an FPGrowth call.
-            for item in nworld_to_itemset[nworld]
-                powerups(miner, :current_items_frequency)[Itemset(item)] += 1
-            end
-        end
-
-        # create an initial fptree
-        fptree = FPTree()
-
-        ModalAssociationRules.grow!(fptree, nworld_to_itemset, miner)
-
-        # create and fill an header table, necessary to traverse FPTrees horizontally
-        htable = HeaderTable(fptree; miner=miner)
-
-        # call main logic
-        _fpgrowth_kernel(fptree, htable, miner, FPTree(), fpgrowth_fragments)
-    end
+    # DEBUG:
+    # println("FRAGMENTS RETURNED")
+    # return fpgrowth_fragments
 
     for (itemset, gfrequency_int) in fpgrowth_fragments
         _threshold = getglobalthreshold(miner, gsupport)
@@ -798,7 +760,73 @@ function fpgrowth(
     end
 end
 
-# `fpgrowth` recursive logic piece; scroll down to see initialization section.
+# `fpgrowth` main logic
+function _fpgrowth(
+    ninstance::Int,
+    _miner::Miner
+)
+    # avoid data-race (e.g., if this function is used in a pmap)
+    miner = deepcopy(_miner)
+    X = dataset(miner)
+
+    # collect the local results, accumulated by this run;
+    # those results are reduced together (e.g., if this function is used in a pmap)
+    fpgrowth_fragments = DefaultDict{Itemset, Int}(0)
+
+    # the instance we are applying fpgrowth to has to be remembered to properly store
+    # local support at the end of each sub-fpgrowth execution.
+    powerups!(miner, :current_instance, ninstance)
+
+    # the frequency of each 1-length frequent itemset is tracked in a fresh dictionary;
+    # this may vary between each iteration of this cycle (each sub-fpgrowth execution).
+    powerups!(miner, :current_items_frequency, DefaultDict{Itemset, Int}(0))
+
+    # from now on, the instance is fixed and we apply fpgrowth horizontally;
+    # the assumption here is that all the frames are shaped equally.
+    kripkeframe = SoleLogics.frame(X, 1)
+    _nworlds = kripkeframe |> SoleLogics.nworlds
+    nworld_to_itemset = [Itemset() for _ in 1:_nworlds]
+
+    # get the frequent 1-length itemsets from the first candidates set;
+    frequents = [candidate
+        for (gmeas_algo, lthreshold, gthreshold) in itemsetmeasures(miner)
+        for candidate in Itemset.(items(miner))
+        if lsupport(candidate, getinstance(X, ninstance), miner) >= lthreshold
+    ] |> unique
+
+    for itemset in frequents
+        fpgrowth_fragments[itemset] += 1
+    end
+
+    for (nworld, w) in enumerate(kripkeframe |> SoleLogics.allworlds)
+        nworld_to_itemset[nworld] = [
+            itemset
+            for itemset in frequents
+            if powerups(
+                miner, :instance_item_toworlds)[(ninstance, itemset)][nworld] > 0
+        ] |> union
+
+        # count 1-length frequent itemsets frequency;
+        # a.k.a prepare miner internal powerups state to handle an FPGrowth call.
+        for item in nworld_to_itemset[nworld]
+            powerups(miner, :current_items_frequency)[Itemset(item)] += 1
+        end
+    end
+
+    # create an initial fptree and populate it
+    fptree = FPTree()
+    ModalAssociationRules.grow!(fptree, nworld_to_itemset, miner)
+
+    # create and fill an header table, necessary to traverse FPTrees horizontally
+    htable = HeaderTable(fptree; miner=miner)
+
+    # call main logic
+    _fpgrowth_kernel(fptree, htable, miner, FPTree(), fpgrowth_fragments)
+
+    return fpgrowth_fragments
+end
+
+# `fpgrowth` recursive logic; scroll down to see initialization section.
 function _fpgrowth_kernel(
     fptree::FPTree,
     htable::HeaderTable,
