@@ -700,7 +700,8 @@ See also [`Miner`](@ref), [`FPTree`](@ref), [`HeaderTable`](@ref),
 function fpgrowth(
     miner::Miner,
     X::AbstractDataset;
-    parallelize::Bool=true,
+    parallel::Bool=false, # WIP
+    distributed::Bool=true,
     verbose::Bool=false
 )::Nothing
     # How does ModalFP-Growth work?
@@ -741,12 +742,13 @@ function fpgrowth(
 
     fpgrowth_fragments = reduce(
         _fragments_reducer,
-        Distributed.pmap(ninstance -> _fpgrowth(ninstance, miner), 1:ninstances(X))
+        Distributed.pmap(
+            ninstance -> _fpgrowth(ninstance, miner),
+            1:ninstances(X);
+            distributed=distributed,
+            # on_error=e -> TODO
+        )
     )
-
-    # DEBUG:
-    # println("FRAGMENTS RETURNED")
-    # return fpgrowth_fragments
 
     for (itemset, gfrequency_int) in fpgrowth_fragments
         _threshold = getglobalthreshold(miner, gsupport)
@@ -766,6 +768,7 @@ function _fpgrowth(
     _miner::Miner
 )
     # avoid data-race (e.g., if this function is used in a pmap)
+    # TODO: I want each worker to work with the exact and only memory he needs.
     miner = deepcopy(_miner)
     X = dataset(miner)
 
