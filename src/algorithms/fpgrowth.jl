@@ -29,7 +29,7 @@ true is accumulated.
 !!! info
     Did you notice? One FPTree structure contains all the information needed to construct an
     [`EnhancedItemset`](@ref). This is crucial to generate new [`FPTree`](@ref)s during
-    fpgrowth algorithm, via building [`ConditionalPatternBase`](@ref) iteratively while
+    fpgrowth algorithm, via building [`ConditionalPatternBase`](@ref)s iteratively while
     avoiding visiting the dataset over and over again.
 
 See also [`EnhancedItemset`](@ref), [`fpgrowth`](@ref), [`gsupport`](@ref), [`Item`](@ref),

@@ -1,5 +1,4 @@
 module ModalAssociationRules
-# Currently, the only topic covered by ModalAssociationRules is Association Rules.
 
 import Base.count, Base.push!
 import Base.size, Base.getindex, Base.IndexStyle, Base.setindex!, Base.iterate
@@ -80,7 +79,7 @@ include("utils/arulemining-utils.jl")
 export combine_items, prune, prune!
 export grow_prune, coalesce_contributors
 export anchor_rulecheck, non_selfabsorbed_rulecheck
-export generaterules # see generaterules!
+export generaterules
 export getlocalthreshold_integer, getglobalthreshold_integer
 
 include("algorithms/apriori.jl")
@@ -98,7 +97,7 @@ export itemset_from_fplist, retrieveleaf
 export grow!
 
 export HeaderTable, items
-export link, link!, follow  # dispatches for both FPTree and HeaderTable
+export link, link!, follow
 export checksanity!
 export patternbase
 export fpgrowth
