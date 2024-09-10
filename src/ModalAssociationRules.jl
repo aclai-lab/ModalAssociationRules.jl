@@ -51,7 +51,7 @@ export GmeasMemoKey, GmeasMemo
 export Info, Powerup
 
 export Miner
-export dataset, algorithm
+export data, algorithm
 export itemsetmeasures, additemmeas
 export rulemeasures, addrulemeas
 export freqitems, arules
@@ -64,6 +64,8 @@ export powerups, powerups!, haspowerup, initpowerups
 export info, info!, hasinfo
 export mine!, apply!, generaterules!
 export analyze
+
+export reincarnate
 
 export frame, allworlds, nworlds
 

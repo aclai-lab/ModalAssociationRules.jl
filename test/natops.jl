@@ -89,8 +89,8 @@ function _compare_arules(miner1::Miner, miner2::Miner, rule::ARule)
 
     # local confidence comparison;
     for ninstance in miner1 |> dataset |> ninstances
-        lconfidence(rule, SoleLogics.getinstance(dataset(miner1), ninstance), miner1)
-        lconfidence(rule, SoleLogics.getinstance(dataset(miner2), ninstance), miner2)
+        lconfidence(rule, SoleLogics.getinstance(data(miner1), ninstance), miner1)
+        lconfidence(rule, SoleLogics.getinstance(data(miner2), ninstance), miner2)
 
         @test miner1.lmemo[(:lconfidence, rule, ninstance)] ===
               miner2.lmemo[(:lconfidence, rule, ninstance)]
@@ -129,8 +129,8 @@ fpgrowth_miner = Miner(X2, fpgrowth, _1_items, _1_itemsetmeasures, _1_rulemeasur
 compare(apriori_miner, fpgrowth_miner)
 
 # checking for re-mining block
-@test apply!(apriori_miner, dataset(apriori_miner)) == Nothing
-@test apply!(fpgrowth_miner, dataset(fpgrowth_miner)) == Nothing
+@test apply!(apriori_miner, data(apriori_miner)) == Nothing
+@test apply!(fpgrowth_miner, data(fpgrowth_miner)) == Nothing
 
 # 2nd comparison
 # print("Debug print: comparison #2\n")

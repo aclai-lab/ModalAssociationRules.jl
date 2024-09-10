@@ -7,7 +7,7 @@ LOCAL_POWERUP_SYMBOLS = [
 ]
 """
 Collection of [`powerups`](@ref) references which are injected when creating a generic
-local meaningfulness measure using [`gmeas`](@ref).
+global meaningfulness measure using [`gmeas`](@ref).
 """
 GLOBAL_POWERUP_SYMBOLS = []
 
@@ -130,29 +130,31 @@ Link together two [`MeaningfulnessMeasure`](@ref), automatically defining
 See also [`globalof`](@ref), [`localof`](@ref), [`isglobalof`](@ref), [`islocalof`](@ref).
 """
 macro linkmeas(gmeasname, lmeasname)
-
     quote
-        ModalAssociationRules.islocalof(::typeof($(lmeasname)), ::typeof($(gmeasname))) = true
-        ModalAssociationRules.isglobalof(::typeof($(gmeasname)), ::typeof($(lmeasname))) = true
+        ModalAssociationRules.islocalof(
+            ::typeof($(lmeasname)), ::typeof($(gmeasname))) = true
+        ModalAssociationRules.isglobalof(
+            ::typeof($(gmeasname)), ::typeof($(lmeasname))) = true
         ModalAssociationRules.localof(::typeof($(gmeasname))) = $(lmeasname)
         ModalAssociationRules.globalof(::typeof($(lmeasname))) = $(gmeasname)
     end
 end
 
-
+# core logic of `lsupport`, as a lambda function
 _lsupport_logic = (itemset, instance, miner) -> begin
-    X, i_instance = instance.s, instance.i_instance # dataset(miner)
+    X, i_instance = instance.s, instance.i_instance # data(miner)
 
-    # Bool vector, representing on which world an Itemset holds
+    # bool vector, representing on which world an Itemset holds
     wmask = [check(toformula(itemset), X, i_instance, w) for w in allworlds(X, i_instance)]
 
-    # Return the result, and eventually the information needed to support powerups
+    # return the result, and eventually the information needed to support powerups
     return Dict(
         :measure => count(wmask) / nworlds(X, i_instance),
         :instance_item_toworlds => wmask,
     )
 end
 
+# core logic of `gsupport`, as a lambda function
 _gsupport_logic = (itemset, X, threshold, miner) -> begin
     _measure = sum([
         lsupport(itemset, getinstance(X, i_instance), miner) >= threshold
@@ -263,5 +265,7 @@ See also [`antecedent`](@ref), [`ARule`](@ref), [`Miner`](@ref), [`gsupport`](@r
 """
 @gmeas gconfidence _gconfidence_logic
 
+# all the meaningfulness measures defined in this file are linked here,
+# meaning that a global measure is associated to its corresponding local one.
 @linkmeas gsupport lsupport
 @linkmeas gconfidence lconfidence

@@ -465,13 +465,22 @@ See also [`info`](@ref), [`info!`](@ref), [`hasinfo`](@ref), [`Miner`](@ref).
 """
 const Info = Dict{Symbol,Any}
 
+"""
+    const MineableData = MineableData
+
+Any type on which mining can be performed.
+
+See also [`Miner`](@info).
+"""
+const MineableData = AbstractDataset
+
 ############################################################################################
 #### Association rule miner machines #######################################################
 ############################################################################################
 
 """
     struct Miner{
-        DATA<:AbstractDataset,
+        DATA<:MineableData,
         MINALGO<:Function,
         I<:Item,
         IMEAS<:MeaningfulnessMeasure,
@@ -543,7 +552,7 @@ See also  [`ARule`](@ref), [`apriori`](@ref), [`MeaningfulnessMeasure`](@ref),
 [`Itemset`](@ref), [`GmeasMemo`](@ref), [`LmeasMemo`](@ref).
 """
 struct Miner{
-    DATA<:AbstractDataset,
+    DATA<:MineableData,
     MINALGO<:Function,
     I<:Item,
     IMEAS<:MeaningfulnessMeasure,
@@ -582,7 +591,7 @@ struct Miner{
         disable_rulesifting::Bool = false,
         info::Info = Info(:istrained => false)
     ) where {
-        DATA<:AbstractDataset,
+        DATA<:MineableData,
         MINALGO<:Function,
         I<:Item,
         IMEAS<:MeaningfulnessMeasure,
@@ -590,8 +599,9 @@ struct Miner{
     }
         # dataset frames must be equal
         @assert allequal([SoleLogics.frame(X, i_instance)
-            for i_instance in 1:ninstances(X)]) "Instances frame is shaped differently. " *
-            "Please, provide an uniform dataset to guarantee mining correctness."
+            for i_instance in 1:ninstances(X)]) "Instances frame is shaped " *
+            "differently. Please, provide an uniform dataset to guarantee " *
+            "mining correctness."
 
         # gsupport is indispensable to mine association rule
         @assert ModalAssociationRules.gsupport in reduce(
@@ -616,13 +626,14 @@ struct Miner{
 end
 
 """
-    dataset(miner::Miner)::AbstractDataset
+    data(miner::Miner)::MineableData
 
 Getter for the dataset wrapped by `miner`s.
 
-See [`SoleBase.AbstractDataset`](@ref), [`Miner`](@ref).
+See [`SoleBase.MineableData`](@ref),
+[`SoleLogics.LogicalInstance`](@ref), [`Miner`](@ref).
 """
-dataset(miner::Miner)::AbstractDataset = miner.X
+data(miner::Miner)::MineableData = miner.X
 
 """
     algorithm(miner::Miner)::Function
@@ -856,11 +867,11 @@ See also [`Miner`](@ref), [`Powerup`](@ref), [`powerups`](@ref).
 haspowerup(miner::Miner, key::Symbol) = haskey(miner |> powerups, key)
 
 """
-    initpowerups(::Function, ::AbstractDataset)
+    initpowerups(::Function, ::MineableData)
 
 This defines how [`Miner`](@ref)'s `powerup` field is filled to optimize the mining.
 """
-initpowerups(::Function, ::AbstractDataset)::Powerup = Powerup()
+initpowerups(::Function, ::MineableData)::Powerup = Powerup()
 
 """
     info(miner::Miner)::Powerup
@@ -895,16 +906,16 @@ hasinfo(miner::Miner, key::Symbol) = haskey(miner |> info, key)
 """
     mine!(miner::Miner)
 
-Synonym for `ModalAssociationRules.apply!(miner, dataset(miner))`.
+Synonym for `ModalAssociationRules.apply!(miner, data(miner))`.
 
 See also [`ARule`](@ref), [`Itemset`](@ref), [`ModalAssociationRules.apply`](@ref).
 """
 function mine!(miner::Miner; kwargs...)
-    return apply!(miner, dataset(miner); kwargs...)
+    return apply!(miner, data(miner); kwargs...)
 end
 
 """
-    apply!(miner::Miner, X::AbstractDataset)
+    apply!(miner::Miner, X::MineableData)
 
 Extract association rules in the dataset referenced by `miner`, saving the interesting
 [`Itemset`](@ref)s inside `miner`.
@@ -912,7 +923,7 @@ Then, return a generator of [`ARule`](@ref)s.
 
 See also [`ARule`](@ref), [`Itemset`](@ref).
 """
-function apply!(miner::Miner, X::AbstractDataset; forcemining::Bool=false, kwargs...)
+function apply!(miner::Miner, X::MineableData; forcemining::Bool=false, kwargs...)
     istrained = info(miner, :istrained)
     if istrained && !forcemining
         @warn "Miner has already been trained. To force mining, set `forcemining=true`."
@@ -941,7 +952,7 @@ function generaterules!(miner::Miner)
 end
 
 function Base.show(io::IO, miner::Miner)
-    println(io, "$(dataset(miner))")
+    println(io, "$(data(miner))")
 
     println(io, "Alphabet: $(items(miner))\n")
     println(io, "Items measures: $(itemsetmeasures(miner))")
@@ -1038,11 +1049,11 @@ function analyze(
 end
 
 ############################################################################################
-#### Dataset utilities #####################################################################
+#### More utilities ########################################################################
 ############################################################################################
 
 function SoleLogics.frame(miner::Miner)
-    return SoleLogics.frame(dataset(miner), 1)
+    return SoleLogics.frame(data(miner), 1)
 end
 
 function SoleLogics.allworlds(miner::Miner)
@@ -1051,4 +1062,30 @@ end
 
 function SoleLogics.nworlds(miner::Miner)
     return frame(miner) |> SoleLogics.nworlds
+end
+
+"""
+    function reincarnate(miner::Miner)::Miner
+
+This is exactly a `deepcopy`, considering only the lightweight parts of a [`Miner`](@ref).
+In particular, the data inside is not copied, but taken as reference.
+
+See also [`data`](@ref), [`Miner`](@ref).
+"""
+function reincarnate(oldminer::Miner, ith_instance::Int64)::Miner
+    newminer = Miner(
+        slicedataset(data(oldminer), ith_instance:ith_instance),
+        oldminer |> algorithm |> deepcopy,
+        oldminer |> items |> deepcopy,
+        oldminer |> itemsetmeasures |> deepcopy,
+        oldminer |> rulemeasures|> deepcopy
+    )
+
+    for key in keys(powerups(newminer))
+        if haskey(powerups(oldminer), key)
+            powerups!(newminer, key, deepcopy(powerups(oldminer, key)))
+        end
+    end
+
+    return newminer
 end

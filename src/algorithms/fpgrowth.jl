@@ -463,7 +463,7 @@ doc_fptree_push = """
     function grow!(
         fptree::FPTree,
         itemset::Itemset,
-        ninstance::Int64,
+        ith_instance::Int64,
         miner::Miner;
         htable::Union{Nothing,HeaderTable}=nothing
     )
@@ -471,7 +471,7 @@ doc_fptree_push = """
     function grow!(
         fptree::FPTree,
         itemset::EnhancedItemset,
-        ninstance::Int64,
+        ith_instance::Int64,
         miner::Miner;
         htable::Union{Nothing,HeaderTable}=nothing
     )
@@ -688,7 +688,7 @@ end
 ############################################################################################
 
 """
-    fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=true)::Nothing
+    fpgrowth(miner::Miner, X::MineableData; verbose::Bool=true)::Nothing
 
 FP-Growth algorithm,
 [as described here](https://www.cs.sfu.ca/~jpei/publications/sigmod00.pdf)
@@ -699,7 +699,7 @@ See also [`Miner`](@ref), [`FPTree`](@ref), [`HeaderTable`](@ref),
 """
 function fpgrowth(
     miner::Miner,
-    X::AbstractDataset;
+    X::MineableData;
     parallel::Bool=false, # WIP
     distributed::Bool=true,
     verbose::Bool=false
@@ -743,10 +743,9 @@ function fpgrowth(
     fpgrowth_fragments = reduce(
         _fragments_reducer,
         Distributed.pmap(
-            ninstance -> _fpgrowth(ninstance, miner),
+            ith_instance -> _fpgrowth(ith_instance, miner),
             1:ninstances(X);
-            distributed=distributed,
-            # on_error=e -> TODO
+            distributed=distributed
         )
     )
 
@@ -764,21 +763,16 @@ end
 
 # `fpgrowth` main logic
 function _fpgrowth(
-    ninstance::Int,
+    ith_instance::Int,
     _miner::Miner
 )
     # avoid data-race (e.g., if this function is used in a pmap)
     # TODO: I want each worker to work with the exact and only memory he needs.
-    miner = deepcopy(_miner)
-    X = dataset(miner)
+    miner = reincarnate(_miner, ith_instance)
 
     # collect the local results, accumulated by this run;
     # those results are reduced together (e.g., if this function is used in a pmap)
     fpgrowth_fragments = DefaultDict{Itemset, Int}(0)
-
-    # the instance we are applying fpgrowth to has to be remembered to properly store
-    # local support at the end of each sub-fpgrowth execution.
-    powerups!(miner, :current_instance, ninstance)
 
     # the frequency of each 1-length frequent itemset is tracked in a fresh dictionary;
     # this may vary between each iteration of this cycle (each sub-fpgrowth execution).
@@ -786,15 +780,15 @@ function _fpgrowth(
 
     # from now on, the instance is fixed and we apply fpgrowth horizontally;
     # the assumption here is that all the frames are shaped equally.
-    kripkeframe = SoleLogics.frame(X, 1)
-    _nworlds = kripkeframe |> SoleLogics.nworlds
+    kripkeframe = frame(miner)
+    _nworlds = kripkeframe |> nworlds
     nworld_to_itemset = [Itemset() for _ in 1:_nworlds]
 
     # get the frequent 1-length itemsets from the first candidates set;
     frequents = [candidate
         for (gmeas_algo, lthreshold, gthreshold) in itemsetmeasures(miner)
         for candidate in Itemset.(items(miner))
-        if lsupport(candidate, getinstance(X, ninstance), miner) >= lthreshold
+        if lsupport(candidate, getinstance(data(miner), ith_instance), miner) >= lthreshold
     ] |> unique
 
     for itemset in frequents
@@ -806,7 +800,7 @@ function _fpgrowth(
             itemset
             for itemset in frequents
             if powerups(
-                miner, :instance_item_toworlds)[(ninstance, itemset)][nworld] > 0
+                miner, :instance_item_toworlds)[(ith_instance, itemset)][nworld] > 0
         ] |> union
 
         # count 1-length frequent itemsets frequency;
@@ -824,7 +818,7 @@ function _fpgrowth(
     htable = HeaderTable(fptree; miner=miner)
 
     # call main logic
-    _fpgrowth_kernel(fptree, htable, miner, FPTree(), fpgrowth_fragments)
+    _fpgrowth_kernel(fptree, htable, miner, FPTree(), fpgrowth_fragments, ith_instance)
 
     return fpgrowth_fragments
 end
@@ -835,7 +829,8 @@ function _fpgrowth_kernel(
     htable::HeaderTable,
     miner::Miner,
     leftout_fptree::FPTree,
-    fpgrowth_fragments::DefaultDict{Itemset, Int}
+    fpgrowth_fragments::DefaultDict{Itemset, Int},
+    current_instance::Int64
 )
     # if `fptree` contains only one path (hence, it can be considered a linked list),
     # then combine all the Itemsets collected from previous step with the remained ones.
@@ -882,7 +877,8 @@ function _fpgrowth_kernel(
                 return (length(combo) > 1 ? 1 : 0)
             end,
             miner,
-            fpgrowth_fragments
+            fpgrowth_fragments,
+            current_instance
         )
 
         _fpgrowth_count_phase(
@@ -898,7 +894,8 @@ function _fpgrowth_kernel(
                 return (length(combo) > 1 ? 1 : 0)
             end,
             miner,
-            fpgrowth_fragments
+            fpgrowth_fragments,
+            current_instance
         )
     else
         for item in reverse(htable)
@@ -922,7 +919,8 @@ function _fpgrowth_kernel(
                 conditional_htable,
                 miner,
                 _leftout_fptree,
-                fpgrowth_fragments
+                fpgrowth_fragments,
+                current_instance
             )
         end
     end
@@ -935,7 +933,8 @@ function _fpgrowth_count_phase(
     lsupport_value_calculator::Function,
     count_increment_strategy::Function,
     miner::Miner,
-    fpgrowth_fragments::DefaultDict{Itemset, Int}
+    fpgrowth_fragments::DefaultDict{Itemset, Int},
+    current_instance::Int64
 )
     for combo in combine_items(items(survivor_itemset), items(leftout_itemset))
         # each combo must be reshaped, following a certain order specified
@@ -943,7 +942,6 @@ function _fpgrowth_count_phase(
         sort!(items(combo), by=t -> powerups(miner, :lexicographic_ordering)[t])
 
         # instance for which we want to update local support
-        current_instance = powerups(miner, :current_instance)
         memokey = (:lsupport, combo, current_instance)
 
         # new local support value
@@ -969,14 +967,14 @@ function _fpgrowth_count_phase(
 end
 
 """
-    initpowerups(::typeof(fpgrowth), ::AbstractDataset)::Powerup
+    initpowerups(::typeof(fpgrowth), ::MineableData)::Powerup
 
 Powerups suite for FP-Growth algorithm.
 When initializing a [`Miner`](@ref) with [`fpgrowth`](@ref) algorithm, this defines
 how miner's `powerup` field is filled to optimize the mining.
 See also [`haspowerup`](@ref), [`powerup`](@ref).
 """
-function initpowerups(::typeof(fpgrowth), ::AbstractDataset)::Powerup
+function initpowerups(::typeof(fpgrowth), ::MineableData)::Powerup
     return Powerup([
         # given and instance I and an itemset λ, the default behaviour when computing
         # local support is to perform model checking to establish in how many worlds
@@ -986,11 +984,6 @@ function initpowerups(::typeof(fpgrowth), ::AbstractDataset)::Powerup
         # Here, however, we want to keep track of the relation.
         # See `lsupport` implementation.
         :instance_item_toworlds => Dict{Tuple{Int, Itemset}, WorldMask}([]),
-
-        # current instance number;
-        # needed when computing local support to remember which
-        # instance is associated with a sub-fpgrowth execution.
-        :current_instance => 0,
 
         # when modal fpgrowth calls propositional fpgrowth multiple times, each call
         # has to know its specific 1-length itemsets ordering;

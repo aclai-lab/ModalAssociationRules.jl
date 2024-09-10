@@ -90,7 +90,7 @@ EXPERIMENTS_IDS = [11]
 
 """
     function runexperiment(
-        X::AbstractDataset,
+        X::MineableData,
         algorithm::Function,
         items::Vector{Item},
         itemsetmeasures::Vector{<:MeaningfulnessMeasure},
@@ -108,7 +108,7 @@ See also [`ARule`](@ref), [`Itemset`](@ref), [`MeaningfulnessMeasure`](@ref),
 [`Miner`](@ref).
 """
 function runexperiment(
-	X::AbstractDataset,
+	X::MineableData,
 	algorithm::Function,
 	items::Vector{Item},
 	itemsetmeasures::Vector{<:MeaningfulnessMeasure},
