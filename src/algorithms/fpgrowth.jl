@@ -719,19 +719,25 @@ function fpgrowth(
     # itemset (that is, how many times an itemset appear as the result of an FP-Growth
     # application on an Instance)
 
-    # initialization logic
+    # simple logging
+
     @assert ModalAssociationRules.gsupport in reduce(vcat, itemsetmeasures(miner)) "" *
-        "FP-Growth " *
-        "requires global support (gsupport) as meaningfulness measure in order to " *
+    "FP-Growth " *
+    "requires global support (gsupport) as meaningfulness measure in order to " *
         "work. Please, add a tuple (gsupport, local support threshold, " *
         "global support threshold) to miner.item_constrained_measures field.\n" *
         "Note that local support is needed too, but it is already considered internally " *
         "by global support."
 
-    if Threads.nthreads() > 1
-        verbose && parallelize && printstyled("Multithreading enabled with " *
-            "#$(Threads.nthreads()) threads\n")
-    end
+        if verbose && parallelize
+            printstyled("Multithreading enabled: # threads = $(Threads.nthreads()).\n")
+        end
+
+        if verbose && distributed
+            printstyled("Workload is distributed across #$(Distributed.nprocs()) processes.\n")
+        end
+
+    # initialization logic
 
     # arbitrary general lexicographic ordering
     incremental = 0
@@ -764,11 +770,11 @@ end
 # `fpgrowth` main logic
 function _fpgrowth(
     ith_instance::Int,
-    _miner::Miner
+    miner::Miner
 )
     # avoid data-race (e.g., if this function is used in a pmap)
     # TODO: I want each worker to work with the exact and only memory he needs.
-    miner = reincarnate(_miner, ith_instance)
+    # miner = reincarnate(_miner, ith_instance)
 
     # collect the local results, accumulated by this run;
     # those results are reduced together (e.g., if this function is used in a pmap)

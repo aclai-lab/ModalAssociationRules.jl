@@ -43,7 +43,7 @@ macro lmeas(measname, measlogic)
             end
 
             # compute local measure
-            response = $(esc(measlogic))(subject, instance, miner)
+            response = $(esc(measlogic))(subject, X, i_instance, miner)
             measure = response[:measure]
 
             # save measure in memoization structure;
@@ -141,9 +141,7 @@ macro linkmeas(gmeasname, lmeasname)
 end
 
 # core logic of `lsupport`, as a lambda function
-_lsupport_logic = (itemset, instance, miner) -> begin
-    X, i_instance = instance.s, instance.i_instance # data(miner)
-
+_lsupport_logic = (itemset, X, i_instance, miner) -> begin
     # bool vector, representing on which world an Itemset holds
     wmask = [check(toformula(itemset), X, i_instance, w) for w in allworlds(X, i_instance)]
 

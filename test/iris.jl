@@ -37,7 +37,7 @@ function _compare_arules(miner1::Miner, miner2::Miner, rule::ARule)
     @test miner1.gmemo[(:gconfidence, rule)] == miner2.gmemo[(:gconfidence, rule)]
 
     # local confidence comparison;
-    for ninstance in miner1 |> dataset |> ninstances
+    for ninstance in miner1 |> data |> ninstances
         lconfidence(rule, SoleLogics.getinstance(data(miner1), ninstance), miner1)
         lconfidence(rule, SoleLogics.getinstance(data(miner2), ninstance), miner2)
 
