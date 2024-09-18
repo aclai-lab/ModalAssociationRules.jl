@@ -162,11 +162,19 @@ function fpgrowth(
         "by global support."
 
     if verbose && parallelize
-        printstyled("Multithreading enabled: # threads = $(Threads.nthreads()).\n")
+        _nthreads = Threads.nthreads()
+        printstyled("Multithreading enabled: # threads = $(_nthreads).\n", color=:green)
+        if _nthreads == 1
+            printstyled(
+                "You probably forget to set a higher number of threads!\n", color=:red)
+            printstyled("Remember to use --threads/-t flag, " *
+                "or change JULIA_NUM_THREADS environment variable", color=:red)
+        end
     end
 
     if verbose && distributed
-        printstyled("Workload distributed across #$(Distributed.nprocs()) processes.\n")
+        printstyled("Workload distributed across #$(Distributed.nprocs()) processes.\n",
+            color=:green)
     end
 
     # establish an arbitrary general lexicographic ordering,

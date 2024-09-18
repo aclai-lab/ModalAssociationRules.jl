@@ -601,8 +601,8 @@ struct Miner{
         RMEAS<:MeaningfulnessMeasure
     }
         # dataset frames must be equal
-        @assert allequal([SoleLogics.frame(X, i_instance)
-            for i_instance in 1:ninstances(X)]) "Instances frame is shaped " *
+        @assert allequal([SoleLogics.frame(X, ith_instance)
+            for ith_instance in 1:ninstances(X)]) "Instances frame is shaped " *
             "differently. Please, provide an uniform dataset to guarantee " *
             "mining correctness."
 
