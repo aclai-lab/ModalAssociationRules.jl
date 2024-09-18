@@ -74,7 +74,7 @@ export @lmeas, @gmeas
 export lsupport, gsupport
 export lconfidence, gconfidence
 
-include("utils/arulemining-utils.jl")
+include("utils/mining-utilities.jl")
 
 export combine_items, prune, prune!
 export grow_prune, coalesce_contributors
@@ -86,7 +86,7 @@ include("algorithms/apriori.jl")
 
 export apriori
 
-include("algorithms/fpgrowth.jl")
+include("data-structures.jl")
 
 export FPTree
 export content, parent, children, count
@@ -99,7 +99,10 @@ export grow!
 export HeaderTable, items
 export link, link!, follow
 export checksanity!
-export patternbase
+
+include("algorithms/fpgrowth.jl")
+
+export patternbase, bounce!, projection
 export fpgrowth
 
 include("utils/natops-loader.jl")

@@ -4,6 +4,12 @@
 Apriori algorithm, [as described here](https://ceur-ws.org/Vol-3284/492.pdf) but generalized
 to also work with modal logic.
 
+# Arguments
+
+-`miner`: miner containing the extraction parameterization;
+- `X`: data from which you want to mine association rules;
+- `verbose`: print informations about each iteration.
+
 See also [`Miner`](@ref), [`SoleBase.MineableData`](@ref).
 """
 function apriori(miner::Miner, X::MineableData; verbose::Bool=false)::Nothing

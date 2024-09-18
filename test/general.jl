@@ -216,7 +216,7 @@ lsupport(Itemset(manual_lr), SoleLogics.getinstance(X2, 7), fpgrowth_miner)
 # more on Miner powerups (a.k.a, "customization system")
 @test ModalAssociationRules.initpowerups(apriori, data(apriori_miner)) == Powerup()
 
-# "arulemining-utils.jl"
+# "rulemining-utils.jl"
 @test combine_items([pq, qr], 3) |> first == pqr
 @test combine_items([manual_p, manual_q], [manual_r]) |> collect |> length == 3
 @test combine_items([manual_p, manual_q], [manual_r]) |>

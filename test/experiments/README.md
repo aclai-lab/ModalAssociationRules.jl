@@ -9,7 +9,7 @@ In particular, this is a summary of the most interesting results. To know more a
 The experiments are organized as follows.
 Initially, a target class is chosen.
 Frequent itemsets related to the target class are extracted, and association rules are generated.
-This process is driven by a parameterization composed of initial items, meaningfulness measures thresholds and modal relations. In addition, the association rules generation process is deliberately not complete: rules where the antecedent only contains modal literals, and those where the same variable is considered both in antecedent and consequent, are discarded (see ```anchor_rulecheck``` and ```non_selfabsorbed_rulecheck``` in ```src/utils/arulemining-utils.jl```).
+This process is driven by a parameterization composed of initial items, meaningfulness measures thresholds and modal relations. In addition, the association rules generation process is deliberately not complete: rules where the antecedent only contains modal literals, and those where the same variable is considered both in antecedent and consequent, are discarded (see ```anchor_rulecheck``` and ```non_selfabsorbed_rulecheck``` in ```src/utils/rulemining-utils.jl```).
 
 Each experiment generates 2 files in ```results``` folder.
 Each filename is organized following the pattern

@@ -451,6 +451,9 @@ const GmeasMemo = Dict{GmeasMemoKey,Threshold} # global measure of an itemset/ar
 Additional informations associated with an [`ARMSubject`](@ref) that can be used to
 specialize a [`Miner`](@ref), augmenting its capabilities.
 
+Essentially, this is a tool you can use to to store information to be considered global
+within the miner.
+
 To understand how to specialize a [`Miner`](@ref), see [`haspowerup`](@ref),
 [`initpowerups`](@ref), ['powerups`](@ref), [`powerups!`](@ref).
 """
@@ -1062,30 +1065,4 @@ end
 
 function SoleLogics.nworlds(miner::Miner)
     return frame(miner) |> SoleLogics.nworlds
-end
-
-"""
-    function reincarnate(miner::Miner)::Miner
-
-This is exactly a `deepcopy`, considering only the lightweight parts of a [`Miner`](@ref).
-In particular, the data inside is not copied, but taken as reference.
-
-See also [`data`](@ref), [`Miner`](@ref).
-"""
-function reincarnate(oldminer::Miner, ith_instance::Int64)::Miner
-    newminer = Miner(
-        slicedataset(data(oldminer), ith_instance:ith_instance),
-        oldminer |> algorithm |> deepcopy,
-        oldminer |> items |> deepcopy,
-        oldminer |> itemsetmeasures |> deepcopy,
-        oldminer |> rulemeasures|> deepcopy
-    )
-
-    for key in keys(powerups(newminer))
-        if haskey(powerups(oldminer), key)
-            powerups!(newminer, key, deepcopy(powerups(oldminer, key)))
-        end
-    end
-
-    return newminer
 end
