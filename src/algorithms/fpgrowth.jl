@@ -48,9 +48,13 @@ function patternbase(
         # items inside the itemset are sorted decreasingly by global support.
         # Note that, although we are working with enhanced itemsets, the sorting only
         # requires to consider the items inside them (so, the "non-enhanced" part).
-        sort!(items(_itemset),
-            by=t -> powerups(miner, :current_items_frequency)[
-                (Threads.threadid(),Itemset(t))], rev=true)
+        lock(miner.POWERUP_LOCK) do
+            sort!(items(_itemset),
+                by=t -> powerups(
+                    miner, :current_items_frequency)[(Threads.threadid(),Itemset(t))],
+                rev=true
+            )
+        end
 
         push!(_patternbase, EnhancedItemset((_itemset, fptcount)))
 

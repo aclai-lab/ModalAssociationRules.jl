@@ -446,22 +446,25 @@ function checksanity!(htable::HeaderTable, miner::Miner)::Bool
     _issorted = begin
         lock(miner.POWERUP_LOCK)
         try
-            issorted(
+            _issorted = issorted(
                 items(htable),
                 by=t -> powerups(miner, :current_items_frequency)[
                     (Threads.threadid(),Itemset(t))],
                 rev=true
             )
+
+            # force sorting if needed
+            if !_issorted
+                sort!(items(htable), by=t -> powerups(
+                    miner, :current_items_frequency)[(Threads.threadid(),Itemset(t))],
+                    rev=true
+                )
+            end
+
+            return _issorted
         finally
             unlock(miner.POWERUP_LOCK)
         end
-    end
-
-    # force sorting if needed
-    if !_issorted
-        sort!(items(htable),
-            by=t -> powerups(
-                miner, :current_items_frequency)[(Threads.threadid(),Itemset(t))], rev=true)
     end
 
     return _issorted

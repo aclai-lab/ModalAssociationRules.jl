@@ -29,4 +29,4 @@ _1_rulemeasures = [(gconfidence, 0.2, 0.2)]
 
 fpgrowth_miner = Miner(X1, fpgrowth, _1_items, _1_itemsetmeasures, _1_rulemeasures)
 
-mine!(fpgrowth_miner; parallel=true)
+@time mine!(fpgrowth_miner; parallel=true)

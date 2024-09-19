@@ -1,5 +1,3 @@
-LMEAS_LOCK = ReentrantLock()
-
 """
 Collection of [`powerups`](@ref) references which are injected when creating a generic
 local meaningfulness measure using [`lmeas`](@ref).
@@ -57,7 +55,7 @@ macro lmeas(measname, measlogic)
                 # between an instance and an subject must be obtained by the internal logic
                 # of the meaningfulness measure callback.
                 if haspowerup(miner, powerup) && haskey(response, powerup)
-                    lock(LMEAS_LOCK) do
+                    lock(miner.MEASURE_LOCK) do
                         powerups(miner, powerup)[(ith_instance,subject)] = response[powerup]
                     end
                 end
