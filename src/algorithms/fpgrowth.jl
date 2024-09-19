@@ -250,7 +250,9 @@ function _fpgrowth(
 
     # the frequency of each 1-length frequent itemset is tracked in a fresh dictionary;
     # this may vary between each iteration of this cycle (each sub-fpgrowth execution).
-    powerups!(miner, :current_items_frequency, DefaultDict{Tuple{Int,Itemset},Int}(0))
+    lock(miner.POWERUP_LOCK) do
+        powerups!(miner, :current_items_frequency, DefaultDict{Tuple{Int,Itemset},Int}(0))
+    end
 
     # from now on, the instance is fixed and we apply fpgrowth horizontally;
     # the assumption here is that all the frames are shaped equally.

@@ -803,8 +803,12 @@ Return the local memoization structure inside `miner`, or a specific entry if a
 
 See also [`Miner`](@ref), [`LmeasMemo`](@ref), [`LmeasMemoKey`](@ref).
 """
-localmemo(miner::Miner)::LmeasMemo = miner.lmemo
-localmemo(miner::Miner, key::LmeasMemoKey) = get(miner.lmemo, key, nothing)
+localmemo(miner::Miner)::LmeasMemo = lock(miner.MEASURE_LOCK) do
+    miner.lmemo
+end
+localmemo(miner::Miner, key::LmeasMemoKey) = lock(miner.MEASURE_LOCK) do
+    get(miner.lmemo, key, nothing)
+end
 
 """
     localmemo!(miner::Miner, key::LmeasMemoKey, val::Threshold)
@@ -828,8 +832,12 @@ Return the global memoization structure inside `miner`, or a specific entry if a
 
 See also [`Miner`](@ref), [`GmeasMemo`](@ref), [`GmeasMemoKey`](@ref).
 """
-globalmemo(miner::Miner)::GmeasMemo = miner.gmemo
-globalmemo(miner::Miner, key::GmeasMemoKey) = get(miner.gmemo, key, nothing)
+globalmemo(miner::Miner)::GmeasMemo = lock(miner.MEASURE_LOCK) do
+    miner.gmemo
+end
+globalmemo(miner::Miner, key::GmeasMemoKey) = lock(miner.MEASURE_LOCK) do
+    get(miner.gmemo, key, nothing)
+end
 
 """
     globalmemo!(miner::Miner, key::GmeasMemoKey, val::Threshold)
@@ -857,8 +865,12 @@ Getter for the entire powerups structure currently loaded in `miner`, or a speci
 
 See also [`haspowerup`](@ref), [`initpowerups`](@ref), [`Miner`](@ref), [`Powerup`](@ref).
 """
-powerups(miner::Miner)::Powerup = miner.powerups
-powerups(miner::Miner, key::Symbol) = miner.powerups[key]
+powerups(miner::Miner)::Powerup = lock(miner.POWERUP_LOCK) do
+    miner.powerups
+end
+powerups(miner::Miner, key::Symbol) = lock(miner.POWERUP_LOCK) do
+    miner.powerups[key]
+end
 
 """
     powerups!(miner::Miner, key::Symbol, val)
@@ -867,7 +879,9 @@ Setter for the content of a specific field of `miner`'s [`powerups`](@ref).
 
 See also [`haspowerup`](@ref), [`initpowerups`](@ref), [`Miner`](@ref), [`Powerup`](@ref).
 """
-powerups!(miner::Miner, key::Symbol, val) = miner.powerups[key] = val
+powerups!(miner::Miner, key::Symbol, val) = lock(miner.POWERUP_LOCK) do
+    miner.powerups[key] = val
+end
 
 """
     haspowerup(miner::Miner, key::Symbol)
