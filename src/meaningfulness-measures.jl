@@ -1,3 +1,5 @@
+LMEAS_LOCK = ReentrantLock()
+
 """
 Collection of [`powerups`](@ref) references which are injected when creating a generic
 local meaningfulness measure using [`lmeas`](@ref).
@@ -31,7 +33,7 @@ macro lmeas(measname, measlogic)
             miner::Miner
         )
             # retrieve logiset and the specific instance
-            X, ith_instance = instance.s, instance.ith_instance
+            X, ith_instance = instance.s, instance.i_instance
 
             # key to access memoization structures
             memokey = LmeasMemoKey((Symbol($(esc(fname))), subject, ith_instance))
@@ -49,12 +51,15 @@ macro lmeas(measname, measlogic)
             # save measure in memoization structure;
             # also, do more stuff depending on `powerups` dispatch (see the documentation).
             localmemo!(miner, memokey, measure)
+
             for powerup in LOCAL_POWERUP_SYMBOLS
                 # the numerical value necessary to save more informations about the relation
                 # between an instance and an subject must be obtained by the internal logic
                 # of the meaningfulness measure callback.
                 if haspowerup(miner, powerup) && haskey(response, powerup)
-                    powerups(miner, powerup)[(ith_instance, subject)] = response[powerup]
+                    lock(LMEAS_LOCK) do
+                        powerups(miner, powerup)[(ith_instance,subject)] = response[powerup]
+                    end
                 end
             end
             # Note that the powerups system could potentially irrorate the entire package

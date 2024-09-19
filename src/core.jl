@@ -581,6 +581,10 @@ struct Miner{
     powerups::Powerup               # mining algorithm powerups (see documentation)
     info::Info                      # general informations
 
+    MEASURE_LOCK
+    POWERUP_LOCK
+    FRAGMENT_LOCK
+
     function Miner(
         X::DATA,
         algorithm::MINALGO,
@@ -623,7 +627,8 @@ struct Miner{
         new{DATA,MINALGO,I,IMEAS,RMEAS}(X, algorithm, unique(items),
             item_constrained_measures, rule_constrained_measures,
             Vector{Itemset}([]), Vector{ARule}([]),
-            LmeasMemo(), GmeasMemo(), powerups, info
+            LmeasMemo(), GmeasMemo(), powerups, info,
+            ReentrantLock(), ReentrantLock(), ReentrantLock()
         )
     end
 end
@@ -809,7 +814,9 @@ Setter for a specific entry `key` inside the local memoization structure wrapped
 See also [`Miner`](@ref), [`LmeasMemo`](@ref), [`LmeasMemoKey`](@ref).
 """
 function localmemo!(miner::Miner, key::LmeasMemoKey, val::Threshold)
-    miner.lmemo[key] = val
+    lock(miner.MEASURE_LOCK) do
+        miner.lmemo[key] = val
+    end
 end
 
 """
@@ -833,7 +840,9 @@ Setter for a specific entry `key` inside the global memoization structure wrappe
 See also [`Miner`](@ref), [`GmeasMemo`](@ref), [`GmeasMemoKey`](@ref).
 """
 globalmemo!(miner::Miner, key::GmeasMemoKey, val::Threshold) = begin
-    miner.gmemo[key] = val
+    lock(miner.MEASURE_LOCK) do
+        miner.gmemo[key] = val
+    end
 end
 
 ############################################################################################

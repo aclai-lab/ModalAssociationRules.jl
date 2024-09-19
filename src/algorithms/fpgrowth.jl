@@ -49,7 +49,8 @@ function patternbase(
         # Note that, although we are working with enhanced itemsets, the sorting only
         # requires to consider the items inside them (so, the "non-enhanced" part).
         sort!(items(_itemset),
-            by=t -> powerups(miner, :current_items_frequency)[Itemset(t)], rev=true)
+            by=t -> powerups(miner, :current_items_frequency)[
+                (Threads.threadid(),Itemset(t))], rev=true)
 
         push!(_patternbase, EnhancedItemset((_itemset, fptcount)))
 
@@ -114,14 +115,19 @@ end
 """
     TODO: comment this
 """
-function _fragments_reducer(a::DefaultDict{Itemset, Int},  b::DefaultDict{Itemset, Int})
-    c = deepcopy(a) # TODO: deepcopy should not be needed here
-
+function _fragments_reducer(
+    a::DefaultDict{Itemset,Int},
+    b::DefaultDict{Itemset,Int}
+)::DefaultDict{Itemset,Int}
     for k in keys(b)
-        c[k] += b[k]
+        if haskey(a,k)
+            a[k] += b[k]
+        else
+            a[k] = b[k]
+        end
     end
 
-    return c
+    return a
 end
 
 ############################################################################################
@@ -161,20 +167,27 @@ function fpgrowth(
         "Note that local support is needed too, but it is already considered internally " *
         "by global support."
 
+    _nthreads = Threads.nthreads()
+    _nworkers = Distributed.nworkers()
+
     if verbose && parallelize
-        _nthreads = Threads.nthreads()
         printstyled("Multithreading enabled: # threads = $(_nthreads).\n", color=:green)
         if _nthreads == 1
             printstyled(
                 "You probably forget to set a higher number of threads!\n", color=:red)
             printstyled("Remember to use --threads/-t flag, " *
-                "or change JULIA_NUM_THREADS environment variable", color=:red)
+                "or change JULIA_NUM_THREADS environment variable\n", color=:red)
         end
     end
 
     if verbose && distributed
         printstyled("Workload distributed across #$(Distributed.nprocs()) processes.\n",
             color=:green)
+        if _nworkers == 1
+            printstyled(
+                "You probably forget to set a higher number of processes!\n", color=:red)
+            printstyled("Remember to set the -p flag.\n",  color=:red)
+        end
     end
 
     # establish an arbitrary general lexicographic ordering,
@@ -185,18 +198,34 @@ function fpgrowth(
         incremental += 1
     end
 
-    fpgrowth_fragments = reduce(
-        _fragments_reducer,
-        Distributed.pmap(
-            ith_instance -> _fpgrowth(ith_instance, miner),
-            1:ninstances(X);
-            distributed=distributed
+    _ninstances = ninstances(X)
+
+    if distributed
+        fpgrowth_fragments = reduce(
+            _fragments_reducer,
+            Distributed.pmap(
+                ith_instance -> _fpgrowth(ith_instance, miner),
+                1:_ninstances;
+                distributed=distributed,
+                batch_size=_ninstances/_nworkers |> Int64
+            )
         )
-    )
+    elseif parallel
+        fpgrowth_fragments = Vector{DefaultDict{Itemset,Int}}(undef,_ninstances)
+        Threads.@threads for ith_instance in 1:_ninstances
+            fpgrowth_fragments[ith_instance] = _fpgrowth(ith_instance, miner)
+        end
+        fpgrowth_fragments = reduce(_fragments_reducer, fpgrowth_fragments)
+    else
+        fpgrowth_fragments = reduce(
+            _fragments_reducer,
+            map(ith_instance -> _fpgrowth(ith_instance, miner), 1:_ninstances)
+        )
+    end
 
     for (itemset, gfrequency_int) in fpgrowth_fragments
         _threshold = getglobalthreshold(miner, gsupport)
-        gfrequency = gfrequency_int / ninstances(X)
+        gfrequency = gfrequency_int / _ninstances
         if gfrequency >= _threshold
             globalmemo!(miner, GmeasMemoKey((Symbol(gsupport), itemset)), gfrequency)
             push!(freqitems(miner), itemset)
@@ -211,17 +240,13 @@ function _fpgrowth(
     ith_instance::Int,
     miner::Miner
 )
-    # avoid data-race (e.g., if this function is used in a pmap)
-    # TODO: I want each worker to work with the exact and only memory he needs.
-    # miner = reincarnate(_miner, ith_instance)
-
     # collect the local results, accumulated by this run;
-    # those results are reduced together (e.g., if this function is used in a pmap)
-    fpgrowth_fragments = DefaultDict{Itemset, Int}(0)
+    # those results will be reduced together (e.g., if this function is used in a pmap)
+    fpgrowth_fragments = DefaultDict{Itemset,Int}(0)
 
     # the frequency of each 1-length frequent itemset is tracked in a fresh dictionary;
     # this may vary between each iteration of this cycle (each sub-fpgrowth execution).
-    powerups!(miner, :current_items_frequency, DefaultDict{Itemset, Int}(0))
+    powerups!(miner, :current_items_frequency, DefaultDict{Tuple{Int,Itemset},Int}(0))
 
     # from now on, the instance is fixed and we apply fpgrowth horizontally;
     # the assumption here is that all the frames are shaped equally.
@@ -237,7 +262,9 @@ function _fpgrowth(
     ] |> unique
 
     for itemset in frequents
-        fpgrowth_fragments[itemset] += 1
+        lock(miner.FRAGMENT_LOCK) do
+            fpgrowth_fragments[itemset] += 1
+        end
     end
 
     for (nworld, w) in enumerate(kripkeframe |> SoleLogics.allworlds)
@@ -251,7 +278,10 @@ function _fpgrowth(
         # count 1-length frequent itemsets frequency;
         # a.k.a prepare miner internal powerups state to handle an FPGrowth call.
         for item in nworld_to_itemset[nworld]
-            powerups(miner, :current_items_frequency)[Itemset(item)] += 1
+            lock(miner.POWERUP_LOCK) do
+                powerups(miner,
+                    :current_items_frequency)[(Threads.threadid(),Itemset(item))] += 1
+            end
         end
     end
 
@@ -406,7 +436,9 @@ function _fpgrowth_count_phase(
         # if local support was set from fresh (and not updated), then also update
         # the information needed to reconstruct global support later.
         if first_time_found
-            fpgrowth_fragments[combo] += count_increment_strategy(combo)
+            lock(miner.FRAGMENT_LOCK) do
+                fpgrowth_fragments[combo] += count_increment_strategy(combo)
+            end
         end
     end
 end
@@ -428,14 +460,16 @@ function initpowerups(::typeof(fpgrowth), ::MineableData)::Powerup
         # holds is not kept in memory by default.
         # Here, however, we want to keep track of the relation.
         # See `lsupport` implementation.
-        :instance_item_toworlds => Dict{Tuple{Int, Itemset}, WorldMask}([]),
+        :instance_item_toworlds => Dict{Tuple{Int,Itemset},WorldMask}([]),
 
         # when modal fpgrowth calls propositional fpgrowth multiple times, each call
         # has to know its specific 1-length itemsets ordering;
         # otherwise, the building process of fptrees is not correct anymore.
-        :current_items_frequency => DefaultDict{Itemset, Int}(0),
+        # To avoid race condition, the first integer in the dictionary's key
+        # contains the number of the current operating thread id.
+        :current_items_frequency => DefaultDict{Tuple{Int,Itemset},Int}(0),
 
         # necessary to reshape all the extracted itemsets to a common ordering
-        :lexicographic_ordering => Dict{Item, Int}([])
+        :lexicographic_ordering => Dict{Item,Int}([])
     ])
 end
