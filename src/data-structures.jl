@@ -443,28 +443,19 @@ If `items` are already sorted, return `true`; otherwise, sort them and return `f
 See also [`Miner`](@ref), [`gsupport`](@ref), [`HeaderTable`](@ref), [`items`](@ref).
 """
 function checksanity!(htable::HeaderTable, miner::Miner)::Bool
-    _issorted = begin
-        lock(miner.POWERUP_LOCK)
-        try
-            _issorted = issorted(
-                items(htable),
-                by=t -> powerups(miner, :current_items_frequency)[
-                    (Threads.threadid(),Itemset(t))],
-                rev=true
-            )
+    _issorted = issorted(
+        items(htable),
+        by=t -> powerups(miner, :current_items_frequency)[
+            (Threads.threadid(),Itemset(t))],
+        rev=true
+    )
 
-            # force sorting if needed
-            if !_issorted
-                sort!(items(htable), by=t -> powerups(
-                    miner, :current_items_frequency)[(Threads.threadid(),Itemset(t))],
-                    rev=true
-                )
-            end
-
-            return _issorted
-        finally
-            unlock(miner.POWERUP_LOCK)
-        end
+    # force sorting if needed
+    if !_issorted
+        sort!(items(htable), by=t -> powerups(
+            miner, :current_items_frequency)[(Threads.threadid(),Itemset(t))],
+            rev=true
+        )
     end
 
     return _issorted
@@ -524,11 +515,10 @@ function grow!(
     end
 
     # sorting must be guaranteed: remember an FPTree essentially is a prefix tree
-    lock(miner.POWERUP_LOCK) do
-        sort!(items(_itemset), by=t -> powerups(
-            miner, :current_items_frequency)[(Threads.threadid(),Itemset(t))], rev=true)
-    end
-    # retrieve the item to grow the tree, and its count
+    sort!(items(_itemset), by=t -> powerups(
+        miner, :current_items_frequency)[(Threads.threadid(),Itemset(t))], rev=true)
+
+        # retrieve the item to grow the tree, and its count
     _count = count(enhanceditemset)
     _item = first(_itemset)
 

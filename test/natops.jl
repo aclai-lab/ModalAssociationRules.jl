@@ -8,6 +8,11 @@ using StatsBase
 
 import ModalAssociationRules.children
 
+if Threads.nthreads() == 1
+    printstyled("Skipping check on parallel ModalFP-Growth." *
+        "\nDid you forget to set -t?\n", color=:light_red)
+end
+
 # load NATOPS dataset and convert it to a Logiset
 X_df, y = load_NATOPS();
 X1 = scalarlogiset(X_df)
@@ -63,8 +68,13 @@ function isequal_lsupp(miner1::Miner, miner2::Miner)
 end
 
 function compare_freqitems(miner1::Miner, miner2::Miner)
-    mine!(miner1)
-    mine!(miner2)
+    if !info(miner1, :istrained)
+        mine!(miner1)
+    end
+
+    if !info(miner2, :istrained)
+        mine!(miner2)
+    end
 
     miner1_freqs = freqitems(miner1)
     miner2_freqs = freqitems(miner2)
@@ -116,25 +126,26 @@ function compare(miner1::Miner, miner2::Miner)
     compare_arules(miner1, miner2)
 end
 
-# 1st comparison
-# print("Debug print: comparison #1\n")
+# 1st comparison: FP-Growth vs its multithreaded variation
+if Threads.nthreads() > 1
+    _1_items = Vector{Item}([manual_p, manual_q, manual_r, manual_lp, manual_lq, manual_lr])
+    _1_itemsetmeasures = [(gsupport, 0.1, 0.1)]
+    _1_rulemeasures = [(gconfidence, 0.2, 0.2)]
 
-_1_items = Vector{Item}([manual_p, manual_q, manual_r, manual_lp, manual_lq, manual_lr])
-_1_itemsetmeasures = [(gsupport, 0.1, 0.1)]
-_1_rulemeasures = [(gconfidence, 0.2, 0.2)]
+    fpgrowth_miner = Miner(X2, fpgrowth, _1_items, _1_itemsetmeasures, _1_rulemeasures)
+    parallel_fpgrowth_miner = Miner(
+        X3, fpgrowth, _1_items, _1_itemsetmeasures, _1_rulemeasures)
+    mine!(fpgrowth_miner)
+    mine!(parallel_fpgrowth_miner; parallel=true)
 
-apriori_miner = Miner(X2, apriori, _1_items, _1_itemsetmeasures, _1_rulemeasures)
-fpgrowth_miner = Miner(X2, fpgrowth, _1_items, _1_itemsetmeasures, _1_rulemeasures)
-
-compare(apriori_miner, fpgrowth_miner)
+    compare(fpgrowth_miner, parallel_fpgrowth_miner)
+end
 
 # checking for re-mining block
-@test apply!(apriori_miner, data(apriori_miner)) == Nothing
 @test apply!(fpgrowth_miner, data(fpgrowth_miner)) == Nothing
+@test apply!(parallel_fpgrowth_miner, data(parallel_fpgrowth_miner)) == Nothing
 
-# 2nd comparison
-# print("Debug print: comparison #2\n")
-
+# 2nd comparisons: Apriori vs its multithreaded variation
 _2_items = Vector{Item}([manual_p, manual_q, manual_r])
 _2_itemsetmeasures = [(gsupport, 0.5, 0.7)]
 _2_rulemeasures = [(gconfidence, 0.7, 0.7)]
@@ -144,21 +155,22 @@ fpgrowth_miner = Miner(X2, fpgrowth, _2_items, _2_itemsetmeasures, _2_rulemeasur
 
 compare(apriori_miner, fpgrowth_miner)
 
-# 3rd comparisons
-# print("Debug print: comparison #3\n")
+# 3rd comparisons: FP-Growth vs its multithreaded variation
+if Threads.nthreads() > 1
+    _3_items = Vector{Item}([manual_lp, manual_lq, manual_lr])
+    _3_itemsetmeasures = [(gsupport, 0.8, 0.8)]
+    _3_rulemeasures = [(gconfidence, 0.7, 0.7)]
 
-_3_items = Vector{Item}([manual_lp, manual_lq, manual_lr])
-_3_itemsetmeasures = [(gsupport, 0.8, 0.8)]
-_3_rulemeasures = [(gconfidence, 0.7, 0.7)]
+    fpgrowth_miner = Miner(X2, fpgrowth, _3_items, _3_itemsetmeasures, _3_rulemeasures)
+    parallel_fpgrowth_miner = Miner(
+        X3, fpgrowth, _3_items, _3_itemsetmeasures, _3_rulemeasures)
+    mine!(fpgrowth_miner)
+    mine!(parallel_fpgrowth_miner; parallel=true)
 
-apriori_miner = Miner(X2, apriori, _3_items, _3_itemsetmeasures, _3_rulemeasures)
-fpgrowth_miner = Miner(X2, fpgrowth, _3_items, _3_itemsetmeasures, _3_rulemeasures)
+    compare(fpgrowth_miner, parallel_fpgrowth_miner)
+end
 
-compare(apriori_miner, fpgrowth_miner)
-
-# 4th comparisons
-# print("Debug print: comparison #4\n")
-
+# 4th comparisons: Apriori vs FP-Growth
 _4_items = Vector{Item}([manual_q, manual_r, manual_lp, manual_lr])
 _4_itemsetmeasures = [(gsupport, 0.4, 0.4)]
 _4_rulemeasures = [(gconfidence, 0.7, 0.7)]
@@ -168,9 +180,7 @@ fpgrowth_miner = Miner(X2, fpgrowth, _4_items, _4_itemsetmeasures, _4_rulemeasur
 
 compare(apriori_miner, fpgrowth_miner)
 
-# 5th comparisons
-# print("Debug print: comparison #5\n)
-
+# 5th comparisons: Apriori vs FP-Growth
 X_df_1_have_command = X_df[1:30, :]
 X_1_have_command = scalarlogiset(X_df_1_have_command)
 

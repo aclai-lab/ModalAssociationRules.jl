@@ -48,13 +48,11 @@ function patternbase(
         # items inside the itemset are sorted decreasingly by global support.
         # Note that, although we are working with enhanced itemsets, the sorting only
         # requires to consider the items inside them (so, the "non-enhanced" part).
-        lock(miner.POWERUP_LOCK) do
-            sort!(items(_itemset),
-                by=t -> powerups(
-                    miner, :current_items_frequency)[(Threads.threadid(),Itemset(t))],
-                rev=true
-            )
-        end
+        sort!(items(_itemset),
+            by=t -> powerups(
+                miner, :current_items_frequency)[(Threads.threadid(),Itemset(t))],
+            rev=true
+        )
 
         push!(_patternbase, EnhancedItemset((_itemset, fptcount)))
 
@@ -198,6 +196,8 @@ function fpgrowth(
     # then save it inside the miner as a powerup.
     incremental = 0
     for candidate in items(miner)
+        # :lexicographic_ordering is only changed one time by the serial code;
+        # algorithm should be correct also without this.
         powerups(miner, :lexicographic_ordering)[candidate] = incremental
         incremental += 1
     end
@@ -216,7 +216,7 @@ function fpgrowth(
         )
     elseif parallel
         fpgrowth_fragments = Vector{DefaultDict{Itemset,Int}}(undef,_ninstances)
-        Threads.@threads for ith_instance in 1:_ninstances
+        @sync Threads.@threads for ith_instance in 1:_ninstances
             fpgrowth_fragments[ith_instance] = _fpgrowth(ith_instance, miner)
         end
         fpgrowth_fragments = reduce(_fragments_reducer, fpgrowth_fragments)
@@ -250,9 +250,7 @@ function _fpgrowth(
 
     # the frequency of each 1-length frequent itemset is tracked in a fresh dictionary;
     # this may vary between each iteration of this cycle (each sub-fpgrowth execution).
-    lock(miner.POWERUP_LOCK) do
-        powerups!(miner, :current_items_frequency, DefaultDict{Tuple{Int,Itemset},Int}(0))
-    end
+    powerups!(miner, :current_items_frequency, DefaultDict{Tuple{Int,Itemset},Int}(0))
 
     # from now on, the instance is fixed and we apply fpgrowth horizontally;
     # the assumption here is that all the frames are shaped equally.
@@ -268,9 +266,7 @@ function _fpgrowth(
     ] |> unique
 
     for itemset in frequents
-        lock(miner.FRAGMENT_LOCK) do
-            fpgrowth_fragments[itemset] += 1
-        end
+        fpgrowth_fragments[itemset] += 1
     end
 
     for (nworld, w) in enumerate(kripkeframe |> SoleLogics.allworlds)
@@ -284,10 +280,8 @@ function _fpgrowth(
         # count 1-length frequent itemsets frequency;
         # a.k.a prepare miner internal powerups state to handle an FPGrowth call.
         for item in nworld_to_itemset[nworld]
-            lock(miner.POWERUP_LOCK) do
-                powerups(miner,
-                    :current_items_frequency)[(Threads.threadid(),Itemset(item))] += 1
-            end
+            powerups(miner,
+                :current_items_frequency)[(Threads.threadid(),Itemset(item))] += 1
         end
     end
 
@@ -420,7 +414,7 @@ function _fpgrowth_count_phase(
     for combo in combine_items(items(survivor_itemset), items(leftout_itemset))
         # each combo must be reshaped, following a certain order specified
         # universally by the miner.
-        sort!(items(combo), by=t -> powerups(miner, :lexicographic_ordering)[t])
+        sort!(items(combo), by=t -> powerups(miner, :lexicographic_ordering, t))
 
         # instance for which we want to update local support
         memokey = (:lsupport, combo, current_instance)
@@ -429,22 +423,17 @@ function _fpgrowth_count_phase(
         lsupport_value = lsupport_value_calculator(combo)
 
         # first time found for this instance
-        first_time_found = !haskey(miner.lmemo, memokey)
+        first_time_found = !haskey(localmemo(miner), memokey)
 
         # local support needs to be updated
-        if first_time_found || lsupport_value > miner.lmemo[memokey]
-            localmemo!(miner,
-                (:lsupport, combo, current_instance),
-                lsupport_value
-            )
+        if first_time_found || lsupport_value > localmemo(miner, memokey)
+            localmemo!(miner, (:lsupport, combo, current_instance), lsupport_value)
         end
 
         # if local support was set from fresh (and not updated), then also update
         # the information needed to reconstruct global support later.
         if first_time_found
-            lock(miner.FRAGMENT_LOCK) do
-                fpgrowth_fragments[combo] += count_increment_strategy(combo)
-            end
+            fpgrowth_fragments[combo] += count_increment_strategy(combo)
         end
     end
 end

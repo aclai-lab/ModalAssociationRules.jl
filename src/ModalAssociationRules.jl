@@ -49,7 +49,7 @@ export LmeasMemoKey, LmeasMemo
 export GmeasMemoKey, GmeasMemo
 export Info, Powerup
 
-export Miner
+export AbstractMiner, Miner
 export data, algorithm
 export itemsetmeasures, additemmeas
 export rulemeasures, addrulemeas

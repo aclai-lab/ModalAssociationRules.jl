@@ -482,6 +482,14 @@ const MineableData = AbstractDataset
 ############################################################################################
 
 """
+This abstract type is intended to identify any entity with a primary structural role during
+mining.
+
+See also [`Miner`](@ref), [`Bulldozer`](@ref).
+"""
+abstract type AbstractMiner end
+
+"""
     struct Miner{
         DATA<:MineableData,
         MINALGO<:Function,
@@ -560,7 +568,7 @@ struct Miner{
     I<:Item,
     IMEAS<:MeaningfulnessMeasure,
     RMEAS<:MeaningfulnessMeasure
-}
+} <: AbstractMiner
     # target dataset
     X::DATA
     # algorithm used to perform extraction
@@ -580,10 +588,6 @@ struct Miner{
 
     powerups::Powerup               # mining algorithm powerups (see documentation)
     info::Info                      # general informations
-
-    MEASURE_LOCK
-    POWERUP_LOCK
-    FRAGMENT_LOCK
 
     function Miner(
         X::DATA,
@@ -803,12 +807,8 @@ Return the local memoization structure inside `miner`, or a specific entry if a
 
 See also [`Miner`](@ref), [`LmeasMemo`](@ref), [`LmeasMemoKey`](@ref).
 """
-localmemo(miner::Miner)::LmeasMemo = lock(miner.MEASURE_LOCK) do
-    miner.lmemo
-end
-localmemo(miner::Miner, key::LmeasMemoKey) = lock(miner.MEASURE_LOCK) do
-    get(miner.lmemo, key, nothing)
-end
+localmemo(miner::Miner)::LmeasMemo = miner.lmemo
+localmemo(miner::Miner, key::LmeasMemoKey) = get(miner.lmemo, key, nothing)
 
 """
     localmemo!(miner::Miner, key::LmeasMemoKey, val::Threshold)
@@ -818,9 +818,7 @@ Setter for a specific entry `key` inside the local memoization structure wrapped
 See also [`Miner`](@ref), [`LmeasMemo`](@ref), [`LmeasMemoKey`](@ref).
 """
 function localmemo!(miner::Miner, key::LmeasMemoKey, val::Threshold)
-    lock(miner.MEASURE_LOCK) do
-        miner.lmemo[key] = val
-    end
+    miner.lmemo[key] = val
 end
 
 """
@@ -832,12 +830,8 @@ Return the global memoization structure inside `miner`, or a specific entry if a
 
 See also [`Miner`](@ref), [`GmeasMemo`](@ref), [`GmeasMemoKey`](@ref).
 """
-globalmemo(miner::Miner)::GmeasMemo = lock(miner.MEASURE_LOCK) do
-    miner.gmemo
-end
-globalmemo(miner::Miner, key::GmeasMemoKey) = lock(miner.MEASURE_LOCK) do
-    get(miner.gmemo, key, nothing)
-end
+globalmemo(miner::Miner)::GmeasMemo = miner.gmemo
+globalmemo(miner::Miner, key::GmeasMemoKey) = get(miner.gmemo, key, nothing)
 
 """
     globalmemo!(miner::Miner, key::GmeasMemoKey, val::Threshold)
@@ -848,9 +842,7 @@ Setter for a specific entry `key` inside the global memoization structure wrappe
 See also [`Miner`](@ref), [`GmeasMemo`](@ref), [`GmeasMemoKey`](@ref).
 """
 globalmemo!(miner::Miner, key::GmeasMemoKey, val::Threshold) = begin
-    lock(miner.MEASURE_LOCK) do
-        miner.gmemo[key] = val
-    end
+    miner.gmemo[key] = val
 end
 
 ############################################################################################
@@ -860,17 +852,17 @@ end
 """
     powerups(miner::Miner)::Powerup
     powerups(miner::Miner, key::Symbol)
+    powerups(miner::Miner, key::Symbol, inner_key)
 
 Getter for the entire powerups structure currently loaded in `miner`, or a specific powerup.
 
 See also [`haspowerup`](@ref), [`initpowerups`](@ref), [`Miner`](@ref), [`Powerup`](@ref).
 """
-powerups(miner::Miner)::Powerup = lock(miner.POWERUP_LOCK) do
-    miner.powerups
-end
-powerups(miner::Miner, key::Symbol) = lock(miner.POWERUP_LOCK) do
-    miner.powerups[key]
-end
+powerups(miner::Miner)::Powerup = miner.powerups
+
+powerups(miner::Miner, key::Symbol) = miner.powerups[key]
+
+powerups(miner::Miner, key::Symbol, inner_key) = miner.powerups[key][inner_key]
 
 """
     powerups!(miner::Miner, key::Symbol, val)
@@ -879,9 +871,9 @@ Setter for the content of a specific field of `miner`'s [`powerups`](@ref).
 
 See also [`haspowerup`](@ref), [`initpowerups`](@ref), [`Miner`](@ref), [`Powerup`](@ref).
 """
-powerups!(miner::Miner, key::Symbol, val) = lock(miner.POWERUP_LOCK) do
-    miner.powerups[key] = val
-end
+powerups!(miner::Miner, key::Symbol, val) = miner.powerups[key] = val
+
+powerups!(miner::Miner, key::Symbol, inner_key, val) = miner.powerups[key][inner_key] = val
 
 """
     haspowerup(miner::Miner, key::Symbol)
@@ -950,8 +942,7 @@ Then, return a generator of [`ARule`](@ref)s.
 See also [`ARule`](@ref), [`Itemset`](@ref).
 """
 function apply!(miner::Miner, X::MineableData; forcemining::Bool=false, kwargs...)
-    istrained = info(miner, :istrained)
-    if istrained && !forcemining
+    if info(miner, :istrained) && !forcemining
         @warn "Miner has already been trained. To force mining, set `forcemining=true`."
         return Nothing
     end

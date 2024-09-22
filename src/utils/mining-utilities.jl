@@ -1,6 +1,125 @@
-############################################################################################
-#### Itemsets ##############################################################################
-############################################################################################
+# Bulldozer utilities
+
+"""
+    struct Bulldozer <: AbstractMiner
+        instance::SoleLogics.LogicalInstance
+        ith_instance::Int64
+        lmemo::LmeasMemo
+        powerups::Powerup
+
+        datalock::ReentrantLock
+        memolock::ReentrantLock
+        poweruplock::ReentrantLock
+    end
+
+Thread-safe specialized structure, useful to handle mining within a modal `instance`.
+
+When writing your multi-threaded/multi-processes mining algorithm, you can use a
+monolithic [`Miner`](@ref) structure to collect the initial parameterization, map many
+Bulldozers (merging their local memoization structure) and then reduce the results.
+
+See also [`AbstractMiner`](@ref), [`Miner`](@ref).
+"""
+struct Bulldozer <: AbstractMiner
+    instance::SoleLogics.LogicalInstance
+    ith_instance::Int64
+    lmemo::LmeasMemo
+    powerups::Powerup
+
+    datalock::ReentrantLock
+    memolock::ReentrantLock
+    poweruplock::ReentrantLock
+end
+
+"""
+    datalock(bulldozer::Bulldozer)
+
+Getter for the [`ReentrantLock`](@ref) associated with the
+[`SoleLogics.LogicalInstance`](@ref) wrapped by a [`Bulldozer`](@ref).
+"""
+datalock(bulldozer::Bulldozer) = bulldozer.datalock
+
+"""
+    memolock(bulldozer::Bulldozer)
+
+Getter for the [`ReentrantLock`](@ref) associated with the inner [`Bulldozer`](@ref)'s
+memoization structure
+"""
+memolock(bulldozer::Bulldozer) = bulldozer.memolock
+
+"""
+    poweruplock(bulldozer::Bulldozer)
+
+Getter for the [`ReentrantLock`](@ref) associated with the customizable dictionary within
+a [`Bulldozer`](@ref).
+"""
+poweruplock(bulldozer::Bulldozer) = bulldozer.poweruplock
+
+"""
+    localmemo(bulldozer::Bulldozer)::LmeasMemoKey
+    localmemo(bulldozer::Bulldozer, key::LmeasMemoKey)
+
+Getter for the memoization structure associated with local itemsets mined by `bulldozer`.
+"""
+localmemo(bulldozer::Bulldozer)::LmeasMemoKey = lock(memolock(bulldozer)) do
+    bulldozer.lmemo
+end
+localmemo(bulldozer::Bulldozer, key::LmeasMemoKey) = lock(memolock(bulldozer)) do
+    bulldozer.lmemo[key]
+end
+
+"""
+    localmemo!(bulldozer::Bulldozer, key::LmeasMemoKey, val::Threshold)
+
+Setter for [`Bulldozer`](@ref)'s memoization structure.
+"""
+localmemo!(
+    bulldozer::Bulldozer,
+    key::LmeasMemoKey,
+    val::Threshold
+) = lock(memolock(bulldozer)) do
+    bulldozer.lmemo[key] = val
+end
+
+"""
+    powerups(bulldozer::Bulldozer)::Powerup
+    powerups(bulldozer::Bulldozer, key::Symbol)::Any
+    powerups(bulldozer::Bulldozer, key::Symbol, inner_key)::Any
+
+Getter for the customizable dictionary wrapped by a [`Bulldozer`](@ref).
+"""
+powerups(bulldozer::Bulldozer)::Powerup = lock(poweruplock(bulldozer)) do
+    bulldozer.powerups
+end
+powerups(bulldozer::Bulldozer, key::Symbol)::Any = lock(poweruplock(bulldozer)) do
+    bulldozer.powerups[key]
+end
+powerups(
+    bulldozer::Bulldozer,
+    key::Symbol,
+    inner_key
+)::Powerup = lock(poweruplock(bulldozer)) do
+    bulldozer.powerups[key][inner_key]
+end
+
+"""
+Reduce many [`Bulldozer`](@ref)s together, merging their local memo structures.
+"""
+function bulldozer_reduce(b1::Bulldozer, b2::Bulldozer)
+    for k in keys(b2)
+        if haskey(b1, k)
+            b1[k] += b2[k]
+        else
+            b1[k] = b2[k]
+        end
+    end
+
+    return b1
+end
+
+
+
+# Itemset utilities
 
 """
     combine_items(itemsets::Vector{<:Itemset}, newlength::Integer)
@@ -53,9 +172,9 @@ function grow_prune(candidates::Vector{Itemset}, frequents::Vector{Itemset}, k::
         )
 end
 
-############################################################################################
-#### Association rules #####################################################################
-############################################################################################
+
+
+# ARule utilities
 
 """
     function anchor_rulecheck(rule::ARule)::Bool
@@ -203,9 +322,10 @@ See also [`ARule`](@ref), [`Miner`](@ref), [`Itemset`](@ref), [`rulemeasures`](@
     end
 end
 
-############################################################################################
-#### Miner #################################################################################
-############################################################################################
+
+
+# Miner utilities
+
 # TODO: rename those in local_threshold_integer/global_threshold_integer
 """
     getlocalthreshold_integer(miner::Miner, meas::Function)

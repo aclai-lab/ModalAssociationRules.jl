@@ -52,17 +52,15 @@ macro lmeas(measname, measlogic)
 
             for powerup in LOCAL_POWERUP_SYMBOLS
                 # the numerical value necessary to save more informations about the relation
-                # between an instance and an subject must be obtained by the internal logic
+                # between an instance and a subject must be obtained by the internal logic
                 # of the meaningfulness measure callback.
                 if haspowerup(miner, powerup) && haskey(response, powerup)
-                    lock(miner.MEASURE_LOCK) do
-                        powerups(miner, powerup)[(ith_instance,subject)] = response[powerup]
-                    end
+                    powerups!(miner, powerup, (ith_instance,subject), response[powerup])
                 end
             end
             # Note that the powerups system could potentially irrorate the entire package
             # and could be expandend/specialized;
-            # for example, a category of powerups is necessary to fill (ith_instance, subject)
+            # e.g., a category of powerups is necessary to fill (ith_instance,subject)
             # fields, other are necessary to save informations about something else.
 
             return measure
@@ -110,9 +108,10 @@ macro gmeas(measname, measlogic)
             # also, do more stuff depending on `powerups` dispatch (see the documentation).
             # to know more, see `lmeas` comments.
             globalmemo!(miner, memokey, measure)
+
             for powerup in GLOBAL_POWERUP_SYMBOLS
                 if haspowerup(miner, powerup) && haskey(response, powerup)
-                    powerups(miner, powerup)[(subject)] = response[powerup]
+                    powerups!(miner, powerup, (subject), response[powerup])
                 end
             end
 
@@ -143,10 +142,13 @@ macro linkmeas(gmeasname, lmeasname)
     end
 end
 
-# core logic of `lsupport`, as a lambda function
+# core logic of `lsupport`, as a lambda function;
+# `miner` is an unused argument, but is required since this function must adhere to local
+# measures interface (see `@lmeas` macro)
 _lsupport_logic = (itemset, X, ith_instance, miner) -> begin
     # bool vector, representing on which world an Itemset holds
-    wmask = [check(toformula(itemset), X, ith_instance, w) for w in allworlds(X, ith_instance)]
+    wmask = [
+        check(toformula(itemset), X, ith_instance, w) for w in allworlds(X, ith_instance)]
 
     # return the result, and eventually the information needed to support powerups
     return Dict(
