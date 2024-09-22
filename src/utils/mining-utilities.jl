@@ -48,13 +48,14 @@ struct Bulldozer{
         instance::SoleLogics.LogicalInstance,
         ith_instance::Int64,
         items::Vector{I},
-        itemsetmeasures::Vector{IMEAS}
+        itemsetmeasures::Vector{IMEAS};
+        powerups::Powerup=Powerup()
     ) where {
         I<:Item,
         IMEAS<:MeaningfulnessMeasure
     }
-        return new{IMEAS}(instance, ith_instance, items, LmeasMemo(), itemsetmeasures,
-            Powerup(), ReentrantLock(), ReentrantLock(), ReentrantLock()
+        return new{I,IMEAS}(instance, ith_instance, items, LmeasMemo(), itemsetmeasures,
+            powerups, ReentrantLock(), ReentrantLock(), ReentrantLock()
         )
     end
 
@@ -63,7 +64,8 @@ struct Bulldozer{
                 SoleLogics.getinstance(miner |> data, ith_instance),
                 ith_instance,
                 items(miner),
-                itemsetmeasures(miner)
+                itemsetmeasures(miner),
+                powerups=deepcopy(powerups(miner))
             )
     end
 end
@@ -77,11 +79,22 @@ See also [`Bulldozer`](@ref), [`SoleLogics.LogicalInstance`](@ref).
 instance(bulldozer::Bulldozer) = bulldozer.instance
 
 """
+    instancenumber(bulldozer::Bulldozer)
+
+Retrieve the instance number associated with `bulldozer`.
+See also [`Bulldozer`](@ref), [`instance(bulldozer::Bulldozer)`](@ref).
+"""
+instancenumber(bulldozer::Bulldozer) = bulldozer.ith_instance
+
+"""
 Getter for the frame of the instance wrapped by `bulldozer`.
 See also [`instance(bulldozer::Bulldozer)`](@ref).
 """
 function SoleLogics.frame(bulldozer::Bulldozer)
-    SoleLogisc.frame(instance(bulldozer), 1)
+    # consider the instance wrapped by `bulldozer`;
+    # get retrieve Kripke frame shape by the instance's parent Logiset.
+    _instance = instance(bulldozer)
+    SoleLogics.frame(_instance.s, instancenumber(bulldozer))
 end
 
 """
@@ -107,19 +120,6 @@ Getter for the [`ReentrantLock`](@ref) associated with the customizable dictiona
 a [`Bulldozer`](@ref).
 """
 poweruplock(bulldozer::Bulldozer) = bulldozer.poweruplock
-
-"""
-    localmemo(bulldozer::Bulldozer)::LmeasMemoKey
-    localmemo(bulldozer::Bulldozer, key::LmeasMemoKey)
-
-Getter for the memoization structure associated with local itemsets mined by `bulldozer`.
-"""
-localmemo(bulldozer::Bulldozer)::LmeasMemoKey = lock(memolock(bulldozer)) do
-    bulldozer.lmemo
-end
-localmemo(bulldozer::Bulldozer, key::LmeasMemoKey) = lock(memolock(bulldozer)) do
-    bulldozer.lmemo[key]
-end
 
 """
     localmemo!(bulldozer::Bulldozer, key::LmeasMemoKey, val::Threshold)
@@ -155,8 +155,24 @@ powerups(
     bulldozer::Bulldozer,
     key::Symbol,
     inner_key
-)::Powerup = lock(poweruplock(bulldozer)) do
-    bulldozer.powerups[key][inner_key]
+)::Any = lock(poweruplock(bulldozer)) do
+    (bulldozer.powerups[key])[inner_key]
+end
+
+powerups!(miner::Bulldozer, key::Symbol, val) = lock(poweruplock(miner)) do
+    miner.powerups[key] = val
+end
+powerups!(miner::Bulldozer, key::Symbol, inner_key, val) = lock(poweruplock(miner)) do
+    miner.powerups[key][inner_key] = val
+end
+
+"""
+    haspowerup(miner::Bulldozer, key::Symbol)
+
+Return whether `bulldozer` powerups field contains an entry `key`.
+"""
+haspowerup(miner::Bulldozer, key::Symbol) = lock(poweruplock(miner)) do
+    haskey(miner |> powerups, key)
 end
 
 """
@@ -164,16 +180,27 @@ end
 
 Reduce many [`Bulldozer`](@ref)s together, merging their local memo structures.
 """
-function bulldozer_reduce(b1::Bulldozer, b2::Bulldozer)::LmeasMemo
-    for k in keys(b2)
-        if haskey(b1, k)
-            b1[k] += b2[k]
+function bulldozer_reduce(
+    b1lmemo::Union{Bulldozer,LmeasMemo},
+    b2lmemo::Union{Bulldozer,LmeasMemo}
+)::LmeasMemo
+    if b1lmemo isa Bulldozer
+        b1lmemo = localmemo(b1lmemo)
+    end
+
+    if b2lmemo isa Bulldozer
+        b2lmemo = localmemo(b2lmemo)
+    end
+
+    for k in keys(b2lmemo)
+        if haskey(b1lmemo, k)
+            b1lmemo[k] += b2lmemo[k]
         else
-            b1[k] = b2[k]
+            b1lmemo[k] = b2lmemo[k]
         end
     end
 
-    return b1
+    return b1lmemo
 end
 
 """

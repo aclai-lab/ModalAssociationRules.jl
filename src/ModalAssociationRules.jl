@@ -77,7 +77,7 @@ export lconfidence, gconfidence
 include("utils/mining-utilities.jl")
 
 export Bulldozer
-export instance, frame
+export instance, instancenumber, frame
 export datalock, memolock, poweruplock
 export bulldozer_reduce
 

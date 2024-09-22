@@ -1,5 +1,9 @@
 """
-    patternbase(item::Item, htable::HeaderTable, miner::Miner)::ConditionalPatternBase
+    patternbase(
+        item::Item,
+        htable::HeaderTable,
+        miner::AbstractMiner
+    )::ConditionalPatternBase
 
 Retrieve the [`ConditionalPatternBase`](@ref) of `fptree` based on `item`.
 
@@ -10,14 +14,14 @@ by an [`EnhancedItemset`](@ref).
 The [`EnhancedItemset`](@ref)s in the returned [`ConditionalPatternBase`](@ref) are sorted
 decreasingly by [`gsupport`](@ref).
 
-See also [`Miner`](@ref), [`ConditionalPatternBase`](@ref), [`contributors`](@ref),
+See also [`AbstractMiner`](@ref), [`ConditionalPatternBase`](@ref), [`contributors`](@ref),
 [`EnhancedItemset`](@ref), [`fpgrowth`](@ref), [`FPTree`](@ref), [`Item`](@ref),
 [`Itemset`](@ref), [`WorldMask`](@ref).
 """
 function patternbase(
     item::Item,
     htable::HeaderTable,
-    miner::Miner
+    miner::AbstractMiner
 )
     # think a pattern base as a vector of vector of itemsets;
     # the reason why the type is explicited differently here, is that every item must be
@@ -48,9 +52,9 @@ function patternbase(
         # items inside the itemset are sorted decreasingly by global support.
         # Note that, although we are working with enhanced itemsets, the sorting only
         # requires to consider the items inside them (so, the "non-enhanced" part).
-        sort!(items(_itemset),
-            by=t -> powerups(
-                miner, :current_items_frequency)[(Threads.threadid(),Itemset(t))],
+        sort!(
+            items(_itemset),
+            by=t -> powerups(miner, :current_items_frequency)[Itemset(t)],
             rev=true
         )
 
@@ -65,9 +69,24 @@ function patternbase(
     return _patternbase, leftout_count
 end
 
-function bounce!(pbase::ConditionalPatternBase, miner::Miner)
+"""
+    function bounce!(pbase::ConditionalPatternBase, miner::AbstractMiner)
+
+Filter out non-frequent [`EnhancedItemset`](@ref)s from a [`ConditionalPatternBase`](@ref).
+
+See also [`ConditionalPatternBase`](@ref), [`EnhancedItemset`](@ref). [`FPTree`](@ref).
+"""
+function bounce!(pbase::ConditionalPatternBase, miner::AbstractMiner)
     # accumulators needed to establish whether an enhanced itemset is promoted or no
     count_accumulator = DefaultDict{Item, Int64}(0)
+
+    # to find local support threshold we need to search for its corresponding global
+    # measure (global support), obtaining a MeaningfulnessMeasure tuple;
+    # its second element is the threshold we are looking for.
+    _support_meas = Iterators.filter(m -> m[1] == gsupport, itemsetmeasures(miner)) |> first
+    _lsupport_threshold = _support_meas[2]
+
+    _nworlds = frame(miner) |> SoleLogics.nworlds
 
     # enhanceditemset shape : (itemset, count)
     for enhanceditemset in pbase
@@ -80,7 +99,7 @@ function bounce!(pbase::ConditionalPatternBase, miner::Miner)
 
     for enhanceditemset in pbase
         filter!(_item ->
-            count_accumulator[_item] / nworlds(miner) >= getlocalthreshold(miner, gsupport),
+            count_accumulator[_item] / _nworlds >= _lsupport_threshold,
             enhanceditemset |> itemset |> items
         )
     end
@@ -90,18 +109,18 @@ function bounce!(pbase::ConditionalPatternBase, miner::Miner)
 end
 
 """
-    function projection(pbase::ConditionalPatternBase, miner::Miner)
+    function projection(pbase::ConditionalPatternBase, miner::AbstractMiner)
 
 Return respectively a [`FPTree`](@ref) and a [`HeaderTable`](@ref) starting from `pbase`.
-A [`Miner`](@ref) must be provided to guarantee the generated header table internal state
-is OK, that is, its items are sorted decreasingly by [`gsupport`](@ref).
+An [`AbstractMiner`](@ref) must be provided to guarantee the generated header table internal
+state is OK, that is, its items are sorted decreasingly by [`gsupport`](@ref).
 
 See also [`ConditionalPatternBase`](@ref), [`FPTree`](@ref), [`gsupport`](@ref),
-[`HeaderTable`](@ref), [`Miner`](@ref).
+[`HeaderTable`](@ref), [`AbstractMiner`](@ref).
 """
 function projection(
     pbase::ConditionalPatternBase,
-    miner::Miner
+    miner::AbstractMiner
 )
     # what this function does, essentially, is to filter the given pattern base.
     fptree = FPTree()
@@ -204,12 +223,12 @@ function fpgrowth(
 
     _ninstances = ninstances(X)
     # here, collect the results of each local call
-    local_results = Vector{LmeasMemo}(undef, _ninstances)
+    local_results = Vector{Bulldozer}(undef, _ninstances)
 
     # leverage multi-threading: apply fp-growth one time per instance,
     # then reduce the results and proceed to compute global supports
     Threads.@threads for ith_instance in 1:_ninstances
-        local_results[ith_instance] = _fpgrowth(ith_instance, Bulldozer(miner))
+        local_results[ith_instance] = _fpgrowth(Bulldozer(miner, ith_instance))
     end
     local_results = reduce(bulldozer_reduce, local_results)
     fpgrowth_fragments = load_bulldozer!(miner, local_results)
@@ -228,15 +247,13 @@ function fpgrowth(
 end
 
 # `fpgrowth` main logic
-function _fpgrowth(
-    ith_instance::Int,
-    miner::Bulldozer
-)
+function _fpgrowth(miner::Bulldozer)
     # this will be used by the miner to understand how to order the items of each itemset
     miner.powerups[:current_items_frequency] = DefaultDict{Itemset,Int}(0)
+    miner.powerups[:instance_item_toworlds] = Dict{Tuple{Int,Itemset},WorldMask}([])
 
     kripkeframe = frame(miner)
-    _nworlds = kripkeframe |> nworlds
+    _nworlds = kripkeframe |> SoleLogics.nworlds
     nworld_to_itemset = [Itemset() for _ in 1:_nworlds]
 
     # get the frequent 1-length itemsets from the first candidates set;
@@ -247,25 +264,19 @@ function _fpgrowth(
         if lsupport(candidate, instance(miner), miner) >= lthreshold
     ] |> unique
 
-    # TODO: proseguire da qui
-
-    for itemset in frequents
-        fpgrowth_fragments[itemset] += 1
-    end
-
     for (nworld, w) in enumerate(kripkeframe |> SoleLogics.allworlds)
         nworld_to_itemset[nworld] = [
             itemset
             for itemset in frequents
-            if powerups(
-                miner, :instance_item_toworlds)[(ith_instance, itemset)][nworld] > 0
+            if powerups(miner, :instance_item_toworlds
+                )[(instancenumber(miner), itemset)][nworld] > 0
         ] |> union
 
         # count 1-length frequent itemsets frequency;
         # a.k.a prepare miner internal powerups state to handle an FPGrowth call.
         for item in nworld_to_itemset[nworld]
             powerups(miner,
-                :current_items_frequency)[(Threads.threadid(),Itemset(item))] += 1
+                :current_items_frequency)[Itemset(item)] += 1
         end
     end
 
@@ -277,19 +288,18 @@ function _fpgrowth(
     htable = HeaderTable(fptree; miner=miner)
 
     # call main logic
-    _fpgrowth_kernel(fptree, htable, miner, FPTree(), fpgrowth_fragments, ith_instance)
+    _fpgrowth_kernel(fptree, htable, miner, FPTree())
 
-    return fpgrowth_fragments
+    # return the given miner, whose internal state has been updated
+    return miner
 end
 
 # `fpgrowth` recursive logic; scroll down to see initialization section.
 function _fpgrowth_kernel(
     fptree::FPTree,
     htable::HeaderTable,
-    miner::Miner,
-    leftout_fptree::FPTree,
-    fpgrowth_fragments::DefaultDict{Itemset, Int},
-    current_instance::Int64
+    miner::Bulldozer,
+    leftout_fptree::FPTree
 )
     # if `fptree` contains only one path (hence, it can be considered a linked list),
     # then combine all the Itemsets collected from previous step with the remained ones.
@@ -305,6 +315,8 @@ function _fpgrowth_kernel(
                     retrievebycontent(fptree, item) |> count
             end
         end
+
+        _nworlds = frame(miner) |> SoleLogics.nworlds
 
         _fpgrowth_count_phase(
             survivor_itemset,
@@ -329,15 +341,13 @@ function _fpgrowth_kernel(
                         _leftout_count = min(_leftout_count, leftout_count_dict[item])
                     end
                 end
-                return _leftout_count / nworlds(miner)
+                return _leftout_count / _nworlds
             end,
             (combo) -> begin
                 #  we don't want to consider the single item combination case
                 return (length(combo) > 1 ? 1 : 0)
             end,
-            miner,
-            fpgrowth_fragments,
-            current_instance
+            miner
         )
 
         _fpgrowth_count_phase(
@@ -346,15 +356,13 @@ function _fpgrowth_kernel(
             (combo) -> begin
                 # here, computation is simpler than the previous
                 # `lsupport_value_calculator` lambda function implementation.
-                return count(retrieveleaf(leftout_fptree)) / nworlds(miner)
+                return count(retrieveleaf(leftout_fptree)) / _nworlds
             end,
             (combo) -> begin
                 # we don't want to consider the single item combination case
                 return (length(combo) > 1 ? 1 : 0)
             end,
-            miner,
-            fpgrowth_fragments,
-            current_instance
+            miner
         )
     else
         for item in reverse(htable)
@@ -377,9 +385,7 @@ function _fpgrowth_kernel(
                 conditional_fptree,
                 conditional_htable,
                 miner,
-                _leftout_fptree,
-                fpgrowth_fragments,
-                current_instance
+                _leftout_fptree
             )
         end
     end
@@ -391,17 +397,16 @@ function _fpgrowth_count_phase(
     leftout_itemset::Itemset,
     lsupport_value_calculator::Function,
     count_increment_strategy::Function,
-    miner::Miner,
-    fpgrowth_fragments::DefaultDict{Itemset, Int},
-    current_instance::Int64
+    miner::Bulldozer
 )
     for combo in combine_items(items(survivor_itemset), items(leftout_itemset))
         # each combo must be reshaped, following a certain order specified
         # universally by the miner.
+
         sort!(items(combo), by=t -> powerups(miner, :lexicographic_ordering, t))
 
         # instance for which we want to update local support
-        memokey = (:lsupport, combo, current_instance)
+        memokey = (:lsupport, combo, instancenumber(miner))
 
         # new local support value
         lsupport_value = lsupport_value_calculator(combo)
@@ -411,14 +416,15 @@ function _fpgrowth_count_phase(
 
         # local support needs to be updated
         if first_time_found || lsupport_value > localmemo(miner, memokey)
-            localmemo!(miner, (:lsupport, combo, current_instance), lsupport_value)
+            localmemo!(miner, (:lsupport, combo, instancenumber(miner)), lsupport_value)
         end
 
         # if local support was set from fresh (and not updated), then also update
         # the information needed to reconstruct global support later.
-        if first_time_found
-            fpgrowth_fragments[combo] += count_increment_strategy(combo)
-        end
+        # DEPRECATED - this is now handled by reduction function
+        # if first_time_found
+        #     fpgrowth_fragments[combo] += count_increment_strategy(combo)
+        # end
     end
 end
 

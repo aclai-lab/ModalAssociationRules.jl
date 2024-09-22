@@ -28,7 +28,7 @@ macro lmeas(measname, measlogic)
         Core.@__doc__ function $(esc(fname))(
             subject::ARMSubject,
             instance::LogicalInstance,
-            miner::Miner
+            miner::AbstractMiner
         )
             # retrieve logiset and the specific instance
             X, ith_instance = instance.s, instance.i_instance

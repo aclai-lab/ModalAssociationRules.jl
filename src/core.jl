@@ -631,8 +631,7 @@ struct Miner{
         new{DATA,MINALGO,I,IMEAS,RMEAS}(X, algorithm, unique(items),
             item_constrained_measures, rule_constrained_measures,
             Vector{Itemset}([]), Vector{ARule}([]),
-            LmeasMemo(), GmeasMemo(), powerups, info,
-            ReentrantLock(), ReentrantLock(), ReentrantLock()
+            LmeasMemo(), GmeasMemo(), powerups, info
         )
     end
 end
@@ -657,13 +656,13 @@ See [`Miner`](@ref).
 algorithm(miner::Miner)::Function = miner.algorithm
 
 """
-    items(miner::Miner)
+    items(miner::AbstractMiner)
 
 Getter for the items of [`Item`](@ref)s loaded into `miner`.
 
 See [`Item`](@ref), [`Miner`](@ref).
 """
-items(miner::Miner) = miner.items
+items(miner::AbstractMiner) = miner.items
 
 """
     itemsetmeasures(miner::Miner)::Vector{<:MeaningfulnessMeasure}
@@ -807,8 +806,8 @@ Return the local memoization structure inside `miner`, or a specific entry if a
 
 See also [`Miner`](@ref), [`LmeasMemo`](@ref), [`LmeasMemoKey`](@ref).
 """
-localmemo(miner::Miner)::LmeasMemo = miner.lmemo
-localmemo(miner::Miner, key::LmeasMemoKey) = get(miner.lmemo, key, nothing)
+localmemo(miner::AbstractMiner)::LmeasMemo = miner.lmemo
+localmemo(miner::AbstractMiner, key::LmeasMemoKey) = get(miner.lmemo, key, nothing)
 
 """
     localmemo!(miner::Miner, key::LmeasMemoKey, val::Threshold)

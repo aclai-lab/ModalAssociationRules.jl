@@ -343,7 +343,7 @@ struct HeaderTable
 
     function HeaderTable(
         fptseed::FPTree;
-        miner::Union{Nothing,Miner}=nothing
+        miner::Union{Nothing,AbstractMiner}=nothing
     )
         htable = new(Vector{Item}(), Dict{Item,Union{Nothing,FPTree}}([]))
 
@@ -434,26 +434,26 @@ function link!(htable::HeaderTable, fptree::FPTree)
 end
 
 """
-    function checksanity!(htable::HeaderTable, miner::Miner)::Bool
+    function checksanity!(htable::HeaderTable, miner::AbstractMiner)::Bool
 
 Check if `htable` internal state is correct, that is, its `items` are sorted decreasingly
 by global support.
 If `items` are already sorted, return `true`; otherwise, sort them and return `false`.
 
-See also [`Miner`](@ref), [`gsupport`](@ref), [`HeaderTable`](@ref), [`items`](@ref).
+See also [`AbstractMiner`](@ref), [`gsupport`](@ref), [`HeaderTable`](@ref),
+[`items`](@ref).
 """
-function checksanity!(htable::HeaderTable, miner::Miner)::Bool
+function checksanity!(htable::HeaderTable, miner::AbstractMiner)::Bool
     _issorted = issorted(
         items(htable),
-        by=t -> powerups(miner, :current_items_frequency)[
-            (Threads.threadid(),Itemset(t))],
+        by=t -> powerups(miner, :current_items_frequency)[Itemset(t)],
         rev=true
     )
 
     # force sorting if needed
     if !_issorted
         sort!(items(htable), by=t -> powerups(
-            miner, :current_items_frequency)[(Threads.threadid(),Itemset(t))],
+            miner, :current_items_frequency)[Itemset(t)],
             rev=true
         )
     end
@@ -475,7 +475,7 @@ doc_fptree_grow = """
         fptree::FPTree,
         itemset::Itemset,
         ith_instance::Int64,
-        miner::Miner;
+        miner::AbstractMiner;
         htable::Union{Nothing,HeaderTable}=nothing
     )
 
@@ -483,14 +483,14 @@ doc_fptree_grow = """
         fptree::FPTree,
         itemset::EnhancedItemset,
         ith_instance::Int64,
-        miner::Miner;
+        miner::AbstractMiner;
         htable::Union{Nothing,HeaderTable}=nothing
     )
 
     grow!(
         fptree::FPTree,
         enhanceditemsets::Union{ConditionalPatternBase,Vector{Itemset}},
-        miner::Miner;
+        miner::AbstractMiner;
         htable::Union{Nothing,HeaderTable}=nothing
     )
 
@@ -505,7 +505,7 @@ See also [`EnhancedItemset`](@ref), [`FPTree`](@ref), [`gsupport`](@ref),
 function grow!(
     fptree::FPTree,
     enhanceditemset::EnhancedItemset,
-    miner::Miner
+    miner::AbstractMiner
 )
     _itemset = itemset(enhanceditemset)
 
@@ -516,7 +516,7 @@ function grow!(
 
     # sorting must be guaranteed: remember an FPTree essentially is a prefix tree
     sort!(items(_itemset), by=t -> powerups(
-        miner, :current_items_frequency)[(Threads.threadid(),Itemset(t))], rev=true)
+        miner, :current_items_frequency)[Itemset(t)], rev=true)
 
         # retrieve the item to grow the tree, and its count
     _count = count(enhanceditemset)
@@ -544,7 +544,7 @@ end
 function grow!(
     fptree::FPTree,
     itemset::Itemset,
-    miner::Miner
+    miner::AbstractMiner
 )
     grow!(fptree, convert(EnhancedItemset, itemset, 1), miner)
 end
@@ -553,7 +553,7 @@ end
 function grow!(
     fptree::FPTree,
     collection::Union{ConditionalPatternBase,Vector{Itemset}},
-    miner::Miner;
+    miner::AbstractMiner;
     kwargs...
 )
     map(element -> grow!(fptree, element, miner; kwargs...), collection)
