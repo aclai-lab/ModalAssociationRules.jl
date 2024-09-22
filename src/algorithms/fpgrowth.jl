@@ -203,30 +203,18 @@ function fpgrowth(
     end
 
     _ninstances = ninstances(X)
+    # here, collect the results of each local call
+    local_results = Vector{LmeasMemo}(undef, _ninstances)
 
-    if distributed
-        fpgrowth_fragments = reduce(
-            _fragments_reducer,
-            Distributed.pmap(
-                ith_instance -> _fpgrowth(ith_instance, miner),
-                1:_ninstances;
-                distributed=distributed,
-                batch_size=_ninstances/_nworkers |> Int64
-            )
-        )
-    elseif parallel
-        fpgrowth_fragments = Vector{DefaultDict{Itemset,Int}}(undef,_ninstances)
-        @sync Threads.@threads for ith_instance in 1:_ninstances
-            fpgrowth_fragments[ith_instance] = _fpgrowth(ith_instance, miner)
-        end
-        fpgrowth_fragments = reduce(_fragments_reducer, fpgrowth_fragments)
-    else
-        fpgrowth_fragments = reduce(
-            _fragments_reducer,
-            map(ith_instance -> _fpgrowth(ith_instance, miner), 1:_ninstances)
-        )
+    # leverage multi-threading: apply fp-growth one time per instance,
+    # then reduce the results and proceed to compute global supports
+    Threads.@threads for ith_instance in 1:_ninstances
+        local_results[ith_instance] = _fpgrowth(ith_instance, Bulldozer(miner))
     end
+    local_results = reduce(bulldozer_reduce, local_results)
+    fpgrowth_fragments = load_bulldozer!(miner, local_results)
 
+    # global setting
     for (itemset, gfrequency_int) in fpgrowth_fragments
         _threshold = getglobalthreshold(miner, gsupport)
         gfrequency = gfrequency_int / _ninstances
@@ -235,35 +223,31 @@ function fpgrowth(
             push!(freqitems(miner), itemset)
         end
 
-        # TODO: check other custom meaningfulness measures
+        # TODO - check other custom meaningfulness measures
     end
 end
 
 # `fpgrowth` main logic
 function _fpgrowth(
     ith_instance::Int,
-    miner::Miner
+    miner::Bulldozer
 )
-    # collect the local results, accumulated by this run;
-    # those results will be reduced together (e.g., if this function is used in a pmap)
-    fpgrowth_fragments = DefaultDict{Itemset,Int}(0)
+    # this will be used by the miner to understand how to order the items of each itemset
+    miner.powerups[:current_items_frequency] = DefaultDict{Itemset,Int}(0)
 
-    # the frequency of each 1-length frequent itemset is tracked in a fresh dictionary;
-    # this may vary between each iteration of this cycle (each sub-fpgrowth execution).
-    powerups!(miner, :current_items_frequency, DefaultDict{Tuple{Int,Itemset},Int}(0))
-
-    # from now on, the instance is fixed and we apply fpgrowth horizontally;
-    # the assumption here is that all the frames are shaped equally.
     kripkeframe = frame(miner)
     _nworlds = kripkeframe |> nworlds
     nworld_to_itemset = [Itemset() for _ in 1:_nworlds]
 
     # get the frequent 1-length itemsets from the first candidates set;
     frequents = [candidate
-        for (gmeas_algo, lthreshold, gthreshold) in itemsetmeasures(miner)
+        # TODO we take for granted that the only measure related to items is always support
+        for (_, lthreshold, _) in itemsetmeasures(miner)
         for candidate in Itemset.(items(miner))
-        if lsupport(candidate, getinstance(data(miner), ith_instance), miner) >= lthreshold
+        if lsupport(candidate, instance(miner), miner) >= lthreshold
     ] |> unique
+
+    # TODO: proseguire da qui
 
     for itemset in frequents
         fpgrowth_fragments[itemset] += 1

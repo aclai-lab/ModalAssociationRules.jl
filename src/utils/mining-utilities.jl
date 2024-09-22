@@ -1,16 +1,23 @@
 # Bulldozer utilities
 
 """
-    struct Bulldozer <: AbstractMiner
+    struct Bulldozer{
+        I<:Item,
+        IMEAS<:MeaningfulnessMeasure
+    } <: AbstractMiner
         instance::SoleLogics.LogicalInstance
         ith_instance::Int64
+
+        items::Vector{I}
+
         lmemo::LmeasMemo
+        itemsetmeasures::Vector{IMEAS}
         powerups::Powerup
 
         datalock::ReentrantLock
         memolock::ReentrantLock
         poweruplock::ReentrantLock
-    end
+    }
 
 Thread-safe specialized structure, useful to handle mining within a modal `instance`.
 
@@ -20,15 +27,61 @@ Bulldozers (merging their local memoization structure) and then reduce the resul
 
 See also [`AbstractMiner`](@ref), [`Miner`](@ref).
 """
-struct Bulldozer <: AbstractMiner
+struct Bulldozer{
+    I<:Item,
+    IMEAS<:MeaningfulnessMeasure
+} <: AbstractMiner
     instance::SoleLogics.LogicalInstance
     ith_instance::Int64
+
+    items::Vector{I}
+
     lmemo::LmeasMemo
+    itemsetmeasures::Vector{IMEAS}
     powerups::Powerup
 
     datalock::ReentrantLock
     memolock::ReentrantLock
     poweruplock::ReentrantLock
+
+    function Bulldozer(
+        instance::SoleLogics.LogicalInstance,
+        ith_instance::Int64,
+        items::Vector{I},
+        itemsetmeasures::Vector{IMEAS}
+    ) where {
+        I<:Item,
+        IMEAS<:MeaningfulnessMeasure
+    }
+        return new{IMEAS}(instance, ith_instance, items, LmeasMemo(), itemsetmeasures,
+            Powerup(), ReentrantLock(), ReentrantLock(), ReentrantLock()
+        )
+    end
+
+    function Bulldozer(miner::Miner, ith_instance::Int64)
+        return Bulldozer(
+                SoleLogics.getinstance(miner |> data, ith_instance),
+                ith_instance,
+                items(miner),
+                itemsetmeasures(miner)
+            )
+    end
+end
+
+"""
+    instance(bulldozer::Bulldozer)
+
+Getter for the instance wrapped by `bulldozer`.
+See also [`Bulldozer`](@ref), [`SoleLogics.LogicalInstance`](@ref).
+"""
+instance(bulldozer::Bulldozer) = bulldozer.instance
+
+"""
+Getter for the frame of the instance wrapped by `bulldozer`.
+See also [`instance(bulldozer::Bulldozer)`](@ref).
+"""
+function SoleLogics.frame(bulldozer::Bulldozer)
+    SoleLogisc.frame(instance(bulldozer), 1)
 end
 
 """
@@ -81,6 +134,10 @@ localmemo!(
     bulldozer.lmemo[key] = val
 end
 
+itemsetmeasures(
+    bulldozer::Bulldozer
+)::Vector{<:MeaningfulnessMeasure} = bulldozer.itemsetmeasures
+
 """
     powerups(bulldozer::Bulldozer)::Powerup
     powerups(bulldozer::Bulldozer, key::Symbol)::Any
@@ -103,9 +160,11 @@ powerups(
 end
 
 """
+    function bulldozer_reduce(b1::Bulldozer, b2::Bulldozer)::LmeasMemo
+
 Reduce many [`Bulldozer`](@ref)s together, merging their local memo structures.
 """
-function bulldozer_reduce(b1::Bulldozer, b2::Bulldozer)
+function bulldozer_reduce(b1::Bulldozer, b2::Bulldozer)::LmeasMemo
     for k in keys(b2)
         if haskey(b1, k)
             b1[k] += b2[k]
@@ -115,6 +174,29 @@ function bulldozer_reduce(b1::Bulldozer, b2::Bulldozer)
     end
 
     return b1
+end
+
+"""
+Load a local memoization structure inside `miner`.
+Also, returns a dictionary associating each loaded local [`Itemset`](@ref) loaded to its
+its global support, in order to simplify `miner`'s job when working in the global setting.
+
+See also [`Itemset`](@ref), [`LmeasMemo`](@ref), [`lsupport`](@ref), [`Miner`](@ref).
+"""
+function load_bulldozer!(miner::Miner, lmemo::LmeasMemo)
+    # a local memo key is a Tuple{Symbol,ARMSubject,Int64}
+
+    fpgrowth_fragments = DefaultDict{Itemset,Int64}(0)
+
+    for (lmemokey, threshold) in lmemo
+        meas, subject, _ = lmemokey
+        localmemo!(miner, lmemokey, threshold)
+        if meas == :lsupport
+            fpgrowth_fragments[subject] += 1
+        end
+    end
+
+    return fpgrowth_fragments
 end
 
 
