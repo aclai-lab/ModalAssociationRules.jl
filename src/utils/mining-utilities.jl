@@ -175,6 +175,9 @@ haspowerup(miner::Bulldozer, key::Symbol) = lock(poweruplock(miner)) do
     haskey(miner |> powerups, key)
 end
 
+# Just to mantain Miner's interfaces
+measures(miner::Bulldozer) = itemsetmeasures(miner)
+
 """
     function bulldozer_reduce(b1::Bulldozer, b2::Bulldozer)::LmeasMemo
 
@@ -203,6 +206,23 @@ function bulldozer_reduce(
     return b1lmemo
 end
 
+function bulldozer_reduce2(local_results::Vector{Bulldozer})
+    b1lmemo = local_results |> first |> localmemo
+
+    for i in 2:length(local_results)
+        b2lmemo = local_results[i] |> localmemo
+        for k in keys(b2lmemo)
+            if haskey(b1lmemo, k)
+                b1lmemo[k] += b2lmemo[k]
+            else
+                b1lmemo[k] = b2lmemo[k]
+            end
+        end
+    end
+
+    return b1lmemo
+end
+
 """
 Load a local memoization structure inside `miner`.
 Also, returns a dictionary associating each loaded local [`Itemset`](@ref) loaded to its
@@ -214,11 +234,12 @@ function load_bulldozer!(miner::Miner, lmemo::LmeasMemo)
     # a local memo key is a Tuple{Symbol,ARMSubject,Int64}
 
     fpgrowth_fragments = DefaultDict{Itemset,Int64}(0)
+    min_lsupport_threshold = findmeasure(miner, lsupport)[2]
 
-    for (lmemokey, threshold) in lmemo
+    for (lmemokey, lmeasvalue) in lmemo
         meas, subject, _ = lmemokey
-        localmemo!(miner, lmemokey, threshold)
-        if meas == :lsupport
+        localmemo!(miner, lmemokey, lmeasvalue)
+        if meas == :lsupport && lmeasvalue > min_lsupport_threshold
             fpgrowth_fragments[subject] += 1
         end
     end

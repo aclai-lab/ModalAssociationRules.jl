@@ -723,7 +723,7 @@ end
 
 """
     findmeasure(
-        miner::Miner,
+        miner::AbstractMiner,
         meas::Function;
         recognizer::Function=islocalof
     )::MeaningfulnessMeasure
@@ -734,7 +734,7 @@ See also [`isglobalof`](@ref), [`islocalof`](@ref), [`MeaningfulnessMeasure`](@r
 [`Miner`](@ref).
 """
 function findmeasure(
-    miner::Miner,
+    miner::AbstractMiner,
     meas::Function;
     recognizer::Function=islocalof
 )::MeaningfulnessMeasure
@@ -921,7 +921,7 @@ See also [`Miner`](@ref).
 hasinfo(miner::Miner, key::Symbol) = haskey(miner |> info, key)
 
 """
-    mine!(miner::Miner)
+    mine!(miner::Miner; kwargs...)
 
 Synonym for `ModalAssociationRules.apply!(miner, data(miner))`.
 
@@ -932,11 +932,14 @@ function mine!(miner::Miner; kwargs...)
 end
 
 """
-    apply!(miner::Miner, X::MineableData)
+    apply!(miner::Miner, X::MineableData; forcemining::Bool=false, kwargs...)
 
 Extract association rules in the dataset referenced by `miner`, saving the interesting
 [`Itemset`](@ref)s inside `miner`.
 Then, return a generator of [`ARule`](@ref)s.
+
+!!! note
+    All the kwargs are forwarded to the mining algorithm within `miner`.
 
 See also [`ARule`](@ref), [`Itemset`](@ref).
 """

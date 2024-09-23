@@ -83,8 +83,12 @@ function bounce!(pbase::ConditionalPatternBase, miner::AbstractMiner)
     # to find local support threshold we need to search for its corresponding global
     # measure (global support), obtaining a MeaningfulnessMeasure tuple;
     # its second element is the threshold we are looking for.
-    _support_meas = Iterators.filter(m -> m[1] == gsupport, itemsetmeasures(miner)) |> first
-    _lsupport_threshold = _support_meas[2]
+    _lsupport_threshold = findmeasure(miner, lsupport)[2]
+
+    # DEPRECATED
+    # _support_meas = Iterators.filter(m -> m[1] == gsupport, itemsetmeasures(miner)) |> first
+    # _lsupport_threshold = _support_meas[2]
+
 
     _nworlds = frame(miner) |> SoleLogics.nworlds
 
@@ -176,7 +180,7 @@ See also [`Miner`](@ref), [`FPTree`](@ref), [`HeaderTable`](@ref),
 function fpgrowth(
     miner::Miner,
     X::MineableData;
-    parallel::Bool=false,
+    parallel::Bool=true,
     distributed::Bool=false,
     verbose::Bool=false
 )::Nothing
@@ -191,7 +195,7 @@ function fpgrowth(
     _nthreads = Threads.nthreads()
     _nworkers = Distributed.nworkers()
 
-    if verbose && parallelize
+    if verbose && parallel
         printstyled("Multithreading enabled: # threads = $(_nthreads).\n", color=:green)
         if _nthreads == 1
             printstyled(
@@ -222,15 +226,22 @@ function fpgrowth(
     end
 
     _ninstances = ninstances(X)
-    # here, collect the results of each local call
     local_results = Vector{Bulldozer}(undef, _ninstances)
-
-    # leverage multi-threading: apply fp-growth one time per instance,
-    # then reduce the results and proceed to compute global supports
-    Threads.@threads for ith_instance in 1:_ninstances
-        local_results[ith_instance] = _fpgrowth(Bulldozer(miner, ith_instance))
+    if parallel
+        # leverage multi-threading: apply fp-growth one time per instance,
+        Threads.@threads for ith_instance in 1:_ninstances
+            local_results[ith_instance] = _fpgrowth(Bulldozer(miner, ith_instance))
+        end
+    else
+        for ith_instance in 1:_ninstances
+            local_results[ith_instance] = _fpgrowth(Bulldozer(miner, ith_instance))
+        end
     end
-    local_results = reduce(bulldozer_reduce, local_results)
+
+    # reduce all the local-memoization structures obtained before,
+    # and proceed to compute global supports
+    # local_results = reduce(bulldozer_reduce, local_results)
+    local_results = bulldozer_reduce2(local_results)
     fpgrowth_fragments = load_bulldozer!(miner, local_results)
 
     # global setting

@@ -10,7 +10,7 @@ import ModalAssociationRules.children
 
 if Threads.nthreads() == 1
     printstyled("Skipping check on parallel ModalFP-Growth." *
-        "\nDid you forget to set -t?\n", color=:light_red)
+        "\nDid you forget to set -t?\n", color=:light_yellow)
 end
 
 # load NATOPS dataset and convert it to a Logiset

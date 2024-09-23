@@ -75,11 +75,10 @@ export lsupport, gsupport
 export lconfidence, gconfidence
 
 include("utils/mining-utilities.jl")
-
 export Bulldozer
 export instance, instancenumber, frame
 export datalock, memolock, poweruplock
-export bulldozer_reduce
+export bulldozer_reduce, bulldozer_reduce2
 
 export combine_items, prune, prune!
 export grow_prune, coalesce_contributors
