@@ -73,21 +73,21 @@ println("leveraging logiset memo -\t$(fpgrowth_runtime_with_logiset_optimization
 
 ############################################################################################
 
-_nthreads = Threads.nthreads()
-println("\nParallel ModalFP-Growth benchmarking...")
-println("Threads number: $(_nthreads)")
-if _nthreads == 1
-    printstyled("Skipping benchmarking. Did you forget to set -t flag?", bold=true)
-else
-    # FPGrowth runtime with multi-threading enabled
-    fpgrowth_miner = Miner(X3, fpgrowth, manual_items, _itemsetmeasures, _rulemeasures)
-    fpgrowth_runtime_parallel = @elapsed mine!(fpgrowth_miner; parallel=true)
-
-    fpgrowth_miner = Miner(X3, fpgrowth, manual_items, _itemsetmeasures, _rulemeasures)
-    fpgrowth_runtime_parallel_logiset_optimizations = @elapsed mine!(
-        fpgrowth_miner; parallel=true)
-
-    println("Parallel Modal-FPGrowth elapsed time (in seconds):")
-    println("mining on fresh logiset -\t$(fpgrowth_runtime_parallel)")
-    println("leveraging logiset memo -\t$(fpgrowth_runtime_parallel_logiset_optimizations)")
-end
+# _nthreads = Threads.nthreads()
+# println("\nParallel ModalFP-Growth benchmarking...")
+# println("Threads number: $(_nthreads)")
+# if _nthreads == 1
+#     printstyled("Skipping benchmarking. Did you forget to set -t flag?", bold=true)
+# else
+#     # FPGrowth runtime with multi-threading enabled
+#     fpgrowth_miner = Miner(X3, fpgrowth, manual_items, _itemsetmeasures, _rulemeasures)
+#     fpgrowth_runtime_parallel = @elapsed mine!(fpgrowth_miner; parallel=true)
+#
+#     fpgrowth_miner = Miner(X3, fpgrowth, manual_items, _itemsetmeasures, _rulemeasures)
+#     fpgrowth_runtime_parallel_logiset_optimizations = @elapsed mine!(
+#         fpgrowth_miner; parallel=true)
+#
+#     println("Parallel Modal-FPGrowth elapsed time (in seconds):")
+#     println("mining on fresh logiset -\t$(fpgrowth_runtime_parallel)")
+#     println("leveraging logiset memo -\t$(fpgrowth_runtime_parallel_logiset_optimizations)")
+# end
