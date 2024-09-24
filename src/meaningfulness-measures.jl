@@ -129,7 +129,8 @@ end
 Link together two [`MeaningfulnessMeasure`](@ref), automatically defining
 [`globalof`](@ref)/[`localof`](@ref) and [`isglobalof`](@ref)/[`islocalof`](@ref).
 
-See also [`globalof`](@ref), [`localof`](@ref), [`isglobalof`](@ref), [`islocalof`](@ref).
+See also [`globalof`](@ref), [`isglobalof`](@ref), [`islocalof`](@ref), [`localof`](@ref),
+[`MeaningfulnessMeasure`](@ref).
 """
 macro linkmeas(gmeasname, lmeasname)
     quote

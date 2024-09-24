@@ -20,7 +20,7 @@
         lmemo::LmeasMemo                    # local memoization structure
         gmemo::GmeasMemo                    # global memoization structure
 
-        powerups::Powerup                   # mining algorithm powerups (see documentation)
+        powerups::MiningState                   # mining algorithm powerups (see documentation)
         info::Info                          # general informations
     end
 
@@ -95,7 +95,7 @@ struct Miner{
     lmemo::LmeasMemo                # local memoization structure
     gmemo::GmeasMemo                # global memoization structure
 
-    powerups::Powerup               # mining algorithm powerups (see documentation)
+    powerups::MiningState               # mining algorithm powerups (see documentation)
     info::Info                      # general informations
 
     function Miner(
@@ -358,15 +358,15 @@ end
 # Miner's specializations structures
 
 """
-    powerups(miner::Miner)::Powerup
+    powerups(miner::Miner)::MiningState
     powerups(miner::Miner, key::Symbol)
     powerups(miner::Miner, key::Symbol, inner_key)
 
 Getter for the entire powerups structure currently loaded in `miner`, or a specific powerup.
 
-See also [`haspowerup`](@ref), [`initpowerups`](@ref), [`Miner`](@ref), [`Powerup`](@ref).
+See also [`haspowerup`](@ref), [`initpowerups`](@ref), [`Miner`](@ref), [`MiningState`](@ref).
 """
-powerups(miner::Miner)::Powerup = miner.powerups
+powerups(miner::Miner)::MiningState = miner.powerups
 powerups(miner::Miner, key::Symbol) = miner.powerups[key]
 powerups(miner::Miner, key::Symbol, inner_key) = miner.powerups[key][inner_key]
 
@@ -375,7 +375,7 @@ powerups(miner::Miner, key::Symbol, inner_key) = miner.powerups[key][inner_key]
 
 Setter for the content of a specific field of `miner`'s [`powerups`](@ref).
 
-See also [`haspowerup`](@ref), [`initpowerups`](@ref), [`Miner`](@ref), [`Powerup`](@ref).
+See also [`haspowerup`](@ref), [`initpowerups`](@ref), [`Miner`](@ref), [`MiningState`](@ref).
 """
 powerups!(miner::Miner, key::Symbol, val) = miner.powerups[key] = val
 powerups!(miner::Miner, key::Symbol, inner_key, val) = miner.powerups[key][inner_key] = val
@@ -385,7 +385,7 @@ powerups!(miner::Miner, key::Symbol, inner_key, val) = miner.powerups[key][inner
 
 Return whether `miner` powerups field contains an entry `key`.
 
-See also [`Miner`](@ref), [`Powerup`](@ref), [`powerups`](@ref).
+See also [`Miner`](@ref), [`MiningState`](@ref), [`powerups`](@ref).
 """
 haspowerup(miner::Miner, key::Symbol) = haskey(miner |> powerups, key)
 
@@ -394,18 +394,18 @@ haspowerup(miner::Miner, key::Symbol) = haskey(miner |> powerups, key)
 
 This defines how [`Miner`](@ref)'s `powerup` field is filled to optimize the mining.
 """
-initpowerups(::Function, ::MineableData)::Powerup = Powerup()
+initpowerups(::Function, ::MineableData)::MiningState = MiningState()
 
 """
-    info(miner::Miner)::Powerup
+    info(miner::Miner)::MiningState
     info(miner::Miner, key::Symbol)
 
 Getter for the entire additional informations field inside a `miner`, or one of its specific
 entries.
 
-See also [`Miner`](@ref), [`Powerup`](@ref).
+See also [`Miner`](@ref), [`MiningState`](@ref).
 """
-info(miner::Miner)::Powerup = miner.info
+info(miner::Miner)::MiningState = miner.info
 info(miner::Miner, key::Symbol) = miner.info[key]
 
 """

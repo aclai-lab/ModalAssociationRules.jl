@@ -10,7 +10,7 @@
 
         lmemo::LmeasMemo
         itemsetmeasures::Vector{IMEAS}
-        powerups::Powerup
+        powerups::MiningState
 
         datalock::ReentrantLock
         memolock::ReentrantLock
@@ -36,7 +36,7 @@ struct Bulldozer{
 
     lmemo::LmeasMemo
     itemsetmeasures::Vector{IMEAS}
-    powerups::Powerup
+    powerups::MiningState
 
     datalock::ReentrantLock
     memolock::ReentrantLock
@@ -47,7 +47,7 @@ struct Bulldozer{
         ith_instance::Int64,
         items::Vector{I},
         itemsetmeasures::Vector{IMEAS};
-        powerups::Powerup=Powerup()
+        powerups::MiningState=MiningState()
     ) where {
         I<:Item,
         IMEAS<:MeaningfulnessMeasure
@@ -137,13 +137,13 @@ itemsetmeasures(
 )::Vector{<:MeaningfulnessMeasure} = bulldozer.itemsetmeasures
 
 """
-    powerups(bulldozer::Bulldozer)::Powerup
+    powerups(bulldozer::Bulldozer)::MiningState
     powerups(bulldozer::Bulldozer, key::Symbol)::Any
     powerups(bulldozer::Bulldozer, key::Symbol, inner_key)::Any
 
 Getter for the customizable dictionary wrapped by a [`Bulldozer`](@ref).
 """
-powerups(bulldozer::Bulldozer)::Powerup = lock(poweruplock(bulldozer)) do
+powerups(bulldozer::Bulldozer)::MiningState = lock(poweruplock(bulldozer)) do
     bulldozer.powerups
 end
 powerups(bulldozer::Bulldozer, key::Symbol)::Any = lock(poweruplock(bulldozer)) do

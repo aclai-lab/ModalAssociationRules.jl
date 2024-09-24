@@ -47,7 +47,7 @@ export localof, globalof
 export ARMSubject
 export LmeasMemoKey, LmeasMemo
 export GmeasMemoKey, GmeasMemo
-export Info, Powerup
+export Info, MiningState
 
 include("miner.jl")
 

@@ -10,7 +10,7 @@ Pages = ["getting-started.md"]
 
 In this introductory section you will learn about the main building blocks of ModalAssociationRules.jl. 
 Also if a good picture about *association rule mining* (ARM, from now onwards) is given during the documentation, to make the most out of this guide we suggest to read the following articles:
-- [association rule mining introduction and Apriori algorithm](https://ceur-ws.org/Vol-3284/492.pdf)
+- [association rule mining introduction and Apriori algorithm](http://ictcs2024.di.unito.it/wp-content/uploads/2024/08/ICTCS_2024_paper_16.pdf)
 - [FPGrowth algorithm](https://www.cs.sfu.ca/~jpei/publications/sigmod00.pdf)
 Those up above introduce two important algorithms, which are also built-in in this package. Moreover, the latter one is the state-of-the-art in the field of ARM.
 
@@ -153,10 +153,10 @@ info!(miner::Miner, key::Symbol, val)
 hasinfo(miner::Miner, key::Symbol)
 ```
 
-When writing your own mining algorithm, or when mining with a particular kind of dataset, you might need to specialize the [`Miner`](@ref), keeping, for example, custom meta data and data structures. To specialize a [`Miner`](@ref), you can fill a [`Powerup`](@ref) structure to fit your needs.
+When writing your own mining algorithm, or when mining with a particular kind of dataset, you might need to specialize the [`Miner`](@ref), keeping, for example, custom meta data and data structures. To specialize a [`Miner`](@ref), you can fill a [`MiningState`](@ref) structure to fit your needs.
 
 ```@docs
-Powerup
+MiningState
 powerups(miner::Miner)
 powerups!(miner::Miner, key::Symbol, val)
 haspowerup(miner::Miner, key::Symbol)

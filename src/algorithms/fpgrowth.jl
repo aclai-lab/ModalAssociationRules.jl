@@ -137,34 +137,14 @@ function projection(
     return fptree, HeaderTable(fptree; miner=miner)
 end
 
-"""
-    TODO: comment this
-"""
-function _fragments_reducer(
-    a::DefaultDict{Itemset,Int},
-    b::DefaultDict{Itemset,Int}
-)::DefaultDict{Itemset,Int}
-    for k in keys(b)
-        if haskey(a,k)
-            a[k] += b[k]
-        else
-            a[k] = b[k]
-        end
-    end
 
-    return a
-end
 
-############################################################################################
-#### Main FP-Growth logic ##################################################################
-############################################################################################
+# fpgrowth implementation starts here
 
 """
     fpgrowth(miner::Miner, X::MineableData; verbose::Bool=true)::Nothing
 
-FP-Growth algorithm,
-[as described here](https://www.cs.sfu.ca/~jpei/publications/sigmod00.pdf)
-but generalized to also work with modal logic.
+(Modal) FP-Growth algorithm, [as described here](http://ictcs2024.di.unito.it/wp-content/uploads/2024/08/ICTCS_2024_paper_16.pdf).
 
 # Arguments
 
@@ -218,6 +198,7 @@ function fpgrowth(
     # establish an arbitrary general lexicographic ordering,
     # then save it inside the miner as a powerup.
     incremental = 0
+    miner.powerups[:lexicographic_ordering] = Dict{Item,Int}([])
     for candidate in items(miner)
         # :lexicographic_ordering is only changed one time by the serial code;
         # algorithm should be correct also without this.
@@ -440,32 +421,34 @@ function _fpgrowth_count_phase(
 end
 
 """
-    initpowerups(::typeof(fpgrowth), ::MineableData)::Powerup
+    initpowerups(::typeof(fpgrowth), ::MineableData)::MiningState
 
 Powerups suite for FP-Growth algorithm.
 When initializing a [`Miner`](@ref) with [`fpgrowth`](@ref) algorithm, this defines
 how miner's `powerup` field is filled to optimize the mining.
 See also [`haspowerup`](@ref), [`powerup`](@ref).
 """
-function initpowerups(::typeof(fpgrowth), ::MineableData)::Powerup
-    return Powerup([
-        # given and instance I and an itemset λ, the default behaviour when computing
-        # local support is to perform model checking to establish in how many worlds
-        # the relation I,w ⊧ λ is satisfied.
-        # A numerical value is obtained, but the exact worlds in which the truth relation
-        # holds is not kept in memory by default.
-        # Here, however, we want to keep track of the relation.
-        # See `lsupport` implementation.
-        :instance_item_toworlds => Dict{Tuple{Int,Itemset},WorldMask}([]),
+function initpowerups(::typeof(fpgrowth), ::MineableData)::MiningState
+    # TODO - remove this
 
-        # when modal fpgrowth calls propositional fpgrowth multiple times, each call
-        # has to know its specific 1-length itemsets ordering;
-        # otherwise, the building process of fptrees is not correct anymore.
-        # To avoid race condition, the first integer in the dictionary's key
-        # contains the number of the current operating thread id.
-        :current_items_frequency => DefaultDict{Tuple{Int,Itemset},Int}(0),
-
-        # necessary to reshape all the extracted itemsets to a common ordering
-        :lexicographic_ordering => Dict{Item,Int}([])
+    return MiningState([
+        # # given and instance I and an itemset λ, the default behaviour when computing
+        # # local support is to perform model checking to establish in how many worlds
+        # # the relation I,w ⊧ λ is satisfied.
+        # # A numerical value is obtained, but the exact worlds in which the truth relation
+        # # holds is not kept in memory by default.
+        # # Here, however, we want to keep track of the relation.
+        # # See `lsupport` implementation.
+        # :instance_item_toworlds => Dict{Tuple{Int,Itemset},WorldMask}([]),
+#
+        # # when modal fpgrowth calls propositional fpgrowth multiple times, each call
+        # # has to know its specific 1-length itemsets ordering;
+        # # otherwise, the building process of fptrees is not correct anymore.
+        # # To avoid race condition, the first integer in the dictionary's key
+        # # contains the number of the current operating thread id.
+        # :current_items_frequency => DefaultDict{Tuple{Int,Itemset},Int}(0),
+#
+        # # necessary to reshape all the extracted itemsets to a common ordering
+        # :lexicographic_ordering => Dict{Item,Int}([])
     ])
 end
