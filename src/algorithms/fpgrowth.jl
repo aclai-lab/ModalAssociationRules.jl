@@ -241,7 +241,7 @@ function fpgrowth(
     # reduce all the local-memoization structures obtained before,
     # and proceed to compute global supports
     # local_results = reduce(bulldozer_reduce, local_results)
-    local_results = bulldozer_reduce2(local_results)
+    local_results = bulldozer_reduce(local_results)
     fpgrowth_fragments = load_bulldozer!(miner, local_results)
 
     # global setting

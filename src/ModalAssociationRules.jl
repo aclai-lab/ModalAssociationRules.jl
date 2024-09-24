@@ -49,6 +49,8 @@ export LmeasMemoKey, LmeasMemo
 export GmeasMemoKey, GmeasMemo
 export Info, Powerup
 
+include("miner.jl")
+
 export AbstractMiner, Miner
 export data, algorithm
 export itemsetmeasures, additemmeas
@@ -64,9 +66,14 @@ export info, info!, hasinfo
 export mine!, apply!, generaterules!
 export analyze
 
-export reincarnate
-
 export frame, allworlds, nworlds
+
+include("bulldozer.jl")
+
+export Bulldozer
+export instance, instancenumber, frame
+export datalock, memolock, poweruplock
+export bulldozer_reduce
 
 include("meaningfulness-measures.jl")
 
@@ -75,10 +82,6 @@ export lsupport, gsupport
 export lconfidence, gconfidence
 
 include("utils/mining-utilities.jl")
-export Bulldozer
-export instance, instancenumber, frame
-export datalock, memolock, poweruplock
-export bulldozer_reduce, bulldozer_reduce2
 
 export combine_items, prune, prune!
 export grow_prune, coalesce_contributors
