@@ -1,12 +1,18 @@
 """
-    apriori(miner::Miner, X::AbstractDataset; verbose::Bool=true)::Nothing
+    apriori(miner::Miner, X::MineableData; verbose::Bool=true)::Nothing
 
 Apriori algorithm, [as described here](https://ceur-ws.org/Vol-3284/492.pdf) but generalized
 to also work with modal logic.
 
-See also [`Miner`](@ref), [`SoleBase.AbstractDataset`](@ref).
+# Arguments
+
+-`miner`: miner containing the extraction parameterization;
+- `X`: data from which you want to mine association rules;
+- `verbose`: print informations about each iteration.
+
+See also [`Miner`](@ref), [`SoleBase.MineableData`](@ref).
 """
-function apriori(miner::Miner, X::AbstractDataset; verbose::Bool=false)::Nothing
+function apriori(miner::Miner, X::MineableData; verbose::Bool=false)::Nothing
     # candidates of length 1 are all the letters in our items
     candidates = Itemset.(items(miner))
 

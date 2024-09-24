@@ -10,7 +10,7 @@ using CategoricalArrays
 using DataStructures: OrderedDict
 
 function load_NATOPS(
-    dirpath::String="test/data/NATOPS",
+    dirpath::String=joinpath(dirname(pathof(ModalAssociationRules)), "../test/data/NATOPS"),
     fileprefix::String="NATOPS"
 )
     # if data is not locally available (e.g., in test/data/),

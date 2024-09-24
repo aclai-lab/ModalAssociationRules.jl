@@ -80,10 +80,10 @@ countmap(y[(!).(check_mask)])
 # φ = items[1]
 #
 # glob = 0
-# for i_instance in 1:ninstances(X)
+# for ith_instance in 1:ninstances(X)
 #     acc = 0
 #     for w in allw
-#         acc = acc + check(φ, X, i_instance, w)
+#         acc = acc + check(φ, X, ith_instance, w)
 #     end
 #
 #     if acc > local_threshold

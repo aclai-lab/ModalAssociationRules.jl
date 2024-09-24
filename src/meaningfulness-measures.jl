@@ -7,7 +7,7 @@ LOCAL_POWERUP_SYMBOLS = [
 ]
 """
 Collection of [`powerups`](@ref) references which are injected when creating a generic
-local meaningfulness measure using [`gmeas`](@ref).
+global meaningfulness measure using [`gmeas`](@ref).
 """
 GLOBAL_POWERUP_SYMBOLS = []
 
@@ -28,13 +28,13 @@ macro lmeas(measname, measlogic)
         Core.@__doc__ function $(esc(fname))(
             subject::ARMSubject,
             instance::LogicalInstance,
-            miner::Miner
+            miner::AbstractMiner
         )
             # retrieve logiset and the specific instance
-            X, i_instance = instance.s, instance.i_instance
+            X, ith_instance = instance.s, instance.i_instance
 
             # key to access memoization structures
-            memokey = LmeasMemoKey((Symbol($(esc(fname))), subject, i_instance))
+            memokey = LmeasMemoKey((Symbol($(esc(fname))), subject, ith_instance))
 
             # leverage memoization if possible
             memoized = localmemo(miner, memokey)
@@ -43,23 +43,24 @@ macro lmeas(measname, measlogic)
             end
 
             # compute local measure
-            response = $(esc(measlogic))(subject, instance, miner)
+            response = $(esc(measlogic))(subject, X, ith_instance, miner)
             measure = response[:measure]
 
             # save measure in memoization structure;
             # also, do more stuff depending on `powerups` dispatch (see the documentation).
             localmemo!(miner, memokey, measure)
+
             for powerup in LOCAL_POWERUP_SYMBOLS
                 # the numerical value necessary to save more informations about the relation
-                # between an instance and an subject must be obtained by the internal logic
+                # between an instance and a subject must be obtained by the internal logic
                 # of the meaningfulness measure callback.
                 if haspowerup(miner, powerup) && haskey(response, powerup)
-                    powerups(miner, powerup)[(i_instance, subject)] = response[powerup]
+                    powerups!(miner, powerup, (ith_instance,subject), response[powerup])
                 end
             end
             # Note that the powerups system could potentially irrorate the entire package
             # and could be expandend/specialized;
-            # for example, a category of powerups is necessary to fill (i_instance, subject)
+            # e.g., a category of powerups is necessary to fill (ith_instance,subject)
             # fields, other are necessary to save informations about something else.
 
             return measure
@@ -107,9 +108,10 @@ macro gmeas(measname, measlogic)
             # also, do more stuff depending on `powerups` dispatch (see the documentation).
             # to know more, see `lmeas` comments.
             globalmemo!(miner, memokey, measure)
+
             for powerup in GLOBAL_POWERUP_SYMBOLS
                 if haspowerup(miner, powerup) && haskey(response, powerup)
-                    powerups(miner, powerup)[(subject)] = response[powerup]
+                    powerups!(miner, powerup, (subject), response[powerup])
                 end
             end
 
@@ -130,33 +132,36 @@ Link together two [`MeaningfulnessMeasure`](@ref), automatically defining
 See also [`globalof`](@ref), [`localof`](@ref), [`isglobalof`](@ref), [`islocalof`](@ref).
 """
 macro linkmeas(gmeasname, lmeasname)
-
     quote
-        ModalAssociationRules.islocalof(::typeof($(lmeasname)), ::typeof($(gmeasname))) = true
-        ModalAssociationRules.isglobalof(::typeof($(gmeasname)), ::typeof($(lmeasname))) = true
+        ModalAssociationRules.islocalof(
+            ::typeof($(lmeasname)), ::typeof($(gmeasname))) = true
+        ModalAssociationRules.isglobalof(
+            ::typeof($(gmeasname)), ::typeof($(lmeasname))) = true
         ModalAssociationRules.localof(::typeof($(gmeasname))) = $(lmeasname)
         ModalAssociationRules.globalof(::typeof($(lmeasname))) = $(gmeasname)
     end
 end
 
+# core logic of `lsupport`, as a lambda function;
+# `miner` is an unused argument, but is required since this function must adhere to local
+# measures interface (see `@lmeas` macro)
+_lsupport_logic = (itemset, X, ith_instance, miner) -> begin
+    # bool vector, representing on which world an Itemset holds
+    wmask = [
+        check(toformula(itemset), X, ith_instance, w) for w in allworlds(X, ith_instance)]
 
-_lsupport_logic = (itemset, instance, miner) -> begin
-    X, i_instance = instance.s, instance.i_instance # dataset(miner)
-
-    # Bool vector, representing on which world an Itemset holds
-    wmask = [check(toformula(itemset), X, i_instance, w) for w in allworlds(X, i_instance)]
-
-    # Return the result, and eventually the information needed to support powerups
+    # return the result, and eventually the information needed to support powerups
     return Dict(
-        :measure => count(wmask) / nworlds(X, i_instance),
+        :measure => count(wmask) / nworlds(X, ith_instance),
         :instance_item_toworlds => wmask,
     )
 end
 
+# core logic of `gsupport`, as a lambda function
 _gsupport_logic = (itemset, X, threshold, miner) -> begin
     _measure = sum([
-        lsupport(itemset, getinstance(X, i_instance), miner) >= threshold
-        for i_instance in 1:ninstances(X)
+        lsupport(itemset, getinstance(X, ith_instance), miner) >= threshold
+        for ith_instance in 1:ninstances(X)
     ]) / ninstances(X)
 
     return Dict(:measure => _measure)
@@ -202,9 +207,9 @@ See also [`Miner`](@ref), [`LogicalInstance`](@ref), [`Itemset`](@ref),
 """
 @gmeas gsupport _gsupport_logic
 
-_lconfidence_logic = (rule, instance, miner) -> begin
-    den = lsupport(antecedent(rule), instance, miner)
-    num = lsupport(convert(Itemset, rule), instance, miner)
+_lconfidence_logic = (rule, X, ith_instance, miner) -> begin
+    den = lsupport(antecedent(rule), getinstance(X, ith_instance), miner)
+    num = lsupport(convert(Itemset, rule), getinstance(X, ith_instance), miner)
 
     # Return the result, and eventually the information needed to support powerups
     return Dict(:measure => num/den)
@@ -223,11 +228,11 @@ end
 """
     function lconfidence(
         rule::ARule,
-        instance::LogicalInstance;
+        ith_instance::LogicalInstance;
         miner::Union{Nothing,Miner}=nothing
     )::Float64
 
-Compute the local confidence for the given `rule` in the given `instance`.
+Compute the local confidence for the given `rule` in the given instance.
 
 Local confidence is the ratio between [`lsupport`](@ref) of an [`ARule`](@ref) on
 a [`LogicalInstance`](@ref) and the [`lsupport`](@ref) of the [`antecedent`](@ref) of the
@@ -263,5 +268,7 @@ See also [`antecedent`](@ref), [`ARule`](@ref), [`Miner`](@ref), [`gsupport`](@r
 """
 @gmeas gconfidence _gconfidence_logic
 
+# all the meaningfulness measures defined in this file are linked here,
+# meaning that a global measure is associated to its corresponding local one.
 @linkmeas gsupport lsupport
 @linkmeas gconfidence lconfidence

@@ -8,6 +8,11 @@ using StatsBase
 
 import ModalAssociationRules.children
 
+if Threads.nthreads() == 1
+    printstyled("Skipping check on parallel ModalFP-Growth." *
+        "\nDid you forget to set -t?\n", color=:light_yellow)
+end
+
 # load NATOPS dataset and convert it to a Logiset
 X_df, y = load_NATOPS();
 X1 = scalarlogiset(X_df)
@@ -39,7 +44,7 @@ end
 # check if local support coincides for each frequent itemset
 function isequal_lsupp(miner1::Miner, miner2::Miner)
     for itemset in freqitems(miner1)
-        for ninstance in 1:(miner1 |> dataset |> ninstances)
+        for ninstance in 1:(miner1 |> data |> ninstances)
             miner1_lsupp = get(miner1.lmemo, (:lsupport, itemset, ninstance), -1.0)
             miner2_lsupp = get(miner2.lmemo, (:lsupport, itemset, ninstance), -1.0)
 
@@ -63,8 +68,13 @@ function isequal_lsupp(miner1::Miner, miner2::Miner)
 end
 
 function compare_freqitems(miner1::Miner, miner2::Miner)
-    mine!(miner1)
-    mine!(miner2)
+    if !info(miner1, :istrained)
+        mine!(miner1)
+    end
+
+    if !info(miner2, :istrained)
+        mine!(miner2)
+    end
 
     miner1_freqs = freqitems(miner1)
     miner2_freqs = freqitems(miner2)
@@ -88,9 +98,9 @@ function _compare_arules(miner1::Miner, miner2::Miner, rule::ARule)
     @test miner1.gmemo[(:gconfidence, rule)] == miner2.gmemo[(:gconfidence, rule)]
 
     # local confidence comparison;
-    for ninstance in miner1 |> dataset |> ninstances
-        lconfidence(rule, SoleLogics.getinstance(dataset(miner1), ninstance), miner1)
-        lconfidence(rule, SoleLogics.getinstance(dataset(miner2), ninstance), miner2)
+    for ninstance in miner1 |> data |> ninstances
+        lconfidence(rule, SoleLogics.getinstance(data(miner1), ninstance), miner1)
+        lconfidence(rule, SoleLogics.getinstance(data(miner2), ninstance), miner2)
 
         @test miner1.lmemo[(:lconfidence, rule, ninstance)] ===
               miner2.lmemo[(:lconfidence, rule, ninstance)]
@@ -116,25 +126,21 @@ function compare(miner1::Miner, miner2::Miner)
     compare_arules(miner1, miner2)
 end
 
-# 1st comparison
-# print("Debug print: comparison #1\n")
-
-_1_items = Vector{Item}([manual_p, manual_q, manual_r, manual_lp, manual_lq, manual_lr])
+# 1st comparison: FP-Growth vs its multithreaded variation
+_1_items = Vector{Item}([manual_p, manual_q, manual_lp, manual_lq])
 _1_itemsetmeasures = [(gsupport, 0.1, 0.1)]
 _1_rulemeasures = [(gconfidence, 0.2, 0.2)]
 
-apriori_miner = Miner(X2, apriori, _1_items, _1_itemsetmeasures, _1_rulemeasures)
+apriori_miner = Miner(X1, apriori, _1_items, _1_itemsetmeasures, _1_rulemeasures)
 fpgrowth_miner = Miner(X2, fpgrowth, _1_items, _1_itemsetmeasures, _1_rulemeasures)
 
 compare(apriori_miner, fpgrowth_miner)
 
 # checking for re-mining block
-@test apply!(apriori_miner, dataset(apriori_miner)) == Nothing
-@test apply!(fpgrowth_miner, dataset(fpgrowth_miner)) == Nothing
+@test apply!(apriori_miner, data(apriori_miner)) == Nothing
+@test apply!(fpgrowth_miner, data(fpgrowth_miner)) == Nothing
 
-# 2nd comparison
-# print("Debug print: comparison #2\n")
-
+# 2nd comparisons: Apriori vs its multithreaded variation
 _2_items = Vector{Item}([manual_p, manual_q, manual_r])
 _2_itemsetmeasures = [(gsupport, 0.5, 0.7)]
 _2_rulemeasures = [(gconfidence, 0.7, 0.7)]
@@ -144,21 +150,17 @@ fpgrowth_miner = Miner(X2, fpgrowth, _2_items, _2_itemsetmeasures, _2_rulemeasur
 
 compare(apriori_miner, fpgrowth_miner)
 
-# 3rd comparisons
-# print("Debug print: comparison #3\n")
-
+# 3rd comparisons: FP-Growth vs its multithreaded variation
 _3_items = Vector{Item}([manual_lp, manual_lq, manual_lr])
 _3_itemsetmeasures = [(gsupport, 0.8, 0.8)]
 _3_rulemeasures = [(gconfidence, 0.7, 0.7)]
 
-apriori_miner = Miner(X2, apriori, _3_items, _3_itemsetmeasures, _3_rulemeasures)
+apriori_miner = Miner(X3, apriori, _3_items, _3_itemsetmeasures, _3_rulemeasures)
 fpgrowth_miner = Miner(X2, fpgrowth, _3_items, _3_itemsetmeasures, _3_rulemeasures)
 
-compare(apriori_miner, fpgrowth_miner)
+compare(fpgrowth_miner, apriori_miner)
 
-# 4th comparisons
-# print("Debug print: comparison #4\n")
-
+# 4th comparisons: Apriori vs FP-Growth
 _4_items = Vector{Item}([manual_q, manual_r, manual_lp, manual_lr])
 _4_itemsetmeasures = [(gsupport, 0.4, 0.4)]
 _4_rulemeasures = [(gconfidence, 0.7, 0.7)]
@@ -168,9 +170,7 @@ fpgrowth_miner = Miner(X2, fpgrowth, _4_items, _4_itemsetmeasures, _4_rulemeasur
 
 compare(apriori_miner, fpgrowth_miner)
 
-# 5th comparisons
-# print("Debug print: comparison #5\n)
-
+# 5th comparisons: Apriori vs FP-Growth
 X_df_1_have_command = X_df[1:30, :]
 X_1_have_command = scalarlogiset(X_df_1_have_command)
 

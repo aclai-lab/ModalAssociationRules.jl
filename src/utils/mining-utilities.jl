@@ -1,6 +1,6 @@
-############################################################################################
-#### Itemsets ##############################################################################
-############################################################################################
+# Bulldozer utilities
+
+# Itemset utilities
 
 """
     combine_items(itemsets::Vector{<:Itemset}, newlength::Integer)
@@ -53,9 +53,9 @@ function grow_prune(candidates::Vector{Itemset}, frequents::Vector{Itemset}, k::
         )
 end
 
-############################################################################################
-#### Association rules #####################################################################
-############################################################################################
+
+
+# ARule utilities
 
 """
     function anchor_rulecheck(rule::ARule)::Bool
@@ -181,7 +181,7 @@ See also [`ARule`](@ref), [`Miner`](@ref), [`Itemset`](@ref), [`rulemeasures`](@
             for meas in rulemeasures(miner)
                 (gmeas_algo, lthreshold, gthreshold) = meas
                 gmeas_result = gmeas_algo(
-                    currentrule, dataset(miner), lthreshold, miner)
+                    currentrule, data(miner), lthreshold, miner)
 
                 # some meaningfulness measure test is failed
                 if gmeas_result < gthreshold
@@ -203,9 +203,10 @@ See also [`ARule`](@ref), [`Miner`](@ref), [`Itemset`](@ref), [`rulemeasures`](@
     end
 end
 
-############################################################################################
-#### Miner #################################################################################
-############################################################################################
+
+
+# Miner utilities
+
 # TODO: rename those in local_threshold_integer/global_threshold_integer
 """
     getlocalthreshold_integer(miner::Miner, meas::Function)
@@ -213,7 +214,7 @@ end
 See [`getlocalthreshold`](@ref).
 """
 function getlocalthreshold_integer(miner::Miner, meas::Function)
-    _nworlds = SoleLogics.frame(dataset(miner), 1) |> SoleLogics.nworlds
+    _nworlds = SoleLogics.frame(data(miner), 1) |> SoleLogics.nworlds
     return convert(Int64, floor(getlocalthreshold(miner, meas) * _nworlds))
 end
 
@@ -224,5 +225,5 @@ See [`getglobalthreshold`](@ref).
 """
 function getglobalthreshold_integer(miner::Miner, meas::Function)
     return convert(
-            Int64, floor(getglobalthreshold(miner, meas) * ninstances(dataset(miner))))
+            Int64, floor(getglobalthreshold(miner, meas) * ninstances(data(miner))))
 end

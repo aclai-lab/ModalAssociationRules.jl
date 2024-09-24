@@ -90,7 +90,7 @@ EXPERIMENTS_IDS = [11]
 
 """
     function runexperiment(
-        X::AbstractDataset,
+        X::MineableData,
         algorithm::Function,
         items::Vector{Item},
         itemsetmeasures::Vector{<:MeaningfulnessMeasure},
@@ -108,7 +108,7 @@ See also [`ARule`](@ref), [`Itemset`](@ref), [`MeaningfulnessMeasure`](@ref),
 [`Miner`](@ref).
 """
 function runexperiment(
-	X::AbstractDataset,
+	X::MineableData,
 	algorithm::Function,
 	items::Vector{Item},
 	itemsetmeasures::Vector{<:MeaningfulnessMeasure},
@@ -178,26 +178,28 @@ end
     ) where {L<:SoleData.AbstractLogiset}
 
 # Arguments
-* `miner`: the (already used) miner from which association rules are taken;
-* `logisets`: vector of logisets, one for each class;
-* `rulebouncer`: function taking a float value (between 0 and 1), that represents
+
+- `miner`: the (already used) miner from which association rules are taken;
+- `logisets`: vector of logisets, one for each class;
+- `rulebouncer`: function taking a float value (between 0 and 1), that represents
     a confidence level: this can be tweaked to limit the size of this comparison;
-* `targetclass`: the class on which miner was originally used;
-* `suppthreshold`: local support threshold used by global support calls invoked inside
+- `targetclass`: the class on which miner was originally used;
+- `suppthreshold`: local support threshold used by global support calls invoked inside
     this function, when measuring the meaningfulness measures of an association rule on
     the other classes (those who are not `targetclass`),
-* `sortby`: either `:confmean` or `:entropy`, establishes how rows are sorted:
+- `sortby`: either `:confmean` or `:entropy`, establishes how rows are sorted:
     in the former case, they are sorted w.r.t. lower mean confidence on classes which are
     not `targetclass`, while in the latter they are sorted in ascending order
     w.r.t `1-entropy(confidences)`;
-* `reportname`: name of the file where output is stored;
-* `classnames`: labels to associated with each class.
+- `reportname`: name of the file where output is stored;
+- `classnames`: labels to associated with each class.
 
 Given a consumed [`Miner`](@ref), that is, a miner which already performed mining,
 print in a file (placed in `results/reportname`) a report regarding the mined
 [`ARule`](@ref) whose global confidence is in a range established by `confidencebouncer`.
 
-# Example
+# Examples
+
 ```julia-repl
 julia> runcomparison(
     _1_miner,
