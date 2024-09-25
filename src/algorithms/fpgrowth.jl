@@ -249,7 +249,7 @@ function _fpgrowth(miner::Bulldozer)
         # TODO we take for granted that the only measure related to items is always support
         for (_, lthreshold, _) in itemsetmeasures(miner)
         for candidate in Itemset.(items(miner))
-        if lsupport(candidate, instance(miner), miner) >= lthreshold
+        if lsupport(candidate, data(miner), miner) >= lthreshold
     ] |> unique
 
     for (nworld, w) in enumerate(kripkeframe |> SoleLogics.allworlds)

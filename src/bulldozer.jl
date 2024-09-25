@@ -83,31 +83,20 @@ struct Bulldozer{
 end
 
 """
-    instance(bulldozer::Bulldozer)
+    data(bulldozer::Bulldozer)
 
 Getter for the instance wrapped by `bulldozer`.
 See also [`Bulldozer`](@ref), [`SoleLogics.LogicalInstance`](@ref).
 """
-instance(bulldozer::Bulldozer) = bulldozer.instance
+data(bulldozer::Bulldozer) = bulldozer.instance
 
 """
     instancenumber(bulldozer::Bulldozer)
 
 Retrieve the instance number associated with `bulldozer`.
-See also [`Bulldozer`](@ref), [`instance(bulldozer::Bulldozer)`](@ref).
+See also [`Bulldozer`](@ref), [`data(::Bulldozer)`](@ref).
 """
 instancenumber(bulldozer::Bulldozer) = bulldozer.ith_instance
-
-"""
-Getter for the frame of the instance wrapped by `bulldozer`.
-See also [`instance(bulldozer::Bulldozer)`](@ref).
-"""
-function SoleLogics.frame(bulldozer::Bulldozer)
-    # consider the instance wrapped by `bulldozer`;
-    # get retrieve Kripke frame shape by the instance's parent Logiset.
-    _instance = instance(bulldozer)
-    SoleLogics.frame(_instance.s, instancenumber(bulldozer))
-end
 
 """
     datalock(bulldozer::Bulldozer)
@@ -171,17 +160,26 @@ miningstate(
     (bulldozer.miningstate[key])[inner_key]
 end
 
+"""
+    miningstate!(miner::Bulldozer, key::Symbol, val)
+    miningstate!(miner::Bulldozer, key::Symbol, inner_key, val)
+
+TODO -
+"""
 miningstate!(miner::Bulldozer, key::Symbol, val) = lock(miningstatelock(miner)) do
     miner.miningstate[key] = val
 end
-miningstate!(miner::Bulldozer, key::Symbol, inner_key, val) = lock(miningstatelock(miner)) do
-    miner.miningstate[key][inner_key] = val
+miningstate!(miner::Bulldozer, key::Symbol, inner_key, val) = begin
+    lock(miningstatelock(miner)) do
+        miner.miningstate[key][inner_key] = val
+    end
 end
 
 """
     hasminingstate(miner::Bulldozer, key::Symbol)
 
 Return whether `bulldozer` miningstate field contains an entry `key`.
+See also [`Bulldozer`](@ref), [`miningstate`](@ref), [`miningstate!`](@ref).
 """
 hasminingstate(miner::Bulldozer, key::Symbol) = lock(miningstatelock(miner)) do
     haskey(miner |> miningstate, key)

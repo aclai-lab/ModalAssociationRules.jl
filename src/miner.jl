@@ -374,41 +374,45 @@ end
 # Miner's mining state structure
 
 """
-    miningstate(miner::Miner)::MiningState
-    miningstate(miner::Miner, key::Symbol)
-    miningstate(miner::Miner, key::Symbol, inner_key)
+    miningstate(miner::AbstractMiner)::MiningState
+    miningstate(miner::AbstractMiner, key::Symbol)
+    miningstate(miner::AbstractMiner, key::Symbol, inner_key)
 
 Getter for the entire [`MiningState`](@ref) structure currently loaded in `miner`,
 a field within it or the value of a specific field.
 
-See also [`hasminingstate`](@ref), [`initminingstate`](@ref), [`Miner`](@ref),
+See also [`AbstractMiner`](@ref), [`hasminingstate`](@ref), [`initminingstate`](@ref),
 [`MiningState`](@ref).
 """
-miningstate(miner::Miner)::MiningState = miner.miningstate
-miningstate(miner::Miner, key::Symbol) = miner.miningstate[key]
-miningstate(miner::Miner, key::Symbol, inner_key) = miner.miningstate[key][inner_key]
+miningstate(miner::AbstractMiner)::MiningState = miner.miningstate
+miningstate(miner::AbstractMiner, key::Symbol) = miner.miningstate[key]
+miningstate(miner::AbstractMiner, key::Symbol, inner_key) = begin
+    miner.miningstate[key][inner_key]
+end
 
 """
-    miningstate!(miner::Miner, key::Symbol, val)
+    miningstate!(miner::AbstractMiner, key::Symbol, val)
 
 Setter for the content of a specific field of `miner`'s [`miningstate`](@ref).
 
-See also [`hasminingstate`](@ref), [`initminingstate`](@ref), [`Miner`](@ref),
+See also [`AbstractMiner`](@ref), [`hasminingstate`](@ref), [`initminingstate`](@ref),
 [`MiningState`](@ref).
 """
-miningstate!(miner::Miner, key::Symbol, val) = miner.miningstate[key] = val
-miningstate!(miner::Miner, key::Symbol, inner_key, val) = begin
+miningstate!(miner::AbstractMiner, key::Symbol, val) = miner.miningstate[key] = val
+miningstate!(miner::AbstractMiner, key::Symbol, inner_key, val) = begin
     miner.miningstate[key][inner_key] = val
 end
 
 """
-    hasminingstate(miner::Miner, key::Symbol)
+    hasminingstate(miner::AbstractMiner, key::Symbol)
 
 Return whether `miner` [`miningstate`](@ref) contains a field `key`.
 
-See also [`Miner`](@ref), [`MiningState`](@ref), [`miningstate`](@ref).
+See also [`AbstractMiner`](@ref), [`MiningState`](@ref), [`miningstate`](@ref).
 """
-hasminingstate(miner::Miner, key::Symbol) = haskey(miner |> miningstate, key)
+hasminingstate(miner::AbstractMiner, key::Symbol) = begin
+    haskey(miner |> miningstate, key)
+end
 
 """
     initminingstate(::Function, ::MineableData)
@@ -601,7 +605,13 @@ end
 
 # Some utilities and new dispatches of external packages
 
-function SoleLogics.frame(miner::Miner)
+"""
+    function SoleLogics.frame(miner::AbstractMiner)
+
+Getter for the frame of a generic piece of miner`s data field.
+See also [`AbstractMiner`](@ref), [`data`](@ref), [`Miner`](@ref).
+"""
+function SoleLogics.frame(miner::AbstractMiner)
     return SoleLogics.frame(data(miner), 1)
 end
 
