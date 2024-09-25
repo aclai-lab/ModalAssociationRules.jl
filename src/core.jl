@@ -504,15 +504,15 @@ Additional informations associated with an [`ARMSubject`](@ref) that can be used
 specialize any concrete type deriving from [`AbstractMiner`](@ref), thus augmenting its
 capabilities.
 
-To understand how to specialize a [`Miner`](@ref), see [`haspowerup`](@ref),
-[`initpowerups`](@ref), ['powerups`](@ref), [`powerups!`](@ref).
+To understand how to specialize a [`Miner`](@ref), see [`hasminingstate`](@ref),
+[`initminingstate`](@ref), ['miningstate`](@ref), [`miningstate!`](@ref).
 """
 const MiningState = Dict{Symbol,Any}
 
 """
     const Info = Dict{Symbol,Any}
 
-Generic setting storage inside [`Miner`](@ref) structures.
+Storage reserved to metadata about mining (e.g., execution time).
 
 See also [`info`](@ref), [`info!`](@ref), [`hasinfo`](@ref), [`Miner`](@ref).
 """

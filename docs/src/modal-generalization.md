@@ -22,5 +22,5 @@ Contributors
 contributors
 contributors!
 
-initpowerups(::typeof(fpgrowth), ::AbstractDataset)
+initminingstate(::typeof(fpgrowth), ::AbstractDataset)
 ```

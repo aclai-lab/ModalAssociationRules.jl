@@ -446,13 +446,13 @@ See also [`AbstractMiner`](@ref), [`gsupport`](@ref), [`HeaderTable`](@ref),
 function checksanity!(htable::HeaderTable, miner::AbstractMiner)::Bool
     _issorted = issorted(
         items(htable),
-        by=t -> powerups(miner, :current_items_frequency)[Itemset(t)],
+        by=t -> miningstate(miner, :current_items_frequency)[Itemset(t)],
         rev=true
     )
 
     # force sorting if needed
     if !_issorted
-        sort!(items(htable), by=t -> powerups(
+        sort!(items(htable), by=t -> miningstate(
             miner, :current_items_frequency)[Itemset(t)],
             rev=true
         )
@@ -515,7 +515,7 @@ function grow!(
     end
 
     # sorting must be guaranteed: remember an FPTree essentially is a prefix tree
-    sort!(items(_itemset), by=t -> powerups(
+    sort!(items(_itemset), by=t -> miningstate(
         miner, :current_items_frequency)[Itemset(t)], rev=true)
 
         # retrieve the item to grow the tree, and its count

@@ -54,7 +54,7 @@ function patternbase(
         # requires to consider the items inside them (so, the "non-enhanced" part).
         sort!(
             items(_itemset),
-            by=t -> powerups(miner, :current_items_frequency)[Itemset(t)],
+            by=t -> miningstate(miner, :current_items_frequency)[Itemset(t)],
             rev=true
         )
 
@@ -196,13 +196,13 @@ function fpgrowth(
     end
 
     # establish an arbitrary general lexicographic ordering,
-    # then save it inside the miner as a powerup.
+    # then save it inside the miner as a key.
     incremental = 0
-    miner.powerups[:lexicographic_ordering] = Dict{Item,Int}([])
+    miner.miningstate[:lexicographic_ordering] = Dict{Item,Int}([])
     for candidate in items(miner)
         # :lexicographic_ordering is only changed one time by the serial code;
         # algorithm should be correct also without this.
-        powerups(miner, :lexicographic_ordering)[candidate] = incremental
+        miningstate(miner, :lexicographic_ordering)[candidate] = incremental
         incremental += 1
     end
 
@@ -240,10 +240,6 @@ end
 
 # `fpgrowth` main logic
 function _fpgrowth(miner::Bulldozer)
-    # this will be used by the miner to understand how to order the items of each itemset
-    miner.powerups[:current_items_frequency] = DefaultDict{Itemset,Int}(0)
-    miner.powerups[:instance_item_toworlds] = Dict{Tuple{Int,Itemset},WorldMask}([])
-
     kripkeframe = frame(miner)
     _nworlds = kripkeframe |> SoleLogics.nworlds
     nworld_to_itemset = [Itemset() for _ in 1:_nworlds]
@@ -260,14 +256,14 @@ function _fpgrowth(miner::Bulldozer)
         nworld_to_itemset[nworld] = [
             itemset
             for itemset in frequents
-            if powerups(miner, :instance_item_toworlds
+            if miningstate(miner, :instance_item_toworlds
                 )[(instancenumber(miner), itemset)][nworld] > 0
         ] |> union
 
         # count 1-length frequent itemsets frequency;
-        # a.k.a prepare miner internal powerups state to handle an FPGrowth call.
+        # a.k.a prepare miner internal miningstate state to handle an FPGrowth call.
         for item in nworld_to_itemset[nworld]
-            powerups(miner,
+            miningstate(miner,
                 :current_items_frequency)[Itemset(item)] += 1
         end
     end
@@ -395,7 +391,7 @@ function _fpgrowth_count_phase(
         # each combo must be reshaped, following a certain order specified
         # universally by the miner.
 
-        sort!(items(combo), by=t -> powerups(miner, :lexicographic_ordering, t))
+        sort!(items(combo), by=t -> miningstate(miner, :lexicographic_ordering, t))
 
         # instance for which we want to update local support
         memokey = (:lsupport, combo, instancenumber(miner))
@@ -421,34 +417,28 @@ function _fpgrowth_count_phase(
 end
 
 """
-    initpowerups(::typeof(fpgrowth), ::MineableData)::MiningState
+    initminingstate(::typeof(fpgrowth), ::MineableData)::MiningState
 
-Powerups suite for FP-Growth algorithm.
-When initializing a [`Miner`](@ref) with [`fpgrowth`](@ref) algorithm, this defines
-how miner's `powerup` field is filled to optimize the mining.
-See also [`haspowerup`](@ref), [`powerup`](@ref).
+[`MiningState`](@ref) fields levereged when executing FP-Growth algorithm.
+
+See also [`hasminingstate`](@ref), [`MiningState`](@ref), [`miningstate`](@ref).
 """
-function initpowerups(::typeof(fpgrowth), ::MineableData)::MiningState
-    # TODO - remove this
-
+function initminingstate(::typeof(fpgrowth), ::MineableData)::MiningState
     return MiningState([
-        # # given and instance I and an itemset λ, the default behaviour when computing
-        # # local support is to perform model checking to establish in how many worlds
-        # # the relation I,w ⊧ λ is satisfied.
-        # # A numerical value is obtained, but the exact worlds in which the truth relation
-        # # holds is not kept in memory by default.
-        # # Here, however, we want to keep track of the relation.
-        # # See `lsupport` implementation.
-        # :instance_item_toworlds => Dict{Tuple{Int,Itemset},WorldMask}([]),
-#
-        # # when modal fpgrowth calls propositional fpgrowth multiple times, each call
-        # # has to know its specific 1-length itemsets ordering;
-        # # otherwise, the building process of fptrees is not correct anymore.
-        # # To avoid race condition, the first integer in the dictionary's key
-        # # contains the number of the current operating thread id.
-        # :current_items_frequency => DefaultDict{Tuple{Int,Itemset},Int}(0),
-#
-        # # necessary to reshape all the extracted itemsets to a common ordering
-        # :lexicographic_ordering => Dict{Item,Int}([])
+        # given and instance I and an itemset λ, the default behaviour when computing
+        # local support is to perform model checking to establish in how many worlds
+        # the relation I,w ⊧ λ is satisfied;
+        # a numerical value is obtained, but the exact worlds in which the truth relation
+        # holds is not kept in memory. We save them in thanks to this field.
+        # See also `lsupport` implementation.
+        :instance_item_toworlds => Dict{Tuple{Int,Itemset},WorldMask}([]),
+
+        # when modal fpgrowth calls propositional fpgrowth multiple times, each call
+        # has to know its specific 1-length itemsets ordering;
+        # otherwise, the building process of fptrees is not correct anymore.
+        :current_items_frequency => DefaultDict{Itemset,Int}(0),
+
+        # necessary to reshape all the extracted itemsets to a common ordering
+        :lexicographic_ordering => Dict{Item,Int}([])
     ])
 end

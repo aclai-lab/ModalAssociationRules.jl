@@ -53,15 +53,15 @@ include("miner.jl")
 
 export AbstractMiner, Miner
 export data, algorithm
-export itemsetmeasures, additemmeas
-export rulemeasures, addrulemeas
+export itemsetmeasures, additemsetmeasure
+export rulemeasures, addrulemeasure
 export freqitems, arules
 export measures, findmeasure
 export getlocalthreshold, getglobalthreshold
 export localmemo, localmemo!
 export globalmemo, globalmemo!
 
-export powerups, powerups!, haspowerup, initpowerups
+export miningstate, miningstate!, hasminingstate, initminingstate
 export info, info!, hasinfo
 export mine!, apply!, generaterules!
 export analyze
@@ -72,7 +72,7 @@ include("bulldozer.jl")
 
 export Bulldozer
 export instance, instancenumber, frame
-export datalock, memolock, poweruplock
+export datalock, memolock, miningstatelock
 export bulldozer_reduce
 
 include("meaningfulness-measures.jl")

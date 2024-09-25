@@ -3,25 +3,35 @@
         I<:Item,
         IMEAS<:MeaningfulnessMeasure
     } <: AbstractMiner
+        # reference to a modal dataset ith instance
         instance::SoleLogics.LogicalInstance
         ith_instance::Int64
 
-        items::Vector{I}
+        items::Vector{I}                # alphabet
 
-        lmemo::LmeasMemo
-        itemsetmeasures::Vector{IMEAS}
-        powerups::MiningState
+        itemsetmeasures::Vector{IMEAS}  # measures associated with mined itemsets
 
+        lmemo::LmeasMemo                # meaningfulness measures memoization structure
+
+        miningstate::MiningState        # special fields related to mining algorithms
+
+        # locks on data, memoization structure and miningstate structure
         datalock::ReentrantLock
         memolock::ReentrantLock
-        poweruplock::ReentrantLock
+        miningstatelock::ReentrantLock
     }
 
-Thread-safe specialized structure, useful to handle mining within a modal `instance`.
+Concrete [`AbstractMiner`](@ref) specialized to mine a single modal instance.
 
-When writing your multi-threaded/multi-processes mining algorithm, you can use a
-monolithic [`Miner`](@ref) structure to collect the initial parameterization, map many
-Bulldozers (merging their local memoization structure) and then reduce the results.
+[`Bulldozer`](@ref)'s interface is similar to [`Miner`](@ref)'s one, but this contains onyly
+the essential fields necessary to work locally within a Kripke model, and is designed to be
+thread-safe.
+
+!!! note
+    Bulldozers are designed to easily implement multi-threaded mining algorithms.
+    When doing so, you can use a monolithic miner structure to collect the initial
+    parameterization, map the computation on many bulldozers, each of which can be easily
+    constructed from the miner itself, and then reduce the results together.
 
 See also [`AbstractMiner`](@ref), [`Miner`](@ref).
 """
@@ -29,31 +39,35 @@ struct Bulldozer{
     I<:Item,
     IMEAS<:MeaningfulnessMeasure
 } <: AbstractMiner
+    # reference to a modal dataset ith instance
     instance::SoleLogics.LogicalInstance
     ith_instance::Int64
 
-    items::Vector{I}
+    items::Vector{I}                # alphabet
 
-    lmemo::LmeasMemo
-    itemsetmeasures::Vector{IMEAS}
-    powerups::MiningState
+    itemsetmeasures::Vector{IMEAS}  # measures associated with mined itemsets
 
+    lmemo::LmeasMemo                # meaningfulness measures memoization structure
+
+    miningstate::MiningState        # special fields related to mining algorithms
+
+    # locks on data, memoization structure and miningstate structure
     datalock::ReentrantLock
     memolock::ReentrantLock
-    poweruplock::ReentrantLock
+    miningstatelock::ReentrantLock
 
     function Bulldozer(
         instance::SoleLogics.LogicalInstance,
         ith_instance::Int64,
         items::Vector{I},
         itemsetmeasures::Vector{IMEAS};
-        powerups::MiningState=MiningState()
+        miningstate::MiningState=MiningState()
     ) where {
         I<:Item,
         IMEAS<:MeaningfulnessMeasure
     }
         return new{I,IMEAS}(instance, ith_instance, items, LmeasMemo(), itemsetmeasures,
-            powerups, ReentrantLock(), ReentrantLock(), ReentrantLock()
+            miningstate, ReentrantLock(), ReentrantLock(), ReentrantLock()
         )
     end
 
@@ -63,7 +77,7 @@ struct Bulldozer{
                 ith_instance,
                 items(miner),
                 itemsetmeasures(miner),
-                powerups=deepcopy(powerups(miner))
+                miningstate=deepcopy(miningstate(miner))
             )
     end
 end
@@ -112,12 +126,12 @@ memoization structure
 memolock(bulldozer::Bulldozer) = bulldozer.memolock
 
 """
-    poweruplock(bulldozer::Bulldozer)
+    miningstatelock(bulldozer::Bulldozer)
 
 Getter for the [`ReentrantLock`](@ref) associated with the customizable dictionary within
 a [`Bulldozer`](@ref).
 """
-poweruplock(bulldozer::Bulldozer) = bulldozer.poweruplock
+miningstatelock(bulldozer::Bulldozer) = bulldozer.miningstatelock
 
 """
     localmemo!(bulldozer::Bulldozer, key::LmeasMemoKey, val::Threshold)
@@ -137,40 +151,40 @@ itemsetmeasures(
 )::Vector{<:MeaningfulnessMeasure} = bulldozer.itemsetmeasures
 
 """
-    powerups(bulldozer::Bulldozer)::MiningState
-    powerups(bulldozer::Bulldozer, key::Symbol)::Any
-    powerups(bulldozer::Bulldozer, key::Symbol, inner_key)::Any
+    miningstate(bulldozer::Bulldozer)::MiningState
+    miningstate(bulldozer::Bulldozer, key::Symbol)::Any
+    miningstate(bulldozer::Bulldozer, key::Symbol, inner_key)::Any
 
 Getter for the customizable dictionary wrapped by a [`Bulldozer`](@ref).
 """
-powerups(bulldozer::Bulldozer)::MiningState = lock(poweruplock(bulldozer)) do
-    bulldozer.powerups
+miningstate(bulldozer::Bulldozer)::MiningState = lock(miningstatelock(bulldozer)) do
+    bulldozer.miningstate
 end
-powerups(bulldozer::Bulldozer, key::Symbol)::Any = lock(poweruplock(bulldozer)) do
-    bulldozer.powerups[key]
+miningstate(bulldozer::Bulldozer, key::Symbol)::Any = lock(miningstatelock(bulldozer)) do
+    bulldozer.miningstate[key]
 end
-powerups(
+miningstate(
     bulldozer::Bulldozer,
     key::Symbol,
     inner_key
-)::Any = lock(poweruplock(bulldozer)) do
-    (bulldozer.powerups[key])[inner_key]
+)::Any = lock(miningstatelock(bulldozer)) do
+    (bulldozer.miningstate[key])[inner_key]
 end
 
-powerups!(miner::Bulldozer, key::Symbol, val) = lock(poweruplock(miner)) do
-    miner.powerups[key] = val
+miningstate!(miner::Bulldozer, key::Symbol, val) = lock(miningstatelock(miner)) do
+    miner.miningstate[key] = val
 end
-powerups!(miner::Bulldozer, key::Symbol, inner_key, val) = lock(poweruplock(miner)) do
-    miner.powerups[key][inner_key] = val
+miningstate!(miner::Bulldozer, key::Symbol, inner_key, val) = lock(miningstatelock(miner)) do
+    miner.miningstate[key][inner_key] = val
 end
 
 """
-    haspowerup(miner::Bulldozer, key::Symbol)
+    hasminingstate(miner::Bulldozer, key::Symbol)
 
-Return whether `bulldozer` powerups field contains an entry `key`.
+Return whether `bulldozer` miningstate field contains an entry `key`.
 """
-haspowerup(miner::Bulldozer, key::Symbol) = lock(poweruplock(miner)) do
-    haskey(miner |> powerups, key)
+hasminingstate(miner::Bulldozer, key::Symbol) = lock(miningstatelock(miner)) do
+    haskey(miner |> miningstate, key)
 end
 
 # Just to mantain Miner's interfaces

@@ -102,9 +102,9 @@ items(miner::Miner)
 measures(miner::Miner)
 findmeasure(miner::Miner,meas::Function; recognizer::Function=islocalof)
 itemsetmeasures(miner::Miner)
-additemmeas(miner::Miner, measure::MeaningfulnessMeasure)
+additemsetmeasure(miner::Miner, measure::MeaningfulnessMeasure)
 rulemeasures(miner::Miner)
-addrulemeas(miner::Miner, measure::MeaningfulnessMeasure)
+addrulemeasure(miner::Miner, measure::MeaningfulnessMeasure)
 
 getlocalthreshold(miner::Miner, meas::Function)
 getlocalthreshold_integer(miner::Miner, meas::Function,contributorslength::Int64)
@@ -142,7 +142,7 @@ globalmemo!(miner::Miner, key::GmeasMemoKey, val::Threshold)
 
 ## Miner customization
 
-A [`Miner`](@ref) also contains two fields to keep additional informations, those are [`info`](@ref) and [`powerups`](@ref).
+A [`Miner`](@ref) also contains two fields to keep additional informations, those are [`info`](@ref) and [`miningstate`](@ref).
 
 The [`info`](@ref) field in [`Miner`](@ref) is a dictionary used to store extra informations about the miner, such as statistics about mining. Currently, since the package is still being developed, the `info` field only contains a flag indicating whether the `miner` has been used for mining or no.
 
@@ -157,8 +157,8 @@ When writing your own mining algorithm, or when mining with a particular kind of
 
 ```@docs
 MiningState
-powerups(miner::Miner)
-powerups!(miner::Miner, key::Symbol, val)
-haspowerup(miner::Miner, key::Symbol)
-initpowerups(::Function, ::AbstractDataset)
+miningstate(miner::Miner)
+miningstate!(miner::Miner, key::Symbol, val)
+hasminingstate(miner::Miner, key::Symbol)
+initminingstate(::Function, ::AbstractDataset)
 ```

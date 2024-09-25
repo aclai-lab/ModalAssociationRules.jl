@@ -1,24 +1,24 @@
 """
-Collection of [`powerups`](@ref) references which are injected when creating a generic
+Collection of [`miningstate`](@ref) references which are injected when creating a generic
 local meaningfulness measure using [`lmeas`](@ref).
 """
-LOCAL_POWERUP_SYMBOLS = [
+LOCAL_MINING_STATES = [
     :instance_item_toworlds
 ]
 """
-Collection of [`powerups`](@ref) references which are injected when creating a generic
+Collection of [`miningstate`](@ref) references which are injected when creating a generic
 global meaningfulness measure using [`gmeas`](@ref).
 """
-GLOBAL_POWERUP_SYMBOLS = []
+GLOBAL_MINING_STATES = []
 
 """
     macro lmeas(measname, measlogic)
 
 Build a generic local meaningfulness measure.
 By default, internal `miner`'s memoization is leveraged.
-To specialize an already existent measure, take a look at [`powerups`](@ref) system.
+To specialize an already existent measure, take a look at [`miningstate`](@ref) system.
 
-See also [`haspowerups`](@ref), [`Miner`](@ref), [`powerups`](@ref).
+See also [`hasminingstate`](@ref), [`Miner`](@ref), [`miningstate`](@ref).
 """
 macro lmeas(measname, measlogic)
     fname = Symbol(measname)
@@ -47,20 +47,20 @@ macro lmeas(measname, measlogic)
             measure = response[:measure]
 
             # save measure in memoization structure;
-            # also, do more stuff depending on `powerups` dispatch (see the documentation).
+            # also, do more stuff depending on `miningstate` dispatch (see the documentation).
             localmemo!(miner, memokey, measure)
 
-            for powerup in LOCAL_POWERUP_SYMBOLS
+            for state in LOCAL_MINING_STATES
                 # the numerical value necessary to save more informations about the relation
                 # between an instance and a subject must be obtained by the internal logic
                 # of the meaningfulness measure callback.
-                if haspowerup(miner, powerup) && haskey(response, powerup)
-                    powerups!(miner, powerup, (ith_instance,subject), response[powerup])
+                if hasminingstate(miner, state) && haskey(response, state)
+                    miningstate!(miner, state, (ith_instance,subject), response[state])
                 end
             end
-            # Note that the powerups system could potentially irrorate the entire package
+            # Note that the miningstate system could potentially irrorate the entire package
             # and could be expandend/specialized;
-            # e.g., a category of powerups is necessary to fill (ith_instance,subject)
+            # e.g., a category of miningstate is necessary to fill (ith_instance,subject)
             # fields, other are necessary to save informations about something else.
 
             return measure
@@ -76,9 +76,9 @@ end
 
 Build a generic global meaningfulness measure.
 By default, internal `miner`'s memoization is leveraged.
-To specialize an already existent measure, take a look at [`powerups`](@ref) system.
+To specialize an already existent measure, take a look at [`miningstate`](@ref) system.
 
-See also [`haspowerups`](@ref), [`Miner`](@ref), [`powerups`](@ref).
+See also [`hasminingstate`](@ref), [`Miner`](@ref), [`miningstate`](@ref).
 """
 macro gmeas(measname, measlogic)
     fname = Symbol(measname)
@@ -105,13 +105,13 @@ macro gmeas(measname, measlogic)
             measure = response[:measure]
 
             # save measure in memoization structure;
-            # also, do more stuff depending on `powerups` dispatch (see the documentation).
+            # also, do more stuff depending on `miningstate` dispatch (see the documentation).
             # to know more, see `lmeas` comments.
             globalmemo!(miner, memokey, measure)
 
-            for powerup in GLOBAL_POWERUP_SYMBOLS
-                if haspowerup(miner, powerup) && haskey(response, powerup)
-                    powerups!(miner, powerup, (subject), response[powerup])
+            for state in GLOBAL_MINING_STATES
+                if hasminingstate(miner, state) && haskey(response, state)
+                    miningstate!(miner, state, (subject), response[state])
                 end
             end
 
@@ -151,7 +151,7 @@ _lsupport_logic = (itemset, X, ith_instance, miner) -> begin
     wmask = [
         check(toformula(itemset), X, ith_instance, w) for w in allworlds(X, ith_instance)]
 
-    # return the result, and eventually the information needed to support powerups
+    # return the result, and eventually the information needed to support miningstate
     return Dict(
         :measure => count(wmask) / nworlds(X, ith_instance),
         :instance_item_toworlds => wmask,
@@ -212,7 +212,7 @@ _lconfidence_logic = (rule, X, ith_instance, miner) -> begin
     den = lsupport(antecedent(rule), getinstance(X, ith_instance), miner)
     num = lsupport(convert(Itemset, rule), getinstance(X, ith_instance), miner)
 
-    # Return the result, and eventually the information needed to support powerups
+    # Return the result, and eventually the information needed to support miningstate
     return Dict(:measure => num/den)
 end
 

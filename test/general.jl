@@ -145,9 +145,9 @@ _temp_miner = Miner(X2, fpgrowth, manual_items, [(gsupport, 0.1, 0.1)], _rulemea
 @test_throws ErrorException getglobalthreshold(_temp_miner, _dummy_gsupport)
 @test _temp_miner.gmemo == GmeasMemo()
 
-@test_throws AssertionError additemmeas(_temp_miner, (gsupport, 0.1, 0.1))
+@test_throws AssertionError additemsetmeasure(_temp_miner, (gsupport, 0.1, 0.1))
 @test length(itemsetmeasures(_temp_miner)) == 1
-@test_throws AssertionError addrulemeas(_temp_miner, (gconfidence, 0.1, 0.1))
+@test_throws AssertionError addrulemeasure(_temp_miner, (gconfidence, 0.1, 0.1))
 @test length(rulemeasures(_temp_miner)) == 1
 @test length(ModalAssociationRules.measures(_temp_miner)) == 2
 
@@ -213,8 +213,8 @@ _temp_arule = generaterules(freqitems(fpgrowth_miner), fpgrowth_miner) |> first
 lsupport(Itemset(manual_p), SoleLogics.getinstance(X2, 7), fpgrowth_miner)
 lsupport(Itemset(manual_lr), SoleLogics.getinstance(X2, 7), fpgrowth_miner)
 
-# more on Miner powerups (a.k.a, "customization system")
-@test ModalAssociationRules.initpowerups(apriori, data(apriori_miner)) == MiningState()
+# more on Miner miningstate (a.k.a, "customization system")
+@test ModalAssociationRules.initminingstate(apriori, data(apriori_miner)) == MiningState()
 
 # "rulemining-utils.jl"
 @test combine_items([pq, qr], 3) |> first == pqr
