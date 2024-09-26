@@ -5,7 +5,7 @@
         I<:Item,
         IMEAS<:MeaningfulnessMeasure,
         RMEAS<:MeaningfulnessMeasure
-    }
+    } <: AbstractMiner
         X::DATA                         # target dataset
 
         algorithm::MINALGO              # algorithm used to perform extraction
