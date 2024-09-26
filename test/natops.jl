@@ -182,7 +182,7 @@ _5_items_prop = [
 ] |> Vector{Item}
 _5_items = vcat(
     _5_items_prop,
-    diamond(IA_L).(_5_items_prop)[1]
+    (_5_items_prop)[1] |> formula |> diamond(IA_L)
 ) |> Vector{Formula}
 
 _5_itemsetmeasures = [(gsupport, 0.1, 0.1)]

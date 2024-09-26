@@ -31,7 +31,7 @@ using StatsBase
 
 include("core.jl")
 
-export Item
+export Item, formula
 export Itemset, toformula, slice
 
 export Threshold
@@ -116,7 +116,7 @@ include("utils/natops-loader.jl")
 
 export load_NATOPS
 
-include("utils/literals-selector.jl")   # TODO: move this in SoleData
+include("utils/literals-selector.jl")   # TODO -  move this in SoleData
 
 export equicut, quantilecut
 export makeconditions

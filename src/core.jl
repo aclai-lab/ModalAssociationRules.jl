@@ -3,8 +3,9 @@
 
 Fundamental type in the context of
 [association rule mining](https://en.wikipedia.org/wiki/Association_rule_learning).
-The name [`Item`](@ref) comes from the classical association rule mining jargon, but it
-simply is a logical formula, whose truth value can be checked on a model.
+
+The name [`Item`](@ref) comes from the classical association rule mining jargon,
+but it is simply a logical formula, whose truth value can be checked on a model.
 
 The purpose of association rule mining (ARM) is to discover *interesting* relations between
 [`Item`](@ref)s, regrouped in [`Itemset`](@ref)s.
@@ -17,10 +18,28 @@ From interesting itemsets, interesting *association rules* ([ARule](@ref)) can b
 See also [`ARule`](@ref), [`gconfidence`](@ref), [`Itemset`](@ref),
 [`MeaningfulnessMeasure`](@ref).
 """
-const Item = SoleLogics.Formula
+struct Item{F<:SoleLogics.Formula}
+    formula::F
+
+    function Item(formula::F) where {F<:SoleLogics.Formula}
+        new{F}(formula)
+    end
+end
+
+function Base.convert(::Type{Item}, formula::SoleLogics.Formula)::Item
+    return Item(formula)
+end
+
+formula(item::Item{F}) where {F} = item.formula
+
+# const Item = SoleLogics.Formula
 
 function Base.isless(a::Item, b::Item)
     isless(hash(a), hash(b))
+end
+
+function Base.show(io::IO, item::Item)
+    print(io, syntaxstring(item.formula))
 end
 
 """
@@ -115,7 +134,7 @@ end
 function Base.convert(::Type{Item}, itemset::Itemset)::Item
     @assert length(itemset) == 1 "Cannot convert $(itemset) of length $(length(itemset)) " *
         "to Item: itemset must contain exactly one item"
-    return first(itemset)
+    return Item(first(itemset))
 end
 
 function Base.:(==)(itemset1::Itemset, itemset2::Itemset)
@@ -144,7 +163,7 @@ Conjunctive normal form of the [`Item`](@ref)s contained in `itemset`.
 
 See also [`Item`](@ref), [`Itemset`](@ref), [`SoleLogics.LeftmostConjunctiveForm`](@ref)
 """
-toformula(itemset::Itemset) = itemset |> items |> LeftmostConjunctiveForm
+toformula(itemset::Itemset) = formula.(itemset |> items) |> LeftmostConjunctiveForm
 
 """
     const EnhancedItemset = Tuple{Itemset,Int64}

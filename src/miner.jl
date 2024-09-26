@@ -19,8 +19,8 @@
         freqitems::Vector{Itemset}      # collected frequent itemsets
         arules::Vector{ARule}           # collected association rules
 
-        localmemo::LmeasMemo                # local memoization structure
-        globalmemo::GmeasMemo                # global memoization structure
+        localmemo::LmeasMemo            # local memoization structure
+        globalmemo::GmeasMemo           # global memoization structure
 
         miningstate::MiningState        # special fields related to mining algorithm
 
@@ -582,18 +582,18 @@ function analyze(
             println(io, "\t$(gmeassym) - (antecedent): " *
                 "$(globalmemo(miner, (gmeassym, antecedent(arule))))")
             # if itemsets_local_info
-            # TODO: report local measures for the antecedent (use `itemsets_localities`)
+            # TODO -  report local measures for the antecedent (use `itemsets_localities`)
 
             println(io, "\t$(gmeassym) - (consequent): " *
                 "$(globalmemo(miner, (gmeassym, consequent(arule))))")
             # if itemsets_local_info
-            # TODO: report local measures for the consequent (use `itemsets_localities`)
+            # TODO -  report local measures for the consequent (use `itemsets_localities`)
 
             _entire_content = union(antecedent(arule), consequent(arule))
             println(io, "\t$(gmeassym) - (entire): " *
                 "$(globalmemo(miner, (gmeassym, _entire_content)))")
             # if itemsets_local_info
-            # TODO: report local measures for the consequent (use `itemsets_localities`)
+            # TODO -  report local measures for the consequent (use `itemsets_localities`)
 
         end
     end

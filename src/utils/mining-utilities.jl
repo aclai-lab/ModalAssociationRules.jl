@@ -83,25 +83,25 @@ See [`antecedent`](@ref), [`ARule`](@ref), [`consequent`](@ref), [`generaterules
 [`Item`](@ref), [`Miner`](@ref).
 """
 function non_selfabsorbed_rulecheck(rule::ARule)::Bool
-    # TODO: this could be moved to SoleData
+    # TODO - this could be moved to SoleData
     function _extract_variable(item::Item)::Int64
-        # extract the Atom wrapped inside a SyntaxTree;
         # if `item` is already an Atom, do nothing.
-        item = item isa Atom ? item : item.children |> first
-        return item.value.metacond.feature.i_variable
+        _formula = formula(item)
+        _formula = _formula isa Atom ? _formula : _formula.children |> first
+        return _formula.value.metacond.feature.i_variable
     end
 
     return all(
         # for each antecedent item
-        ant_it ->
+        ant_item ->
             # no other items in antecedent share the same variable
             count(
-                _ant_it -> _extract_variable(ant_it) == _extract_variable(_ant_it),
+                _ant_item -> _extract_variable(ant_item) == _extract_variable(_ant_item),
                 antecedent(rule)
             ) == 1 &&
             # every consequent item does not share the same variable
             all(
-                cons_it -> _extract_variable(ant_it) != _extract_variable(cons_it),
+                cons_item -> _extract_variable(ant_item) != _extract_variable(cons_item),
                 consequent(rule)
             ),
         antecedent(rule)
@@ -207,7 +207,7 @@ end
 
 # Miner utilities
 
-# TODO: rename those in local_threshold_integer/global_threshold_integer
+# TODO -  rename those in local_threshold_integer/global_threshold_integer
 """
     getlocalthreshold_integer(miner::Miner, meas::Function)
 
