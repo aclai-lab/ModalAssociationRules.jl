@@ -7,13 +7,13 @@
         instance::SoleLogics.LogicalInstance
         ith_instance::Int64
 
-        items::Vector{I}                # alphabet
+        items::Vector{I}                    # alphabet
 
-        itemsetmeasures::Vector{IMEAS}  # measures associated with mined itemsets
+        itemsetmeasures::Vector{IMEAS}      # measures associated with mined itemsets
 
         localmemo::LmeasMemo                # meaningfulness measures memoization structure
 
-        miningstate::MiningState        # special fields related to mining algorithms
+        miningstate::MiningState            # special fields related to mining algorithms
 
         # locks on data, memoization structure and miningstate structure
         datalock::ReentrantLock
@@ -87,13 +87,24 @@ end
 
 Getter for the instance wrapped by `bulldozer`.
 See also [`Bulldozer`](@ref), [`SoleLogics.LogicalInstance`](@ref).
+
 """
 data(bulldozer::Bulldozer) = bulldozer.instance
+
+"""
+    instance(bulldozer::Bulldozer) = bulldozer.instance
+
+Getter for the instance wrapped by `bulldozer`'s.
+
+See also [`instancenumber(::Bulldozer)`](@ref).
+"""
+instance(bulldozer::Bulldozer) = bulldozer.instance
 
 """
     instancenumber(bulldozer::Bulldozer)
 
 Retrieve the instance number associated with `bulldozer`.
+
 See also [`Bulldozer`](@ref), [`data(::Bulldozer)`](@ref).
 """
 instancenumber(bulldozer::Bulldozer) = bulldozer.ith_instance
@@ -126,6 +137,8 @@ miningstatelock(bulldozer::Bulldozer) = bulldozer.miningstatelock
     localmemo!(bulldozer::Bulldozer, key::LmeasMemoKey, val::Threshold)
 
 Setter for [`Bulldozer`](@ref)'s memoization structure.
+
+See also [`localmemo`](@ref), [`LmeasMemo`](@ref), [`LmeasMemoKey`](@ref).
 """
 localmemo!(
     bulldozer::Bulldozer,
@@ -145,6 +158,8 @@ itemsetmeasures(
     miningstate(bulldozer::Bulldozer, key::Symbol, inner_key)::Any
 
 Getter for the customizable dictionary wrapped by a [`Bulldozer`](@ref).
+
+See also [`miningstate!(::Bulldozer)`].
 """
 miningstate(bulldozer::Bulldozer)::MiningState = lock(miningstatelock(bulldozer)) do
     bulldozer.miningstate
@@ -179,6 +194,7 @@ end
     hasminingstate(miner::Bulldozer, key::Symbol)
 
 Return whether `miner` miningstate field contains a field `key`.
+
 See also [`Bulldozer`](@ref), [`miningstate`](@ref), [`miningstate!`](@ref).
 """
 hasminingstate(miner::Bulldozer, key::Symbol) = lock(miningstatelock(miner)) do
@@ -200,12 +216,24 @@ measures(miner::Bulldozer) = itemsetmeasures(miner)
 # utilities
 
 """
+    function SoleLogics.frame(bulldozer::Bulldozer)
+
+Getter for the frame of the instance wrapped by `bulldozer`.
+See also [`instance(::Bulldozer)`](@ref).
+"""
+function SoleLogics.frame(bulldozer::Bulldozer)
+    _instance = instance(bulldozer)
+    SoleLogics.frame(_instance.s, instancenumber(bulldozer))
+end
+
+
+"""
     function bulldozer_reduce(b1::Bulldozer, b2::Bulldozer)::LmeasMemo
 
 Reduce many [`Bulldozer`](@ref)s together, merging their local memo structures in linear
 time.
 
-See also [`LmeasMemo`](@ref), [`localmemo`](@ref);
+See also [`LmeasMemo`](@ref), [`localmemo(::Bulldozer)`](@ref);
 """
 function bulldozer_reduce(local_results::Vector{Bulldozer})
     b1lmemo = local_results |> first |> localmemo
