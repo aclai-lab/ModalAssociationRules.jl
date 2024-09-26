@@ -1,7 +1,10 @@
 # Offline loader for NATOPS dataset.
-# This is intended to be run if you have NATOPS installed locally.
-# By default, when tests run, NATOPS is downloaded from timeseriesclassification.com,
-# but it might be down for some reason.
+
+# Usage:
+# call `load_natops()`, eventually specifying the installation path of NATOPS if it is not
+# downloaded in /test/data/NATOPS.
+# Otherwise it will be downloaded from timeseriesclassification.com, but might be
+# unavailable.
 
 using ZipFile
 using DataFrames
