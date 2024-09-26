@@ -77,7 +77,7 @@ export bulldozer_reduce
 
 include("meaningfulness-measures.jl")
 
-export @lmeas, @gmeas
+export @localmeasure, @globalmeasure
 export lsupport, gsupport
 export lconfidence, gconfidence
 

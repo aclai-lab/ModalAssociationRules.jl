@@ -151,7 +151,7 @@ function runexperiment(
 
             println("\nResults:\n")
 			for r in sort(
-                arules(miner), by = x -> miner.gmemo[(:gconfidence, x)], rev=true)
+                arules(miner), by = x -> miner.globalmemo[(:gconfidence, x)], rev=true)
 				ModalAssociationRules.analyze(
                     r, miner; variablenames=variablenames, itemsets_global_info=true)
 			end

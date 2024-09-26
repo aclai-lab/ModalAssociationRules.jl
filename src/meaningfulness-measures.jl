@@ -1,26 +1,65 @@
 """
-Collection of [`miningstate`](@ref) references which are injected when creating a generic
-local meaningfulness measure using [`lmeas`](@ref).
+If an [`AbstractMiner`](@ref)'s [`miningstate`](@ref) contains one of these fields,
+then it is filled when computing any local meaningfulness measure created using
+[`@localmeasure`](@ref) macro.
+
+See also [`AbstractMiner`](@ref), [`@localmeasure`](@ref), [`miningstate`](@ref).
 """
 LOCAL_MINING_STATES = [
     :instance_item_toworlds
 ]
+
 """
-Collection of [`miningstate`](@ref) references which are injected when creating a generic
-global meaningfulness measure using [`gmeas`](@ref).
+If an [`AbstractMiner`](@ref)'s [`miningstate`](@ref) contains one of these fields,
+then it is filled when computing any local meaningfulness measure created using
+[`globalmeasure`](@ref) macro.
+
+See also [`AbstractMiner`](@ref), [`@globalmeasure`](@ref), [`miningstate`](@ref).
 """
 GLOBAL_MINING_STATES = []
 
 """
-    macro lmeas(measname, measlogic)
+    macro localmeasure(measname, measlogic)
 
-Build a generic local meaningfulness measure.
-By default, internal `miner`'s memoization is leveraged.
-To specialize an already existent measure, take a look at [`miningstate`](@ref) system.
+Build a generic local meaningfulness measure, levering the optimizations provided by any
+[`AbstractMiner`](@ref).
 
-See also [`hasminingstate`](@ref), [`Miner`](@ref), [`miningstate`](@ref).
+# Arguments
+
+-`measname`: the name of the local measure you are defining (e.g., lsupport);
+-`measlogic`: a lambda function whose arguments are (itemset, data, ith_instance, miner);
+see the note below to know more about this.
+
+!!! note
+    When defining a new local measure, you only need to write its essential logic through
+    a lambda function (itemset, X, ith_instance, miner).
+
+    In particular, `itemset` is an [`Itemset`](@ref), `X` is a reference to the dataset,
+    `ith_instance` is an integer defining on which instance you want to compute the measure,
+    and `miner` is the [`AbstractMiner`](@ref) in which you want to save the measure.
+
+    Also, `miner` argument can be used to leverage its [`miningstate`](@ref) structure.
+    A complete example of the logic behind local support is shown below:
+
+    ```julia
+    _lsupport_logic = (itemset, X, ith_instance, miner) -> begin
+        # vector representing on which world an Itemset holds
+        wmask = [
+            check(toformula(itemset), X, ith_instance, w) for w in allworlds(X, ith_instance)]
+
+        # return the result enriched with more informations, that will eventually will be
+        # used if miner's miningstate has specific fields (e.g., :instance_item_toworlds).
+        return Dict(
+            :measure => count(wmask) / nworlds(X, ith_instance),
+            :instance_item_toworlds => wmask,
+        )
+    end
+    ```
+
+See also [`AbstractMiner`](@ref), [`hasminingstate`](@ref), [`lsupport`](@ref),
+[`miningstate`](@ref).
 """
-macro lmeas(measname, measlogic)
+macro localmeasure(measname, measlogic)
     fname = Symbol(measname)
 
     quote
@@ -72,15 +111,43 @@ macro lmeas(measname, measlogic)
 end
 
 """
-    macro gmeas(measname, measlogic)
+    macro globalmeasure(measname, measlogic)
 
-Build a generic global meaningfulness measure.
-By default, internal `miner`'s memoization is leveraged.
-To specialize an already existent measure, take a look at [`miningstate`](@ref) system.
+Build a generic global meaningfulness measure, levering the optimizations provided by any
+[`AbstractMiner`](@ref).
 
-See also [`hasminingstate`](@ref), [`Miner`](@ref), [`miningstate`](@ref).
+# Arguments
+
+-`measname`: the name of the global measure you are defining (e.g., gsupport);
+-`measlogic`: a lambda function whose arguments are (rule, X, threshold, miner);
+see the note below to know more about this.
+
+!!! note
+    When defining a new global measure, you only need to write its essential logic through
+    a lambda function (itemset, X, ith_instance, miner).
+
+    In particular, `itemset` is an [`Itemset`](@ref), `X` is a reference to the dataset
+    and `miner` is the [`AbstractMiner`](@ref) in which you want to save the measure.
+
+    Also, `miner` argument can be used to leverage its [`miningstate`](@ref) structure.
+    A complete example of the logic behind global support is shown below:
+
+    ```julia
+    _gsupport_logic = (itemset, X, threshold, miner) -> begin
+        _measure = sum([
+            lsupport(itemset, getinstance(X, ith_instance), miner) >= threshold
+            for ith_instance in 1:ninstances(X)
+        ]) / ninstances(X)
+
+        # at the moment, no `miningstate` fields in miner are leveraged
+        return Dict(:measure => _measure)
+    end
+    ```
+
+See also [`AbstractMiner`](@ref), [`hasminingstate`](@ref), [`gsupport`](@ref),
+[`miningstate`](@ref).
 """
-macro gmeas(measname, measlogic)
+macro globalmeasure(measname, measlogic)
     fname = Symbol(measname)
 
     quote
@@ -106,7 +173,7 @@ macro gmeas(measname, measlogic)
 
             # save measure in memoization structure;
             # also, do more stuff depending on `miningstate` dispatch (see the documentation).
-            # to know more, see `lmeas` comments.
+            # to know more, see `localmeasure` comments.
             globalmemo!(miner, memokey, measure)
 
             for state in GLOBAL_MINING_STATES
@@ -127,7 +194,7 @@ end
     macro linkmeas(gmeasname, lmeasname)
 
 Link together two [`MeaningfulnessMeasure`](@ref), automatically defining
-[`globalof`](@ref)/[`localof`](@ref) and [`isglobalof`](@ref)/[`islocalof`](@ref).
+[`globalof`](@ref)/[`localof`](@ref) and [`isglobalof`](@ref)/[`islocalof`](@ref) traits.
 
 See also [`globalof`](@ref), [`isglobalof`](@ref), [`islocalof`](@ref), [`localof`](@ref),
 [`MeaningfulnessMeasure`](@ref).
@@ -145,7 +212,7 @@ end
 
 # core logic of `lsupport`, as a lambda function;
 # `miner` is an unused argument, but is required since this function must adhere to local
-# measures interface (see `@lmeas` macro)
+# measures interface (see `@localmeasure` macro)
 _lsupport_logic = (itemset, X, ith_instance, miner) -> begin
     # bool vector, representing on which world an Itemset holds
     wmask = [
@@ -184,7 +251,7 @@ If a miner is provided, then its internal state is updated and used to leverage 
 
 See also [`Miner`](@ref), [`LogicalInstance`](@ref), [`Itemset`](@ref).
 """
-@lmeas lsupport _lsupport_logic
+@localmeasure lsupport _lsupport_logic
 
 """
     function gsupport(
@@ -206,7 +273,7 @@ If a miner is provided, then its internal state is updated and used to leverage 
 See also [`Miner`](@ref), [`LogicalInstance`](@ref), [`Itemset`](@ref),
 [`SupportedLogiset`](@ref), [`Threshold`](@ref).
 """
-@gmeas gsupport _gsupport_logic
+@globalmeasure gsupport _gsupport_logic
 
 _lconfidence_logic = (rule, X, ith_instance, miner) -> begin
     den = lsupport(antecedent(rule), getinstance(X, ith_instance), miner)
@@ -244,7 +311,7 @@ If a miner is provided, then its internal state is updated and used to leverage 
 See also [`antecedent`](@ref), [`ARule`](@ref), [`Miner`](@ref),
 [`LogicalInstance`](@ref), [`lsupport`](@ref).
 """
-@lmeas lconfidence _lconfidence_logic
+@localmeasure lconfidence _lconfidence_logic
 
 """
     function gconfidence(
@@ -267,7 +334,7 @@ memoization.
 See also [`antecedent`](@ref), [`ARule`](@ref), [`Miner`](@ref), [`gsupport`](@ref),
 [`SupportedLogiset`](@ref).
 """
-@gmeas gconfidence _gconfidence_logic
+@globalmeasure gconfidence _gconfidence_logic
 
 # all the meaningfulness measures defined in this file are linked here,
 # meaning that a global measure is associated to its corresponding local one.

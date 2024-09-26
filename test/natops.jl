@@ -37,7 +37,7 @@ manual_items = Vector{Item}([
 # check if global support coincides for each frequent itemset
 function isequal_gsupp(miner1::Miner, miner2::Miner)
     for itemset in freqitems(miner1)
-        @test miner1.gmemo[(:gsupport, itemset)] == miner2.gmemo[(:gsupport, itemset)]
+        @test miner1.globalmemo[(:gsupport, itemset)] == miner2.globalmemo[(:gsupport, itemset)]
     end
 end
 
@@ -45,8 +45,8 @@ end
 function isequal_lsupp(miner1::Miner, miner2::Miner)
     for itemset in freqitems(miner1)
         for ninstance in 1:(miner1 |> data |> ninstances)
-            miner1_lsupp = get(miner1.lmemo, (:lsupport, itemset, ninstance), -1.0)
-            miner2_lsupp = get(miner2.lmemo, (:lsupport, itemset, ninstance), -1.0)
+            miner1_lsupp = get(miner1.localmemo, (:lsupport, itemset, ninstance), -1.0)
+            miner2_lsupp = get(miner2.localmemo, (:lsupport, itemset, ninstance), -1.0)
 
             if miner1_lsupp == -1.0 || miner2_lsupp == -1.0
                 # this is fine, and doesn't imply the two algorithms are different.
@@ -95,15 +95,15 @@ end
 function _compare_arules(miner1::Miner, miner2::Miner, rule::ARule)
     # global confidence comparison;
     # here it is implied that rules are already generated using generaterules!
-    @test miner1.gmemo[(:gconfidence, rule)] == miner2.gmemo[(:gconfidence, rule)]
+    @test miner1.globalmemo[(:gconfidence, rule)] == miner2.globalmemo[(:gconfidence, rule)]
 
     # local confidence comparison;
     for ninstance in miner1 |> data |> ninstances
         lconfidence(rule, SoleLogics.getinstance(data(miner1), ninstance), miner1)
         lconfidence(rule, SoleLogics.getinstance(data(miner2), ninstance), miner2)
 
-        @test miner1.lmemo[(:lconfidence, rule, ninstance)] ===
-              miner2.lmemo[(:lconfidence, rule, ninstance)]
+        @test miner1.localmemo[(:lconfidence, rule, ninstance)] ===
+              miner2.localmemo[(:lconfidence, rule, ninstance)]
     end
 end
 

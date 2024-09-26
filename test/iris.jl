@@ -34,15 +34,15 @@ _1_items = Vector{Item}(Atom.([
 function _compare_arules(miner1::Miner, miner2::Miner, rule::ARule)
     # global confidence comparison;
     # here it is implied that rules are already generated using generaterules!
-    @test miner1.gmemo[(:gconfidence, rule)] == miner2.gmemo[(:gconfidence, rule)]
+    @test miner1.globalmemo[(:gconfidence, rule)] == miner2.globalmemo[(:gconfidence, rule)]
 
     # local confidence comparison;
     for ninstance in miner1 |> data |> ninstances
         lconfidence(rule, SoleLogics.getinstance(data(miner1), ninstance), miner1)
         lconfidence(rule, SoleLogics.getinstance(data(miner2), ninstance), miner2)
 
-        @test miner1.lmemo[(:lconfidence, rule, ninstance)] ===
-              miner2.lmemo[(:lconfidence, rule, ninstance)]
+        @test miner1.localmemo[(:lconfidence, rule, ninstance)] ===
+              miner2.localmemo[(:lconfidence, rule, ninstance)]
     end
 end
 
@@ -114,4 +114,4 @@ compare_arules(apriori_miner, fpgrowth_miner)
 # freqitems(fpgrowth_miner)
 # patt = freqitems(fpgrowth_miner)[10]
 # check(patt |> toformula |> tree, X) |> sum
-# fpgrowth_miner.gmemo[(:gsupport, patt)]
+# fpgrowth_miner.globalmemo[(:gsupport, patt)]

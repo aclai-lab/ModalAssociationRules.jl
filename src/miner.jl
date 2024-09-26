@@ -19,8 +19,8 @@
         freqitems::Vector{Itemset}      # collected frequent itemsets
         arules::Vector{ARule}           # collected association rules
 
-        lmemo::LmeasMemo                # local memoization structure
-        gmemo::GmeasMemo                # global memoization structure
+        localmemo::LmeasMemo                # local memoization structure
+        globalmemo::GmeasMemo                # global memoization structure
 
         miningstate::MiningState        # special fields related to mining algorithm
 
@@ -101,8 +101,8 @@ struct Miner{
     freqitems::Vector{Itemset}      # collected frequent itemsets
     arules::Vector{ARule}           # collected association rules
 
-    lmemo::LmeasMemo                # local memoization structure
-    gmemo::GmeasMemo                # global memoization structure
+    localmemo::LmeasMemo                # local memoization structure
+    globalmemo::GmeasMemo                # global memoization structure
 
     miningstate::MiningState        # mining algorithm miningstate (see documentation)
     info::Info                      # general informations
@@ -331,8 +331,8 @@ Return the local memoization structure inside `miner`, or a specific entry if a
 
 See also [`Miner`](@ref), [`LmeasMemo`](@ref), [`LmeasMemoKey`](@ref).
 """
-localmemo(miner::AbstractMiner)::LmeasMemo = miner.lmemo
-localmemo(miner::AbstractMiner, key::LmeasMemoKey) = get(miner.lmemo, key, nothing)
+localmemo(miner::AbstractMiner)::LmeasMemo = miner.localmemo
+localmemo(miner::AbstractMiner, key::LmeasMemoKey) = get(miner.localmemo, key, nothing)
 
 """
     localmemo!(miner::Miner, key::LmeasMemoKey, val::Threshold)
@@ -342,7 +342,7 @@ Setter for a specific entry `key` inside the local memoization structure wrapped
 See also [`Miner`](@ref), [`LmeasMemo`](@ref), [`LmeasMemoKey`](@ref).
 """
 function localmemo!(miner::Miner, key::LmeasMemoKey, val::Threshold)
-    miner.lmemo[key] = val
+    miner.localmemo[key] = val
 end
 
 """
@@ -354,8 +354,8 @@ Return the global memoization structure inside `miner`, or a specific entry if a
 
 See also [`Miner`](@ref), [`GmeasMemo`](@ref), [`GmeasMemoKey`](@ref).
 """
-globalmemo(miner::Miner)::GmeasMemo = miner.gmemo
-globalmemo(miner::Miner, key::GmeasMemoKey) = get(miner.gmemo, key, nothing)
+globalmemo(miner::Miner)::GmeasMemo = miner.globalmemo
+globalmemo(miner::Miner, key::GmeasMemoKey) = get(miner.globalmemo, key, nothing)
 
 """
     globalmemo!(miner::Miner, key::GmeasMemoKey, val::Threshold)
@@ -366,7 +366,7 @@ Setter for a specific entry `key` inside the global memoization structure wrappe
 See also [`Miner`](@ref), [`GmeasMemo`](@ref), [`GmeasMemoKey`](@ref).
 """
 globalmemo!(miner::Miner, key::GmeasMemoKey, val::Threshold) = begin
-    miner.gmemo[key] = val
+    miner.globalmemo[key] = val
 end
 
 
@@ -515,9 +515,9 @@ function Base.show(io::IO, miner::Miner)
     println(io, "# of association rules mined: $(length(arules(miner)))\n")
 
     println(io, "Local measures memoization structure entries: " *
-        "$(length(miner.lmemo |> keys))")
+        "$(length(miner.localmemo |> keys))")
     println(io, "Global measures memoization structure entries: " *
-        "$(length(miner.gmemo |> keys))\n")
+        "$(length(miner.globalmemo |> keys))\n")
 
     print(io, "Additional infos: $(info(miner) |> keys)\n")
     print(io, "Specialization fields: $(miningstate(miner) |> keys)")
@@ -557,15 +557,15 @@ function analyze(
 
     # report global emasures for the rule
     for measure in rulemeasures(miner)
-        gmeas = first(measure)
-        gmeassym = gmeas |> Symbol
+        globalmeasure = first(measure)
+        gmeassym = globalmeasure |> Symbol
 
         println(io, "\t$(gmeassym): $(globalmemo(miner, (gmeassym, arule)))")
 
         # report local measures for the rule
         if rule_local_info
             # find local measure (its name, as Symbol) associated with the global measure
-            lmeassym = ModalAssociationRules.localof(gmeas) |> Symbol
+            lmeassym = ModalAssociationRules.localof(globalmeasure) |> Symbol
             for i in 1:ninstances(miner |> data)
                 print(io, "$(lmeassym): $(localmemo(miner, (lmeassym, arule, i))) ")
             end
@@ -576,8 +576,8 @@ function analyze(
     # report global measures for both antecedent and consequent
     if itemsets_global_info
         for measure in itemsetmeasures(miner)
-            gmeas = first(measure)
-            gmeassym = gmeas |> Symbol
+            globalmeasure = first(measure)
+            gmeassym = globalmeasure |> Symbol
 
             println(io, "\t$(gmeassym) - (antecedent): " *
                 "$(globalmemo(miner, (gmeassym, antecedent(arule))))")

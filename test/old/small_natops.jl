@@ -47,8 +47,8 @@ itfp = Itemset([manual_p, manual_lp])
 
 for ninstance in 1:360
     try
-        apriori_lsupp = apriori_miner.lmemo[(:lsupport, itap, ninstance)]
-        fpgrowth_lsupp = fpgrowth_miner.lmemo[(:lsupport, itfp, ninstance)]
+        apriori_lsupp = apriori_miner.localmemo[(:lsupport, itap, ninstance)]
+        fpgrowth_lsupp = fpgrowth_miner.localmemo[(:lsupport, itfp, ninstance)]
 
         if apriori_lsupp != fpgrowth_lsupp
             println("Different lsupp value for instance $(ninstance))")
@@ -58,11 +58,11 @@ for ninstance in 1:360
     catch e
         if isa(e, KeyError)
             apriori_lsupp_haskey =
-                haskey(apriori_miner.lmemo, (:lsupport, itap, ninstance))
+                haskey(apriori_miner.localmemo, (:lsupport, itap, ninstance))
             fpgrowth_lsupp_haskey =
-                haskey(fpgrowth_miner.lmemo, (:lsupport, itap, ninstance))
+                haskey(fpgrowth_miner.localmemo, (:lsupport, itap, ninstance))
 
-            apriori_lsupp = apriori_miner.lmemo[(:lsupport, itap, ninstance)]
+            apriori_lsupp = apriori_miner.localmemo[(:lsupport, itap, ninstance)]
 
             if apriori_lsupp > lsupport_threshold
                 println("Missing informative lsupp entry: ")

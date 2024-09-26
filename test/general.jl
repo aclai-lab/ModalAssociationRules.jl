@@ -143,7 +143,7 @@ end
 _temp_miner = Miner(X2, fpgrowth, manual_items, [(gsupport, 0.1, 0.1)], _rulemeasures)
 @test_throws ErrorException getlocalthreshold(_temp_miner, _dummy_gsupport)
 @test_throws ErrorException getglobalthreshold(_temp_miner, _dummy_gsupport)
-@test _temp_miner.gmemo == GmeasMemo()
+@test _temp_miner.globalmemo == GmeasMemo()
 
 @test_throws AssertionError additemsetmeasure(_temp_miner, (gsupport, 0.1, 0.1))
 @test length(itemsetmeasures(_temp_miner)) == 1

@@ -11,7 +11,7 @@
 
         itemsetmeasures::Vector{IMEAS}  # measures associated with mined itemsets
 
-        lmemo::LmeasMemo                # meaningfulness measures memoization structure
+        localmemo::LmeasMemo                # meaningfulness measures memoization structure
 
         miningstate::MiningState        # special fields related to mining algorithms
 
@@ -23,7 +23,7 @@
 
 Concrete [`AbstractMiner`](@ref) specialized to mine a single modal instance.
 
-[`Bulldozer`](@ref)'s interface is similar to [`Miner`](@ref)'s one, but this contains onyly
+[`Bulldozer`](@ref)'s interface is similar to [`Miner`](@ref)'s one, but contains only
 the essential fields necessary to work locally within a Kripke model, and is designed to be
 thread-safe.
 
@@ -47,7 +47,7 @@ struct Bulldozer{
 
     itemsetmeasures::Vector{IMEAS}  # measures associated with mined itemsets
 
-    lmemo::LmeasMemo                # meaningfulness measures memoization structure
+    localmemo::LmeasMemo            # meaningfulness measures memoization structure
 
     miningstate::MiningState        # special fields related to mining algorithms
 
@@ -66,7 +66,7 @@ struct Bulldozer{
         I<:Item,
         IMEAS<:MeaningfulnessMeasure
     }
-        return new{I,IMEAS}(instance, ith_instance, items, LmeasMemo(), itemsetmeasures,
+        return new{I,IMEAS}(instance, ith_instance, items, itemsetmeasures, LmeasMemo(),
             miningstate, ReentrantLock(), ReentrantLock(), ReentrantLock()
         )
     end
@@ -132,7 +132,7 @@ localmemo!(
     key::LmeasMemoKey,
     val::Threshold
 ) = lock(memolock(bulldozer)) do
-    bulldozer.lmemo[key] = val
+    bulldozer.localmemo[key] = val
 end
 
 itemsetmeasures(
@@ -164,7 +164,7 @@ end
     miningstate!(miner::Bulldozer, key::Symbol, val)
     miningstate!(miner::Bulldozer, key::Symbol, inner_key, val)
 
-TODO -
+Setter for the content of a specific `miner`'s [`miningstate`](@ref).
 """
 miningstate!(miner::Bulldozer, key::Symbol, val) = lock(miningstatelock(miner)) do
     miner.miningstate[key] = val
@@ -178,22 +178,34 @@ end
 """
     hasminingstate(miner::Bulldozer, key::Symbol)
 
-Return whether `bulldozer` miningstate field contains an entry `key`.
+Return whether `miner` miningstate field contains a field `key`.
 See also [`Bulldozer`](@ref), [`miningstate`](@ref), [`miningstate!`](@ref).
 """
 hasminingstate(miner::Bulldozer, key::Symbol) = lock(miningstatelock(miner)) do
     haskey(miner |> miningstate, key)
 end
 
-# Just to mantain Miner's interfaces
+"""
+    measures(miner::Bulldozer)
+
+Synonym for [`itemsetmeasures`](ref).
+This exists to adhere to [`Miner`](@ref)'s interface.
+
+See also [`itemsetmeasures`](@ref), [`Miner`](@ref).
+"""
 measures(miner::Bulldozer) = itemsetmeasures(miner)
 
+
+
+# utilities
 
 """
     function bulldozer_reduce(b1::Bulldozer, b2::Bulldozer)::LmeasMemo
 
-Reduce many [`Bulldozer`](@ref)s together, merging their local memo structures
-in linear time.
+Reduce many [`Bulldozer`](@ref)s together, merging their local memo structures in linear
+time.
+
+See also [`LmeasMemo`](@ref), [`localmemo`](@ref);
 """
 function bulldozer_reduce(local_results::Vector{Bulldozer})
     b1lmemo = local_results |> first |> localmemo
@@ -219,13 +231,13 @@ its global support, in order to simplify `miner`'s job when working in the globa
 
 See also [`Itemset`](@ref), [`LmeasMemo`](@ref), [`lsupport`](@ref), [`Miner`](@ref).
 """
-function load_bulldozer!(miner::Miner, lmemo::LmeasMemo)
-    # a local memo key is a Tuple{Symbol,ARMSubject,Int64}
+function load_localmemo!(miner::Miner, localmemo::LmeasMemo)
+    # remember a local memo key is a Tuple{Symbol,ARMSubject,Int64}
 
     fpgrowth_fragments = DefaultDict{Itemset,Int64}(0)
     min_lsupport_threshold = findmeasure(miner, lsupport)[2]
 
-    for (lmemokey, lmeasvalue) in lmemo
+    for (lmemokey, lmeasvalue) in localmemo
         meas, subject, _ = lmemokey
         localmemo!(miner, lmemokey, lmeasvalue)
         if meas == :lsupport && lmeasvalue > min_lsupport_threshold

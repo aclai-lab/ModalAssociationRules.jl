@@ -223,7 +223,7 @@ function fpgrowth(
     # and proceed to compute global supports
     # local_results = reduce(bulldozer_reduce, local_results)
     local_results = bulldozer_reduce(local_results)
-    fpgrowth_fragments = load_bulldozer!(miner, local_results)
+    fpgrowth_fragments = load_localmemo!(miner, local_results)
 
     # global setting
     for (itemset, gfrequency_int) in fpgrowth_fragments
