@@ -26,8 +26,8 @@ Build a generic local meaningfulness measure, levering the optimizations provide
 
 # Arguments
 
--`measname`: the name of the local measure you are defining (e.g., lsupport);
--`measlogic`: a lambda function whose arguments are (itemset, data, ith_instance, miner);
+- `measname`: the name of the local measure you are defining (e.g., lsupport);
+- `measlogic`: a lambda function whose arguments are (itemset, data, ith_instance, miner) -
 see the note below to know more about this.
 
 !!! note
@@ -118,9 +118,9 @@ Build a generic global meaningfulness measure, levering the optimizations provid
 
 # Arguments
 
--`measname`: the name of the global measure you are defining (e.g., gsupport);
--`measlogic`: a lambda function whose arguments are (rule, X, threshold, miner);
-see the note below to know more about this.
+- `measname`: the name of the global measure you are defining (e.g., gsupport);
+- `measlogic`: a lambda function whose arguments are (rule, X, threshold, miner) - see the
+note below to know more about this.
 
 !!! note
     When defining a new global measure, you only need to write its essential logic through

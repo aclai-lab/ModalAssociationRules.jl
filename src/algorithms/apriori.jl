@@ -6,7 +6,7 @@ to also work with modal logic.
 
 # Arguments
 
--`miner`: miner containing the extraction parameterization;
+- `miner`: miner containing the extraction parameterization;
 - `X`: data from which you want to mine association rules;
 - `verbose`: print informations about each iteration.
 
