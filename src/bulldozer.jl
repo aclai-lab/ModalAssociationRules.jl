@@ -35,17 +35,15 @@ thread-safe.
 
 See also [`AbstractMiner`](@ref), [`Miner`](@ref).
 """
-struct Bulldozer{
-    I<:Item,
-    IMEAS<:MeaningfulnessMeasure
-} <: AbstractMiner
+struct Bulldozer{I<:Item} <: AbstractMiner
     # reference to a modal dataset ith instance
     instance::SoleLogics.LogicalInstance
     ith_instance::Int64
 
     items::Vector{I}                # alphabet
 
-    itemsetmeasures::Vector{IMEAS}  # measures associated with mined itemsets
+    # measures associated with mined itemsets
+    itemsetmeasures::Vector{<:MeaningfulnessMeasure}
 
     localmemo::LmeasMemo            # meaningfulness measures memoization structure
 
@@ -60,13 +58,10 @@ struct Bulldozer{
         instance::SoleLogics.LogicalInstance,
         ith_instance::Int64,
         items::Vector{I},
-        itemsetmeasures::Vector{IMEAS};
+        itemsetmeasures::Vector{<:MeaningfulnessMeasure};
         miningstate::MiningState=MiningState()
-    ) where {
-        I<:Item,
-        IMEAS<:MeaningfulnessMeasure
-    }
-        return new{I,IMEAS}(instance, ith_instance, items, itemsetmeasures, LmeasMemo(),
+    ) where {I<:Item}
+        return new{I}(instance, ith_instance, items, itemsetmeasures, LmeasMemo(),
             miningstate, ReentrantLock(), ReentrantLock(), ReentrantLock()
         )
     end
@@ -81,6 +76,11 @@ struct Bulldozer{
             )
     end
 end
+
+"""
+TODO
+"""
+itemtype(::Bulldozer{I}) where {I<:Item} = I
 
 """
     data(bulldozer::Bulldozer)
@@ -268,7 +268,7 @@ function load_localmemo!(miner::Miner, localmemo::LmeasMemo)
     for (lmemokey, lmeasvalue) in localmemo
         meas, subject, _ = lmemokey
         localmemo!(miner, lmemokey, lmeasvalue)
-        if meas == :lsupport && lmeasvalue > min_lsupport_threshold
+        if meas == :lsupport && lmeasvalue >= min_lsupport_threshold
             fpgrowth_fragments[subject] += 1
         end
     end

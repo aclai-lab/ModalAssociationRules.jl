@@ -32,10 +32,13 @@ using StatsBase
 include("core.jl")
 
 export Item, formula
-export Itemset, toformula, slice
+export Itemset, formula, slice
 
 export Threshold
 export WorldMask, EnhancedItemset, ConditionalPatternBase
+
+export AbstractMiner
+export MineableData
 
 export ARule
 export antecedent, consequent
@@ -51,7 +54,8 @@ export Info, MiningState
 
 include("miner.jl")
 
-export AbstractMiner, Miner
+export Miner
+export itemtype, datatype
 export data, algorithm
 export itemsetmeasures, additemsetmeasure
 export rulemeasures, addrulemeasure

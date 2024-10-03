@@ -27,6 +27,8 @@ Return a generator of [`Itemset`](@ref), which iterates the combinations of [`It
 in `variable` and prepend them to `fixed` vector.
 
 See also [`Item`](@ref), [`Itemset`](@ref).
+
+TODO - this may be deprecated
 """
 function combine_items(variable::Vector{<:Item}, fixed::Vector{<:Item})
     return (Itemset(union(combo, fixed)) for combo in combinations(variable))
@@ -40,7 +42,11 @@ is in `frequents`.
 
 See also [`Itemset`](@ref).
 """
-function grow_prune(candidates::Vector{Itemset}, frequents::Vector{Itemset}, k::Integer)
+function grow_prune(
+    candidates::AbstractVector{Itemset{I}},
+    frequents::AbstractVector{Itemset{I}},
+    k::Integer
+) where {I<:Item}
     # if the frequents set does not contain the subset of a certain candidate,
     # that candidate is pruned out.
     return Iterators.filter(
@@ -48,8 +54,8 @@ function grow_prune(candidates::Vector{Itemset}, frequents::Vector{Itemset}, k::
             # note: why first(combo)? Because combinations(itemset, k-1) returns vectors,
             # each one wrapping one Itemset, but we just need that exact itemset.
             itemset -> all(
-                combo -> Itemset(combo) in frequents, combinations(itemset, k-1)),
-                combine_items(candidates, k)
+                    combo -> Itemset{I}(combo) in frequents, combinations(itemset, k-1)),
+            combine_items(candidates, k) |> unique
         )
 end
 
@@ -148,7 +154,7 @@ See also [`ARule`](@ref), [`Miner`](@ref), [`Itemset`](@ref), [`rulemeasures`](@
             # hence, since we want the antecedent to be longer initially,
             # the first subset values corresponds to (see comment below)
             # (l-a)
-            _consequent = subset |> Itemset
+            _consequent = subset == Any[] ? Itemset{Item}() : Itemset{Item}()
             # a
             _antecedent = symdiff(items(itemset), items(_consequent)) |> Itemset
 

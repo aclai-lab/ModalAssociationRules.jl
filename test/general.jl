@@ -66,8 +66,8 @@ r = Itemset(manual_r)
 @test !(pq in [manual_p, manual_q, manual_r])
 @test pq in [pq, pqr, qr]
 
-@test toformula(pq) isa LeftmostConjunctiveForm
-@test toformula(pq).children |> first in [manual_p, manual_q]
+@test formula(pq) isa LeftmostConjunctiveForm
+@test formula(pq).children |> first in [manual_p, manual_q]
 
 @test Threshold <: Float64
 @test WorldMask <: Vector{Int64}

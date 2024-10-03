@@ -15,6 +15,7 @@ end
 
 # load NATOPS dataset and convert it to a Logiset
 X_df, y = load_NATOPS();
+X_df = ((x)->x[1:4]).(X_df)
 X1 = scalarlogiset(X_df)
 
 # different tested algorithms will use different Logiset's copies,
@@ -179,11 +180,12 @@ _5_items_prop = [
     Atom(ScalarCondition(VariableMin(4), >=, 1.8))
     Atom(ScalarCondition(VariableMin(5), >=, -0.5))
     Atom(ScalarCondition(VariableMax(6), >=, 0))
-] |> Vector{Item}
+]
+
 _5_items = vcat(
     _5_items_prop,
-    (_5_items_prop)[1] |> formula |> diamond(IA_L)
-) |> Vector{Formula}
+    (_5_items_prop)[1] |> diamond(IA_L)
+) |> Vector{Item}
 
 _5_itemsetmeasures = [(gsupport, 0.1, 0.1)]
 _5_rulemeasures = [(gconfidence, 0.1, 0.1)]

@@ -239,8 +239,15 @@ See also [`FPTree`](@ref), [`Item`](@ref), [`Itemset`](@ref).
 function itemset_from_fplist(fptree::FPTree)::Itemset
     @assert islist(fptree) "FPTree is not shaped as list, function call is ambiguous."
 
-    function _retrieve(fptree::FPTree)
-        retrieved = Itemset([_retrieve(child) for child in children(fptree)])
+    function _retrieve(fptree::FPTree)::Itemset
+        # TODO - I am forced to parametrize Itemset, but here I cannot be dependant from
+        # a Miner object! I don't know which items are being manipulated.
+        retrieved = [_retrieve(child) for child in children(fptree)]
+
+        retrieved = length(retrieved) > 0 ?
+            union(retrieved...) :
+            Itemset{Item}()
+
         _content = content(fptree)
 
         if !isnothing(_content)
@@ -446,14 +453,14 @@ See also [`AbstractMiner`](@ref), [`gsupport`](@ref), [`HeaderTable`](@ref),
 function checksanity!(htable::HeaderTable, miner::AbstractMiner)::Bool
     _issorted = issorted(
         items(htable),
-        by=t -> miningstate(miner, :current_items_frequency)[Itemset(t)],
+        by=t -> miningstate(miner, :current_items_frequency)[t],
         rev=true
     )
 
     # force sorting if needed
     if !_issorted
         sort!(items(htable), by=t -> miningstate(
-            miner, :current_items_frequency)[Itemset(t)],
+            miner, :current_items_frequency)[t],
             rev=true
         )
     end
@@ -516,9 +523,9 @@ function grow!(
 
     # sorting must be guaranteed: remember an FPTree essentially is a prefix tree
     sort!(items(_itemset), by=t -> miningstate(
-        miner, :current_items_frequency)[Itemset(t)], rev=true)
+        miner, :current_items_frequency)[t], rev=true)
 
-        # retrieve the item to grow the tree, and its count
+    # retrieve the item to grow the tree, and its count
     _count = count(enhanceditemset)
     _item = first(_itemset)
 
@@ -543,18 +550,18 @@ end
 """$(doc_fptree_grow)"""
 function grow!(
     fptree::FPTree,
-    itemset::Itemset,
+    itemset::IT,
     miner::AbstractMiner
-)
+) where {IT<:Itemset}
     grow!(fptree, convert(EnhancedItemset, itemset, 1), miner)
 end
 
 """$(doc_fptree_grow)"""
 function grow!(
     fptree::FPTree,
-    collection::Union{ConditionalPatternBase,Vector{Itemset}},
+    collection::Union{ConditionalPatternBase,Vector{IT}},
     miner::AbstractMiner;
     kwargs...
-)
+) where {IT<:Itemset}
     map(element -> grow!(fptree, element, miner; kwargs...), collection)
 end

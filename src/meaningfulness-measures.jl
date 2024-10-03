@@ -45,7 +45,7 @@ see the note below to know more about this.
     _lsupport_logic = (itemset, X, ith_instance, miner) -> begin
         # vector representing on which world an Itemset holds
         wmask = [
-            check(toformula(itemset), X, ith_instance, w) for w in allworlds(X, ith_instance)]
+            check(formula(itemset), X, ith_instance, w) for w in allworlds(X, ith_instance)]
 
         # return the result enriched with more informations, that will eventually will be
         # used if miner's miningstate has specific fields (e.g., :instance_item_toworlds).
@@ -216,7 +216,7 @@ end
 _lsupport_logic = (itemset, X, ith_instance, miner) -> begin
     # bool vector, representing on which world an Itemset holds
     wmask = [
-        check(toformula(itemset), X, ith_instance, w) for w in allworlds(X, ith_instance)]
+        check(formula(itemset), X, ith_instance, w) for w in allworlds(X, ith_instance)]
 
     # return the result, and eventually the information needed to support miningstate
     return Dict(

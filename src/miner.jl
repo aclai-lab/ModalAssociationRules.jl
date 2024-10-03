@@ -1,14 +1,11 @@
 """
     struct Miner{
-        DATA<:MineableData,
-        MINALGO<:Function,
+        D<:MineableData,
         I<:Item,
-        IMEAS<:MeaningfulnessMeasure,
-        RMEAS<:MeaningfulnessMeasure
     } <: AbstractMiner
-        X::DATA                         # target dataset
+        X::D                            # target dataset
 
-        algorithm::MINALGO              # algorithm used to perform extraction
+        algorithm::Function             # algorithm used to perform extraction
 
         items::Vector{I}                # items considered during the extraction
 
@@ -82,21 +79,18 @@ See also  [`ARule`](@ref), [`Bulldozer`](@ref), [`MeaningfulnessMeasure`](@ref),
 [`MiningState`](@ref).
 """
 struct Miner{
-    DATA<:MineableData,
-    MINALGO<:Function,
-    I<:Item,
-    IMEAS<:MeaningfulnessMeasure,
-    RMEAS<:MeaningfulnessMeasure
+    D<:MineableData,
+    I<:Item
 } <: AbstractMiner
-    X::DATA                         # target dataset
+    X::D                         # target dataset
 
-    algorithm::MINALGO              # algorithm used to perform extraction
+    algorithm::Function             # algorithm used to perform extraction
 
     items::Vector{I}                # alphabet
 
     # meaningfulness measures
-    item_constrained_measures::Vector{IMEAS}
-    rule_constrained_measures::Vector{RMEAS}
+    item_constrained_measures::Vector{<:MeaningfulnessMeasure}
+    rule_constrained_measures::Vector{<:MeaningfulnessMeasure}
 
     freqitems::Vector{Itemset}      # collected frequent itemsets
     arules::Vector{ARule}           # collected association rules
@@ -108,11 +102,13 @@ struct Miner{
     info::Info                      # general informations
 
     function Miner(
-        X::DATA,
-        algorithm::MINALGO,
+        X::D,
+        algorithm::Function,
         items::Vector{I},
-        item_constrained_measures::Vector{IMEAS} = [(gsupport, 0.1, 0.1)],
-        rule_constrained_measures::Vector{RMEAS} = [(gconfidence, 0.2, 0.2)];
+        item_constrained_measures::Vector{<:MeaningfulnessMeasure} = [(gsupport, 0.1, 0.1)],
+        rule_constrained_measures::Vector{<:MeaningfulnessMeasure} = [
+            (gconfidence, 0.2, 0.2)
+        ];
         rulesift::Vector{<:Function} = Vector{Function}([
             anchor_rulecheck,
             non_selfabsorbed_rulecheck
@@ -120,11 +116,8 @@ struct Miner{
         disable_rulesifting::Bool = false,
         info::Info = Info(:istrained => false)
     ) where {
-        DATA<:MineableData,
-        MINALGO<:Function,
+        D<:MineableData,
         I<:Item,
-        IMEAS<:MeaningfulnessMeasure,
-        RMEAS<:MeaningfulnessMeasure
     }
         # dataset frames must be equal
         @assert allequal([SoleLogics.frame(X, ith_instance)
@@ -146,13 +139,23 @@ struct Miner{
             miningstate[:rulesift] = rulesift
         end
 
-        new{DATA,MINALGO,I,IMEAS,RMEAS}(X, algorithm, unique(items),
+        new{D,I}(X, algorithm, unique(items),
             item_constrained_measures, rule_constrained_measures,
             Vector{Itemset}([]), Vector{ARule}([]),
             LmeasMemo(), GmeasMemo(), miningstate, info
         )
     end
 end
+
+"""
+TODO
+"""
+datatype(::Miner{D,I}) where {D<:MineableData,I<:Item} = D
+
+"""
+TODO
+"""
+itemtype(::Miner{D,I}) where {D<:MineableData,I<:Item} = I
 
 """
     data(miner::Miner)::MineableData

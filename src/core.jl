@@ -1,5 +1,7 @@
 """
-    const Item = SoleLogics.Formula
+    struct Item{F<:SoleLogics.Formula}
+        formula::F
+    end
 
 Fundamental type in the context of
 [association rule mining](https://en.wikipedia.org/wiki/Association_rule_learning).
@@ -22,7 +24,7 @@ struct Item{F<:SoleLogics.Formula}
     formula::F
 
     function Item(formula::F) where {F<:SoleLogics.Formula}
-        new{F}(formula)
+        return new{F}(formula)
     end
 end
 
@@ -31,8 +33,6 @@ function Base.convert(::Type{Item}, formula::SoleLogics.Formula)::Item
 end
 
 formula(item::Item{F}) where {F} = item.formula
-
-# const Item = SoleLogics.Formula
 
 function Base.isless(a::Item, b::Item)
     isless(hash(a), hash(b))
@@ -79,62 +79,16 @@ Frequent itemsets are then used to generate association rules ([`ARule`](@ref)).
 See also [`ARule`](@ref), [`gsupport`](@ref), [`Item`](@ref), [`lsupport`](@ref),
 [`MeaningfulnessMeasure`](@ref).
 """
-struct Itemset
-    items::Vector{Item}
+const Itemset{I<:Item} = Vector{I} # maybe here is I<:Item{<:SoleLogics.Formula}?
 
-    Itemset() = new(Vector{Item}[])
-    Itemset(item::I) where {I<:Item} = new(Vector{Item}([item]))
-    Itemset(itemset::Vector{I}) where {I<:Item} = new(Vector{Item}(itemset |> unique))
+Itemset{I}() where {I<:Item} = I[]
+Itemset{I}(item::Item) where {I<:Item} = I[item]
+Itemset(items::Vector{I}) where {I<:Item} = Itemset{Item}(items)
 
-    Itemset(anyvec::Vector{Any}) = begin
-        @assert isempty(anyvec) "Illegal constructor call"
-        return Itemset()
-    end
-
-    Itemset(itemsets::Vector{Itemset}) = return union(itemsets)
-end
-
-@forward Itemset.items size, IndexStyle, setindex!
-@forward Itemset.items iterate, length, firstindex, lastindex, similar, show
-
-function Base.getindex(itemset::Itemset, indexes::Vararg{Int,N}) where N
-    return Itemset(items(itemset)[indexes...])
-end
-
-function Base.getindex(itemset::Itemset, range::AbstractUnitRange{I}) where {I<:Integer}
-    return Itemset(items(itemset)[range])
-end
-
-function push!(itemset::Itemset, item::Item)
-    push!(items(itemset), item)
-end
-
-items(itemset::Itemset) = itemset.items
-
-function Base.union(itemsets::Vector{Itemset})
-    return Itemset(union(items.([itemsets]...)...))
-end
-
-function Base.union(itemsets::Vararg{Itemset,N}) where N
-    return union([itemsets...])
-end
-
-function Base.hash(itemset::Itemset, h::UInt)
-    return hash(itemset |> items |> sort, h)
-end
+items(itemset::Itemset) = itemset
 
 function Base.convert(::Type{Itemset}, item::Item)
-    return Itemset(item)
-end
-
-function Base.convert(::Type{Itemset}, formulavector::Vector{Formula})
-    return Itemset(formulavector)
-end
-
-function Base.convert(::Type{Item}, itemset::Itemset)::Item
-    @assert length(itemset) == 1 "Cannot convert $(itemset) of length $(length(itemset)) " *
-        "to Item: itemset must contain exactly one item"
-    return Item(first(itemset))
+    return Itemset{Item}(item)
 end
 
 function Base.:(==)(itemset1::Itemset, itemset2::Itemset)
@@ -157,13 +111,13 @@ function Base.show(io::IO, itemset::Itemset)
 end
 
 """
-    toformula(itemset::Itemset)
+    formula(itemset::Itemset)
 
 Conjunctive normal form of the [`Item`](@ref)s contained in `itemset`.
 
 See also [`Item`](@ref), [`Itemset`](@ref), [`SoleLogics.LeftmostConjunctiveForm`](@ref)
 """
-toformula(itemset::Itemset) = formula.(itemset |> items) |> LeftmostConjunctiveForm
+formula(itemset::Itemset) = formula.(itemset |> items) |> LeftmostConjunctiveForm
 
 """
     const EnhancedItemset = Tuple{Itemset,Int64}
@@ -174,7 +128,7 @@ to compress multiple, identical itemsets in one.
 
 See also [`Itemset`](@ref).
 """
-const EnhancedItemset = Tuple{Itemset,Int64}
+const EnhancedItemset = Tuple{<:Itemset,Int64} # Tuple{Itemset,Int64}
 
 """
     itemset(enhitemset::EnhancedItemset)
@@ -342,8 +296,8 @@ function Base.show(
     arule::ARule;
     variablenames::Union{Nothing,Vector{String}}=nothing
 )
-    _antecedent = arule |> antecedent |> toformula
-    _consequent = arule |> consequent |> toformula
+    _antecedent = arule |> antecedent |> formula
+    _consequent = arule |> consequent |> formula
 
     print(io, "$(syntaxstring(_antecedent, variable_names_map=variablenames)) => " *
         "$(syntaxstring(_consequent, variable_names_map=variablenames))")

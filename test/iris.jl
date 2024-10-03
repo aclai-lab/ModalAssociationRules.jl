@@ -113,5 +113,5 @@ compare_arules(apriori_miner, fpgrowth_miner)
 # this can't work, since previous test is broken and mining fails
 # freqitems(fpgrowth_miner)
 # patt = freqitems(fpgrowth_miner)[10]
-# check(patt |> toformula |> tree, X) |> sum
+# check(patt |> formula |> tree, X) |> sum
 # fpgrowth_miner.globalmemo[(:gsupport, patt)]
