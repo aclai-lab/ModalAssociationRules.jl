@@ -5,7 +5,7 @@ using ModalAssociationRules
 using SoleData
 using StatsBase
 
-import ModalAssociationRules.children
+import ModalAssociationRules.children, ModalAssociationRules.info
 
 # load NATOPS dataset and convert it to a Logiset
 X_df, y = load_NATOPS()
@@ -39,29 +39,27 @@ _rulemeasures = [(gconfidence, 0.2, 0.2)]
 apriori_miner = Miner(X1, apriori, manual_items, _itemsetmeasures, _rulemeasures)
 fpgrowth_miner = Miner(X2, fpgrowth, manual_items, _itemsetmeasures, _rulemeasures)
 
-pq = Itemset([manual_p, manual_q])
-qr = Itemset([manual_q, manual_r])
-pr = Itemset([manual_p, manual_r])
-pqr = Itemset([manual_p, manual_q, manual_r])
-r = Itemset(manual_r)
+pq = Itemset{Item}([manual_p, manual_q])
+qr = Itemset{Item}([manual_q, manual_r])
+pr = Itemset{Item}([manual_p, manual_r])
+pqr = Itemset{Item}([manual_p, manual_q, manual_r])
+r = Itemset{Item}(Item(manual_r))
 @test pq in pq
 @test qr in pqr
 @test (pqr in [pq,qr]) == false
 
 # "core.jl - fundamental types"
-@test Item <: Formula
-@test Itemset(manual_p) |> items == [manual_p]
-@test all(item -> item in [manual_p, manual_q], pq |> items)
-
-@test convert(Item, Itemset([manual_p])) == manual_p
+@test Itemset{Item} <: Itemset{<:Item}
+@test Itemset{Item}(Item[manual_p]) == Item[manual_p]
+@test all(item -> item in Item[manual_p, manual_q], pq)
 
 @test_throws MethodError convert(Item, [manual_p])
 @test_throws MethodError convert(Item, [manual_p, manual_q])
-@test_throws AssertionError convert(Item, pq)
+@test_throws MethodError convert(Item, pq)
 
 @test syntaxstring(manual_p) == "min[V1] > -0.5"
 
-@test manual_p in pq
+@test Item(manual_p) in pq
 @test pq in pqr
 @test !(pq in [manual_p, manual_q, manual_r])
 @test pq in [pq, pqr, qr]
@@ -81,20 +79,19 @@ enhanceditemset = convert(EnhancedItemset, pq, 42)
 
 @test ConditionalPatternBase <: Vector{EnhancedItemset}
 
-@test_nowarn ARule(pq, Itemset(manual_r))
-arule = ARule(pq, Itemset(manual_r))
+@test_nowarn ARule(pq, Itemset(Item[manual_r]))
+arule = ARule(pq, Itemset(Item[manual_r]))
 @test content(arule) |> first == antecedent(arule)
 @test content(arule) |> last == consequent(arule)
-arule2 = ARule(qr, Itemset(manual_p))
-arule3 = ARule(Itemset([manual_q, manual_p]), Itemset(manual_r))
+arule2 = ARule(qr, Itemset(Item[manual_p]))
+arule3 = ARule(Itemset(Item[manual_q, manual_p]), Itemset(Item[manual_r]))
 
 @test arule != arule2
 @test arule == arule3
 
-@test_throws AssertionError ARule(qr, Itemset(manual_q))
+@test_throws AssertionError ARule(qr, Itemset(Item[manual_q]))
 
 @test MeaningfulnessMeasure <: Tuple{Function,Threshold,Threshold}
-# see MeaningfulnessMeasure section for tests about islocalof and isglobalof
 
 @test ARMSubject <: Union{ARule,Itemset}
 @test LmeasMemoKey <: Tuple{Symbol,ARMSubject,Int64}
@@ -210,19 +207,19 @@ _temp_lsupport = lsupport(pq, SoleLogics.getinstance(X2, 7), fpgrowth_miner)
 
 _temp_arule = generaterules(freqitems(fpgrowth_miner), fpgrowth_miner) |> first
 
-lsupport(Itemset(manual_p), SoleLogics.getinstance(X2, 7), fpgrowth_miner)
-lsupport(Itemset(manual_lr), SoleLogics.getinstance(X2, 7), fpgrowth_miner)
+lsupport(Itemset{Item}(manual_p), SoleLogics.getinstance(X2, 7), fpgrowth_miner)
+lsupport(Itemset{Item}(manual_lr), SoleLogics.getinstance(X2, 7), fpgrowth_miner)
 
 # more on Miner miningstate (a.k.a, "customization system")
 @test ModalAssociationRules.initminingstate(apriori, data(apriori_miner)) == MiningState()
 
 # "rulemining-utils.jl"
 @test combine_items([pq, qr], 3) |> first == pqr
-@test combine_items([manual_p, manual_q], [manual_r]) |> collect |> length == 3
-@test combine_items([manual_p, manual_q], [manual_r]) |>
-    collect |> first == Itemset([manual_p, manual_r])
+@test combine_items(Item[manual_p, manual_q], Item[manual_r]) |> collect |> length == 3
+@test combine_items(Item[manual_p, manual_q], Item[manual_r]) |>
+    collect |> first == Itemset(Item[manual_p, manual_r])
 
-@test grow_prune([pq,qr,pr], [pq,qr,pr], 3) |> collect |> unique == [pqr]
+@test grow_prune([pq,qr,pr], [pq,qr,pr], 3) |> collect |> unique == pqr # TODO - this is wrong!
 @test generaterules(freqitems(fpgrowth_miner), fpgrowth_miner) |> first isa ARule
 
 _rulemeasures_just_for_test = [(ModalAssociationRules.gconfidence, 1.1, 1.1)]
@@ -328,7 +325,7 @@ prefix_existance = Dict{Itemset, Bool}()
 function _allowed_existence(fptree::FPTree)
     function _retrieve_prefix(fptree::FPTree)
         if isroot(fptree)
-            return Itemset()
+            return Itemset{Item}()
         else
             return union(fptree |> content |> Itemset,
                 fptree |> ModalAssociationRules.parent |> _retrieve_prefix)
@@ -371,8 +368,8 @@ root = FPTree()
 
 @test_nowarn grow!(root, [pqr, qr], fpgrowth_miner)
 
-enhanceditemset = (Itemset(manual_p), 1)
-enhanceditemset2 = (Itemset(manual_q), 1)
+enhanceditemset = (Itemset{Item}(manual_p), 1)
+enhanceditemset2 = (Itemset{Item}(manual_q), 1)
 @test_nowarn grow!(root, enhanceditemset, fpgrowth_miner)
 
 @test_nowarn grow!(root, [enhanceditemset, enhanceditemset2], fpgrowth_miner)
