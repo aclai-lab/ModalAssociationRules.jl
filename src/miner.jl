@@ -82,7 +82,7 @@ struct Miner{
     D<:MineableData,
     I<:Item
 } <: AbstractMiner
-    X::D                         # target dataset
+    X::D                            # target dataset
 
     algorithm::Function             # algorithm used to perform extraction
 
@@ -95,8 +95,8 @@ struct Miner{
     freqitems::Vector{Itemset}      # collected frequent itemsets
     arules::Vector{ARule}           # collected association rules
 
-    localmemo::LmeasMemo                # local memoization structure
-    globalmemo::GmeasMemo                # global memoization structure
+    localmemo::LmeasMemo            # local memoization structure
+    globalmemo::GmeasMemo           # global memoization structure
 
     miningstate::MiningState        # mining algorithm miningstate (see documentation)
     info::Info                      # general informations

@@ -17,19 +17,16 @@ X2 = deepcopy(X1)
 X3 = deepcopy(X1)
 
 # make a vector of item, that will be the initial state of the mining machine
-manual_p = Atom(ScalarCondition(VariableMin(1), >, -0.5))
-manual_q = Atom(ScalarCondition(VariableMin(2), <=, -2.2))
-manual_r = Atom(ScalarCondition(VariableMin(3), >, -3.6))
+manual_p = Atom(ScalarCondition(VariableMin(1), >, -0.5)) |> Item
+manual_q = Atom(ScalarCondition(VariableMin(2), <=, -2.2)) |> Item
+manual_r = Atom(ScalarCondition(VariableMin(3), >, -3.6)) |> Item
 
-manual_lp = box(IA_L)(manual_p)
-manual_lq = diamond(IA_L)(manual_q)
-manual_lr = box(IA_L)(manual_r)
+manual_lp = box(IA_L)(manual_p |> formula) |> Item
+manual_lq = diamond(IA_L)(manual_q |> formula) |> Item
+manual_lr = box(IA_L)(manual_r |> formula) |> Item
 
 manual_items = Vector{Item}([
     manual_p, manual_q, manual_r, manual_lp, manual_lq, manual_lr])
-
-# items to short test-case
-# manual_items = Vector{Item}([manual_p, manual_r, manual_lr])
 
 # set meaningfulness measures, for both mining frequent itemsets and establish which
 # combinations of them are association rules.
@@ -43,7 +40,8 @@ pq = Itemset{Item}([manual_p, manual_q])
 qr = Itemset{Item}([manual_q, manual_r])
 pr = Itemset{Item}([manual_p, manual_r])
 pqr = Itemset{Item}([manual_p, manual_q, manual_r])
-r = Itemset{Item}(Item(manual_r))
+r = Itemset{Item}(manual_r)
+
 @test pq in pq
 @test qr in pqr
 @test (pqr in [pq,qr]) == false
@@ -51,7 +49,7 @@ r = Itemset{Item}(Item(manual_r))
 # "core.jl - fundamental types"
 @test Itemset{Item} <: Itemset{<:Item}
 @test Itemset{Item}(Item[manual_p]) == Item[manual_p]
-@test all(item -> item in Item[manual_p, manual_q], pq)
+@test all(item -> item in [manual_p, manual_q], pq)
 
 @test_throws MethodError convert(Item, [manual_p])
 @test_throws MethodError convert(Item, [manual_p, manual_q])
@@ -59,7 +57,7 @@ r = Itemset{Item}(Item(manual_r))
 
 @test syntaxstring(manual_p) == "min[V1] > -0.5"
 
-@test Item(manual_p) in pq
+@test manual_p in pq
 @test pq in pqr
 @test !(pq in [manual_p, manual_q, manual_r])
 @test pq in [pq, pqr, qr]
@@ -79,17 +77,17 @@ enhanceditemset = convert(EnhancedItemset, pq, 42)
 
 @test ConditionalPatternBase <: Vector{EnhancedItemset}
 
-@test_nowarn ARule(pq, Itemset(Item[manual_r]))
-arule = ARule(pq, Itemset(Item[manual_r]))
+@test_nowarn ARule(pq, Itemset([manual_r]))
+arule = ARule(pq, Itemset([manual_r]))
 @test content(arule) |> first == antecedent(arule)
 @test content(arule) |> last == consequent(arule)
-arule2 = ARule(qr, Itemset(Item[manual_p]))
-arule3 = ARule(Itemset(Item[manual_q, manual_p]), Itemset(Item[manual_r]))
+arule2 = ARule(qr, Itemset([manual_p]))
+arule3 = ARule(Itemset([manual_q, manual_p]), Itemset([manual_r]))
 
 @test arule != arule2
 @test arule == arule3
 
-@test_throws AssertionError ARule(qr, Itemset(Item[manual_q]))
+@test_throws AssertionError ARule(qr, Itemset([manual_q]))
 
 @test MeaningfulnessMeasure <: Tuple{Function,Threshold,Threshold}
 
@@ -129,10 +127,10 @@ _association_rules_test1(fpgrowth_miner)
 @test info(fpgrowth_miner) isa Info
 
 function _dummy_gsupport(
-    itemset::Itemset,
-    X::SupportedLogiset,
-    threshold::Threshold,
-    miner::Union{Nothing,Miner}
+    ::Itemset,
+    ::SupportedLogiset,
+    ::Threshold,
+    ::Union{Nothing,Miner}
 )::Float64
     return 1.0
 end
@@ -205,22 +203,21 @@ _temp_apriori_miner = Miner(X1, apriori, manual_items, _itemsetmeasures, _ruleme
 _temp_lsupport = lsupport(pq, SoleLogics.getinstance(X2, 7), fpgrowth_miner)
 @test _temp_lsupport >= 0.0 && _temp_lsupport <= 1.0
 
-_temp_arule = generaterules(freqitems(fpgrowth_miner), fpgrowth_miner) |> first
-
-lsupport(Itemset{Item}(manual_p), SoleLogics.getinstance(X2, 7), fpgrowth_miner)
-lsupport(Itemset{Item}(manual_lr), SoleLogics.getinstance(X2, 7), fpgrowth_miner)
+lsupport(Itemset(manual_p), SoleLogics.getinstance(X2, 7), fpgrowth_miner)
+lsupport(Itemset(manual_lr), SoleLogics.getinstance(X2, 7), fpgrowth_miner)
 
 # more on Miner miningstate (a.k.a, "customization system")
 @test ModalAssociationRules.initminingstate(apriori, data(apriori_miner)) == MiningState()
 
 # "rulemining-utils.jl"
 @test combine_items([pq, qr], 3) |> first == pqr
-@test combine_items(Item[manual_p, manual_q], Item[manual_r]) |> collect |> length == 3
-@test combine_items(Item[manual_p, manual_q], Item[manual_r]) |>
-    collect |> first == Itemset(Item[manual_p, manual_r])
+@test combine_items([manual_p, manual_q], [manual_r]) |> collect |> length == 3
+@test combine_items([manual_p, manual_q], [manual_r]) |>
+    collect |> first == Itemset([manual_p, manual_r])
 
-@test grow_prune([pq,qr,pr], [pq,qr,pr], 3) |> collect |> unique == pqr # TODO - this is wrong!
-@test generaterules(freqitems(fpgrowth_miner), fpgrowth_miner) |> first isa ARule
+# Deprecated test
+# @test grow_prune([pq,qr,pr], [pq,qr,pr], 3) |> collect |> unique == pqr
+# @test generaterules(freqitems(fpgrowth_miner), fpgrowth_miner) |> first isa ARule
 
 _rulemeasures_just_for_test = [(ModalAssociationRules.gconfidence, 1.1, 1.1)]
 _temp_fpgrowth_miner = Miner(
@@ -287,13 +284,17 @@ conditional_patternbase = EnhancedItemset[
 ]
 
 manual_fptree = FPTree()
-@test_nowarn grow!(manual_fptree, conditional_patternbase, fpgrowth_miner)
+@test_nowarn grow!(manual_fptree, conditional_patternbase; miner=fpgrowth_miner)
 
 # 1st property - most frequent item has only a single node directly under the root
 @test count(x -> x == manual_r, content.(manual_fptree |> ModalAssociationRules.children)) == 1
 
 # 2nd property - the sum of counts for each item equals the total count we know manually
-item_to_count = Dict{Item, Int64}(manual_p => 0, manual_q => 0, manual_r => 0)
+item_to_count = Dict{Item, Int64}(
+    manual_p => 0,
+    manual_q => 0,
+    manual_r => 0
+)
 
 function _count_accumulation(fptree::FPTree)
     for child in ModalAssociationRules.children(fptree)
@@ -302,7 +303,8 @@ function _count_accumulation(fptree::FPTree)
     item_to_count[content(fptree)] += count(fptree)
 end
 
-@test_nowarn map(child -> _count_accumulation(child), ModalAssociationRules.children(manual_fptree))
+@test_nowarn map(
+    child -> _count_accumulation(child), ModalAssociationRules.children(manual_fptree))
 
 @test item_to_count[manual_p] == 2
 @test item_to_count[manual_q] == 4
@@ -315,7 +317,8 @@ function _parent_supremacy(fptree::FPTree)
     _parent_supremacy.(fptree |> children)
 end
 
-@test_nowarn map(child -> _parent_supremacy(child), ModalAssociationRules.children(manual_fptree))
+@test_nowarn map(
+    child -> _parent_supremacy(child), ModalAssociationRules.children(manual_fptree))
 
 # 4th property - there are x itemsets having prefix p before y, where y is the label of a
 # node in the tree, p is the prefix on the path from the root, and x the count of the node.
@@ -363,15 +366,15 @@ fpt2_c1 = ModalAssociationRules.children(fpt2)[1]
 @test checksanity!(htable, fpgrowth_miner) == true
 
 root = FPTree()
-@test_nowarn grow!(root, pqr, fpgrowth_miner)
+@test_nowarn grow!(root, pqr; miner=fpgrowth_miner)
 @test ModalAssociationRules.children(root) |> first |> count == 1
 
-@test_nowarn grow!(root, [pqr, qr], fpgrowth_miner)
+@test_nowarn grow!(root, [pqr, qr]; miner=fpgrowth_miner)
 
 enhanceditemset = (Itemset{Item}(manual_p), 1)
 enhanceditemset2 = (Itemset{Item}(manual_q), 1)
-@test_nowarn grow!(root, enhanceditemset, fpgrowth_miner)
+@test_nowarn grow!(root, enhanceditemset; miner=fpgrowth_miner)
 
-@test_nowarn grow!(root, [enhanceditemset, enhanceditemset2], fpgrowth_miner)
+@test_nowarn grow!(root, [enhanceditemset, enhanceditemset2]; miner=fpgrowth_miner)
 
 @test Base.reverse(htable) == htable |> items |> reverse

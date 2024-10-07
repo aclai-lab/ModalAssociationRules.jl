@@ -235,7 +235,7 @@ time.
 
 See also [`LmeasMemo`](@ref), [`localmemo(::Bulldozer)`](@ref);
 """
-function bulldozer_reduce(local_results::Vector{Bulldozer})
+function bulldozer_reduce(local_results::AbstractVector{Bulldozer})
     b1lmemo = local_results |> first |> localmemo
 
     for i in 2:length(local_results)

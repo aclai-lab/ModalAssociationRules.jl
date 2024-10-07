@@ -81,9 +81,12 @@ See also [`ARule`](@ref), [`gsupport`](@ref), [`Item`](@ref), [`lsupport`](@ref)
 """
 const Itemset{I<:Item} = Vector{I} # maybe here is I<:Item{<:SoleLogics.Formula}?
 
-# TODO - Itemset(::SoleLogics.Formula) should do Itemset{Item}(Item(myarg))
+
 Itemset{I}() where {I<:Item} = I[]
 Itemset{I}(item::Item) where {I<:Item} = I[item]
+
+Itemset(f::SoleLogics.Formula) = Itemset{Item}(Item(f))
+Itemset(item::Item) = Itemset{Item}(item)
 Itemset(items::Vector{I}) where {I<:Item} = Itemset{Item}(items)
 
 items(itemset::Itemset) = itemset

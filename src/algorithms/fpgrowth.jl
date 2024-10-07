@@ -130,7 +130,7 @@ function projection(
 
     if length(pbase) > 0
         bounce!(pbase, miner)
-        grow!(fptree, pbase, miner)
+        grow!(fptree, pbase; miner=miner)
     end
 
     return fptree, HeaderTable(fptree; miner=miner)
@@ -262,7 +262,7 @@ function _fpgrowth(miner::Bulldozer{I}) where {I<:Item}
 
     # create an initial fptree and populate it
     fptree = FPTree()
-    grow!(fptree, nworld_to_itemset, miner)
+    grow!(fptree, nworld_to_itemset; miner=miner)
 
     # create and fill an header table, necessary to traverse FPTrees horizontally
     htable = HeaderTable(fptree; miner=miner)

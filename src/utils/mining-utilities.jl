@@ -3,14 +3,14 @@
 # Itemset utilities
 
 """
-    combine_items(itemsets::Vector{<:Itemset}, newlength::Integer)
+    combine_items(itemsets::AbstractVector{<:Itemset}, newlength::Integer)
 
 Return a generator which combines [`Itemset`](@ref)s from `itemsets` into new itemsets of
 length `newlength` by taking all combinations of two itemsets and joining them.
 
 See also [`Itemset`](@ref).
 """
-function combine_items(itemsets::Vector{<:Itemset}, newlength::Integer)
+function combine_items(itemsets::AbstractVector{<:Itemset}, newlength::Integer)
     return Iterators.filter(
         combo -> length(combo) == newlength,
         Iterators.map(
@@ -21,7 +21,7 @@ function combine_items(itemsets::Vector{<:Itemset}, newlength::Integer)
 end
 
 """
-    combine_items(variable::Vector{<:Item}, fixed::Vector{<:Item})
+    combine_items(variable::AbstractVector{<:Item}, fixed::AbstractVector{<:Item})
 
 Return a generator of [`Itemset`](@ref), which iterates the combinations of [`Item`](@ref)s
 in `variable` and prepend them to `fixed` vector.
@@ -30,12 +30,16 @@ See also [`Item`](@ref), [`Itemset`](@ref).
 
 TODO - this may be deprecated
 """
-function combine_items(variable::Vector{<:Item}, fixed::Vector{<:Item})
+function combine_items(variable::AbstractVector{<:Item}, fixed::AbstractVector{<:Item})
     return (Itemset(union(combo, fixed)) for combo in combinations(variable))
 end
 
 """
-    grow_prune(candidates::Vector{Itemset}, frequents::Vector{Itemset}, k::Integer)
+    grow_prune(
+        candidates::AbstractVector{Itemset},
+        frequents::AbstractVector{Itemset},
+        k::Integer
+    )
 
 Return a generator, which yields only the `candidates` for which every (k-1)-length subset
 is in `frequents`.
@@ -115,7 +119,7 @@ function non_selfabsorbed_rulecheck(rule::ARule)::Bool
 end
 
 """
-    generaterules(itemsets::Vector{Itemset}, miner::Miner)
+    generaterules(itemsets::AbstractVector{Itemset}, miner::Miner)
 
 Raw subroutine of [`generaterules!(miner::Miner; kwargs...)`](@ref).
 
@@ -131,7 +135,7 @@ constraints specified in `rulemeasures(miner)`, and yields the rule if so.
 See also [`ARule`](@ref), [`Miner`](@ref), [`Itemset`](@ref), [`rulemeasures`](@ref).
 """
 @resumable function generaterules(
-    itemsets::Vector{Itemset},
+    itemsets::AbstractVector{Itemset},
     miner::Miner
 )
     # From the original paper at 3.4 here:

@@ -150,13 +150,13 @@ See also [`content`](@ref), [`FPTree`](@ref).
 link(fptree::FPTree)::Union{Nothing,FPTree} = fptree.link
 
 """
-    content!(fptree::FPTree, item::Union{Nothing,Item})
+    content!(fptree::FPTree, item::Item)
 
 Setter for `fptree`'s content (the wrapped item).
 
 See also [`content`](@ref), [`FPTree`](@ref).
 """
-content!(fptree::FPTree, item::Union{Nothing,Item}) = fptree.content = item
+content!(fptree::FPTree, item::Item) = fptree.content = item
 
 """
     parent!(fptree::FPTree, item::Union{Nothing,FPTree})
@@ -478,6 +478,8 @@ See also [`HeaderTable`](@ref), [`Item`](@ref).
 Base.reverse(htable::HeaderTable) = reverse(items(htable))
 
 doc_fptree_grow = """
+    TODO - rewrite this docstring
+
     function grow!(
         fptree::FPTree,
         itemset::Itemset,
@@ -511,8 +513,9 @@ See also [`EnhancedItemset`](@ref), [`FPTree`](@ref), [`gsupport`](@ref),
 """$(doc_fptree_grow)"""
 function grow!(
     fptree::FPTree,
-    enhanceditemset::EnhancedItemset,
-    miner::AbstractMiner
+    enhanceditemset::EnhancedItemset;
+    miner::Union{Nothing,AbstractMiner},
+    kwargs...
 )
     _itemset = itemset(enhanceditemset)
 
@@ -537,7 +540,8 @@ function grow!(
         # there is no need to create a new child, just grow an already existing one
         subfptree = _children[_children_idx]
         addcount!(subfptree, _count)
-        grow!(subfptree, (_itemset[2:end], _count) |> EnhancedItemset, miner)
+        grow!(
+            subfptree, (_itemset[2:end], _count) |> EnhancedItemset; miner=miner, kwargs...)
     else
         # here we want to create a new children FPTree, and set this as its parent;
         # note that we don't want to update count and contributors since we already
@@ -550,18 +554,19 @@ end
 """$(doc_fptree_grow)"""
 function grow!(
     fptree::FPTree,
-    itemset::IT,
-    miner::AbstractMiner
+    itemset::IT;
+    miner::Union{Nothing,AbstractMiner},
+    kwargs...
 ) where {IT<:Itemset}
-    grow!(fptree, convert(EnhancedItemset, itemset, 1), miner)
+    grow!(fptree, convert(EnhancedItemset, itemset, 1); miner=miner, kwargs...)
 end
 
 """$(doc_fptree_grow)"""
 function grow!(
     fptree::FPTree,
-    collection::Union{ConditionalPatternBase,Vector{IT}},
-    miner::AbstractMiner;
+    collection::Union{ConditionalPatternBase,Vector{IT}};
+    miner::Union{Nothing,AbstractMiner},
     kwargs...
 ) where {IT<:Itemset}
-    map(element -> grow!(fptree, element, miner; kwargs...), collection)
+    map(element -> grow!(fptree, element; miner=miner, kwargs...), collection)
 end
