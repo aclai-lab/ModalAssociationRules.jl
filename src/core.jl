@@ -31,7 +31,7 @@ end
 
 See also [`Item`](@ref), [SoleLogics.Formula](https://aclai-lab.github.io/SoleLogics.jl/stable/getting-started/#SoleLogics.Formula).
 """
-formula(item::Item{F}) where {F} = item.formula
+formula(item::Item{F}) where {F<:SoleLogics.Formula} = item.formula
 
 function Base.isless(a::Item, b::Item)
     isless(hash(a), hash(b))
@@ -56,7 +56,7 @@ Semantically, [`Itemset`](@ref)s represent [`Item`](@ref)s (that is, formulas) c
     Interestingness is established through a set of [`MeaningfulnessMeasure`](@ref).
 
 !!! details
-    If you are asking yourself why is this implemented as a vector, it is for two reasons:
+    Itemsets are implemented as a vector for two reasons:
 
     1. [lookup is faster](https://www.juliabloggers.com/set-vs-vector-lookup-in-julia-a-closer-look/)
     when the collection is small (an itemset is unlikely to consist of more than 100 items);
@@ -66,15 +66,32 @@ Semantically, [`Itemset`](@ref)s represent [`Item`](@ref)s (that is, formulas) c
 
 # Examples
 ```julia
-# "min[V1] > 1.0" and "min[V2] ≤ 0.0" (Vi is the ith variable of a generic dataset)
-p = ScalarCondition(VariableMin(1), >, 1.0)  |> Atom |> Item
-q = ScalarCondition(VariableMin(2), <=, 0.0) |> Atom |> Item
+julia> p = ScalarCondition(VariableMin(1), >, 1.0)  |> Atom |> Item
+min[V1] > 1.0
+julia> q = ScalarCondition(VariableMin(2), >=, 0.0) |> Atom |> Item
+min[V2] ≥ 0.0
 
-my_itemset = Itemset([p,q])
+julia> pq = Itemset([p,q])
+julia> qp = Itemset([q,p])
+
+julia> pq == qp
+true
+julia> pq === qp
+false
+
+julia> r = ScalarCondition(VariableMax(3), <=, 2.0) |> Atom |> Item
+max[V3] ≤ 2.0
+julia> pqr = [pq; r];
+
+julia> pq in pqr
+true
+
+julia> formula(pqr) |> syntaxstring
+"(min[V1] > 1.0) ∧ (min[V2] ≥ 0.0) ∧ (max[V3] ≤ 2.0)"
 ```
 
-See also [`ARule`](@ref), [`gsupport`](@ref), [`Item`](@ref), [`lsupport`](@ref),
-[`MeaningfulnessMeasure`](@ref).
+See also [`ARule`](@ref), [`formula`](@ref), [`gsupport`](@ref), [`Item`](@ref),
+[`lsupport`](@ref), [`MeaningfulnessMeasure`](@ref).
 """
 const Itemset{I<:Item} = Vector{I}
 
@@ -82,11 +99,11 @@ Itemset{I}() where {I<:Item} = I[]
 Itemset{I}(item::Item) where {I<:Item} = I[item]
 
 Itemset(f::SoleLogics.Formula) = Itemset{Item}(Item(f))
-Itemset(item::Item) = Itemset{Item}(item)
-Itemset(items::Vector{I}) where {I<:Item} = Itemset{Item}(items)
+Itemset(item::Item) = Itemset{typeof(item)}(item)
+Itemset(items::Vector{I}) where {I<:Item} = Itemset{I}(items)
 
 function Base.convert(::Type{Itemset}, item::Item)
-    return Itemset{Item}(item)
+    return Itemset{typeof(item)}(item) # This could be Itemset{typeof(item)}(item)
 end
 
 function Base.:(==)(itemset1::Itemset, itemset2::Itemset)
@@ -109,59 +126,48 @@ function Base.show(io::IO, itemset::Itemset)
 end
 
 """
-    formula(itemset::Itemset)
+    formula(itemset::Itemset)::SoleLogics.LeftmostConjunctiveForm
 
 Conjunctive normal form of the [`Item`](@ref)s contained in `itemset`.
 
-See also [`Item`](@ref), [`Itemset`](@ref), [`SoleLogics.LeftmostConjunctiveForm`](@ref)
+See also [`Item`](@ref), [`Itemset`](@ref),
+[`SoleLogics.LeftmostConjunctiveForm`](https://aclai-lab.github.io/SoleLogics.jl/stable/more-on-formulas/#SoleLogics.LeftmostConjunctiveForm)
 """
-formula(itemset::Itemset) = formula.(itemset) |> LeftmostConjunctiveForm
+formula(itemset::Itemset)::SoleLogics.LeftmostConjunctiveForm = begin
+    formula.(itemset) |> LeftmostConjunctiveForm
+end
 
 """
-    const EnhancedItemset = Tuple{Itemset,Int64}
+    const EnhancedItemset = Tuple{Itemset,UInt32}
 
-An [`Itemset`](@ref), paired with an integer number.
-This type is useful when, in a certain mining algorithm (e.g., [`fpgrowth`](@ref)), you need
-to compress multiple, identical itemsets in one.
+Compressed representation of multiple, identical [`Itemset`](@ref)s.
 
 See also [`Itemset`](@ref).
 """
 const EnhancedItemset = Tuple{<:Itemset,Int64}
 
 """
-    itemset(enhitemset::EnhancedItemset)
+    itemset(enhitemset::EnhancedItemset)::Itemset
 
-Getter for the [`Itemset`](@ref) wrapped within `enhitemset`.
+Getter for the [`Itemset`](@ref) wrapped within an [`EnhancedItemset`](@ref).
 
 See also [`EnhancedItemset`](@ref), [`Itemset`](@ref).
 """
 itemset(enhitemset::EnhancedItemset) = first(enhitemset)
 
 """
-    itemset(enhitemset::EnhancedItemset)
+    itemset(enhitemset::EnhancedItemset)::Int64
 
 Getter for the integer counter wrapped within `enhitemset`.
 
 See also [`EnhancedItemset`](@ref), [`Itemset`](@ref).
 """
-count(enhitemset::EnhancedItemset) = last(enhitemset)
+count(enhitemset::EnhancedItemset)::Int64 = last(enhitemset)
 
-"""
-    function Base.convert(::Type{EnhancedItemset}, itemset::Itemset, count::Int64)
-
-See also [`EnhancedItemset`](@ref), [`Itemset`](@ref).
-"""
 function Base.convert(::Type{EnhancedItemset}, itemset::Itemset, count::Int64)
     return EnhancedItemset((itemset, count))
 end
 
-"""
-    function Base.convert(::Type{Itemset}, enhanceditemset::EnhancedItemset)
-
-Conversion from [`EnhancedItemset`](@ref) to [`Itemset`](@ref).
-
-See also [`EnhancedItemset`](@ref), [`Itemset`](@ref).
-"""
 function Base.convert(::Type{Itemset}, enhanceditemset::EnhancedItemset)
     return first(enhanceditemset)
 end
@@ -174,11 +180,12 @@ end
     const ConditionalPatternBase = Vector{EnhancedItemset}
 
 Collection of [`EnhancedItemset`](@ref).
-This is useful to manipulate certain data structures when looking for frequent
-[`Itemset`](@ref)s, such as [`FPTree`](@ref)s.
 
-In fact, this is used to implement [`fpgrowth`](@ref) algorithm
-[as described here](https://www.cs.sfu.ca/~jpei/publications/sigmod00.pdf).
+!!! note
+    This plays a central role in the state-of-the-art algorithm [`fpgrowth`](@ref).
+    In this algorithm, in fact, a [`ConditionalPatternBase`](@ref) embodies all the
+    information needed to build an important data structure called [`FPTree`](@ref)
+    in the algorithm.
 
 See also [`EnhancedItemset`](@ref), [`fpgrowth`](@ref), [`FPTree`](@ref).
 """
@@ -187,23 +194,25 @@ const ConditionalPatternBase = Vector{EnhancedItemset}
 """
     const ARule = Tuple{Itemset,Itemset}
 
-An association rule represents a strong and meaningful co-occurrence relationship of the
-form "X ⇒ Y", between two [`Itemset`](@ref)s X and Y, where X ∩ Y = ∅, respectively called
-[`antecedent`](@ref) and [`consequent`](@ref).
+An association rule represents a *frequent* and *meaningful* co-occurrence relationship of
+the form "X ⇒ Y", between two [`Itemset`](@ref)s X and Y, where X ∩ Y = ∅, respectively
+called [`antecedent`](@ref) and [`consequent`](@ref).
 
-Note that, given an itemset Z containing atleast two [`Item`](@ref)s (|Z| ≥ 2), it can be
-partitioned in two (sub)itemsets X and Y. Trying all the possible binary partitioning of Z
-is a systematic way to generate [`ARule`](@ref)s.
+!!! note
+    Extracting all the [`ARule`](@ref) "hidden" in the data is the main purpose of
+    association rule mining (ARM).
 
-Extracting all the [`ARule`](@ref) "hidden" in the data is the main purpose of association
-rule mining (ARM).
+    Given an itemset Z containing atleast two [`Item`](@ref)s (|Z| ≥ 2), it can be
+    partitioned in two (sub)itemsets X and Y; trying all the possible binary partitioning
+    of Z is a systematic way to generate [`ARule`](@ref)s.
 
-The general framework always followed by ARM techniques is to, firstly, generate all the
-frequent itemsets considering a set of [`MeaningfulnessMeasure`](@ref) specifically
-tailored to work with [`Itemset`](@ref)s.
-Thereafter, all the association rules are generated by testing all the combinations of
-frequent itemsets against another set of [`MeaningfulnessMeasure`](@ref), this time
-designed to capture how interesting a rule is.
+    The general framework always followed by ARM techniques is to, firstly, generate all the
+    frequent itemsets considering a set of [`MeaningfulnessMeasure`](@ref) specifically
+    tailored to work with [`Itemset`](@ref)s.
+
+    Thereafter, all the association rules are generated by testing all the combinations of
+    frequent itemsets against another set of [`MeaningfulnessMeasure`](@ref), this time
+    designed to capture how interesting a rule is.
 
 See also [`antecedent`](@ref), [`consequent`](@ref), [`gconfidence`](@ref),
 [`Itemset`](@ref), [`lconfidence`](@ref), [`MeaningfulnessMeasure`](@ref).
@@ -302,9 +311,21 @@ function Base.show(
 end
 
 """
+    ARMSubject = Union{ARule,Itemset}
+
+Each entity mined through an association rule mining algorithm.
+
+See also [`ARule`](@ref), [`GmeasMemo`](@ref), [`GmeasMemoKey`](@ref), [`Itemset`](@ref),
+[`LmeasMemo`](@ref), [`LmeasMemoKey`](@ref).
+"""
+const ARMSubject = Union{ARule,Itemset}
+
+
+
+"""
     const Threshold = Float64
 
-Threshold value for [`MeaningfulnessMeasure`](@ref)s.
+Threshold value type for [`MeaningfulnessMeasure`](@ref)s.
 
 See also [`gconfidence`](@ref), [`gsupport`](@ref), [`lconfidence`](@ref),
 [`lsupport`](@ref), [`MeaningfulnessMeasure`](@ref).
@@ -314,7 +335,7 @@ const Threshold = Float64
 """
     const MeaningfulnessMeasure = Tuple{Function, Threshold, Threshold}
 
-To fully understand this description, we recommend reading
+To fully understand this description, we suggest reading
 [this article](http://ictcs2024.di.unito.it/wp-content/uploads/2024/08/ICTCS_2024_paper_16.pdf).
 
 In the classic propositional case scenario, we can think each instance as a propositional
@@ -389,7 +410,7 @@ See also [`getlocalthreshold`](@ref), [`gsupport`](@ref), [`islocalof`](@ref),
 isglobalof(::Function, ::Function)::Bool = false
 
 """
-    localof(::Function)
+    localof(::Function)::Union{Nothing,MeaningfulnessMeasure}
 
 Return the local measure associated with the given one.
 
@@ -398,7 +419,7 @@ See also [`islocalof`](@ref), [`isglobalof`](@ref), [`globalof`](@ref), [`linkme
 localof(::Function) = nothing
 
 """
-    globalof(::Function) = nothing
+    globalof(::Function)::Union{Nothing,MeaningfulnessMeasure} = nothing
 
 Return the global measure associated with the given one.
 
@@ -407,14 +428,22 @@ See also [`linkmeas`](@ref), [`islocalof`](@ref), [`isglobalof`](@ref), [`localo
 globalof(::Function) = nothing
 
 """
-    ARMSubject = Union{ARule,Itemset}
+    const WorldMask = Vector{Int64}
 
-Every entity mined through an association rule mining algorithm.
+Vector whose i-th position stores how many times a certain [`MeaningfulnessMeasure`](@ref)
+applied on a specific [`Itemset`](@ref)s is true on the i-th world of multiple instances.
 
-See also [`GmeasMemo`](@ref), [`GmeasMemoKey`](@ref), [`LmeasMemo`](@ref),
-[`LmeasMemoKey`](@ref).
+If a single instance is considered, then this acts as a bit mask.
+
+For example, if we consider 5 Kripke models of a modal dataset, each of which containing 3
+worlds, then the [`WorldMask`](@ref) of an itemset could be [5,2,0], meaning that the
+itemset is always true on the first world of every instance. In the second world, the same
+itemset is true on it only for two instances. Considering the third world, then the itemset
+is never true.
+
+See also [`Itemset`](@ref), [`MeaningfulnessMeasure`](@ref).
 """
-const ARMSubject = Union{ARule,Itemset} # memoizable association-rule-mining types
+ const WorldMask = Vector{Int64}
 
 
 
@@ -505,21 +534,3 @@ mining.
 See also [`Miner`](@ref), [`Bulldozer`](@ref).
 """
 abstract type AbstractMiner end
-
-"""
-    const WorldMask = Vector{Int64}
-
-Vector whose i-th position stores how many times a certain [`MeaningfulnessMeasure`](@ref)
-applied on a specific [`Itemset`](@ref)s is true on the i-th world of multiple instances.
-
-If a single instance is considered, then this acts as a bit mask.
-
-For example, if we consider 5 Kripke models of a modal dataset, each of which containing 3
-worlds, then the [`WorldMask`](@ref) of an itemset could be [5,2,0], meaning that the
-itemset is always true on the first world of every instance. In the second world, the same
-itemset is true on it only for two instances. Considering the third world, then the itemset
-is never true.
-
-See also [`Itemset`](@ref), [`MeaningfulnessMeasure`](@ref).
-"""
- const WorldMask = Vector{Int64}

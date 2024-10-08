@@ -32,25 +32,32 @@ using StatsBase
 include("core.jl")
 
 export Item, formula
-export Itemset, formula, slice
+export Itemset
 
-export Threshold
-export WorldMask, EnhancedItemset, ConditionalPatternBase
-
-export AbstractMiner
-export MineableData
+export EnhancedItemset, count
+export ConditionalPatternBase
 
 export ARule
-export antecedent, consequent
+export content, antecedent, consequent
 
+export ARMSubject
+
+export Threshold
 export MeaningfulnessMeasure
 export islocalof, isglobalof
 export localof, globalof
 
-export ARMSubject
+export WorldMask
+
 export LmeasMemoKey, LmeasMemo
 export GmeasMemoKey, GmeasMemo
-export Info, MiningState
+
+export MiningState
+export Info
+export MineableData
+
+export AbstractMiner
+export MineableData
 
 include("miner.jl")
 
