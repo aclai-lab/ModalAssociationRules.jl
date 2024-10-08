@@ -53,7 +53,7 @@ function patternbase(
         # Note that, although we are working with enhanced itemsets, the sorting only
         # requires to consider the items inside them (so, the "non-enhanced" part).
         sort!(
-            items(_itemset),
+            _itemset,
             by=t -> miningstate(miner, :current_items_frequency)[t],
             rev=true
         )
@@ -103,7 +103,7 @@ function bounce!(pbase::ConditionalPatternBase, miner::AbstractMiner)
     for enhanceditemset in pbase
         filter!(_item ->
             count_accumulator[_item] / _nworlds >= _lsupport_threshold,
-            enhanceditemset |> itemset |> items
+            enhanceditemset |> itemset
         )
     end
 
@@ -379,10 +379,10 @@ function _fpgrowth_count_phase(
     count_increment_strategy::Function,
     miner::Bulldozer
 )
-    for combo in combine_items(items(survivor_itemset), items(leftout_itemset))
+    for combo in combine_items(survivor_itemset, leftout_itemset)
         # each combo must be reshaped, following a certain order specified
         # universally by the miner (lexicographi ordering).
-        sort!(items(combo))
+        sort!(combo)
 
         # instance for which we want to update local support
         memokey = (:lsupport, combo, instancenumber(miner))

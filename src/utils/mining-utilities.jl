@@ -160,7 +160,7 @@ See also [`ARule`](@ref), [`Miner`](@ref), [`Itemset`](@ref), [`rulemeasures`](@
             # (l-a)
             _consequent = subset == Any[] ? Itemset{Item}() : Itemset{Item}()
             # a
-            _antecedent = symdiff(items(itemset), items(_consequent)) |> Itemset
+            _antecedent = symdiff(itemset, _consequent) |> Itemset
 
             # degenerate case
             if length(_antecedent) < 1 || length(_consequent) != 1

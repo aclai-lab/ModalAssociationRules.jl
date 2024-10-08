@@ -7,18 +7,12 @@ Fundamental type in the context of
 [association rule mining](https://en.wikipedia.org/wiki/Association_rule_learning).
 
 The name [`Item`](@ref) comes from the classical association rule mining jargon,
-but it is simply a logical formula, whose truth value can be checked on a model.
-
-The purpose of association rule mining (ARM) is to discover *interesting* relations between
-[`Item`](@ref)s, regrouped in [`Itemset`](@ref)s.
-
-Interestingness is established through a set of [`MeaningfulnessMeasure`](@ref),
-such as [`gsupport`](@ref).
-
-From interesting itemsets, interesting *association rules* ([ARule](@ref)) can be generated.
+but it is simply a wrapper around a logical formula, whose truth value can be checked on a
+model. To know more about logical formulas, see
+[SoleLogics.Formula](https://aclai-lab.github.io/SoleLogics.jl/stable/getting-started/#SoleLogics.Formula).
 
 See also [`ARule`](@ref), [`gconfidence`](@ref), [`Itemset`](@ref),
-[`MeaningfulnessMeasure`](@ref).
+[`MeaningfulnessMeasure`](@ref), [SoleLogics.Formula](https://aclai-lab.github.io/SoleLogics.jl/stable/getting-started/#SoleLogics.Formula).
 """
 struct Item{F<:SoleLogics.Formula}
     formula::F
@@ -32,6 +26,11 @@ function Base.convert(::Type{Item}, formula::SoleLogics.Formula)::Item
     return Item(formula)
 end
 
+"""
+    formula(item::Item{F}) where {F}
+
+See also [`Item`](@ref), [SoleLogics.Formula](https://aclai-lab.github.io/SoleLogics.jl/stable/getting-started/#SoleLogics.Formula).
+"""
 formula(item::Item{F}) where {F} = item.formula
 
 function Base.isless(a::Item, b::Item)
@@ -43,44 +42,41 @@ function Base.show(io::IO, item::Item)
 end
 
 """
-    struct Itemset
-        items::Vector{Item}
-    end
+    const Itemset{I<:Item} = Vector{I}
 
-Encoding of a conjunction between *unique* [`Item`](@ref)s.
+Vector collecting multiple [`Item`](@ref)s.
 
-Given a [`MeaningfulnessMeasure`](@ref) `meas` and a threshold to be overpassed `t`,
-then an itemset `itemset` is said to be meaningful with respect to `meas` if and only if
-`meas(itemset) > t`.
+Semantically, [`Itemset`](@ref)s represent [`Item`](@ref)s (that is, formulas) conjunctions.
 
-Generally speaking, meaningfulness (or interestingness) of an itemset is directly
-correlated to its frequency in the data: intuitively, when a pattern is recurrent in data,
-then it is candidate to be interesting.
+!!! note
+    In the context of association rule mining, *interesting* itemsets are manipulated to
+    discover *interesting* relations between [`Item`](@ref)s, in the form of association
+    rules ([ARule](@ref)).
 
-Every association rule mining algorithm aims to find *frequent* itemsets by applying
-meaningfulness measures such as local and global support, respectively [`lsupport`](@ref)
-and [`gsupport`](@ref).
+    Interestingness is established through a set of [`MeaningfulnessMeasure`](@ref).
 
-Frequent itemsets are then used to generate association rules ([`ARule`](@ref)).
-
-!!! warning
-    Keep in mind that [Itemset](@ref)'s interface is the same as a generic Vector
-    ([see Julia interfaces documentation here](https://docs.julialang.org/en/v1/manual/interfaces/)),
-    but behaves as a Set (as the name item*Set* suggests).
-
+!!! details
     If you are asking yourself why is this implemented as a vector, it is for two reasons:
+
     1. [lookup is faster](https://www.juliabloggers.com/set-vs-vector-lookup-in-julia-a-closer-look/)
     when the collection is small (an itemset is unlikely to consist of more than 100 items);
 
-    2. we want to keep an ordering between items in the vast majority of all mining
-    algorithms; if two [`Itemset`](@ref) are created with the same content, regardless
-    of their items order, then their hash is the same.
+    2. most of the time, we want to keep an ordering between items while searching for
+    interesting itemsets.
+
+# Examples
+```julia
+# "min[V1] > 1.0" and "min[V2] ≤ 0.0" (Vi is the ith variable of a generic dataset)
+p = ScalarCondition(VariableMin(1), >, 1.0)  |> Atom |> Item
+q = ScalarCondition(VariableMin(2), <=, 0.0) |> Atom |> Item
+
+my_itemset = Itemset([p,q])
+```
 
 See also [`ARule`](@ref), [`gsupport`](@ref), [`Item`](@ref), [`lsupport`](@ref),
 [`MeaningfulnessMeasure`](@ref).
 """
-const Itemset{I<:Item} = Vector{I} # maybe here is I<:Item{<:SoleLogics.Formula}?
-
+const Itemset{I<:Item} = Vector{I}
 
 Itemset{I}() where {I<:Item} = I[]
 Itemset{I}(item::Item) where {I<:Item} = I[item]
@@ -88,8 +84,6 @@ Itemset{I}(item::Item) where {I<:Item} = I[item]
 Itemset(f::SoleLogics.Formula) = Itemset{Item}(Item(f))
 Itemset(item::Item) = Itemset{Item}(item)
 Itemset(items::Vector{I}) where {I<:Item} = Itemset{Item}(items)
-
-items(itemset::Itemset) = itemset
 
 function Base.convert(::Type{Itemset}, item::Item)
     return Itemset{Item}(item)
@@ -106,8 +100,8 @@ end
 function Base.in(itemset1::Itemset, itemset2::Itemset)
     # naive quadratic search solution is better than the second one (commented)
     # since itemsets are intended to be fairly short (6/7 conjuncts at most).
-    return all(item -> item in items(itemset2), items(itemset1))
-    # return issubset(Set(itemset1 |> items) in Set(itemset2 |> items))
+    return all(item -> item in itemset2, itemset1)
+    # return issubset(Set(itemset1) in Set(itemset2))
 end
 
 function Base.show(io::IO, itemset::Itemset)
@@ -121,7 +115,7 @@ Conjunctive normal form of the [`Item`](@ref)s contained in `itemset`.
 
 See also [`Item`](@ref), [`Itemset`](@ref), [`SoleLogics.LeftmostConjunctiveForm`](@ref)
 """
-formula(itemset::Itemset) = formula.(itemset |> items) |> LeftmostConjunctiveForm
+formula(itemset::Itemset) = formula.(itemset) |> LeftmostConjunctiveForm
 
 """
     const EnhancedItemset = Tuple{Itemset,Int64}
@@ -290,8 +284,8 @@ function Base.convert(::Type{Itemset}, arule::ARule)::Itemset
 end
 
 function Base.hash(arule::ARule, h::UInt)
-    _antecedent = sort(arule |> antecedent |> items)
-    _consequent = sort(arule |> consequent |> items)
+    _antecedent = sort(arule |> antecedent)
+    _consequent = sort(arule |> consequent)
     return hash(vcat(_antecedent, _consequent), h)
 end
 

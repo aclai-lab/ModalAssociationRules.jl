@@ -525,7 +525,7 @@ function grow!(
     end
 
     # sorting must be guaranteed: remember an FPTree essentially is a prefix tree
-    sort!(items(_itemset), by=t -> miningstate(
+    sort!(_itemset, by=t -> miningstate(
         miner, :current_items_frequency)[t], rev=true)
 
     # retrieve the item to grow the tree, and its count

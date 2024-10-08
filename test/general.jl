@@ -377,4 +377,4 @@ enhanceditemset2 = (Itemset(manual_q), 1)
 @test_nowarn grow!(
     root, ConditionalPatternBase([enhanceditemset, enhanceditemset2]); miner=fpgrowth_miner)
 
-@test Base.reverse(htable) == htable |> items |> reverse
+@test Base.reverse(htable) == items(htable) |> reverse
