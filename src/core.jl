@@ -132,7 +132,7 @@ to compress multiple, identical itemsets in one.
 
 See also [`Itemset`](@ref).
 """
-const EnhancedItemset = Tuple{<:Itemset,Int64} # Tuple{Itemset,Int64}
+const EnhancedItemset = Tuple{<:Itemset,Int64}
 
 """
     itemset(enhitemset::EnhancedItemset)

@@ -59,11 +59,11 @@ r = Itemset{Item}(manual_r)
 
 @test manual_p in pq
 @test pq in pqr
-@test !(pq in [manual_p, manual_q, manual_r])
+@test (pq in [manual_p, manual_q, manual_r])
 @test pq in [pq, pqr, qr]
 
 @test formula(pq) isa LeftmostConjunctiveForm
-@test formula(pq).children |> first in [manual_p, manual_q]
+@test formula(pq).children |> first |> Item in [manual_p, manual_q]
 
 @test Threshold <: Float64
 @test WorldMask <: Vector{Int64}
@@ -371,10 +371,10 @@ root = FPTree()
 
 @test_nowarn grow!(root, [pqr, qr]; miner=fpgrowth_miner)
 
-enhanceditemset = (Itemset{Item}(manual_p), 1)
-enhanceditemset2 = (Itemset{Item}(manual_q), 1)
+enhanceditemset = (Itemset(manual_p), 1)
+enhanceditemset2 = (Itemset(manual_q), 1)
 @test_nowarn grow!(root, enhanceditemset; miner=fpgrowth_miner)
-
-@test_nowarn grow!(root, [enhanceditemset, enhanceditemset2]; miner=fpgrowth_miner)
+@test_nowarn grow!(
+    root, ConditionalPatternBase([enhanceditemset, enhanceditemset2]); miner=fpgrowth_miner)
 
 @test Base.reverse(htable) == htable |> items |> reverse
