@@ -156,7 +156,7 @@ macro globalmeasure(measname, measlogic)
             subject::ARMSubject,
             X::SupportedLogiset,
             threshold::Threshold,
-            miner::Miner
+            miner::AbstractMiner
         )
             # key to access memoization structures
             memokey = GmeasMemoKey((Symbol($(esc(fname))), subject))
@@ -239,7 +239,7 @@ end
     function lsupport(
         itemset::Itemset,
         instance::LogicalInstance;
-        miner::Union{Nothing,Miner}=nothing
+        miner::Union{Nothing,AbstractMiner}=nothing
     )::Float64
 
 Compute the local support for the given `itemset` in the given `instance`.
@@ -258,7 +258,7 @@ See also [`Miner`](@ref), [`LogicalInstance`](@ref), [`Itemset`](@ref).
         itemset::Itemset,
         X::SupportedLogiset,
         threshold::Threshold;
-        miner::Union{Nothing,Miner}=nothing
+        miner::Union{Nothing,AbstractMiner}=nothing
     )::Float64
 
 Compute the global support for the given `itemset` on a logiset `X`, considering `threshold`
@@ -297,7 +297,7 @@ end
     function lconfidence(
         rule::ARule,
         ith_instance::LogicalInstance;
-        miner::Union{Nothing,Miner}=nothing
+        miner::Union{Nothing,AbstractMiner}=nothing
     )::Float64
 
 Compute the local confidence for the given `rule` in the given instance.
@@ -308,7 +308,7 @@ same rule.
 
 If a miner is provided, then its internal state is updated and used to leverage memoization.
 
-See also [`antecedent`](@ref), [`ARule`](@ref), [`Miner`](@ref),
+See also [`AbstractMiner`](@ref), [`antecedent`](@ref), [`ARule`](@ref),
 [`LogicalInstance`](@ref), [`lsupport`](@ref).
 """
 @localmeasure lconfidence _lconfidence_logic
@@ -318,7 +318,7 @@ See also [`antecedent`](@ref), [`ARule`](@ref), [`Miner`](@ref),
         rule::ARule,
         X::SupportedLogiset,
         threshold::Threshold;
-        miner::Union{Nothing,Miner}=nothing
+        miner::Union{Nothing,AbstractMiner}=nothing
     )::Float64
 
 Compute the global confidence for the given `rule` on a logiset `X`, considering
@@ -331,7 +331,7 @@ the same rule.
 If a miner is provided, then its internal state is updated and used to leverage
 memoization.
 
-See also [`antecedent`](@ref), [`ARule`](@ref), [`Miner`](@ref), [`gsupport`](@ref),
+See also [`antecedent`](@ref), [`ARule`](@ref), [`AbstractMiner`](@ref), [`gsupport`](@ref),
 [`SupportedLogiset`](@ref).
 """
 @globalmeasure gconfidence _gconfidence_logic

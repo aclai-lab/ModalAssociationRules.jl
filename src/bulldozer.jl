@@ -78,38 +78,6 @@ struct Bulldozer{I<:Item} <: AbstractMiner
 end
 
 """
-TODO
-"""
-itemtype(::Bulldozer{I}) where {I<:Item} = I
-
-"""
-    data(bulldozer::Bulldozer)
-
-Getter for the instance wrapped by `bulldozer`.
-See also [`Bulldozer`](@ref), [`SoleLogics.LogicalInstance`](@ref).
-
-"""
-data(bulldozer::Bulldozer) = bulldozer.instance
-
-"""
-    instance(bulldozer::Bulldozer) = bulldozer.instance
-
-Getter for the instance wrapped by `bulldozer`'s.
-
-See also [`instancenumber(::Bulldozer)`](@ref).
-"""
-instance(bulldozer::Bulldozer) = bulldozer.instance
-
-"""
-    instancenumber(bulldozer::Bulldozer)
-
-Retrieve the instance number associated with `bulldozer`.
-
-See also [`Bulldozer`](@ref), [`data(::Bulldozer)`](@ref).
-"""
-instancenumber(bulldozer::Bulldozer) = bulldozer.ith_instance
-
-"""
     datalock(bulldozer::Bulldozer)
 
 Getter for the [`ReentrantLock`](@ref) associated with the
@@ -134,23 +102,58 @@ a [`Bulldozer`](@ref).
 miningstatelock(bulldozer::Bulldozer) = bulldozer.miningstatelock
 
 """
-    localmemo!(bulldozer::Bulldozer, key::LmeasMemoKey, val::Threshold)
-
-Setter for [`Bulldozer`](@ref)'s memoization structure.
-
-See also [`localmemo`](@ref), [`LmeasMemo`](@ref), [`LmeasMemoKey`](@ref).
+TODO
 """
-localmemo!(
-    bulldozer::Bulldozer,
-    key::LmeasMemoKey,
-    val::Threshold
-) = lock(memolock(bulldozer)) do
-    bulldozer.localmemo[key] = val
-end
+itemtype(::Bulldozer{I}) where {I<:Item} = I
 
+"""
+    data(bulldozer::Bulldozer)
+
+See [`data(::AbstractMiner)`](@ref), [`SoleLogics.LogicalInstance`](@ref).
+"""
+data(bulldozer::Bulldozer) = bulldozer.instance
+
+"""
+    items(bulldozer::Bulldozer)
+
+See [`items(::AbstractMiner)`](@ref).
+"""
+items(bulldozer::Bulldozer) = bulldozer.items
+
+"""
+    instance(bulldozer::Bulldozer) = bulldozer.instance
+
+Getter for the instance wrapped by `bulldozer`'s.
+Synonym for [`data(::Bulldozer)`](@ref).
+
+See also [`instancenumber(::Bulldozer)`](@ref).
+"""
+instance(bulldozer::Bulldozer) = bulldozer.instance
+
+"""
+    instancenumber(bulldozer::Bulldozer)
+
+Retrieve the instance number associated with `bulldozer`.
+
+See also [`Bulldozer`](@ref), [`data(::Bulldozer)`](@ref).
+"""
+instancenumber(bulldozer::Bulldozer) = bulldozer.ith_instance
+
+"""
+    itemsetmeasures(bulldozer::Bulldozer)::Vector{<:MeaningfulnessMeasure}
+
+See also [`itemsetmeasures(::AbstractMiner)`](@ref).
+"""
 itemsetmeasures(
     bulldozer::Bulldozer
 )::Vector{<:MeaningfulnessMeasure} = bulldozer.itemsetmeasures
+
+"""
+    localmemo(miner::Bulldozer)
+
+See [`localmemo(::AbstractMiner)`](@ref).
+"""
+localmemo(miner::Bulldozer) = miner.localmemo
 
 """
     miningstate(bulldozer::Bulldozer)::MiningState
@@ -165,14 +168,14 @@ miningstate(bulldozer::Bulldozer)::MiningState = lock(miningstatelock(bulldozer)
     bulldozer.miningstate
 end
 miningstate(bulldozer::Bulldozer, key::Symbol)::Any = lock(miningstatelock(bulldozer)) do
-    bulldozer.miningstate[key]
+    miningstate(bulldozer)[key]
 end
 miningstate(
     bulldozer::Bulldozer,
     key::Symbol,
     inner_key
 )::Any = lock(miningstatelock(bulldozer)) do
-    (bulldozer.miningstate[key])[inner_key]
+    miningstate(bulldozer, key)[inner_key]
 end
 
 """
@@ -259,7 +262,7 @@ its global support, in order to simplify `miner`'s job when working in the globa
 
 See also [`Itemset`](@ref), [`LmeasMemo`](@ref), [`lsupport`](@ref), [`Miner`](@ref).
 """
-function load_localmemo!(miner::Miner, localmemo::LmeasMemo)
+function load_localmemo!(miner::AbstractMiner, localmemo::LmeasMemo)
     # remember a local memo key is a Tuple{Symbol,ARMSubject,Int64}
 
     fpgrowth_fragments = DefaultDict{Itemset,Int64}(0)

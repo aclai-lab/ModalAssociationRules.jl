@@ -13,7 +13,7 @@ to also work with modal logic.
 See also [`Miner`](@ref), [`SoleBase.MineableData`](@ref).
 """
 function apriori(
-    miner::Miner,
+    miner::AbstractMiner,
     X::MineableData;
     verbose::Bool=false
 )::Nothing

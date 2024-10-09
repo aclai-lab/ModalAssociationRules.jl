@@ -85,10 +85,6 @@ function bounce!(pbase::ConditionalPatternBase, miner::AbstractMiner)
     # its second element is the threshold we are looking for.
     _lsupport_threshold = findmeasure(miner, lsupport)[2]
 
-    # DEPRECATED
-    # _support_meas = Iterators.filter(m -> m[1] == gsupport, itemsetmeasures(miner)) |> first
-    # _lsupport_threshold = _support_meas[2]
-
     _nworlds = frame(miner) |> SoleLogics.nworlds
 
     # enhanceditemset shape : (itemset, count)
@@ -141,7 +137,7 @@ end
 # fpgrowth implementation starts here
 
 """
-    fpgrowth(miner::Miner, X::MineableData; verbose::Bool=true)::Nothing
+    fpgrowth(miner::AbstractMiner, X::MineableData; verbose::Bool=true)::Nothing
 
 (Modal) FP-Growth algorithm, [as described here](http://ictcs2024.di.unito.it/wp-content/uploads/2024/08/ICTCS_2024_paper_16.pdf).
 
@@ -153,11 +149,18 @@ end
 - `distributed`: enable multi-processing execution, with `Distributed.nworkers()` processes;
 - `verbose`: print detailed informations while the algorithm runs.
 
-See also [`Miner`](@ref), [`FPTree`](@ref), [`HeaderTable`](@ref),
-[`SoleBase.AbstractDataset`](@ref)
+# Requirements
+This implementation requires a custom [`Bulldozer`](@ref) constructor capable of handling
+the given [`AbstractMiner`](@ref). In particular, the following dispatch must be
+implemented:
+
+```Bulldozer(miner::MyMinerType, ith_instance::Int64)```
+
+See also [`AbstractMiner`](@ref), [`Bulldozer`](@ref), [`FPTree`](@ref),
+[`HeaderTable`](@ref), [`SoleBase.AbstractDataset`](@ref)
 """
 function fpgrowth(
-    miner::Miner,
+    miner::AbstractMiner,
     X::MineableData;
     parallel::Bool=true,
     distributed::Bool=false,
