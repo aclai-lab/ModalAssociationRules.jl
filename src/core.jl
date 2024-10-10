@@ -551,7 +551,7 @@ For example, [`Miner`](@ref) does completely implement the interface while
 - globalmemo(miner::AbstractMiner)
 
 - miningstate(miner::AbstractMiner)
-- info(miner::Miner)
+- info(miner::AbstractMiner)
 
 See also [`Miner`](@ref), [`Bulldozer`](@ref).
 """
@@ -638,7 +638,7 @@ See also [`Miner`](@ref), [`LmeasMemo`](@ref), [`LmeasMemoKey`](@ref).
 """
 localmemo(::AbstractMiner)::LmeasMemo = error("Not implemented.")
 localmemo(miner::AbstractMiner, key::LmeasMemoKey)::Union{Nothing,Threshold} = begin
-    get(miner.localmemo, key, nothing)
+    get(localmemo(miner), key, nothing)
 end
 
 """
@@ -663,7 +663,7 @@ See also [`Miner`](@ref), [`GmeasMemo`](@ref), [`GmeasMemoKey`](@ref).
 """
 globalmemo(::AbstractMiner)::GmeasMemo = error("Not implemented.")
 globalmemo(miner::AbstractMiner, key::GmeasMemoKey)::Union{Nothing,Threshold} = begin
-    get(miner.globalmemo, key, nothing)
+    get(globalmemo(miner), key, nothing)
 end
 
 """
