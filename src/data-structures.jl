@@ -5,7 +5,7 @@
         parent::Union{Nothing,FPTree}       # parent node
         const children::Vector{FPTree}      # children nodes
 
-        count::Int64                        # number of equal Items this node represents
+        count::Integer                        # number of equal Items this node represents
 
         link::Union{Nothing,FPTree}         # link to another FPTree root
     end
@@ -35,7 +35,7 @@ mutable struct FPTree
     content::Union{Nothing,Item}        # Item contained in this node (nothing if root)
     parent::Union{Nothing,FPTree}       # parent node
     const children::Vector{FPTree}      # children nodes
-    count::Int64                        # number of equal Items this node represents
+    count::Integer                        # number of equal Items this node represents
 
     link::Union{Nothing,FPTree}         # link to another FPTree root
 
@@ -78,7 +78,7 @@ mutable struct FPTree
         return fptree
     end
 
-    function FPTree(item::Item, count::Int64)
+    function FPTree(item::Item, count::Integer)
         return new(item, nothing, FPTree[], count, nothing)
     end
 
@@ -128,7 +128,7 @@ See also [`children!`](@ref), [`FPTree`](@ref).
 children(fptree::FPTree)::Vector{FPTree} = fptree.children
 
 """
-    Base.count(fptree::FPTree)::Int64
+    Base.count(fptree::FPTree)::Integer
 
 Getter for the `fptree` internal counter.
 Essentially, it represents the number of overlappings [`Item`](@ref) which ended up in
@@ -136,7 +136,7 @@ Essentially, it represents the number of overlappings [`Item`](@ref) which ended
 
 See also [`count!`](@ref), [`FPTree`](@ref), [`Item`](@ref).
 """
-Base.count(fptree::FPTree)::Int64 = fptree.count
+Base.count(fptree::FPTree)::Integer = fptree.count
 
 """
     link(fptree::FPTree)::Union{Nothing,FPTree}
@@ -188,22 +188,22 @@ children!(fptree::FPTree, child::FPTree) = begin
 end
 
 """
-    count!(fptree::FPTree, newcount::Int64)
+    count!(fptree::FPTree, newcount::Integer)
 
 Setter for `fptree`'s internal counter to a fixed value `newcount`.
 
 See also [`count`](@ref), [`FPTree`](@ref).
 """
-count!(fptree::FPTree, newcount::Int64) = fptree.count = newcount
+count!(fptree::FPTree, newcount::Integer) = fptree.count = newcount
 
 """
-    addcount!(fptree::FPTree, newcount::Int64)
+    addcount!(fptree::FPTree, newcount::Integer)
 
 Add `newcount` to `fptree`'s internal counter.
 
 See also [`count`](@ref), [`FPTree`](@ref).
 """
-addcount!(fptree::FPTree, deltacount::Int64) = fptree.count += deltacount
+addcount!(fptree::FPTree, deltacount::Integer) = fptree.count += deltacount
 
 function isroot(fptree::FPTree)::Bool
     return fptree |> content |> isnothing
@@ -318,7 +318,7 @@ function link!(from::FPTree, to::FPTree)
     from.link = to
 end
 
-function Base.show(io::IO, fptree::FPTree; indentation::Int64=0)
+function Base.show(io::IO, fptree::FPTree; indentation::Integer=0)
     _children = children(fptree)
 
     println(io, "-"^indentation * "*"^(length(_children)==0) *
@@ -483,7 +483,7 @@ doc_fptree_grow = """
     function grow!(
         fptree::FPTree,
         itemset::Itemset,
-        ith_instance::Int64,
+        ith_instance::Integer,
         miner::AbstractMiner;
         htable::Union{Nothing,HeaderTable}=nothing
     )
@@ -491,7 +491,7 @@ doc_fptree_grow = """
     function grow!(
         fptree::FPTree,
         itemset::EnhancedItemset,
-        ith_instance::Int64,
+        ith_instance::Integer,
         miner::AbstractMiner;
         htable::Union{Nothing,HeaderTable}=nothing
     )

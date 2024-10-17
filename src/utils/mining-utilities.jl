@@ -94,7 +94,7 @@ See [`antecedent`](@ref), [`ARule`](@ref), [`consequent`](@ref), [`generaterules
 """
 function non_selfabsorbed_rulecheck(rule::ARule)::Bool
     # TODO - this could be moved to SoleData
-    function _extract_variable(item::Item)::Int64
+    function _extract_variable(item::Item)::Integer
         # if `item` is already an Atom, do nothing.
         _formula = formula(item)
         _formula = _formula isa Atom ? _formula : _formula.children |> first
@@ -229,7 +229,7 @@ function getlocalthreshold_integer(miner::Miner, meas::Function)
 end
 
 """
-    getglobalthreshold_integer(miner::Miner, meas::Function, ninstances::Int64)
+    getglobalthreshold_integer(miner::Miner, meas::Function, ninstances::Integer)
 
 See [`getglobalthreshold`](@ref).
 """

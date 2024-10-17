@@ -156,15 +156,15 @@ See also [`EnhancedItemset`](@ref), [`Itemset`](@ref).
 itemset(enhitemset::EnhancedItemset) = first(enhitemset)
 
 """
-    itemset(enhitemset::EnhancedItemset)::Int64
+    itemset(enhitemset::EnhancedItemset)::Integer
 
 Getter for the integer counter wrapped within `enhitemset`.
 
 See also [`EnhancedItemset`](@ref), [`Itemset`](@ref).
 """
-count(enhitemset::EnhancedItemset)::Int64 = last(enhitemset)
+count(enhitemset::EnhancedItemset)::Integer = last(enhitemset)
 
-function Base.convert(::Type{EnhancedItemset}, itemset::Itemset, count::Int64)
+function Base.convert(::Type{EnhancedItemset}, itemset::Itemset, count::Integer)
     return EnhancedItemset((itemset, count))
 end
 

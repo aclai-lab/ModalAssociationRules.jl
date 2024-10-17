@@ -5,7 +5,7 @@
     } <: AbstractMiner
         # reference to a modal dataset ith instance
         instance::SoleLogics.LogicalInstance
-        ith_instance::Int64
+        ith_instance::Integer
 
         items::Vector{I}                    # alphabet
 
@@ -38,7 +38,7 @@ See also [`AbstractMiner`](@ref), [`Miner`](@ref).
 struct Bulldozer{I<:Item} <: AbstractMiner
     # reference to a modal dataset ith instance
     instance::SoleLogics.LogicalInstance
-    ith_instance::Int64
+    ith_instance::Integer
 
     items::Vector{I}                # alphabet
 
@@ -56,7 +56,7 @@ struct Bulldozer{I<:Item} <: AbstractMiner
 
     function Bulldozer(
         instance::SoleLogics.LogicalInstance,
-        ith_instance::Int64,
+        ith_instance::Integer,
         items::Vector{I},
         itemsetmeasures::Vector{<:MeaningfulnessMeasure};
         miningstate::MiningState=MiningState()
@@ -66,7 +66,7 @@ struct Bulldozer{I<:Item} <: AbstractMiner
         )
     end
 
-    function Bulldozer(miner::Miner, ith_instance::Int64)
+    function Bulldozer(miner::Miner, ith_instance::Integer)
         return Bulldozer(
                 SoleLogics.getinstance(miner |> data, ith_instance),
                 ith_instance,

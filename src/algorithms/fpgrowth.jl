@@ -154,7 +154,7 @@ This implementation requires a custom [`Bulldozer`](@ref) constructor capable of
 the given [`AbstractMiner`](@ref). In particular, the following dispatch must be
 implemented:
 
-```Bulldozer(miner::MyMinerType, ith_instance::Int64)```
+```Bulldozer(miner::MyMinerType, ith_instance::Integer)```
 
 See also [`AbstractMiner`](@ref), [`Bulldozer`](@ref), [`FPTree`](@ref),
 [`HeaderTable`](@ref), [`SoleBase.AbstractDataset`](@ref)
