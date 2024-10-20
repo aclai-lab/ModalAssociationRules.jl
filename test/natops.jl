@@ -200,3 +200,7 @@ compare(apriori_miner, fpgrowth_miner)
 
 arule = fpgrowth_miner |> arules |> first
 @test_nowarn analyze(arule, fpgrowth_miner; verbose=true)
+
+@test frame(fpgrowth_miner) isa SoleLogics.FullDimensionalFrame
+@test allworlds(fpgrowth_miner) |> first isa SoleLogics.Interval
+@test SoleLogics.nworlds(fpgrowth_miner) == 1326
