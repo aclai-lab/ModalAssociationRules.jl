@@ -212,28 +212,3 @@ See also [`ARule`](@ref), [`Miner`](@ref), [`Itemset`](@ref), [`rulemeasures`](@
         end
     end
 end
-
-
-
-# Miner utilities
-
-# TODO -  rename those in local_threshold_integer/global_threshold_integer
-"""
-    getlocalthreshold_integer(miner::Miner, meas::Function)
-
-See [`getlocalthreshold`](@ref).
-"""
-function getlocalthreshold_integer(miner::Miner, meas::Function)
-    _nworlds = SoleLogics.frame(data(miner), 1) |> SoleLogics.nworlds
-    return convert(Int64, floor(getlocalthreshold(miner, meas) * _nworlds))
-end
-
-"""
-    getglobalthreshold_integer(miner::Miner, meas::Function, ninstances::Integer)
-
-See [`getglobalthreshold`](@ref).
-"""
-function getglobalthreshold_integer(miner::Miner, meas::Function)
-    return convert(
-            Int64, floor(getglobalthreshold(miner, meas) * ninstances(data(miner))))
-end

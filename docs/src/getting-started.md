@@ -107,10 +107,7 @@ rulemeasures(miner::Miner)
 addrulemeasure(miner::Miner, measure::MeaningfulnessMeasure)
 
 getlocalthreshold(miner::Miner, meas::Function)
-getlocalthreshold_integer(miner::Miner, meas::Function,contributorslength::Integer)
-
 getglobalthreshold(miner::Miner, meas::Function)
-getglobalthreshold_integer(miner::Miner, meas::Function, ninstances::Integer)
 ```
 
 After a [`Miner`](@ref) ends mining (we will see how to mine in a second), frequent [`Itemset`](@ref)s and [`ARule`](@ref) are accessibles through the getters below.

@@ -98,7 +98,6 @@ export combine_items, prune, prune!
 export grow_prune, coalesce_contributors
 export anchor_rulecheck, non_selfabsorbed_rulecheck
 export generaterules
-export getlocalthreshold_integer, getglobalthreshold_integer
 
 include("algorithms/apriori.jl")
 
