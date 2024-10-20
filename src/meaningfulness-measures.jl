@@ -177,9 +177,11 @@ macro globalmeasure(measname, measlogic)
             globalmemo!(miner, memokey, measure)
 
             for state in GLOBAL_MINING_STATES
-                if hasminingstate(miner, state) && haskey(response, state)
-                    miningstate!(miner, state, (subject), response[state])
-                end
+                # Is this functionality useful?
+                # TODO - enable when finding an application
+                # if hasminingstate(miner, state) && haskey(response, state)
+                #     miningstate!(miner, state, (subject), response[state])
+                # end
             end
 
             return measure
