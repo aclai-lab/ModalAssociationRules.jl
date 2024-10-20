@@ -103,7 +103,7 @@ arule3 = ARule(Itemset([manual_q, manual_p]), Itemset([manual_r]))
 @test GmeasMemo <: Dict{GmeasMemoKey,Threshold}
 
 # "core.jl - Miner"
-mine!(fpgrowth_miner)
+mine!(fpgrowth_miner; parallel=false)
 
 @test_nowarn Miner(X1, apriori, manual_items)
 @test_nowarn algorithm(Miner(X1, apriori, manual_items)) isa Function

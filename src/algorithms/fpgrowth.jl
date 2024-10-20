@@ -163,8 +163,7 @@ function fpgrowth(
     miner::AbstractMiner,
     X::MineableData;
     parallel::Bool=true,
-    distributed::Bool=false,
-    verbose::Bool=false
+    distributed::Bool=false
 )::Nothing
     @assert ModalAssociationRules.gsupport in reduce(vcat, itemsetmeasures(miner)) "" *
     "FP-Growth " *
@@ -174,28 +173,30 @@ function fpgrowth(
         "Note that local support is needed too, but it is already considered internally " *
         "by global support."
 
-    _nthreads = Threads.nthreads()
-    _nworkers = Distributed.nworkers()
-
-    if verbose && parallel
-        printstyled("Multithreading enabled: # threads = $(_nthreads).\n", color=:green)
-        if _nthreads == 1
-            printstyled(
-                "You probably forget to set a higher number of threads!\n", color=:red)
-            printstyled("Remember to use --threads/-t flag, " *
-                "or change JULIA_NUM_THREADS environment variable\n", color=:red)
-        end
-    end
-
-    if verbose && distributed
-        printstyled("Workload distributed across #$(Distributed.nprocs()) processes.\n",
-            color=:green)
-        if _nworkers == 1
-            printstyled(
-                "You probably forget to set a higher number of processes!\n", color=:red)
-            printstyled("Remember to set the -p flag.\n",  color=:red)
-        end
-    end
+    # deprecated - verbose kwarg no more exists
+    #
+    # _nthreads = Threads.nthreads()
+    # _nworkers = Distributed.nworkers()
+    #
+    # if verbose && parallel
+    #     printstyled("Multithreading enabled: # threads = $(_nthreads).\n", color=:green)
+    #     if _nthreads == 1
+    #         printstyled(
+    #             "You probably forget to set a higher number of threads!\n", color=:red)
+    #         printstyled("Remember to use --threads/-t flag, " *
+    #             "or change JULIA_NUM_THREADS environment variable\n", color=:red)
+    #     end
+    # end
+    #
+    # if verbose && distributed
+    #     printstyled("Workload distributed across #$(Distributed.nprocs()) processes.\n",
+    #         color=:green)
+    #     if _nworkers == 1
+    #         printstyled(
+    #             "You probably forget to set a higher number of processes!\n", color=:red)
+    #         printstyled("Remember to set the -p flag.\n",  color=:red)
+    #     end
+    # end
 
     _ninstances = ninstances(X)
     local_results = Vector{Bulldozer}(undef, _ninstances)
