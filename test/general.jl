@@ -126,6 +126,8 @@ function _association_rules_test1(miner::Miner)
 end
 _association_rules_test1(fpgrowth_miner)
 
+
+
 @test info(fpgrowth_miner) isa Info
 
 function _dummy_gsupport(
@@ -142,9 +144,7 @@ _temp_miner = Miner(X2, fpgrowth, manual_items, [(gsupport, 0.1, 0.1)], _rulemea
 @test_throws ErrorException getglobalthreshold(_temp_miner, _dummy_gsupport)
 @test _temp_miner.globalmemo == GmeasMemo()
 
-@test_throws AssertionError additemsetmeasure(_temp_miner, (gsupport, 0.1, 0.1))
 @test length(itemsetmeasures(_temp_miner)) == 1
-@test_throws AssertionError addrulemeasure(_temp_miner, (gconfidence, 0.1, 0.1))
 @test length(rulemeasures(_temp_miner)) == 1
 @test length(ModalAssociationRules.measures(_temp_miner)) == 2
 
@@ -434,3 +434,29 @@ _statefulMiner = statefulMiner(MiningState())
 @test_nowarn miningstate!(_statefulMiner, :field, Dict(:inner_field => 3))
 @test_throws ErrorException miningstate(_statefulMiner)
 @test_throws ErrorException miningstate(_statefulMiner, :field, :inner_field)
+
+
+
+@test_nowarn datatype(apriori_miner)
+
+_my_lsupport_logic = (itemset, X, ith_instance, miner) -> begin
+    wmask = [
+        check(formula(itemset), X, ith_instance, w) for w in allworlds(X, ith_instance)]
+
+        return Dict(
+        :measure => count(wmask) / nworlds(X, ith_instance),
+        :instance_item_toworlds => wmask,
+    )
+end
+
+_my_gsupport_logic = (itemset, X, threshold, miner) -> begin
+    _measure = sum([
+        lsupport(itemset, getinstance(X, ith_instance), miner) >= threshold
+        for ith_instance in 1:ninstances(X)
+    ]) / ninstances(X)
+
+    return Dict(:measure => _measure)
+end
+
+@localmeasure my_lsupport _my_lsupport_logic
+@localmeasure my_gsupport _my_gsupport_logic

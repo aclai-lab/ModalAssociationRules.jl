@@ -126,13 +126,15 @@ struct Miner{
             "mining correctness."
 
         # gsupport is indispensable to mine association rule
-        @assert ModalAssociationRules.gsupport in reduce(
-            vcat, item_constrained_measures) "Miner requires global support " *
-            "(gsupport) as meaningfulness measure in order to work properly. " *
-            "Please, add a tuple (gsupport, local support threshold, global support " *
-            "threshold) to item_constrained_measures field.\n" *
-            "Local support (lsupport) is needed too, but it is already considered " *
-            "internally by gsupport."
+        if !(ModalAssociationRules.gsupport in first.(item_constrained_measures))
+            throw(ArgumentError(
+                "Miner requires global support " *
+                "(gsupport) as meaningfulness measure in order to work properly. " *
+                "Please, add a tuple (gsupport, local support threshold, global support " *
+                "threshold) to item_constrained_measures field.\n" *
+                "Local support (lsupport) is needed too, but it is already considered " *
+                "internally by gsupport."))
+        end
 
         miningstate = initminingstate(algorithm, X)
         if !disable_rulesifting
@@ -240,32 +242,6 @@ info(miner::Miner)::Info = miner.info
 
 
 # Miner's utilities
-
-"""
-    additemsetmeasure(miner::Miner, measure::MeaningfulnessMeasure)
-
-Add a new `measure` to `miner`'s [`itemsetmeasures`](@ref).
-
-See also [`addrulemeasure`](@ref), [`MeaningfulnessMeasure`](@ref), [`Miner`](@ref),
-[`Itemset`](@ref), [`rulemeasures`](@ref).
-"""
-function additemsetmeasure(miner::Miner, measure::MeaningfulnessMeasure)
-    @assert measure in first.(itemsetmeasures(miner)) "Miner already contains $(measure)."
-    push!(itemsetmeasures(miner), measure)
-end
-
-"""
-    addrulemeasure(miner::Miner, measure::MeaningfulnessMeasure)
-
-Add a new `measure` to `miner`'s [`rulemeasures`](@ref).
-
-See also [`itemsetmeasures`](@ref), [`MeaningfulnessMeasure`](@ref), [`Miner`](@ref),
-[`rulemeasures`](@ref).
-"""
-function addrulemeasure(miner::Miner, measure::MeaningfulnessMeasure)
-    @assert measure in first.(rulemeasures(miner)) "Miner already contains $(measure)."
-    push!(rulemeasures(miner), measure)
-end
 
 """
     getlocalthreshold(miner::Miner, meas::Function)::Threshold

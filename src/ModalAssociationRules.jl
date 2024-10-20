@@ -64,8 +64,7 @@ include("miner.jl")
 export Miner
 export itemtype, datatype
 export data, algorithm
-export itemsetmeasures, additemsetmeasure
-export rulemeasures, addrulemeasure
+export itemsetmeasures, rulemeasures
 export freqitems, arules
 export measures, findmeasure
 export getlocalthreshold, getglobalthreshold
@@ -88,7 +87,7 @@ export bulldozer_reduce
 
 include("meaningfulness-measures.jl")
 
-export @localmeasure, @globalmeasure
+export @localmeasure, @globalmeasure, @linkmeas
 export lsupport, gsupport
 export lconfidence, gconfidence
 
