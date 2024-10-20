@@ -36,6 +36,8 @@ _rulemeasures = [(gconfidence, 0.2, 0.2)]
 apriori_miner = Miner(X1, apriori, manual_items, _itemsetmeasures, _rulemeasures)
 fpgrowth_miner = Miner(X2, fpgrowth, manual_items, _itemsetmeasures, _rulemeasures)
 
+@test itemtype(apriori_miner) == Item
+
 pq = Itemset{Item}([manual_p, manual_q])
 qr = Itemset{Item}([manual_q, manual_r])
 pr = Itemset{Item}([manual_p, manual_r])
@@ -197,6 +199,16 @@ _temp_apriori_miner = Miner(X1, apriori, manual_items, _itemsetmeasures, _ruleme
 @test isglobalof(gconfidence, gsupport) == false
 @test isglobalof(gconfidence, lconfidence) == true
 @test isglobalof(gconfidence, gconfidence) == false
+
+@test localof(lsupport) |> isnothing
+@test localof(gsupport) == lsupport
+@test localof(lconfidence) |> isnothing
+@test localof(gconfidence) == lconfidence
+
+@test globalof(lsupport) == gsupport
+@test globalof(gsupport) |> isnothing
+@test globalof(lconfidence) == gconfidence
+@test globalof(gconfidence) |> isnothing
 
 @test lsupport(pq, SoleLogics.getinstance(X2, 1), fpgrowth_miner) == 0.0
 
@@ -378,3 +390,47 @@ enhanceditemset2 = (Itemset(manual_q), 1)
     root, ConditionalPatternBase([enhanceditemset, enhanceditemset2]); miner=fpgrowth_miner)
 
 @test Base.reverse(htable) == items(htable) |> reverse
+
+# Additional tests not covered before
+item_from_formula = Item(CONJUNCTION(Atom("p"), Atom("q")))
+itemset_from_formula = Itemset(CONJUNCTION(Atom("p"), Atom("q")))
+@test convert(Itemset, item_from_formula) == itemset_from_formula
+
+@test_nowarn syntaxstring(EnhancedItemset((itemset_from_formula, 1)))
+
+itemset_1 = Itemset(Atom("p"))
+itemset_2 = Itemset(Atom("q"))
+arule1 = ARule((itemset_1, itemset_2))
+@test convert(Itemset, arule1) == Itemset([itemset_1..., itemset_2...])
+
+@test_nowarn Base.hash(arule1, UInt(42))
+
+@test_nowarn syntaxstring(arule1)
+
+struct genericMiner <: AbstractMiner
+end
+
+_genericMiner = genericMiner()
+
+@test_throws ErrorException data(_genericMiner)
+@test_throws ErrorException items(_genericMiner)
+@test_throws ErrorException algorithm(_genericMiner)
+@test_throws ErrorException freqitems(_genericMiner)
+@test_throws ErrorException arules(_genericMiner)
+@test_throws ErrorException itemsetmeasures(_genericMiner)
+@test_throws ErrorException rulemeasures(_genericMiner)
+@test_throws ErrorException localmemo(_genericMiner)
+@test_throws ErrorException globalmemo(_genericMiner)
+@test_throws ErrorException miningstate(_genericMiner)
+@test_throws ErrorException info(_genericMiner)
+@test_throws ErrorException itemtype(_genericMiner)
+
+struct statefulMiner <: AbstractMiner
+    miningstate::MiningState
+end
+_statefulMiner = statefulMiner(MiningState())
+
+@test_nowarn miningstate!(_statefulMiner, :field, 2)
+@test_nowarn miningstate!(_statefulMiner, :field, Dict(:inner_field => 3))
+@test_throws ErrorException miningstate(_statefulMiner)
+@test_throws ErrorException miningstate(_statefulMiner, :field, :inner_field)

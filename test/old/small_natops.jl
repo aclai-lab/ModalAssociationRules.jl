@@ -70,8 +70,6 @@ for ninstance in 1:360
                 println("\tapriori? $(apriori_lsupp_haskey);")
                 println("\tfpgrowth? $(fpgrowth_lsupp_haskey);")
             end
-        else
-            rethrow(e)
         end
     end
 end

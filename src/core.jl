@@ -103,7 +103,7 @@ Itemset(item::Item) = Itemset{typeof(item)}(item)
 Itemset(items::Vector{I}) where {I<:Item} = Itemset{I}(items)
 
 function Base.convert(::Type{Itemset}, item::Item)
-    return Itemset{typeof(item)}(item) # This could be Itemset{typeof(item)}(item)
+    return Itemset{typeof(item)}(item)
 end
 
 function Base.:(==)(itemset1::Itemset, itemset2::Itemset)
@@ -803,8 +803,6 @@ function findmeasure(
             "Maybe the miner is not initialized properly, and $meas is omitted. " *
             "Please use itemsetmeasures/rulemeasures to check which measures are , " *
             "available and miner's setters to add a new measures and their thresholds.")
-        else
-            rethrow(e)
         end
     end
 end
