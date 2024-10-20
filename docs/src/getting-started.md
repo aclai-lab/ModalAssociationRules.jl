@@ -10,7 +10,7 @@ Pages = ["getting-started.md"]
 
 In this introductory section you will learn about the main building blocks of ModalAssociationRules.jl. 
 Also if a good picture about *association rule mining* (ARM, from now onwards) is given during the documentation, to make the most out of this guide we suggest to read the following articles:
-- [association rule mining introduction and Apriori algorithm](https://ceur-ws.org/Vol-3284/492.pdf)
+- [association rule mining introduction and Apriori algorithm](http://ictcs2024.di.unito.it/wp-content/uploads/2024/08/ICTCS_2024_paper_16.pdf)
 - [FPGrowth algorithm](https://www.cs.sfu.ca/~jpei/publications/sigmod00.pdf)
 Those up above introduce two important algorithms, which are also built-in in this package. Moreover, the latter one is the state-of-the-art in the field of ARM.
 
@@ -25,9 +25,9 @@ Item
 Itemset
 ```
 
-Notice that one [`Itemset`](@ref) could be a set, but actually it is a vector: this is because, often, ARM algorithms need to establish an order between items in itemsets to work efficiently. To convert an [`Itemset`](@ref) in its [conjunctive normla form](https://en.wikipedia.org/wiki/Conjunctive_normal_form) we simply call [`toformula`](@ref).
+Notice that one [`Itemset`](@ref) could be a set, but actually it is a vector: this is because, often, ARM algorithms need to establish an order between items in itemsets to work efficiently. To convert an [`Itemset`](@ref) in its [conjunctive normla form](https://en.wikipedia.org/wiki/Conjunctive_normal_form) we simply call [`formula`](@ref).
 ```@docs
-toformula
+formula
 ```
 
 In general, an [`Itemset`](@ref) behaves exactly like you would expect a `Vector{Item}` would do. At the end of the day, the only difference is that manipulating an [`Itemset`](@ref), for example through `push!` or `union`, guarantees the wrapped items always keep the same sorting.
@@ -102,15 +102,10 @@ items(miner::Miner)
 measures(miner::Miner)
 findmeasure(miner::Miner,meas::Function; recognizer::Function=islocalof)
 itemsetmeasures(miner::Miner)
-additemmeas(miner::Miner, measure::MeaningfulnessMeasure)
 rulemeasures(miner::Miner)
-addrulemeas(miner::Miner, measure::MeaningfulnessMeasure)
 
 getlocalthreshold(miner::Miner, meas::Function)
-getlocalthreshold_integer(miner::Miner, meas::Function,contributorslength::Int64)
-
 getglobalthreshold(miner::Miner, meas::Function)
-getglobalthreshold_integer(miner::Miner, meas::Function, ninstances::Int64)
 ```
 
 After a [`Miner`](@ref) ends mining (we will see how to mine in a second), frequent [`Itemset`](@ref)s and [`ARule`](@ref) are accessibles through the getters below.
@@ -142,7 +137,7 @@ globalmemo!(miner::Miner, key::GmeasMemoKey, val::Threshold)
 
 ## Miner customization
 
-A [`Miner`](@ref) also contains two fields to keep additional informations, those are [`info`](@ref) and [`powerups`](@ref).
+A [`Miner`](@ref) also contains two fields to keep additional informations, those are [`info`](@ref) and [`miningstate`](@ref).
 
 The [`info`](@ref) field in [`Miner`](@ref) is a dictionary used to store extra informations about the miner, such as statistics about mining. Currently, since the package is still being developed, the `info` field only contains a flag indicating whether the `miner` has been used for mining or no.
 
@@ -153,12 +148,12 @@ info!(miner::Miner, key::Symbol, val)
 hasinfo(miner::Miner, key::Symbol)
 ```
 
-When writing your own mining algorithm, or when mining with a particular kind of dataset, you might need to specialize the [`Miner`](@ref), keeping, for example, custom meta data and data structures. To specialize a [`Miner`](@ref), you can fill a [`Powerup`](@ref) structure to fit your needs.
+When writing your own mining algorithm, or when mining with a particular kind of dataset, you might need to specialize the [`Miner`](@ref), keeping, for example, custom meta data and data structures. To specialize a [`Miner`](@ref), you can fill a [`MiningState`](@ref) structure to fit your needs.
 
 ```@docs
-Powerup
-powerups(miner::Miner)
-powerups!(miner::Miner, key::Symbol, val)
-haspowerup(miner::Miner, key::Symbol)
-initpowerups(::Function, ::AbstractDataset)
+MiningState
+miningstate(miner::Miner)
+miningstate!(miner::Miner, key::Symbol, val)
+hasminingstate(miner::Miner, key::Symbol)
+initminingstate(::Function, ::AbstractDataset)
 ```

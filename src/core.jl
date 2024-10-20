@@ -1,116 +1,109 @@
-############################################################################################
-#### Fundamental definitions ###############################################################
-############################################################################################
 """
-    const Item = SoleLogics.Formula
+    struct Item{F<:SoleLogics.Formula}
+        formula::F
+    end
 
 Fundamental type in the context of
 [association rule mining](https://en.wikipedia.org/wiki/Association_rule_learning).
-An [`Item`](@ref) is a logical formula, which can be [`SoleLogics.check`](@ref)ed on models.
 
-The purpose of association rule mining (ARM) is to discover interesting relations between
-[`Item`](@ref)s, regrouped in [`Itemset`](@ref)s, to generate association rules
-([`ARule`](@ref)).
+The name [`Item`](@ref) comes from the classical association rule mining jargon,
+but it is simply a wrapper around a logical formula, whose truth value can be checked on a
+model. To know more about logical formulas, see
+[SoleLogics.Formula](https://aclai-lab.github.io/SoleLogics.jl/stable/getting-started/#SoleLogics.Formula).
 
-Interestingness is established through a set of [`MeaningfulnessMeasure`](@ref).
-
-See also [`SoleLogics.check`](@ref), [`gconfidence`](@ref), [`lsupport`](@ref),
-[`MeaningfulnessMeasure`](@ref), [`SoleLogics.Formula`](@ref).
+See also [`ARule`](@ref), [`gconfidence`](@ref), [`Itemset`](@ref),
+[`MeaningfulnessMeasure`](@ref), [SoleLogics.Formula](https://aclai-lab.github.io/SoleLogics.jl/stable/getting-started/#SoleLogics.Formula).
 """
-const Item = SoleLogics.Formula
+struct Item{F<:SoleLogics.Formula}
+    formula::F
+
+    function Item(formula::F) where {F<:SoleLogics.Formula}
+        return new{F}(formula)
+    end
+end
+
+function Base.convert(::Type{Item}, formula::SoleLogics.Formula)::Item
+    return Item(formula)
+end
+
+"""
+    formula(item::Item{F}) where {F}
+
+See also [`Item`](@ref), [SoleLogics.Formula](https://aclai-lab.github.io/SoleLogics.jl/stable/getting-started/#SoleLogics.Formula).
+"""
+formula(item::Item{F}) where {F<:SoleLogics.Formula} = item.formula
 
 function Base.isless(a::Item, b::Item)
     isless(hash(a), hash(b))
 end
 
+function Base.show(io::IO, item::Item)
+    print(io, syntaxstring(item.formula))
+end
+
 """
-    struct Itemset
-        items::Vector{Item}
-    end
+    const Itemset{I<:Item} = Vector{I}
 
-Collection of *unique* [`Item`](@ref)s.
+Vector collecting multiple [`Item`](@ref)s.
 
-Given a [`MeaningfulnessMeasure`](@ref) `meas` and a threshold to be overpassed `t`,
-then an itemset `itemset` is said to be meaningful with respect to `meas` if and only if
-`meas(itemset) > t`.
-
-Generally speaking, meaningfulness (or interestingness) of an itemset is directly
-correlated to its frequency in the data: intuitively, when a pattern is recurrent in data,
-then it is candidate to be interesting.
-
-Every association rule mining algorithm aims to find *frequent* itemsets by applying
-meaningfulness measures such as local and global support, respectively [`lsupport`](@ref)
-and [`gsupport`](@ref).
-
-Frequent itemsets are then used to generate association rules ([`ARule`](@ref)).
+Semantically, [`Itemset`](@ref)s represent [`Item`](@ref)s (that is, formulas) conjunctions.
 
 !!! note
-    Despite being implemented as vector, an [`Itemset`](@ref) behaves like a set.
-    [Lookup is faster](https://www.juliabloggers.com/set-vs-vector-lookup-in-julia-a-closer-look/)
-    and the internal sorting of the items is essential to make mining algorithms work.
+    In the context of association rule mining, *interesting* itemsets are manipulated to
+    discover *interesting* relations between [`Item`](@ref)s, in the form of association
+    rules ([ARule](@ref)).
 
-    In other words, it is guaranteed that, if two [`Itemset`](@ref) are created with the
-    same content, regardless of their items order, then their hash is the same.
+    Interestingness is established through a set of [`MeaningfulnessMeasure`](@ref).
 
-See also [`ARule`](@ref), [`gsupport`](@ref), [`Item`](@ref), [`lsupport`](@ref),
-[`MeaningfulnessMeasure`](@ref).
+!!! details
+    Itemsets are implemented as a vector for two reasons:
+
+    1. [lookup is faster](https://www.juliabloggers.com/set-vs-vector-lookup-in-julia-a-closer-look/)
+    when the collection is small (an itemset is unlikely to consist of more than 100 items);
+
+    2. most of the time, we want to keep an ordering between items while searching for
+    interesting itemsets.
+
+# Examples
+```julia
+julia> p = ScalarCondition(VariableMin(1), >, 1.0)  |> Atom |> Item
+min[V1] > 1.0
+julia> q = ScalarCondition(VariableMin(2), >=, 0.0) |> Atom |> Item
+min[V2] ≥ 0.0
+
+julia> pq = Itemset([p,q])
+julia> qp = Itemset([q,p])
+
+julia> pq == qp
+true
+julia> pq === qp
+false
+
+julia> r = ScalarCondition(VariableMax(3), <=, 2.0) |> Atom |> Item
+max[V3] ≤ 2.0
+julia> pqr = [pq; r];
+
+julia> pq in pqr
+true
+
+julia> formula(pqr) |> syntaxstring
+"(min[V1] > 1.0) ∧ (min[V2] ≥ 0.0) ∧ (max[V3] ≤ 2.0)"
+```
+
+See also [`ARule`](@ref), [`formula`](@ref), [`gsupport`](@ref), [`Item`](@ref),
+[`lsupport`](@ref), [`MeaningfulnessMeasure`](@ref).
 """
-struct Itemset
-    items::Vector{Item}
+const Itemset{I<:Item} = Vector{I}
 
-    Itemset() = new(Vector{Item}[])
-    Itemset(item::I) where {I<:Item} = new(Vector{Item}([item]))
-    Itemset(itemset::Vector{I}) where {I<:Item} = new(Vector{Item}(itemset |> unique))
+Itemset{I}() where {I<:Item} = I[]
+Itemset{I}(item::Item) where {I<:Item} = I[item]
 
-    Itemset(anyvec::Vector{Any}) = begin
-        @assert isempty(anyvec) "Illegal constructor call"
-        return Itemset()
-    end
-
-    Itemset(itemsets::Vector{Itemset}) = return union(itemsets)
-end
-
-@forward Itemset.items size, IndexStyle, setindex!
-@forward Itemset.items iterate, length, firstindex, lastindex, similar, show
-
-function Base.getindex(itemset::Itemset, indexes::Vararg{Int,N}) where N
-    return Itemset(items(itemset)[indexes...])
-end
-
-function Base.getindex(itemset::Itemset, range::AbstractUnitRange{I}) where {I<:Integer}
-    return Itemset(items(itemset)[range])
-end
-
-function push!(itemset::Itemset, item::Item)
-    push!(items(itemset), item)
-end
-
-items(itemset::Itemset) = itemset.items
-
-function Base.union(itemsets::Vector{Itemset})
-    return Itemset(union(items.([itemsets]...)...))
-end
-
-function Base.union(itemsets::Vararg{Itemset,N}) where N
-    return union([itemsets...])
-end
-
-function Base.hash(itemset::Itemset, h::UInt)
-    return hash(itemset |> items |> sort, h)
-end
+Itemset(f::SoleLogics.Formula) = Itemset{Item}(Item(f))
+Itemset(item::Item) = Itemset{typeof(item)}(item)
+Itemset(items::Vector{I}) where {I<:Item} = Itemset{I}(items)
 
 function Base.convert(::Type{Itemset}, item::Item)
-    return Itemset(item)
-end
-
-function Base.convert(::Type{Itemset}, formulavector::Vector{Formula})
-    return Itemset(formulavector)
-end
-
-function Base.convert(::Type{Item}, itemset::Itemset)::Item
-    @assert length(itemset) == 1 "Cannot convert $(itemset) of length $(length(itemset)) " *
-        "to Item: itemset must contain exactly one item"
-    return first(itemset)
+    return Itemset{typeof(item)}(item)
 end
 
 function Base.:(==)(itemset1::Itemset, itemset2::Itemset)
@@ -124,8 +117,8 @@ end
 function Base.in(itemset1::Itemset, itemset2::Itemset)
     # naive quadratic search solution is better than the second one (commented)
     # since itemsets are intended to be fairly short (6/7 conjuncts at most).
-    return all(item -> item in items(itemset2), items(itemset1))
-    # return issubset(Set(itemset1 |> items) in Set(itemset2 |> items))
+    return all(item -> item in itemset2, itemset1)
+    # return issubset(Set(itemset1) in Set(itemset2))
 end
 
 function Base.show(io::IO, itemset::Itemset)
@@ -133,59 +126,45 @@ function Base.show(io::IO, itemset::Itemset)
 end
 
 """
-    toformula(itemset::Itemset)
+    formula(itemset::Itemset)::SoleLogics.LeftmostConjunctiveForm
 
 Conjunctive normal form of the [`Item`](@ref)s contained in `itemset`.
 
-See also [`Item`](@ref), [`Itemset`](@ref), [`SoleLogics.LeftmostConjunctiveForm`](@ref)
+See also [`Item`](@ref), [`Itemset`](@ref),
+[`SoleLogics.LeftmostConjunctiveForm`](https://aclai-lab.github.io/SoleLogics.jl/stable/more-on-formulas/#SoleLogics.LeftmostConjunctiveForm)
 """
-toformula(itemset::Itemset) = itemset |> items |> LeftmostConjunctiveForm
-
-"""
-    const Threshold = Float64
-
-Threshold value for meaningfulness measures.
-
-See also [`gconfidence`](@ref), [`gsupport`](@ref), [`lconfidence`](@ref),
-[`lsupport`](@ref).
-"""
-const Threshold = Float64
+formula(itemset::Itemset)::SoleLogics.LeftmostConjunctiveForm = begin
+    formula.(itemset) |> LeftmostConjunctiveForm
+end
 
 """
-    const WorldMask = Vector{Int64}
+    const EnhancedItemset = Tuple{Itemset,UInt32}
 
-Vector whose i-th position stores how many times a certain [`MeaningfulnessMeasure`](@ref)
-applied on a specific [`Itemset`](@ref)s is true on the i-th world of multiple instances.
+Compressed representation of multiple, identical [`Itemset`](@ref)s.
 
-If a single instance is considered, then this acts as a bit mask.
-
-For example, if we consider 5 instances, each of which containing 3 worlds, then the worlds
-mask of an itemset could be [5,2,0], meaning that the itemset is always true on the first
-world of every instance. If we consider the second world, the same itemset is true on it
-only on two instances. If we consider the third world, then the itemset is never true.
-
-See also [`Itemset`](@ref), [`MeaningfulnessMeasure`](@ref).
+See also [`Itemset`](@ref).
 """
- const WorldMask = Vector{Int64}
+const EnhancedItemset = Tuple{<:Itemset,Int64}
 
 """
-    const EnhancedItem = Tuple{Item,Int64,WorldMask}
-"""
-const EnhancedItem = Tuple{Item,Int64}
+    itemset(enhitemset::EnhancedItemset)::Itemset
 
-"""
-    const EnhancedItemset = Tuple{Itemset,Int64}
-"""
-const EnhancedItemset = Tuple{Itemset,Int64}
+Getter for the [`Itemset`](@ref) wrapped within an [`EnhancedItemset`](@ref).
 
+See also [`EnhancedItemset`](@ref), [`Itemset`](@ref).
+"""
 itemset(enhitemset::EnhancedItemset) = first(enhitemset)
-count(enhitemset::EnhancedItemset) = last(enhitemset)
 
-function Base.convert(
-    ::Type{EnhancedItemset},
-    itemset::Itemset,
-    count::Int64
-)
+"""
+    itemset(enhitemset::EnhancedItemset)::Integer
+
+Getter for the integer counter wrapped within `enhitemset`.
+
+See also [`EnhancedItemset`](@ref), [`Itemset`](@ref).
+"""
+count(enhitemset::EnhancedItemset)::Integer = last(enhitemset)
+
+function Base.convert(::Type{EnhancedItemset}, itemset::Itemset, count::Integer)
     return EnhancedItemset((itemset, count))
 end
 
@@ -201,11 +180,12 @@ end
     const ConditionalPatternBase = Vector{EnhancedItemset}
 
 Collection of [`EnhancedItemset`](@ref).
-This is useful to manipulate certain data structures when looking for frequent
-[`Itemset`](@ref)s, such as [`FPTree`](@ref).
 
-This is used to implement [`fpgrowth`](@ref) algorithm
-[as described here](https://www.cs.sfu.ca/~jpei/publications/sigmod00.pdf).
+!!! note
+    This plays a central role in the state-of-the-art algorithm [`fpgrowth`](@ref).
+    In this algorithm, in fact, a [`ConditionalPatternBase`](@ref) embodies all the
+    information needed to build an important data structure called [`FPTree`](@ref)
+    in the algorithm.
 
 See also [`EnhancedItemset`](@ref), [`fpgrowth`](@ref), [`FPTree`](@ref).
 """
@@ -214,18 +194,25 @@ const ConditionalPatternBase = Vector{EnhancedItemset}
 """
     const ARule = Tuple{Itemset,Itemset}
 
-An association rule represents a strong and meaningful co-occurrence relationship between
-two [`Itemset`](@ref)s, callend [`antecedent`](@ref) and [`consequent`](@ref), whose
-intersection is empty.
+An association rule represents a *frequent* and *meaningful* co-occurrence relationship of
+the form "X ⇒ Y", between two [`Itemset`](@ref)s X and Y, where X ∩ Y = ∅, respectively
+called [`antecedent`](@ref) and [`consequent`](@ref).
 
-Extracting all the [`ARule`](@ref) "hidden" in the data is the main purpose of ARM.
+!!! note
+    Extracting all the [`ARule`](@ref) "hidden" in the data is the main purpose of
+    association rule mining (ARM).
 
-The general framework always followed by ARM techniques is to, firstly, generate all the
-frequent itemsets considering a set of [`MeaningfulnessMeasure`](@ref) specifically
-tailored to work with [`Itemset`](@ref)s.
-Thereafter, all the association rules are generated by testing all the combinations of
-frequent itemsets against another set of [`MeaningfulnessMeasure`](@ref), this time
-designed to capture how "reliable" a rule is.
+    Given an itemset Z containing atleast two [`Item`](@ref)s (|Z| ≥ 2), it can be
+    partitioned in two (sub)itemsets X and Y; trying all the possible binary partitioning
+    of Z is a systematic way to generate [`ARule`](@ref)s.
+
+    The general framework always followed by ARM techniques is to, firstly, generate all the
+    frequent itemsets considering a set of [`MeaningfulnessMeasure`](@ref) specifically
+    tailored to work with [`Itemset`](@ref)s.
+
+    Thereafter, all the association rules are generated by testing all the combinations of
+    frequent itemsets against another set of [`MeaningfulnessMeasure`](@ref), this time
+    designed to capture how interesting a rule is.
 
 See also [`antecedent`](@ref), [`consequent`](@ref), [`gconfidence`](@ref),
 [`Itemset`](@ref), [`lconfidence`](@ref), [`MeaningfulnessMeasure`](@ref).
@@ -275,6 +262,14 @@ See also [`consequent`](@ref), [`ARule`](@ref), [`Itemset`](@ref).
 """
 consequent(rule::ARule)::Itemset = rule.consequent
 
+"""
+    function Base.:(==)(rule1::ARule, rule2::ARule)
+
+Antecedent (consequent) [`Item`](@ref)s ordering could be different between the two
+[`ARule`](@ref), but they are essentially the same rule.
+
+See also [`antecedent`](@ref), [`ARule`](@ref), [`consequent`](@ref).
+"""
 function Base.:(==)(rule1::ARule, rule2::ARule)
     # first antecedent must be included in the second one,
     # same when considering the consequent;
@@ -285,13 +280,21 @@ function Base.:(==)(rule1::ARule, rule2::ARule)
         consequent(rule1) in consequent(rule2)
 end
 
+"""
+    function Base.convert(::Type{Itemset}, arule::ARule)::Itemset
+
+Convert an [`ARule`](@ref) to an [`Itemset`](@ref) by merging its [`antecedent`](@ref)
+and consequent [`consequent`](@ref).
+
+See also [`antecedent`](@ref), [`ARule`](@ref), [`consequent`](@ref), [`Itemset`](@ref).
+"""
 function Base.convert(::Type{Itemset}, arule::ARule)::Itemset
     return Itemset(vcat(antecedent(arule), consequent(arule)))
 end
 
 function Base.hash(arule::ARule, h::UInt)
-    _antecedent = sort(arule |> antecedent |> items)
-    _consequent = sort(arule |> consequent |> items)
+    _antecedent = sort(arule |> antecedent)
+    _consequent = sort(arule |> consequent)
     return hash(vcat(_antecedent, _consequent), h)
 end
 
@@ -300,39 +303,76 @@ function Base.show(
     arule::ARule;
     variablenames::Union{Nothing,Vector{String}}=nothing
 )
-    _antecedent = arule |> antecedent |> toformula
-    _consequent = arule |> consequent |> toformula
+    _antecedent = arule |> antecedent |> formula
+    _consequent = arule |> consequent |> formula
 
     print(io, "$(syntaxstring(_antecedent, variable_names_map=variablenames)) => " *
         "$(syntaxstring(_consequent, variable_names_map=variablenames))")
 end
 
 """
-    const MeaningfulnessMeasure = Tuple{Function, Threshold, Threshold}
+    ARMSubject = Union{ARule,Itemset}
 
-In the classic propositional case scenario where each instance of a [`Logiset`](@ref) is
-composed of just a single world (it is a propositional interpretation), a meaningfulness
-measure is simply a function which measures how many times a property of an
-[`Itemset`](@ref) or an [`ARule`](@ref) is respected across all instances of the dataset.
+Each entity mined through an association rule mining algorithm.
 
-In the context of modal logic, where the instances of a dataset are relational objects,
-every meaningfulness measure must capture two aspects: how much an [`Itemset`](@ref) or an
-[`ARule`](@ref) is meaningful *inside an instance*, and how much the same object is
-meaningful *across all the instances*.
+See also [`ARule`](@ref), [`GmeasMemo`](@ref), [`GmeasMemoKey`](@ref), [`Itemset`](@ref),
+[`LmeasMemo`](@ref), [`LmeasMemoKey`](@ref).
+"""
+const ARMSubject = Union{ARule,Itemset}
 
-For this reason, we can think of a meaningfulness measure as a matryoshka composed of
-an external global measure and an internal local measure.
-The global measure tests for how many instances a local measure overpass a local threshold.
-At the end of the process, a global threshold can be used to establish if the global measure
-is actually meaningful or not.
-(Note that this generalizes the propositional logic case scenario, where it is enough to
-just apply a measure across instances.)
 
-Therefore, a [`MeaningfulnessMeasure`](@ref) is a tuple composed of a global meaningfulness
-measure, a local threshold and a global threshold.
+
+"""
+    const Threshold = Float64
+
+Threshold value type for [`MeaningfulnessMeasure`](@ref)s.
 
 See also [`gconfidence`](@ref), [`gsupport`](@ref), [`lconfidence`](@ref),
-[`lsupport`](@ref).
+[`lsupport`](@ref), [`MeaningfulnessMeasure`](@ref).
+"""
+const Threshold = Float64
+
+"""
+    const MeaningfulnessMeasure = Tuple{Function, Threshold, Threshold}
+
+To fully understand this description, we suggest reading
+[this article](http://ictcs2024.di.unito.it/wp-content/uploads/2024/08/ICTCS_2024_paper_16.pdf).
+
+In the classic propositional case scenario, we can think each instance as a propositional
+interpretation, or equivalently, as a Kripke frame containing only one world.
+In this setting, a meaningfulness measure indicates how many times a specific property of
+an [`Itemset`](@ref) (or an [`ARule`](@ref)) is satisfied.
+
+The most important meaningfulness measure is *support*, defined as "the number of instances
+in a dataset that satisfy an itemset" (it is defined similarly for association rules,
+where we consider the itemset obtained by combining both rule's antecedent and consequent).
+Other meaningfulness measures can be defined in function of support.
+
+In the context of modal logic, where the instances of a dataset are relational objects
+called Kripke frames, every meaningfulness measure must capture two aspects: how much an
+[`Itemset`](@ref) or an [`ARule`](@ref) is meaningful *within an instance*, and how much the
+same object is meaningful *across all the instances*, that is, how many times it resulted
+meaningful within an instance. Note that those two aspects coincide in the propositional
+scenario.
+
+When a meaningfulness measure is applied locally within an instance, it is said to be
+"local". Otherwise, it is said to be "global".
+For example, local support is defined as "the number of worlds within an instance, which
+satisfy an itemset".
+To define global support we need to define a *minimum local support threshold* sl which is
+a real number between 0 and 1. Now, we can say that global support is "the number of
+instances for which local support overpassed the minimum local support threshold".
+
+As in the propositional setting, more meaningfulness measures can be defined starting from
+support, but now they must respect the local/global dichotomy.
+
+We now have all the ingredients to understand this type definition.
+A [`MeaningfulnessMeasure`](@ref) is a tuple composed of a global meaningfulness
+measure, a local threshold used internally, and a global threshold we would like our
+itemsets (rules) to overpass.
+
+See also [`gconfidence`](@ref), [`gsupport`](@ref), [`lsupport`](@ref),
+[`lconfidence`](@ref).
 """
 const MeaningfulnessMeasure = Tuple{Function,Threshold,Threshold}
 
@@ -348,12 +388,14 @@ For example, `islocalof(lsupport, gsupport)` is `true`, and `isglobalof(gsupport
 is `false`.
 
 !!! warning
-    When implementing a custom meaningfulness measure, make sure to implement both traits
-    if necessary. This is fundamental to guarantee the correct behavior of some methods,
-    such as [`getlocalthreshold`](@ref).
+    When implementing a custom meaningfulness measure, make sure to implement both
+    [`islocalof`](@ref)/[`isglobalof`](@ref) and [`localof`](@ref)/[`globalof`](@ref).
+    This is fundamental to guarantee the correct behavior of some methods, such as
+    [`getlocalthreshold`](@ref).
+    Alternatively, you can simply use the macro [`@linkmeas`](@ref).
 
 See also [`getlocalthreshold`](@ref), [`gsupport`](@ref), [`isglobalof`](@ref),
-[`lsupport`](@ref).
+[`linkmeas`](@ref), [`lsupport`](@ref).
 """
 islocalof(::Function, ::Function)::Bool = false
 
@@ -363,42 +405,49 @@ islocalof(::Function, ::Function)::Bool = false
 Twin trait of [`islocalof`](@ref).
 
 See also [`getlocalthreshold`](@ref), [`gsupport`](@ref), [`islocalof`](@ref),
-[`lsupport`](@ref).
+[`linkmeas`](@ref), [`lsupport`](@ref).
 """
 isglobalof(::Function, ::Function)::Bool = false
 
 """
-    localof(::Function)
+    localof(::Function)::Union{Nothing,MeaningfulnessMeasure}
 
 Return the local measure associated with the given one.
 
-See also [`islocalof`](@ref), [`isglobalof`](@ref), [`globalof`](@ref).
+See also [`islocalof`](@ref), [`isglobalof`](@ref), [`globalof`](@ref), [`linkmeas`](@ref).
 """
 localof(::Function) = nothing
 
 """
-    globalof(::Function) = nothing
+    globalof(::Function)::Union{Nothing,MeaningfulnessMeasure} = nothing
 
 Return the global measure associated with the given one.
 
-See also [`islocalof`](@ref), [`isglobalof`](@ref), [`localof`](@ref).
+See also [`linkmeas`](@ref), [`islocalof`](@ref), [`isglobalof`](@ref), [`localof`](@ref).
 """
 globalof(::Function) = nothing
 
 """
-    ARMSubject = Union{ARule,Itemset}
+    const WorldMask = Vector{Int64}
 
-[Memoizable](https://en.wikipedia.org/wiki/Memoization) types for association rule mining
-(ARM).
+Vector whose i-th position stores how many times a certain [`MeaningfulnessMeasure`](@ref)
+applied on a specific [`Itemset`](@ref)s is true on the i-th world of multiple instances.
 
-See also [`GmeasMemo`](@ref), [`GmeasMemoKey`](@ref), [`LmeasMemo`](@ref),
-[`LmeasMemoKey`](@ref).
+If a single instance is considered, then this acts as a bit mask.
+
+For example, if we consider 5 Kripke models of a modal dataset, each of which containing 3
+worlds, then the [`WorldMask`](@ref) of an itemset could be [5,2,0], meaning that the
+itemset is always true on the first world of every instance. In the second world, the same
+itemset is true on it only for two instances. Considering the third world, then the itemset
+is never true.
+
+See also [`Itemset`](@ref), [`MeaningfulnessMeasure`](@ref).
 """
-const ARMSubject = Union{ARule,Itemset} # memoizable association-rule-mining types
+ const WorldMask = Vector{Int64}
 
-############################################################################################
-#### Utility structures ####################################################################
-############################################################################################
+
+
+# utility structures
 
 """
     const LmeasMemoKey = Tuple{Symbol,ARMSubject,Int64}
@@ -407,7 +456,8 @@ Key of a [`LmeasMemo`](@ref) dictionary.
 Represents a local meaningfulness measure name (as a `Symbol`), a [`ARMSubject`](@ref),
 and the number of a dataset instance where the measure is applied.
 
-See also [`LmeasMemo`](@ref), [`ARMSubject`](@ref).
+See also [`ARMSubject`](@ref), [`LmeasMemo`](@ref), [`lsupport`](@ref),
+[`lconfidence`](@ref).
 """
 const LmeasMemoKey = Tuple{Symbol,ARMSubject,Int64}
 
@@ -417,7 +467,8 @@ const LmeasMemoKey = Tuple{Symbol,ARMSubject,Int64}
 Association between a local measure of a [`ARMSubject`](@ref) on a specific dataset
 instance, and its value.
 
-See also [`LmeasMemoKey`](@ref), [`ARMSubject`](@ref).
+See also [`ARMSubject`](@ref), [`LmeasMemo`](@ref), [`lsupport`](@ref),
+[`lconfidence`](@ref).
 """
 const LmeasMemo = Dict{LmeasMemoKey,Threshold}
 
@@ -427,7 +478,8 @@ const LmeasMemo = Dict{LmeasMemoKey,Threshold}
 Key of a [`GmeasMemo`](@ref) dictionary.
 Represents a global meaningfulness measure name (as a `Symbol`) and a [`ARMSubject`](@ref).
 
-See also [`GmeasMemo`](@ref), [`ARMSubject`](@ref).
+See also [`ARMSubject`](@ref), [`GmeasMemo`](@ref), [`gconfidence`](@ref),
+[`gsupport`](@ref).
 """
 const GmeasMemoKey = Tuple{Symbol,ARMSubject}
 
@@ -446,23 +498,21 @@ See also [`GmeasMemoKey`](@ref), [`ARMSubject`](@ref).
 const GmeasMemo = Dict{GmeasMemoKey,Threshold} # global measure of an itemset/arule => value
 
 """
-    const Powerup = Dict{Symbol,Any}
+    const MiningState = Dict{Symbol,Any}
 
 Additional informations associated with an [`ARMSubject`](@ref) that can be used to
-specialize a [`Miner`](@ref), augmenting its capabilities.
+specialize any concrete type deriving from [`AbstractMiner`](@ref), thus augmenting its
+capabilities.
 
-Essentially, this is a tool you can use to to store information to be considered global
-within the miner.
-
-To understand how to specialize a [`Miner`](@ref), see [`haspowerup`](@ref),
-[`initpowerups`](@ref), ['powerups`](@ref), [`powerups!`](@ref).
+To understand how to specialize a [`Miner`](@ref), see [`hasminingstate`](@ref),
+[`initminingstate`](@ref), ['miningstate`](@ref), [`miningstate!`](@ref).
 """
-const Powerup = Dict{Symbol,Any}
+const MiningState = Dict{Symbol,Any}
 
 """
     const Info = Dict{Symbol,Any}
 
-Generic setting storage inside [`Miner`](@ref) structures.
+Storage reserved to metadata about mining (e.g., execution time).
 
 See also [`info`](@ref), [`info!`](@ref), [`hasinfo`](@ref), [`Miner`](@ref).
 """
@@ -478,9 +528,336 @@ See also [`Miner`](@info).
 const MineableData = AbstractDataset
 
 """
-This abstract type is intended to identify any entity with a primary structural role during
-mining.
+Any entity capable of perform association rule mining.
+
+# Interface
+
+Each new concrete miner structure must define the following getters and setters.
+Actually, depending on its purposes, a structure may partially implement these dispatches.
+For example, [`Miner`](@ref) does completely implement the interface while
+[`Bulldozer`](@ref) does not.
+
+- data(miner::AbstractMiner)
+- items(miner::AbstractMiner)
+- algorithm(miner::AbstractMiner)
+
+- freqitems(miner::AbstractMiner)
+- arules(miner::AbstractMiner)
+
+- itemsetmeasures(miner::AbstractMiner)
+- rulemeasures(miner::AbstractMiner)
+
+- localmemo(miner::AbstractMiner)
+- globalmemo(miner::AbstractMiner)
+
+- miningstate(miner::AbstractMiner)
+- info(miner::AbstractMiner)
 
 See also [`Miner`](@ref), [`Bulldozer`](@ref).
 """
 abstract type AbstractMiner end
+
+"""
+    data(miner::AbstractMiner)
+
+Getter for the data to mine, loaded inside `miner`.
+
+See also [`AbstractMiner`](@ref).
+"""
+data(::AbstractMiner) = error("Not implemented")
+
+"""
+    items(miner::AbstractMiner)
+
+Getter for the [`Item`](@ref)s considered during mining by `miner`.
+
+See also [`AbstractMiner`](@ref), [`Item`](@ref).
+"""
+items(::AbstractMiner) = error("Not implemented")
+
+"""
+    algorithm(miner::AbstractMiner)
+
+Reference to the mining algorithm.
+
+See also [`AbstractMiner`](@ref), [`apriori`](@ref), [`fpgrowth`](@ref).
+"""
+algorithm(::AbstractMiner) = error("Not implemented")
+
+
+"""
+    freqitems(miner::AbstractMiner)
+
+Getter for `miner`'s collection dedicated to store frequent [`Itemset`](@ref)s.
+
+See also [`Item`](@ref), [`Itemset`](@ref)
+"""
+freqitems(::AbstractMiner) = error("Not implemented")
+
+"""
+    arules(miner::AbstractMiner)
+
+Getter for `miner`'s collection dedicated to store interesting [`ARule`](@ref)s.
+
+See also [`ARule`](@ref)
+"""
+arules(::AbstractMiner) = error("Not implemented")
+
+
+
+"""
+    itemsetmeasures(miner::AbstractMiner)
+
+Getter for `miner`'s collection dedicated to store the [`MeaningfulnessMeasure`](@ref)s
+that must be honored by all the extracted [`Itemset`](@ref)s.
+
+See also [`AbstractMiner`](@ref), [`Itemset`](@ref).
+"""
+itemsetmeasures(::AbstractMiner) = error("Not implemented")
+
+"""
+    rulemeasures(miner::AbstractMiner)
+
+Getter for `miner`'s collection dedicated to store the [`MeaningfulnessMeasure`](@ref)s
+that must be honored by all the extracted [`ARule`](@ref)s.
+
+See also [`AbstractMiner`](@ref), [`ARule`](@ref).
+"""
+rulemeasures(::AbstractMiner) = error("Not implemented")
+
+
+
+"""
+    localmemo(miner::Miner)::LmeasMemo
+    localmemo(miner::Miner, key::LmeasMemoKey)
+
+Return the local memoization structure inside `miner`, or a specific entry if a
+[`LmeasMemoKey`](@ref) is provided.
+
+See also [`Miner`](@ref), [`LmeasMemo`](@ref), [`LmeasMemoKey`](@ref).
+"""
+localmemo(::AbstractMiner)::LmeasMemo = error("Not implemented.")
+localmemo(miner::AbstractMiner, key::LmeasMemoKey)::Union{Nothing,Threshold} = begin
+    get(localmemo(miner), key, nothing)
+end
+
+"""
+    localmemo!(miner::Miner, key::LmeasMemoKey, val::Threshold)
+
+Setter for a specific entry `key` inside the local memoization structure wrapped by `miner`.
+
+See also [`Miner`](@ref), [`LmeasMemo`](@ref), [`LmeasMemoKey`](@ref).
+"""
+localmemo!(miner::AbstractMiner, key::LmeasMemoKey, val::Threshold) = begin
+    miner.localmemo[key] = val
+end
+
+"""
+    globalmemo(miner::Miner)::GmeasMemo
+    globalmemo(miner::Miner, key::GmeasMemoKey)
+
+Return the global memoization structure inside `miner`, or a specific entry if a
+[`GmeasMemoKey`](@ref) is provided.
+
+See also [`Miner`](@ref), [`GmeasMemo`](@ref), [`GmeasMemoKey`](@ref).
+"""
+globalmemo(::AbstractMiner)::GmeasMemo = error("Not implemented.")
+globalmemo(miner::AbstractMiner, key::GmeasMemoKey)::Union{Nothing,Threshold} = begin
+    get(globalmemo(miner), key, nothing)
+end
+
+"""
+    globalmemo!(miner::Miner, key::GmeasMemoKey, val::Threshold)
+
+Setter for a specific entry `key` inside the global memoization structure wrapped by
+`miner`.
+
+See also [`Miner`](@ref), [`GmeasMemo`](@ref), [`GmeasMemoKey`](@ref).
+"""
+globalmemo!(miner::AbstractMiner, key::GmeasMemoKey, val::Threshold) = begin
+    miner.globalmemo[key] = val
+end
+
+
+
+"""
+    miningstate(miner::Miner)::MiningState
+    miningstate(miner::Miner, key::Symbol)
+    miningstate(miner::Miner, key::Symbol, inner_key)
+
+Getter for the entire [`MiningState`](@ref) structure currently loaded in `miner`,
+a field within it or the value of a specific field.
+
+See also [`Miner`](@ref), [`hasminingstate`](@ref), [`initminingstate`](@ref),
+[`MiningState`](@ref).
+"""
+miningstate(::AbstractMiner)::MiningState = error("Not implemented.")
+miningstate(miner::AbstractMiner, key::Symbol) = miningstate(miner)[key]
+miningstate(miner::AbstractMiner, key::Symbol, inner_key) = begin
+    miningstate(miner)[key][inner_key]
+end
+
+"""
+    miningstate!(miner::Miner, key::Symbol, val)
+
+Setter for the content of a specific field of `miner`'s [`miningstate`](@ref).
+
+See also [`Miner`](@ref), [`hasminingstate`](@ref), [`initminingstate`](@ref),
+[`MiningState`](@ref).
+"""
+miningstate!(miner::AbstractMiner, key::Symbol, val) = miner.miningstate[key] = val
+miningstate!(miner::AbstractMiner, key::Symbol, inner_key, val) = begin
+    miner.miningstate[key][inner_key] = val
+end
+
+"""
+    hasminingstate(miner::Miner, key::Symbol)
+
+Return whether `miner` [`miningstate`](@ref) contains a field `key`.
+
+See also [`Miner`](@ref), [`MiningState`](@ref), [`miningstate`](@ref).
+"""
+hasminingstate(miner::AbstractMiner, key::Symbol) = begin
+    haskey(miningstate(miner), key)
+end
+
+"""
+    info(miner::Miner)::MiningState
+    info(miner::Miner, key::Symbol)
+
+Getter `miner`'s metadata, such as the elapsed time of the mining algorithm.
+
+See also [`Miner`](@ref), [`MiningState`](@ref).
+"""
+info(::AbstractMiner)::Info = error("Not implemented")
+info(miner::AbstractMiner, key::Symbol) = info(miner)[key]
+
+"""
+    info!(miner::Miner, key::Symbol, val)
+
+Setter for `miner`'s metadata.
+
+See also [`hasinfo`](@ref), [`info`](@ref), [`Miner`](@ref).
+"""
+info!(miner::AbstractMiner, key::Symbol, val) = miner.info[key] = val
+
+"""
+    hasinfo(miner::AbstractMiner, key::Symbol)
+
+Return whether `miner` additional informations field contains an entry `key`.
+
+See also [`AbstractMiner`](@ref).
+"""
+hasinfo(miner::AbstractMiner, key::Symbol) = haskey(info(miner), key)
+
+
+
+# General AbstractMiner dispatches
+
+"""
+    itemtype(miner::AbstractMiner)
+
+Return the typejoin of all the [`Item`](@ref)s wrapped by `miner`.
+
+See also [`AbstractMiner`](@ref), [`Item`](@ref).
+"""
+itemtype(miner::AbstractMiner) = begin
+    typejoin(typeof.(items(miner))...)
+end
+
+"""
+    measures(miner::AbstractMiner)::Vector{<:MeaningfulnessMeasure}
+
+Return all the [`MeaningfulnessMeasures`](@ref) wrapped by `miner`.
+
+See also [`AbstractMiner`](@ref), [`itemsetmeasures`](@ref),
+[`MeaningfulnessMeasure`](@ref), [`rulemeasures`](@ref).
+"""
+function measures(miner::AbstractMiner)::Vector{<:MeaningfulnessMeasure}
+    return vcat(itemsetmeasures(miner), rulemeasures(miner))
+end
+
+"""
+    findmeasure(
+        miner::AbstractMiner,
+        meas::Function;
+        recognizer::Function=islocalof
+    )::MeaningfulnessMeasure
+
+Retrieve the [`MeaningfulnessMeasure`](@ref) associated with `meas` within `miner`.
+
+See also [`isglobalof`](@ref), [`islocalof`](@ref), [`MeaningfulnessMeasure`](@ref),
+[`AbstractMiner`](@ref).
+"""
+function findmeasure(
+    miner::AbstractMiner,
+    meas::Function;
+    recognizer::Function=islocalof
+)::MeaningfulnessMeasure
+    try
+        return Iterators.filter(
+            m -> first(m)==meas || recognizer(meas, first(m)), measures(miner)) |> first
+    catch e
+        if isa(e, ArgumentError)
+            error("The provided miner has no measure $meas. " *
+            "Maybe the miner is not initialized properly, and $meas is omitted. " *
+            "Please use itemsetmeasures/rulemeasures to check which measures are , " *
+            "available and miner's setters to add a new measures and their thresholds.")
+        end
+    end
+end
+
+
+
+"""
+    mine!(miner::AbstractMiner; kwargs...)
+
+Synonym for [`apply!](@ref).
+
+See also [`ARule`](@ref), [`Itemset`](@ref), [`apply`](@ref).
+"""
+function mine!(miner::AbstractMiner; kwargs...)
+    return apply!(miner, data(miner); kwargs...)
+end
+
+"""
+    apply!(miner::AbstractMiner, X::MineableData; forcemining::Bool=false, kwargs...)
+
+Extract association rules from data referenced by `miner` ([`data`](@ref)),
+saving the interesting [`Itemset`](@ref)s inside `miner`'s appropriate structure
+([`freqitems`](@ref)).
+
+Return a generator of interesting [`ARule`](@ref)s.
+
+!!! note
+    All the kwargs are forwarded to the mining algorithm within `miner`.
+
+See also [`ARule`](@ref), [`data`](@ref), [`freqitems`](@ref), [`Itemset`](@ref).
+"""
+function apply!(miner::AbstractMiner, X::MineableData; forcemining::Bool=false, kwargs...)
+    if info(miner, :istrained) && !forcemining
+        @warn "The miner has already been trained. To force mining, set `forcemining=true`."
+        return Nothing
+    end
+
+    algorithm(miner)(miner, X; kwargs...)
+    info!(miner, :istrained, true)
+
+    return generaterules(freqitems(miner), miner)
+end
+
+"""
+    generaterules!(miner::AbstractMiner; kwargs...)
+
+Return a generator of [`ARule`](@ref)s, given an already trained `miner`.
+
+See also [`ARule`](@ref), [`AbstractMiner`](@ref).
+"""
+function generaterules!(miner::AbstractMiner)
+    if !info(miner, :istrained)
+        error("The miner should be trained before generating rules. " *
+            "Please, invoke `mine!`.")
+    end
+
+    return generaterules(freqitems(miner), miner)
+end

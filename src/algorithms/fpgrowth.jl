@@ -36,7 +36,7 @@ function patternbase(
     leftout_count = 0
 
     while !isnothing(fptree)
-        _itemset = Itemset([])                  # prepare the new enhanced itemset content
+        _itemset = Itemset{itemtype(miner)}([]) # prepare the new enhanced itemset content
         ancestorfpt = parent(fptree)            # parent reference to climb up
         fptcount = count(fptree)                # count to be propagated to ancestors
         leftout_count += fptcount               # count associated with the item lefted out
@@ -53,8 +53,8 @@ function patternbase(
         # Note that, although we are working with enhanced itemsets, the sorting only
         # requires to consider the items inside them (so, the "non-enhanced" part).
         sort!(
-            items(_itemset),
-            by=t -> powerups(miner, :current_items_frequency)[Itemset(t)],
+            _itemset,
+            by=t -> miningstate(miner, :current_items_frequency)[t],
             rev=true
         )
 
@@ -85,11 +85,6 @@ function bounce!(pbase::ConditionalPatternBase, miner::AbstractMiner)
     # its second element is the threshold we are looking for.
     _lsupport_threshold = findmeasure(miner, lsupport)[2]
 
-    # DEPRECATED
-    # _support_meas = Iterators.filter(m -> m[1] == gsupport, itemsetmeasures(miner)) |> first
-    # _lsupport_threshold = _support_meas[2]
-
-
     _nworlds = frame(miner) |> SoleLogics.nworlds
 
     # enhanceditemset shape : (itemset, count)
@@ -104,7 +99,7 @@ function bounce!(pbase::ConditionalPatternBase, miner::AbstractMiner)
     for enhanceditemset in pbase
         filter!(_item ->
             count_accumulator[_item] / _nworlds >= _lsupport_threshold,
-            enhanceditemset |> itemset |> items
+            enhanceditemset |> itemset
         )
     end
 
@@ -131,40 +126,20 @@ function projection(
 
     if length(pbase) > 0
         bounce!(pbase, miner)
-        grow!(fptree, pbase, miner)
+        grow!(fptree, pbase; miner=miner)
     end
 
     return fptree, HeaderTable(fptree; miner=miner)
 end
 
-"""
-    TODO: comment this
-"""
-function _fragments_reducer(
-    a::DefaultDict{Itemset,Int},
-    b::DefaultDict{Itemset,Int}
-)::DefaultDict{Itemset,Int}
-    for k in keys(b)
-        if haskey(a,k)
-            a[k] += b[k]
-        else
-            a[k] = b[k]
-        end
-    end
 
-    return a
-end
 
-############################################################################################
-#### Main FP-Growth logic ##################################################################
-############################################################################################
+# fpgrowth implementation starts here
 
 """
-    fpgrowth(miner::Miner, X::MineableData; verbose::Bool=true)::Nothing
+    fpgrowth(miner::AbstractMiner, X::MineableData; verbose::Bool=true)::Nothing
 
-FP-Growth algorithm,
-[as described here](https://www.cs.sfu.ca/~jpei/publications/sigmod00.pdf)
-but generalized to also work with modal logic.
+(Modal) FP-Growth algorithm, [as described here](http://ictcs2024.di.unito.it/wp-content/uploads/2024/08/ICTCS_2024_paper_16.pdf).
 
 # Arguments
 
@@ -174,15 +149,21 @@ but generalized to also work with modal logic.
 - `distributed`: enable multi-processing execution, with `Distributed.nworkers()` processes;
 - `verbose`: print detailed informations while the algorithm runs.
 
-See also [`Miner`](@ref), [`FPTree`](@ref), [`HeaderTable`](@ref),
-[`SoleBase.AbstractDataset`](@ref)
+# Requirements
+This implementation requires a custom [`Bulldozer`](@ref) constructor capable of handling
+the given [`AbstractMiner`](@ref). In particular, the following dispatch must be
+implemented:
+
+```Bulldozer(miner::MyMinerType, ith_instance::Integer)```
+
+See also [`AbstractMiner`](@ref), [`Bulldozer`](@ref), [`FPTree`](@ref),
+[`HeaderTable`](@ref), [`SoleBase.AbstractDataset`](@ref)
 """
 function fpgrowth(
-    miner::Miner,
+    miner::AbstractMiner,
     X::MineableData;
     parallel::Bool=true,
-    distributed::Bool=false,
-    verbose::Bool=false
+    distributed::Bool=false
 )::Nothing
     @assert ModalAssociationRules.gsupport in reduce(vcat, itemsetmeasures(miner)) "" *
     "FP-Growth " *
@@ -192,38 +173,30 @@ function fpgrowth(
         "Note that local support is needed too, but it is already considered internally " *
         "by global support."
 
-    _nthreads = Threads.nthreads()
-    _nworkers = Distributed.nworkers()
-
-    if verbose && parallel
-        printstyled("Multithreading enabled: # threads = $(_nthreads).\n", color=:green)
-        if _nthreads == 1
-            printstyled(
-                "You probably forget to set a higher number of threads!\n", color=:red)
-            printstyled("Remember to use --threads/-t flag, " *
-                "or change JULIA_NUM_THREADS environment variable\n", color=:red)
-        end
-    end
-
-    if verbose && distributed
-        printstyled("Workload distributed across #$(Distributed.nprocs()) processes.\n",
-            color=:green)
-        if _nworkers == 1
-            printstyled(
-                "You probably forget to set a higher number of processes!\n", color=:red)
-            printstyled("Remember to set the -p flag.\n",  color=:red)
-        end
-    end
-
-    # establish an arbitrary general lexicographic ordering,
-    # then save it inside the miner as a powerup.
-    incremental = 0
-    for candidate in items(miner)
-        # :lexicographic_ordering is only changed one time by the serial code;
-        # algorithm should be correct also without this.
-        powerups(miner, :lexicographic_ordering)[candidate] = incremental
-        incremental += 1
-    end
+    # deprecated - verbose kwarg no more exists
+    #
+    # _nthreads = Threads.nthreads()
+    # _nworkers = Distributed.nworkers()
+    #
+    # if verbose && parallel
+    #     printstyled("Multithreading enabled: # threads = $(_nthreads).\n", color=:green)
+    #     if _nthreads == 1
+    #         printstyled(
+    #             "You probably forget to set a higher number of threads!\n", color=:red)
+    #         printstyled("Remember to use --threads/-t flag, " *
+    #             "or change JULIA_NUM_THREADS environment variable\n", color=:red)
+    #     end
+    # end
+    #
+    # if verbose && distributed
+    #     printstyled("Workload distributed across #$(Distributed.nprocs()) processes.\n",
+    #         color=:green)
+    #     if _nworkers == 1
+    #         printstyled(
+    #             "You probably forget to set a higher number of processes!\n", color=:red)
+    #         printstyled("Remember to set the -p flag.\n",  color=:red)
+    #     end
+    # end
 
     _ninstances = ninstances(X)
     local_results = Vector{Bulldozer}(undef, _ninstances)
@@ -242,7 +215,7 @@ function fpgrowth(
     # and proceed to compute global supports
     # local_results = reduce(bulldozer_reduce, local_results)
     local_results = bulldozer_reduce(local_results)
-    fpgrowth_fragments = load_bulldozer!(miner, local_results)
+    fpgrowth_fragments = load_localmemo!(miner, local_results)
 
     # global setting
     for (itemset, gfrequency_int) in fpgrowth_fragments
@@ -258,42 +231,42 @@ function fpgrowth(
 end
 
 # `fpgrowth` main logic
-function _fpgrowth(miner::Bulldozer)
-    # this will be used by the miner to understand how to order the items of each itemset
-    miner.powerups[:current_items_frequency] = DefaultDict{Itemset,Int}(0)
-    miner.powerups[:instance_item_toworlds] = Dict{Tuple{Int,Itemset},WorldMask}([])
-
+function _fpgrowth(miner::Bulldozer{I}) where {I<:Item}
     kripkeframe = frame(miner)
     _nworlds = kripkeframe |> SoleLogics.nworlds
-    nworld_to_itemset = [Itemset() for _ in 1:_nworlds]
+    nworld_to_itemset = [Itemset{I}() for _ in 1:_nworlds]
 
     # get the frequent 1-length itemsets from the first candidates set;
     frequents = [candidate
         # TODO we take for granted that the only measure related to items is always support
         for (_, lthreshold, _) in itemsetmeasures(miner)
-        for candidate in Itemset.(items(miner))
-        if lsupport(candidate, instance(miner), miner) >= lthreshold
+        for candidate in Itemset{I}.(items(miner))
+        if lsupport(candidate, data(miner), miner) >= lthreshold
     ] |> unique
 
     for (nworld, w) in enumerate(kripkeframe |> SoleLogics.allworlds)
-        nworld_to_itemset[nworld] = [
+        _itemset_in_world = [
             itemset
             for itemset in frequents
-            if powerups(miner, :instance_item_toworlds
+            if miningstate(miner, :instance_item_toworlds
                 )[(instancenumber(miner), itemset)][nworld] > 0
-        ] |> union
+        ]
+
+        nworld_to_itemset[nworld] = length(_itemset_in_world) > 0 ?
+            union(_itemset_in_world...) :
+            Itemset{I}()
 
         # count 1-length frequent itemsets frequency;
-        # a.k.a prepare miner internal powerups state to handle an FPGrowth call.
+        # a.k.a prepare miner internal miningstate state to handle an FPGrowth call.
         for item in nworld_to_itemset[nworld]
-            powerups(miner,
-                :current_items_frequency)[Itemset(item)] += 1
+            miningstate(miner,
+                :current_items_frequency)[item] += 1
         end
     end
 
     # create an initial fptree and populate it
     fptree = FPTree()
-    ModalAssociationRules.grow!(fptree, nworld_to_itemset, miner)
+    grow!(fptree, nworld_to_itemset; miner=miner)
 
     # create and fill an header table, necessary to traverse FPTrees horizontally
     htable = HeaderTable(fptree; miner=miner)
@@ -309,9 +282,9 @@ end
 function _fpgrowth_kernel(
     fptree::FPTree,
     htable::HeaderTable,
-    miner::Bulldozer,
+    miner::Bulldozer{I},
     leftout_fptree::FPTree
-)
+) where {I<:Item}
     # if `fptree` contains only one path (hence, it can be considered a linked list),
     # then combine all the Itemsets collected from previous step with the remained ones.
     if islist(fptree)
@@ -363,7 +336,7 @@ function _fpgrowth_kernel(
 
         _fpgrowth_count_phase(
             leftout_itemset,
-            Itemset(),
+            Itemset{I}(),
             (combo) -> begin
                 # here, computation is simpler than the previous
                 # `lsupport_value_calculator` lambda function implementation.
@@ -410,11 +383,10 @@ function _fpgrowth_count_phase(
     count_increment_strategy::Function,
     miner::Bulldozer
 )
-    for combo in combine_items(items(survivor_itemset), items(leftout_itemset))
+    for combo in combine_items(survivor_itemset, leftout_itemset)
         # each combo must be reshaped, following a certain order specified
-        # universally by the miner.
-
-        sort!(items(combo), by=t -> powerups(miner, :lexicographic_ordering, t))
+        # universally by the miner (lexicographi ordering).
+        sort!(combo)
 
         # instance for which we want to update local support
         memokey = (:lsupport, combo, instancenumber(miner))
@@ -440,32 +412,25 @@ function _fpgrowth_count_phase(
 end
 
 """
-    initpowerups(::typeof(fpgrowth), ::MineableData)::Powerup
+    initminingstate(::typeof(fpgrowth), ::MineableData)::MiningState
 
-Powerups suite for FP-Growth algorithm.
-When initializing a [`Miner`](@ref) with [`fpgrowth`](@ref) algorithm, this defines
-how miner's `powerup` field is filled to optimize the mining.
-See also [`haspowerup`](@ref), [`powerup`](@ref).
+[`MiningState`](@ref) fields levereged when executing FP-Growth algorithm.
+
+See also [`hasminingstate`](@ref), [`MiningState`](@ref), [`miningstate`](@ref).
 """
-function initpowerups(::typeof(fpgrowth), ::MineableData)::Powerup
-    return Powerup([
+function initminingstate(::typeof(fpgrowth), ::MineableData)::MiningState
+    return MiningState([
         # given and instance I and an itemset λ, the default behaviour when computing
         # local support is to perform model checking to establish in how many worlds
-        # the relation I,w ⊧ λ is satisfied.
-        # A numerical value is obtained, but the exact worlds in which the truth relation
-        # holds is not kept in memory by default.
-        # Here, however, we want to keep track of the relation.
-        # See `lsupport` implementation.
+        # the relation I,w ⊧ λ is satisfied;
+        # a numerical value is obtained, but the exact worlds in which the truth relation
+        # holds is not kept in memory. We save them in thanks to this field.
+        # See also `lsupport` implementation.
         :instance_item_toworlds => Dict{Tuple{Int,Itemset},WorldMask}([]),
 
         # when modal fpgrowth calls propositional fpgrowth multiple times, each call
-        # has to know its specific 1-length itemsets ordering;
+        # has to know its specific 1-length itemsets ordering (that is, one Item);
         # otherwise, the building process of fptrees is not correct anymore.
-        # To avoid race condition, the first integer in the dictionary's key
-        # contains the number of the current operating thread id.
-        :current_items_frequency => DefaultDict{Tuple{Int,Itemset},Int}(0),
-
-        # necessary to reshape all the extracted itemsets to a common ordering
-        :lexicographic_ordering => Dict{Item,Int}([])
+        :current_items_frequency => DefaultDict{Item,Int}(0),
     ])
 end

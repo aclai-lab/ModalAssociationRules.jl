@@ -11,8 +11,9 @@ using SoleData: VariableMin, VariableMax
 _X, y = @load_iris
 X1 = DataFrame(hcat(values(_X)...), collect(keys(_X)))
 
-X = scalarlogiset(X1; relations = AbstractRelation[], conditions =
-    Vector{ScalarMetaCondition}(
+X = scalarlogiset(X1;
+    relations=AbstractRelation[],
+    conditions=Vector{ScalarMetaCondition}(
         collect(Iterators.flatten([
             [ScalarMetaCondition(f, <=) for f in VariableMin.(1:4)],
             [ScalarMetaCondition(f, >=) for f in VariableMin.(1:4)],
@@ -34,15 +35,15 @@ _1_items = Vector{Item}(Atom.([
 function _compare_arules(miner1::Miner, miner2::Miner, rule::ARule)
     # global confidence comparison;
     # here it is implied that rules are already generated using generaterules!
-    @test miner1.gmemo[(:gconfidence, rule)] == miner2.gmemo[(:gconfidence, rule)]
+    @test miner1.globalmemo[(:gconfidence, rule)] == miner2.globalmemo[(:gconfidence, rule)]
 
     # local confidence comparison;
     for ninstance in miner1 |> data |> ninstances
         lconfidence(rule, SoleLogics.getinstance(data(miner1), ninstance), miner1)
         lconfidence(rule, SoleLogics.getinstance(data(miner2), ninstance), miner2)
 
-        @test miner1.lmemo[(:lconfidence, rule, ninstance)] ===
-              miner2.lmemo[(:lconfidence, rule, ninstance)]
+        @test miner1.localmemo[(:lconfidence, rule, ninstance)] ===
+              miner2.localmemo[(:lconfidence, rule, ninstance)]
     end
 end
 
@@ -113,5 +114,5 @@ compare_arules(apriori_miner, fpgrowth_miner)
 # this can't work, since previous test is broken and mining fails
 # freqitems(fpgrowth_miner)
 # patt = freqitems(fpgrowth_miner)[10]
-# check(patt |> toformula |> tree, X) |> sum
-# fpgrowth_miner.gmemo[(:gsupport, patt)]
+# check(patt |> formula |> tree, X) |> sum
+# fpgrowth_miner.globalmemo[(:gsupport, patt)]

@@ -1,26 +1,65 @@
 """
-Collection of [`powerups`](@ref) references which are injected when creating a generic
-local meaningfulness measure using [`lmeas`](@ref).
+If an [`AbstractMiner`](@ref)'s [`miningstate`](@ref) contains one of these fields,
+then it is filled when computing any local meaningfulness measure created using
+[`@localmeasure`](@ref) macro.
+
+See also [`AbstractMiner`](@ref), [`@localmeasure`](@ref), [`miningstate`](@ref).
 """
-LOCAL_POWERUP_SYMBOLS = [
+LOCAL_MINING_STATES = [
     :instance_item_toworlds
 ]
-"""
-Collection of [`powerups`](@ref) references which are injected when creating a generic
-global meaningfulness measure using [`gmeas`](@ref).
-"""
-GLOBAL_POWERUP_SYMBOLS = []
 
 """
-    macro lmeas(measname, measlogic)
+If an [`AbstractMiner`](@ref)'s [`miningstate`](@ref) contains one of these fields,
+then it is filled when computing any local meaningfulness measure created using
+[`globalmeasure`](@ref) macro.
 
-Build a generic local meaningfulness measure.
-By default, internal `miner`'s memoization is leveraged.
-To specialize an already existent measure, take a look at [`powerups`](@ref) system.
-
-See also [`haspowerups`](@ref), [`Miner`](@ref), [`powerups`](@ref).
+See also [`AbstractMiner`](@ref), [`@globalmeasure`](@ref), [`miningstate`](@ref).
 """
-macro lmeas(measname, measlogic)
+GLOBAL_MINING_STATES = []
+
+"""
+    macro localmeasure(measname, measlogic)
+
+Build a generic local meaningfulness measure, levering the optimizations provided by any
+[`AbstractMiner`](@ref).
+
+# Arguments
+
+- `measname`: the name of the local measure you are defining (e.g., lsupport);
+- `measlogic`: a lambda function whose arguments are (itemset, data, ith_instance, miner) -
+see the note below to know more about this.
+
+!!! note
+    When defining a new local measure, you only need to write its essential logic through
+    a lambda function (itemset, X, ith_instance, miner).
+
+    In particular, `itemset` is an [`Itemset`](@ref), `X` is a reference to the dataset,
+    `ith_instance` is an integer defining on which instance you want to compute the measure,
+    and `miner` is the [`AbstractMiner`](@ref) in which you want to save the measure.
+
+    Also, `miner` argument can be used to leverage its [`miningstate`](@ref) structure.
+    A complete example of the logic behind local support is shown below:
+
+    ```julia
+    _lsupport_logic = (itemset, X, ith_instance, miner) -> begin
+        # vector representing on which world an Itemset holds
+        wmask = [
+            check(formula(itemset), X, ith_instance, w) for w in allworlds(X, ith_instance)]
+
+        # return the result enriched with more informations, that will eventually will be
+        # used if miner's miningstate has specific fields (e.g., :instance_item_toworlds).
+        return Dict(
+            :measure => count(wmask) / nworlds(X, ith_instance),
+            :instance_item_toworlds => wmask,
+        )
+    end
+    ```
+
+See also [`AbstractMiner`](@ref), [`hasminingstate`](@ref), [`lsupport`](@ref),
+[`miningstate`](@ref).
+"""
+macro localmeasure(measname, measlogic)
     fname = Symbol(measname)
 
     quote
@@ -47,20 +86,20 @@ macro lmeas(measname, measlogic)
             measure = response[:measure]
 
             # save measure in memoization structure;
-            # also, do more stuff depending on `powerups` dispatch (see the documentation).
+            # also, do more stuff depending on `miningstate` dispatch (see the documentation).
             localmemo!(miner, memokey, measure)
 
-            for powerup in LOCAL_POWERUP_SYMBOLS
+            for state in LOCAL_MINING_STATES
                 # the numerical value necessary to save more informations about the relation
                 # between an instance and a subject must be obtained by the internal logic
                 # of the meaningfulness measure callback.
-                if haspowerup(miner, powerup) && haskey(response, powerup)
-                    powerups!(miner, powerup, (ith_instance,subject), response[powerup])
+                if hasminingstate(miner, state) && haskey(response, state)
+                    miningstate!(miner, state, (ith_instance,subject), response[state])
                 end
             end
-            # Note that the powerups system could potentially irrorate the entire package
+            # Note that the miningstate system could potentially irrorate the entire package
             # and could be expandend/specialized;
-            # e.g., a category of powerups is necessary to fill (ith_instance,subject)
+            # e.g., a category of miningstate is necessary to fill (ith_instance,subject)
             # fields, other are necessary to save informations about something else.
 
             return measure
@@ -72,15 +111,43 @@ macro lmeas(measname, measlogic)
 end
 
 """
-    macro gmeas(measname, measlogic)
+    macro globalmeasure(measname, measlogic)
 
-Build a generic global meaningfulness measure.
-By default, internal `miner`'s memoization is leveraged.
-To specialize an already existent measure, take a look at [`powerups`](@ref) system.
+Build a generic global meaningfulness measure, levering the optimizations provided by any
+[`AbstractMiner`](@ref).
 
-See also [`haspowerups`](@ref), [`Miner`](@ref), [`powerups`](@ref).
+# Arguments
+
+- `measname`: the name of the global measure you are defining (e.g., gsupport);
+- `measlogic`: a lambda function whose arguments are (rule, X, threshold, miner) - see the
+note below to know more about this.
+
+!!! note
+    When defining a new global measure, you only need to write its essential logic through
+    a lambda function (itemset, X, ith_instance, miner).
+
+    In particular, `itemset` is an [`Itemset`](@ref), `X` is a reference to the dataset
+    and `miner` is the [`AbstractMiner`](@ref) in which you want to save the measure.
+
+    Also, `miner` argument can be used to leverage its [`miningstate`](@ref) structure.
+    A complete example of the logic behind global support is shown below:
+
+    ```julia
+    _gsupport_logic = (itemset, X, threshold, miner) -> begin
+        _measure = sum([
+            lsupport(itemset, getinstance(X, ith_instance), miner) >= threshold
+            for ith_instance in 1:ninstances(X)
+        ]) / ninstances(X)
+
+        # at the moment, no `miningstate` fields in miner are leveraged
+        return Dict(:measure => _measure)
+    end
+    ```
+
+See also [`AbstractMiner`](@ref), [`hasminingstate`](@ref), [`gsupport`](@ref),
+[`miningstate`](@ref).
 """
-macro gmeas(measname, measlogic)
+macro globalmeasure(measname, measlogic)
     fname = Symbol(measname)
 
     quote
@@ -89,7 +156,7 @@ macro gmeas(measname, measlogic)
             subject::ARMSubject,
             X::SupportedLogiset,
             threshold::Threshold,
-            miner::Miner
+            miner::AbstractMiner
         )
             # key to access memoization structures
             memokey = GmeasMemoKey((Symbol($(esc(fname))), subject))
@@ -105,14 +172,16 @@ macro gmeas(measname, measlogic)
             measure = response[:measure]
 
             # save measure in memoization structure;
-            # also, do more stuff depending on `powerups` dispatch (see the documentation).
-            # to know more, see `lmeas` comments.
+            # also, do more stuff depending on `miningstate` dispatch (see the documentation).
+            # to know more, see `localmeasure` comments.
             globalmemo!(miner, memokey, measure)
 
-            for powerup in GLOBAL_POWERUP_SYMBOLS
-                if haspowerup(miner, powerup) && haskey(response, powerup)
-                    powerups!(miner, powerup, (subject), response[powerup])
-                end
+            for state in GLOBAL_MINING_STATES
+                # Is this functionality useful?
+                # TODO - enable when finding an application
+                # if hasminingstate(miner, state) && haskey(response, state)
+                #     miningstate!(miner, state, (subject), response[state])
+                # end
             end
 
             return measure
@@ -127,9 +196,10 @@ end
     macro linkmeas(gmeasname, lmeasname)
 
 Link together two [`MeaningfulnessMeasure`](@ref), automatically defining
-[`globalof`](@ref)/[`localof`](@ref) and [`isglobalof`](@ref)/[`islocalof`](@ref).
+[`globalof`](@ref)/[`localof`](@ref) and [`isglobalof`](@ref)/[`islocalof`](@ref) traits.
 
-See also [`globalof`](@ref), [`localof`](@ref), [`isglobalof`](@ref), [`islocalof`](@ref).
+See also [`globalof`](@ref), [`isglobalof`](@ref), [`islocalof`](@ref), [`localof`](@ref),
+[`MeaningfulnessMeasure`](@ref).
 """
 macro linkmeas(gmeasname, lmeasname)
     quote
@@ -144,13 +214,13 @@ end
 
 # core logic of `lsupport`, as a lambda function;
 # `miner` is an unused argument, but is required since this function must adhere to local
-# measures interface (see `@lmeas` macro)
+# measures interface (see `@localmeasure` macro)
 _lsupport_logic = (itemset, X, ith_instance, miner) -> begin
     # bool vector, representing on which world an Itemset holds
     wmask = [
-        check(toformula(itemset), X, ith_instance, w) for w in allworlds(X, ith_instance)]
+        check(formula(itemset), X, ith_instance, w) for w in allworlds(X, ith_instance)]
 
-    # return the result, and eventually the information needed to support powerups
+    # return the result, and eventually the information needed to support miningstate
     return Dict(
         :measure => count(wmask) / nworlds(X, ith_instance),
         :instance_item_toworlds => wmask,
@@ -171,7 +241,7 @@ end
     function lsupport(
         itemset::Itemset,
         instance::LogicalInstance;
-        miner::Union{Nothing,Miner}=nothing
+        miner::Union{Nothing,AbstractMiner}=nothing
     )::Float64
 
 Compute the local support for the given `itemset` in the given `instance`.
@@ -183,14 +253,14 @@ If a miner is provided, then its internal state is updated and used to leverage 
 
 See also [`Miner`](@ref), [`LogicalInstance`](@ref), [`Itemset`](@ref).
 """
-@lmeas lsupport _lsupport_logic
+@localmeasure lsupport _lsupport_logic
 
 """
     function gsupport(
         itemset::Itemset,
         X::SupportedLogiset,
         threshold::Threshold;
-        miner::Union{Nothing,Miner}=nothing
+        miner::Union{Nothing,AbstractMiner}=nothing
     )::Float64
 
 Compute the global support for the given `itemset` on a logiset `X`, considering `threshold`
@@ -205,13 +275,13 @@ If a miner is provided, then its internal state is updated and used to leverage 
 See also [`Miner`](@ref), [`LogicalInstance`](@ref), [`Itemset`](@ref),
 [`SupportedLogiset`](@ref), [`Threshold`](@ref).
 """
-@gmeas gsupport _gsupport_logic
+@globalmeasure gsupport _gsupport_logic
 
 _lconfidence_logic = (rule, X, ith_instance, miner) -> begin
     den = lsupport(antecedent(rule), getinstance(X, ith_instance), miner)
     num = lsupport(convert(Itemset, rule), getinstance(X, ith_instance), miner)
 
-    # Return the result, and eventually the information needed to support powerups
+    # Return the result, and eventually the information needed to support miningstate
     return Dict(:measure => num/den)
 end
 
@@ -229,7 +299,7 @@ end
     function lconfidence(
         rule::ARule,
         ith_instance::LogicalInstance;
-        miner::Union{Nothing,Miner}=nothing
+        miner::Union{Nothing,AbstractMiner}=nothing
     )::Float64
 
 Compute the local confidence for the given `rule` in the given instance.
@@ -240,17 +310,17 @@ same rule.
 
 If a miner is provided, then its internal state is updated and used to leverage memoization.
 
-See also [`antecedent`](@ref), [`ARule`](@ref), [`Miner`](@ref),
+See also [`AbstractMiner`](@ref), [`antecedent`](@ref), [`ARule`](@ref),
 [`LogicalInstance`](@ref), [`lsupport`](@ref).
 """
-@lmeas lconfidence _lconfidence_logic
+@localmeasure lconfidence _lconfidence_logic
 
 """
     function gconfidence(
         rule::ARule,
         X::SupportedLogiset,
         threshold::Threshold;
-        miner::Union{Nothing,Miner}=nothing
+        miner::Union{Nothing,AbstractMiner}=nothing
     )::Float64
 
 Compute the global confidence for the given `rule` on a logiset `X`, considering
@@ -263,10 +333,10 @@ the same rule.
 If a miner is provided, then its internal state is updated and used to leverage
 memoization.
 
-See also [`antecedent`](@ref), [`ARule`](@ref), [`Miner`](@ref), [`gsupport`](@ref),
+See also [`antecedent`](@ref), [`ARule`](@ref), [`AbstractMiner`](@ref), [`gsupport`](@ref),
 [`SupportedLogiset`](@ref).
 """
-@gmeas gconfidence _gconfidence_logic
+@globalmeasure gconfidence _gconfidence_logic
 
 # all the meaningfulness measures defined in this file are linked here,
 # meaning that a global measure is associated to its corresponding local one.

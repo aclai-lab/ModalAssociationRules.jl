@@ -151,7 +151,7 @@ function runexperiment(
 
             println("\nResults:\n")
 			for r in sort(
-                arules(miner), by = x -> miner.gmemo[(:gconfidence, x)], rev=true)
+                arules(miner), by = x -> miner.globalmemo[(:gconfidence, x)], rev=true)
 				ModalAssociationRules.analyze(
                     r, miner; variablenames=variablenames, itemsets_global_info=true)
 			end
@@ -395,8 +395,8 @@ function runcomparison(
         # val[3] is a vector of pairs; in particular:
         #   val[3] |> first is an integer i, indicating that measures refers to ith-logiset
         #   val[3] |> last is a vector of length 4, containing all the measures
-        _antecedent = val[1] |> antecedent |> toformula
-        _consequent = val[1] |> consequent |> toformula
+        _antecedent = val[1] |> antecedent |> formula
+        _consequent = val[1] |> consequent |> formula
         row_cellstrings = String[
             # rule
             "$(syntaxstring(_antecedent, variable_names_map=variablenames))" *

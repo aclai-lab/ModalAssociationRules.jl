@@ -31,37 +31,47 @@ using StatsBase
 
 include("core.jl")
 
-export Item
-export Itemset, toformula, slice
+export Item, formula
+export Itemset
 
-export Threshold
-export WorldMask, EnhancedItemset, ConditionalPatternBase
+export EnhancedItemset, count
+export ConditionalPatternBase
 
 export ARule
-export antecedent, consequent
+export content, antecedent, consequent
 
+export ARMSubject
+
+export Threshold
 export MeaningfulnessMeasure
 export islocalof, isglobalof
 export localof, globalof
 
-export ARMSubject
+export WorldMask
+
 export LmeasMemoKey, LmeasMemo
 export GmeasMemoKey, GmeasMemo
-export Info, Powerup
+
+export MiningState
+export Info
+export MineableData
+
+export AbstractMiner
+export MineableData
 
 include("miner.jl")
 
-export AbstractMiner, Miner
+export Miner
+export itemtype, datatype
 export data, algorithm
-export itemsetmeasures, additemmeas
-export rulemeasures, addrulemeas
+export itemsetmeasures, rulemeasures
 export freqitems, arules
 export measures, findmeasure
 export getlocalthreshold, getglobalthreshold
 export localmemo, localmemo!
 export globalmemo, globalmemo!
 
-export powerups, powerups!, haspowerup, initpowerups
+export miningstate, miningstate!, hasminingstate, initminingstate
 export info, info!, hasinfo
 export mine!, apply!, generaterules!
 export analyze
@@ -72,12 +82,12 @@ include("bulldozer.jl")
 
 export Bulldozer
 export instance, instancenumber, frame
-export datalock, memolock, poweruplock
+export datalock, memolock, miningstatelock
 export bulldozer_reduce
 
 include("meaningfulness-measures.jl")
 
-export @lmeas, @gmeas
+export @localmeasure, @globalmeasure, @linkmeas
 export lsupport, gsupport
 export lconfidence, gconfidence
 
@@ -87,7 +97,6 @@ export combine_items, prune, prune!
 export grow_prune, coalesce_contributors
 export anchor_rulecheck, non_selfabsorbed_rulecheck
 export generaterules
-export getlocalthreshold_integer, getglobalthreshold_integer
 
 include("algorithms/apriori.jl")
 
@@ -116,7 +125,7 @@ include("utils/natops-loader.jl")
 
 export load_NATOPS
 
-include("utils/literals-selector.jl")   # TODO: move this in SoleData
+include("utils/literals-selector.jl")   # TODO -  move this in SoleData
 
 export equicut, quantilecut
 export makeconditions

@@ -33,8 +33,8 @@ projection(pbase::ConditionalPatternBase, miner::Miner)
 ```
 
 Also, FPGrowth requires the [`Miner`](@ref) to remember the [`Contributors`](@ref) associated with the extracted frequent itemsets.
-To add this functionality, we can define a new dispatch of [`initpowerups`](@ref): it is automatically considered to enrich the miner, while building it together with [`fpgrowth`](@ref) as mining algorithm.
+To add this functionality, we can define a new dispatch of [`initminingstate`](@ref): it is automatically considered to enrich the miner, while building it together with [`fpgrowth`](@ref) as mining algorithm.
 
 ```@docs
-initpowerups(::typeof(fpgrowth), ::AbstractDataset)
+initminingstate(::typeof(fpgrowth), ::AbstractDataset)
 ```
