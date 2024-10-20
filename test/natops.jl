@@ -15,8 +15,9 @@ end
 
 # load NATOPS dataset and convert it to a Logiset
 X_df, y = load_NATOPS();
-X_df = ((x)->x[1:4]).(X_df)
-X1 = scalarlogiset(X_df)
+X_df_1_have_command = X_df[1:30, :]
+X_df_short = ((x)->x[1:4]).(X_df)
+X1 = scalarlogiset(X_df_short)
 
 # different tested algorithms will use different Logiset's copies,
 # and deepcopies must be produced now.
@@ -196,3 +197,6 @@ fpgrowth_miner = Miner(X_1_have_command,
     fpgrowth, _5_items, _5_itemsetmeasures, _5_rulemeasures)
 
 compare(apriori_miner, fpgrowth_miner)
+
+arule = fpgrowth_miner |> arules |> first
+@test_nowarn analyze(arule, fpgrowth_miner; verbose=true)

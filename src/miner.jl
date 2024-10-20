@@ -351,7 +351,7 @@ function analyze(
             # find local measure (its name, as Symbol) associated with the global measure
             lmeassym = ModalAssociationRules.localof(globalmeasure) |> Symbol
             for i in 1:ninstances(miner |> data)
-                print(io, "$(lmeassym): $(localmemo(miner, (lmeassym, arule, i))) ")
+                println(io, "\t$(lmeassym): $(localmemo(miner, (lmeassym, arule, i))) ")
             end
             println(io, "")
         end
@@ -381,8 +381,6 @@ function analyze(
 
         end
     end
-
-    println(io, "")
 end
 
 

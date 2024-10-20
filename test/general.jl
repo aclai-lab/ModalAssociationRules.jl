@@ -33,6 +33,9 @@ manual_items = Vector{Item}([
 _itemsetmeasures = [(gsupport, 0.1, 0.1)]
 _rulemeasures = [(gconfidence, 0.2, 0.2)]
 
+@test_throws ArgumentError Miner(
+    X1, apriori, manual_items, [(gconfidence, 0.1, 0.1)], _rulemeasures)
+
 apriori_miner = Miner(X1, apriori, manual_items, _itemsetmeasures, _rulemeasures)
 fpgrowth_miner = Miner(X2, fpgrowth, manual_items, _itemsetmeasures, _rulemeasures)
 

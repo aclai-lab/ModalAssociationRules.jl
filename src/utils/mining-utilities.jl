@@ -158,7 +158,7 @@ See also [`ARule`](@ref), [`Miner`](@ref), [`Itemset`](@ref), [`rulemeasures`](@
             # hence, since we want the antecedent to be longer initially,
             # the first subset values corresponds to (see comment below)
             # (l-a)
-            _consequent = subset == Any[] ? Itemset{Item}() : Itemset{Item}()
+            _consequent = subset == Any[] ? Itemset{Item}() : subset
             # a
             _antecedent = symdiff(itemset, _consequent) |> Itemset
 
@@ -189,6 +189,7 @@ See also [`ARule`](@ref), [`Miner`](@ref), [`Itemset`](@ref), [`rulemeasures`](@
 
             interesting = true
             for meas in rulemeasures(miner)
+                @show meas
                 (gmeas_algo, lthreshold, gthreshold) = meas
                 gmeas_result = gmeas_algo(
                     currentrule, data(miner), lthreshold, miner)
