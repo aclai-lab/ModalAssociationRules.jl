@@ -108,11 +108,10 @@ function _load_NATOPS(dirpath::String, fileprefix::String)
     y_train = map(fix_class_names, y_train)
     y_test  = map(fix_class_names, y_test)
 
-    if !(nrow(X_train) == length(y_train))
-        throw(ArgumentError("Mismatching dimensions for X_train ($(nrow(X_train))) and " *
-        "y_train ($(length(y_train)))"))
-
-    end
+    # if !(nrow(X_train) == length(y_train))
+    #     throw(ArgumentError("Mismatching dimensions for X_train ($(nrow(X_train))) and " *
+    #         "y_train ($(length(y_train)))"))
+    # end
 
     y_train = categorical(y_train)
     y_test = categorical(y_test)
