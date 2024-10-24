@@ -173,31 +173,6 @@ function fpgrowth(
         "Note that local support is needed too, but it is already considered internally " *
         "by global support."
 
-    # deprecated - verbose kwarg no more exists
-    #
-    # _nthreads = Threads.nthreads()
-    # _nworkers = Distributed.nworkers()
-    #
-    # if verbose && parallel
-    #     printstyled("Multithreading enabled: # threads = $(_nthreads).\n", color=:green)
-    #     if _nthreads == 1
-    #         printstyled(
-    #             "You probably forget to set a higher number of threads!\n", color=:red)
-    #         printstyled("Remember to use --threads/-t flag, " *
-    #             "or change JULIA_NUM_THREADS environment variable\n", color=:red)
-    #     end
-    # end
-    #
-    # if verbose && distributed
-    #     printstyled("Workload distributed across #$(Distributed.nprocs()) processes.\n",
-    #         color=:green)
-    #     if _nworkers == 1
-    #         printstyled(
-    #             "You probably forget to set a higher number of processes!\n", color=:red)
-    #         printstyled("Remember to set the -p flag.\n",  color=:red)
-    #     end
-    # end
-
     _ninstances = ninstances(X)
     local_results = Vector{Bulldozer}(undef, _ninstances)
     if parallel
@@ -219,14 +194,33 @@ function fpgrowth(
 
     # global setting
     for (itemset, gfrequency_int) in fpgrowth_fragments
+        # manually compute and save miner's global support if >= min threhsold;
         _threshold = getglobalthreshold(miner, gsupport)
         gfrequency = gfrequency_int / _ninstances
+
         if gfrequency >= _threshold
             globalmemo!(miner, GmeasMemoKey((Symbol(gsupport), itemset)), gfrequency)
-            push!(freqitems(miner), itemset)
-        end
 
-        # TODO - check other custom meaningfulness measures
+            # for those itemsets, also check other measures and save the frequent ones.
+            saveflag = true
+            for (gmeas_algo, lthreshold, gthreshold) in itemsetmeasures(miner)
+                if gmeas_algo == gsupport
+                    continue
+                end
+
+                # note that when calling a generic gmeas_algo created using @globalmemo,
+                # the result is automatically memoized and we do not need to also call
+                # globalmemo! like in the case before, where we computed gsupport manually.
+                if gmeas_algo(itemset, X, lthreshold, miner) < gthreshold
+                    saveflag = !saveflag
+                    break
+                end
+            end
+
+            if saveflag
+                push!(freqitems(miner), itemset)
+            end
+        end
     end
 end
 
@@ -238,10 +232,12 @@ function _fpgrowth(miner::Bulldozer{I}) where {I<:Item}
 
     # get the frequent 1-length itemsets from the first candidates set;
     frequents = [candidate
-        # TODO we take for granted that the only measure related to items is always support
-        for (_, lthreshold, _) in itemsetmeasures(miner)
         for candidate in Itemset{I}.(items(miner))
-        if lsupport(candidate, data(miner), miner) >= lthreshold
+        for (gmeas_algo, lthreshold, gthreshold) in itemsetmeasures(miner)
+        # in all the existing literature, the only measure needed here is be `lsupport`;
+        # however, we give the possibility to control more granularly what does it mean
+        # for an itemset to be *locally frequent*.
+        if localof(gmeas_algo)(candidate, data(miner), miner) >= lthreshold
     ] |> unique
 
     for (nworld, w) in enumerate(kripkeframe |> SoleLogics.allworlds)

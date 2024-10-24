@@ -189,7 +189,6 @@ See also [`ARule`](@ref), [`Miner`](@ref), [`Itemset`](@ref), [`rulemeasures`](@
 
             interesting = true
             for meas in rulemeasures(miner)
-                @show meas
                 (gmeas_algo, lthreshold, gthreshold) = meas
                 gmeas_result = gmeas_algo(
                     currentrule, data(miner), lthreshold, miner)

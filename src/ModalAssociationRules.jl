@@ -56,10 +56,13 @@ export MiningState
 export Info
 export MineableData
 
-export AbstractMiner
 export MineableData
 
-include("miner.jl")
+include("types/miner.jl")
+
+export AbstractMiner
+
+include("utils/miner.jl")
 
 export Miner
 export itemtype, datatype
@@ -78,7 +81,7 @@ export analyze
 
 export frame, allworlds, nworlds
 
-include("bulldozer.jl")
+include("utils/bulldozer.jl")
 
 export Bulldozer
 export instance, instancenumber, frame
@@ -125,9 +128,8 @@ include("utils/natops-loader.jl")
 
 export load_NATOPS
 
-include("utils/literals-selector.jl")   # TODO -  move this in SoleData
-
-export equicut, quantilecut
-export makeconditions
+## include("utils/literals-selector.jl")   # TODO -  move this in SoleData
+# export equicut, quantilecut
+# export makeconditions
 
 end
