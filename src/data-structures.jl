@@ -344,9 +344,10 @@ struct HeaderTable
     # association Item -> FPTree
     link::Dict{Item,Union{Nothing,FPTree}}
 
-    function HeaderTable()
-        new(Item[], Dict{Item,Union{Nothing,FPTree}}())
-    end
+    # deprecated
+    # function HeaderTable()
+    #     new(Item[], Dict{Item,Union{Nothing,FPTree}}())
+    # end
 
     function HeaderTable(
         fptseed::FPTree;

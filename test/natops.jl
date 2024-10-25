@@ -199,7 +199,7 @@ fpgrowth_miner = Miner(X_1_have_command,
 compare(apriori_miner, fpgrowth_miner)
 
 arule = fpgrowth_miner |> arules |> first
-@test_nowarn analyze(arule, fpgrowth_miner; verbose=true)
+@test_nowarn analyze(arule, fpgrowth_miner; io=devnull, verbose=true)
 
 @test frame(fpgrowth_miner) isa SoleLogics.FullDimensionalFrame
 @test allworlds(fpgrowth_miner) |> first isa SoleLogics.Interval
@@ -221,3 +221,21 @@ my_bulldozer = Bulldozer(fpgrowth_miner, 1)
 
 @test_nowarn miningstate!(my_bulldozer, :myfield, Dict(42 => 24))
 @test miningstate(my_bulldozer, :myfield, 42) == 24
+
+# 6th comparisons: FP-Growth using new meaningfulness measures
+_6_items = _5_items
+_6_itemsetmeasures = [(gsupport, 0.5, 0.5)]
+
+# the following measure thresholds have the only purpose of trigger code coverage
+_6_rulemeasures = [
+    (gconfidence, 0.5, 0.5),
+    (glift, 0.5, 0.5),          # [-∞,+∞]
+    (gconviction, 1.0, 1.0),    # [0,+∞]
+    (gleverage, -0.25, -0.25),  # [-0.25,0.25]
+    (gchisquared, 0.0, 0.0),
+]
+
+fpgrowth_miner = Miner(X_1_have_command,
+    fpgrowth, _6_items, _6_itemsetmeasures, _6_rulemeasures)
+
+@test_nowarn mine!(fpgrowth_miner)

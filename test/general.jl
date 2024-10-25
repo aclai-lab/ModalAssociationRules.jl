@@ -51,7 +51,8 @@ r = Itemset{Item}(manual_r)
 @test qr in pqr
 @test (pqr in [pq,qr]) == false
 
-# "core.jl - fundamental types"
+
+
 @test Itemset{Item} <: Itemset{<:Item}
 @test Itemset{Item}(Item[manual_p]) == Item[manual_p]
 @test all(item -> item in [manual_p, manual_q], pq)
@@ -162,7 +163,9 @@ _temp_apriori_miner = Miner(X1, apriori, manual_items, _itemsetmeasures, _ruleme
 
 @test_nowarn repr("text/plain", _temp_miner)
 
-# "meaningfulness-measures.jl"
+
+
+# meaningfulness measures
 @test islocalof(lsupport, lsupport) == false
 @test islocalof(lsupport, gsupport) == true
 @test islocalof(lsupport, lconfidence) == false
@@ -357,8 +360,7 @@ end
 
 @test_nowarn map(child -> _allowed_existence(child), children(manual_fptree))
 
-# "fpgrowth.jl - HeaderTable"
-@test HeaderTable() isa HeaderTable
+
 
 fpt = FPTree(pqr)
 @test_throws MethodError htable = HeaderTable([pqr], fpt)
@@ -437,8 +439,6 @@ _statefulMiner = statefulMiner(MiningState())
 @test_nowarn miningstate!(_statefulMiner, :field, Dict(:inner_field => 3))
 @test_throws ErrorException miningstate(_statefulMiner)
 @test_throws ErrorException miningstate(_statefulMiner, :field, :inner_field)
-
-
 
 @test_nowarn datatype(apriori_miner)
 
