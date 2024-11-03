@@ -1,5 +1,3 @@
-# Bulldozer utilities
-
 # Itemset utilities
 
 """
