@@ -33,7 +33,13 @@ thread-safe.
     parameterization, map the computation on many bulldozers, each of which can be easily
     constructed from the miner itself, and then reduce the results together.
 
-See also [`AbstractMiner`](@ref), [`Miner`](@ref).
+!!! warning
+    Currently, [`data`](@ref), [`memo`](@ref) and [`miningstate`](@ref) dispatches are not
+    protected by locks and they are going to be deprecated.
+    When using a working in a multi-threaded scenario, please create a new
+    [`Bulldozer`](@ref) in each thread and then merge them using [`bulldozer_reduce`](@ref).
+
+See also [`AbstractMiner`](@ref), [`bulldozer_reduce`](@ref), [`Miner`](@ref).
 """
 struct Bulldozer{I<:Item} <: AbstractMiner
     # reference to a modal dataset ith instance
@@ -170,17 +176,20 @@ Getter for the customizable dictionary wrapped by a [`Bulldozer`](@ref).
 
 See also [`miningstate!(::Bulldozer)`].
 """
-miningstate(bulldozer::Bulldozer)::MiningState = lock(miningstatelock(bulldozer)) do
+miningstate(bulldozer::Bulldozer)::MiningState = begin
+    # lock(miningstatelock(bulldozer)) do
     bulldozer.miningstate
 end
-miningstate(bulldozer::Bulldozer, key::Symbol)::Any = lock(miningstatelock(bulldozer)) do
+miningstate(bulldozer::Bulldozer, key::Symbol)::Any = begin
+    # lock(miningstatelock(bulldozer)) do
     miningstate(bulldozer)[key]
 end
 miningstate(
     bulldozer::Bulldozer,
     key::Symbol,
     inner_key
-)::Any = lock(miningstatelock(bulldozer)) do
+)::Any = begin
+    # lock(miningstatelock(bulldozer)) do
     miningstate(bulldozer, key)[inner_key]
 end
 
@@ -190,13 +199,13 @@ end
 
 Setter for the content of a specific `miner`'s [`miningstate`](@ref).
 """
-miningstate!(miner::Bulldozer, key::Symbol, val) = lock(miningstatelock(miner)) do
+miningstate!(miner::Bulldozer, key::Symbol, val) = begin
+    # lock(miningstatelock(miner)) do
     miner.miningstate[key] = val
 end
 miningstate!(miner::Bulldozer, key::Symbol, inner_key, val) = begin
-    lock(miningstatelock(miner)) do
-        miner.miningstate[key][inner_key] = val
-    end
+    # lock(miningstatelock(miner)) do
+    miner.miningstate[key][inner_key] = val
 end
 
 """
@@ -206,7 +215,8 @@ Return whether `miner` miningstate field contains a field `key`.
 
 See also [`Bulldozer`](@ref), [`miningstate`](@ref), [`miningstate!`](@ref).
 """
-hasminingstate(miner::Bulldozer, key::Symbol) = lock(miningstatelock(miner)) do
+hasminingstate(miner::Bulldozer, key::Symbol) = begin
+    # lock(miningstatelock(miner)) do
     haskey(miner |> miningstate, key)
 end
 
