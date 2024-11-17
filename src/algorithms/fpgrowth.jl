@@ -173,6 +173,8 @@ function fpgrowth(
         "Note that local support is needed too, but it is already considered internally " *
         "by global support."
 
+    t_start = time()
+
     _ninstances = ninstances(X)
     local_results = Vector{Bulldozer}(undef, _ninstances)
     if parallel
@@ -185,6 +187,9 @@ function fpgrowth(
             local_results[ith_instance] = _fpgrowth(Bulldozer(miner, ith_instance))
         end
     end
+
+    t_kernel_end = time()
+    println("fpgrowth kernel elapsed time: $(t_kernel_end-t_start)")
 
     # reduce all the local-memoization structures obtained before,
     # and proceed to compute global supports
@@ -244,8 +249,13 @@ function _fpgrowth(miner::Bulldozer{I}) where {I<:Item}
         _itemset_in_world = [
             itemset
             for itemset in frequents
-            if miningstate(miner, :instance_item_toworlds
-                )[(instancenumber(miner), itemset)][nworld] > 0
+            if miningstate(
+                miner,
+                :instance_item_toworlds
+                # uncomment if building Bulldozer without slicedataset
+                # )[(instancenumber(miner), itemset)][nworld] > 0
+                # uncomment if building Bulldozer through slicedataset
+                )[(1, itemset)][nworld] > 0
         ]
 
         nworld_to_itemset[nworld] = length(_itemset_in_world) > 0 ?
@@ -323,10 +333,6 @@ function _fpgrowth_kernel(
                 end
                 return _leftout_count / _nworlds
             end,
-            (combo) -> begin
-                #  we don't want to consider the single item combination case
-                return (length(combo) > 1 ? 1 : 0)
-            end,
             miner
         )
 
@@ -337,10 +343,6 @@ function _fpgrowth_kernel(
                 # here, computation is simpler than the previous
                 # `lsupport_value_calculator` lambda function implementation.
                 return count(retrieveleaf(leftout_fptree)) / _nworlds
-            end,
-            (combo) -> begin
-                # we don't want to consider the single item combination case
-                return (length(combo) > 1 ? 1 : 0)
             end,
             miner
         )
@@ -376,7 +378,6 @@ function _fpgrowth_count_phase(
     survivor_itemset::Itemset,
     leftout_itemset::Itemset,
     lsupport_value_calculator::Function,
-    count_increment_strategy::Function,
     miner::Bulldozer
 )
     for combo in combine_items(survivor_itemset, leftout_itemset)
@@ -397,13 +398,6 @@ function _fpgrowth_count_phase(
         if first_time_found || lsupport_value > localmemo(miner, memokey)
             localmemo!(miner, (:lsupport, combo, instancenumber(miner)), lsupport_value)
         end
-
-        # if local support was set from fresh (and not updated), then also update
-        # the information needed to reconstruct global support later.
-        # DEPRECATED - this is now handled by reduction function
-        # if first_time_found
-        #     fpgrowth_fragments[combo] += count_increment_strategy(combo)
-        # end
     end
 end
 
@@ -416,9 +410,9 @@ See also [`hasminingstate`](@ref), [`MiningState`](@ref), [`miningstate`](@ref).
 """
 function initminingstate(::typeof(fpgrowth), ::MineableData)::MiningState
     return MiningState([
-        # given and instance I and an itemset λ, the default behaviour when computing
-        # local support is to perform model checking to establish in how many worlds
-        # the relation I,w ⊧ λ is satisfied;
+        # given an instance I and an itemset λ, the default behaviour when computing
+        # local support is to perform model checking in order to establish in how
+        # many worlds the relation I,w ⊧ λ is satisfied;
         # a numerical value is obtained, but the exact worlds in which the truth relation
         # holds is not kept in memory. We save them in thanks to this field.
         # See also `lsupport` implementation.
