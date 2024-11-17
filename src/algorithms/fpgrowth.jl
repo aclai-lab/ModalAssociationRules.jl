@@ -234,11 +234,7 @@ function _fpgrowth(miner::Bulldozer{I}) where {I<:Item}
     frequents = [candidate
         for candidate in Itemset{I}.(items(miner))
         for (gmeas_algo, lthreshold, gthreshold) in itemsetmeasures(miner)
-<<<<<<< HEAD
         # in all the existing literature, the only measure needed here is `lsupport`;
-=======
-        # in all the existing literature, the only measure needed here is be `lsupport`;
->>>>>>> dev
         # however, we give the possibility to control more granularly what does it mean
         # for an itemset to be *locally frequent*.
         if localof(gmeas_algo)(candidate, data(miner), miner) >= lthreshold

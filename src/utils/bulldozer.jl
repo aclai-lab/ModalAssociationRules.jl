@@ -67,14 +67,11 @@ struct Bulldozer{I<:Item} <: AbstractMiner
     end
 
     function Bulldozer(miner::Miner, ith_instance::Integer)
-<<<<<<< HEAD:src/bulldozer.jl
         # this works if I am managing one instance at a time in my parallel region;
         # ideally, I would like to avoid repeating 1,2,3,...360 calls but only performing
         # `nthreads` partitioning in (e.g., `nthreads=4`) 1:90, 91:180, ..., 281:360.
         # _logiset_slice = slicedataset(data(miner), ith_instance)
 
-=======
->>>>>>> dev:src/utils/bulldozer.jl
         return Bulldozer(
                 # SoleLogics.getinstance(_logiset_slice, 1),
                 SoleLogics.getinstance(data(miner), ith_instance),
