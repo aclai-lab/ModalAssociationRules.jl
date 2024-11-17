@@ -173,8 +173,6 @@ function fpgrowth(
         "Note that local support is needed too, but it is already considered internally " *
         "by global support."
 
-    t_start = time()
-
     _ninstances = ninstances(X)
     local_results = Vector{Bulldozer}(undef, _ninstances)
     if parallel
@@ -187,9 +185,6 @@ function fpgrowth(
             local_results[ith_instance] = _fpgrowth(Bulldozer(miner, ith_instance))
         end
     end
-
-    t_kernel_end = time()
-    println("fpgrowth kernel elapsed time: $(t_kernel_end-t_start)")
 
     # reduce all the local-memoization structures obtained before,
     # and proceed to compute global supports
