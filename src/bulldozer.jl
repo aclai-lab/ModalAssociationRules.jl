@@ -66,9 +66,15 @@ struct Bulldozer{I<:Item} <: AbstractMiner
         )
     end
 
-    function Bulldozer(miner::Miner, ith_instance::Int64)
+    function Bulldozer(miner::Miner, ith_instance::Integer)
+        # this works if I am managing one instance at a time in my parallel region;
+        # ideally, I would like to avoid repeating 1,2,3,...360 calls but only performing
+        # `nthreads` partitioning in (e.g., `nthreads=4`) 1:90, 91:180, ..., 281:360.
+        # _logiset_slice = slicedataset(data(miner), ith_instance)
+
         return Bulldozer(
-                SoleLogics.getinstance(miner |> data, ith_instance),
+                # SoleLogics.getinstance(_logiset_slice, 1),
+                SoleLogics.getinstance(data(miner), ith_instance),
                 ith_instance,
                 items(miner),
                 itemsetmeasures(miner),

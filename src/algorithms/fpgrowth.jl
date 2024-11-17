@@ -237,7 +237,11 @@ function _fpgrowth(miner::Bulldozer{I}) where {I<:Item}
         # TODO we take for granted that the only measure related to items is always support
         for (_, lthreshold, _) in itemsetmeasures(miner)
         for candidate in Itemset{I}.(items(miner))
-        if lsupport(candidate, data(miner), miner) >= lthreshold
+        for (gmeas_algo, lthreshold, gthreshold) in itemsetmeasures(miner)
+        # in all the existing literature, the only measure needed here is `lsupport`;
+        # however, we give the possibility to control more granularly what does it mean
+        # for an itemset to be *locally frequent*.
+        if localof(gmeas_algo)(candidate, data(miner), miner) >= lthreshold
     ] |> unique
 
     for (nworld, w) in enumerate(kripkeframe |> SoleLogics.allworlds)

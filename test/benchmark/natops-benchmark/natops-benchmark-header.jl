@@ -35,6 +35,7 @@ mining on fresh logiset -       11.765854723s
 
 using ModalAssociationRules
 using SoleData
+using StatProfilerHTML
 using StatsBase
 
 # load NATOPS dataset and convert it to a Logiset
