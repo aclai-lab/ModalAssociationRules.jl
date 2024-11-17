@@ -6,5 +6,6 @@
 /test/data/NATOPS/NATOPSDimension*
 # /test/experiments/results/*
 /docs/build/
+/src/statprof/*
 
 TODO
