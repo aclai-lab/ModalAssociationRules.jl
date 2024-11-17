@@ -11,8 +11,9 @@ using SoleData: VariableMin, VariableMax
 _X, y = @load_iris
 X1 = DataFrame(hcat(values(_X)...), collect(keys(_X)))
 
-X = scalarlogiset(X1; relations = AbstractRelation[], conditions =
-    Vector{ScalarMetaCondition}(
+X = scalarlogiset(X1;
+    relations=AbstractRelation[],
+    conditions=Vector{ScalarMetaCondition}(
         collect(Iterators.flatten([
             [ScalarMetaCondition(f, <=) for f in VariableMin.(1:4)],
             [ScalarMetaCondition(f, >=) for f in VariableMin.(1:4)],

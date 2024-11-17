@@ -1,5 +1,6 @@
 #!/bin/sh
 
+cd /home/mauro/.julia/dev/ModalAssociationRules/test/benchmark/natops-benchmark/
 PROJECT_DIR="../../../"
 
 # julia --project="${PROJECT_DIR}" apriori-benchmark.jl

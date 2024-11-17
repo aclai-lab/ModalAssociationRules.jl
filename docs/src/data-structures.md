@@ -22,14 +22,14 @@ children(fptree::FPTree)
 children!(fptree::FPTree, child::FPTree)
 
 Base.count(fptree::FPTree)
-count!(fptree::FPTree, newcount::Int64)
-addcount!(fptree::FPTree, deltacount::Int64)
+count!(fptree::FPTree, newcount::Integer)
+addcount!(fptree::FPTree, deltacount::Integer)
 
 contributors(fptree::FPTree)
 contributors!(fptree::FPTree, contribution::WorldMask)
 addcontributors!(fptree::FPTree, contribution::WorldMask)
 
-Base.push!(fptree::FPTree, itemset::Itemset, ninstance::Int64, miner::Miner; htable::Union{Nothing,HeaderTable}=nothing)
+Base.push!(fptree::FPTree, itemset::Itemset, ninstance::Integer, miner::Miner; htable::Union{Nothing,HeaderTable}=nothing)
 
 link(fptree::FPTree)
 link!(from::FPTree, to::FPTree)

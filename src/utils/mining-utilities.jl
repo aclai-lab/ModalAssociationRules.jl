@@ -1,16 +1,14 @@
-# Bulldozer utilities
-
 # Itemset utilities
 
 """
-    combine_items(itemsets::Vector{<:Itemset}, newlength::Integer)
+    combine_items(itemsets::AbstractVector{<:Itemset}, newlength::Integer)
 
 Return a generator which combines [`Itemset`](@ref)s from `itemsets` into new itemsets of
 length `newlength` by taking all combinations of two itemsets and joining them.
 
 See also [`Itemset`](@ref).
 """
-function combine_items(itemsets::Vector{<:Itemset}, newlength::Integer)
+function combine_items(itemsets::AbstractVector{<:Itemset}, newlength::Integer)
     return Iterators.filter(
         combo -> length(combo) == newlength,
         Iterators.map(
@@ -21,7 +19,7 @@ function combine_items(itemsets::Vector{<:Itemset}, newlength::Integer)
 end
 
 """
-    combine_items(variable::Vector{<:Item}, fixed::Vector{<:Item})
+    combine_items(variable::AbstractVector{<:Item}, fixed::AbstractVector{<:Item})
 
 Return a generator of [`Itemset`](@ref), which iterates the combinations of [`Item`](@ref)s
 in `variable` and prepend them to `fixed` vector.
@@ -30,12 +28,16 @@ See also [`Item`](@ref), [`Itemset`](@ref).
 
 TODO - this may be deprecated
 """
-function combine_items(variable::Vector{<:Item}, fixed::Vector{<:Item})
+function combine_items(variable::AbstractVector{<:Item}, fixed::AbstractVector{<:Item})
     return (Itemset(union(combo, fixed)) for combo in combinations(variable))
 end
 
 """
-    grow_prune(candidates::Vector{Itemset}, frequents::Vector{Itemset}, k::Integer)
+    grow_prune(
+        candidates::AbstractVector{Itemset},
+        frequents::AbstractVector{Itemset},
+        k::Integer
+    )
 
 Return a generator, which yields only the `candidates` for which every (k-1)-length subset
 is in `frequents`.
@@ -90,7 +92,7 @@ See [`antecedent`](@ref), [`ARule`](@ref), [`consequent`](@ref), [`generaterules
 """
 function non_selfabsorbed_rulecheck(rule::ARule)::Bool
     # TODO - this could be moved to SoleData
-    function _extract_variable(item::Item)::Int64
+    function _extract_variable(item::Item)::Integer
         # if `item` is already an Atom, do nothing.
         _formula = formula(item)
         _formula = _formula isa Atom ? _formula : _formula.children |> first
@@ -115,7 +117,7 @@ function non_selfabsorbed_rulecheck(rule::ARule)::Bool
 end
 
 """
-    generaterules(itemsets::Vector{Itemset}, miner::Miner)
+    generaterules(itemsets::AbstractVector{Itemset}, miner::Miner)
 
 Raw subroutine of [`generaterules!(miner::Miner; kwargs...)`](@ref).
 
@@ -131,7 +133,7 @@ constraints specified in `rulemeasures(miner)`, and yields the rule if so.
 See also [`ARule`](@ref), [`Miner`](@ref), [`Itemset`](@ref), [`rulemeasures`](@ref).
 """
 @resumable function generaterules(
-    itemsets::Vector{Itemset},
+    itemsets::AbstractVector{Itemset},
     miner::Miner
 )
     # From the original paper at 3.4 here:
@@ -154,9 +156,9 @@ See also [`ARule`](@ref), [`Miner`](@ref), [`Itemset`](@ref), [`rulemeasures`](@
             # hence, since we want the antecedent to be longer initially,
             # the first subset values corresponds to (see comment below)
             # (l-a)
-            _consequent = subset == Any[] ? Itemset{Item}() : Itemset{Item}()
+            _consequent = subset == Any[] ? Itemset{Item}() : subset
             # a
-            _antecedent = symdiff(items(itemset), items(_consequent)) |> Itemset
+            _antecedent = symdiff(itemset, _consequent) |> Itemset
 
             # degenerate case
             if length(_antecedent) < 1 || length(_consequent) != 1
@@ -167,9 +169,6 @@ See also [`ARule`](@ref), [`Miner`](@ref), [`Itemset`](@ref), [`rulemeasures`](@
 
             # sift pipeline to remove unwanted rules;
             # this can be customized at construction time - see Miner constructor kwargs.
-            # NOTE: for some reason, the equivalent expression
-            # `if !all(sift -> sift(currentrule), miningstate(miner, :rulesift)) continue end`
-            # does not work, since `currentrule` is not identified from external scope.
             sifted = false
             for sift in miningstate(miner, :rulesift)
                 if !sift(currentrule)
@@ -207,29 +206,4 @@ See also [`ARule`](@ref), [`Miner`](@ref), [`Itemset`](@ref), [`rulemeasures`](@
             end
         end
     end
-end
-
-
-
-# Miner utilities
-
-# TODO -  rename those in local_threshold_integer/global_threshold_integer
-"""
-    getlocalthreshold_integer(miner::Miner, meas::Function)
-
-See [`getlocalthreshold`](@ref).
-"""
-function getlocalthreshold_integer(miner::Miner, meas::Function)
-    _nworlds = SoleLogics.frame(data(miner), 1) |> SoleLogics.nworlds
-    return convert(Int64, floor(getlocalthreshold(miner, meas) * _nworlds))
-end
-
-"""
-    getglobalthreshold_integer(miner::Miner, meas::Function, ninstances::Int64)
-
-See [`getglobalthreshold`](@ref).
-"""
-function getglobalthreshold_integer(miner::Miner, meas::Function)
-    return convert(
-            Int64, floor(getglobalthreshold(miner, meas) * ninstances(data(miner))))
 end

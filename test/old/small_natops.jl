@@ -42,8 +42,8 @@ fpgrowth_miner = Miner(X2, fpgrowth, manual_items, _itemsetmeasures, _rulemeasur
 mine!(apriori_miner)
 mine!(fpgrowth_miner)
 
-itap = Itemset([manual_p, manual_lp])
-itfp = Itemset([manual_p, manual_lp])
+itap = Itemset{Item}([manual_p, manual_lp])
+itfp = Itemset{Item}([manual_p, manual_lp])
 
 for ninstance in 1:360
     try
@@ -70,8 +70,6 @@ for ninstance in 1:360
                 println("\tapriori? $(apriori_lsupp_haskey);")
                 println("\tfpgrowth? $(fpgrowth_lsupp_haskey);")
             end
-        else
-            rethrow(e)
         end
     end
 end

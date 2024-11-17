@@ -13,12 +13,14 @@ to also work with modal logic.
 See also [`Miner`](@ref), [`SoleBase.MineableData`](@ref).
 """
 function apriori(
-    miner::Miner,
+    miner::AbstractMiner,
     X::MineableData;
     verbose::Bool=false
 )::Nothing
+    _itemtype = itemtype(miner)
+
     # candidates of length 1 are all the letters in our items
-    candidates = Itemset{itemtype(miner)}.(items(miner))
+    candidates = Itemset{_itemtype}.(items(miner))
 
     while !isempty(candidates)
         # get the frequent itemsets from the first candidates set;
@@ -29,7 +31,7 @@ function apriori(
             # specifically, global support also calls local support and updates
             # contributors
             if gmeas_algo(candidate, X, lthreshold, miner) >= gthreshold
-        ] |> Vector{Itemset{itemtype(miner)}}
+        ] |> Vector{Itemset{_itemtype}}
 
         # save frequent itemsets inside the miner machine
         push!(freqitems(miner), frequents...)

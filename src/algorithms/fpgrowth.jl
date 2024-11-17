@@ -53,7 +53,7 @@ function patternbase(
         # Note that, although we are working with enhanced itemsets, the sorting only
         # requires to consider the items inside them (so, the "non-enhanced" part).
         sort!(
-            items(_itemset),
+            _itemset,
             by=t -> miningstate(miner, :current_items_frequency)[t],
             rev=true
         )
@@ -85,10 +85,6 @@ function bounce!(pbase::ConditionalPatternBase, miner::AbstractMiner)
     # its second element is the threshold we are looking for.
     _lsupport_threshold = findmeasure(miner, lsupport)[2]
 
-    # DEPRECATED
-    # _support_meas = Iterators.filter(m -> m[1] == gsupport, itemsetmeasures(miner)) |> first
-    # _lsupport_threshold = _support_meas[2]
-
     _nworlds = frame(miner) |> SoleLogics.nworlds
 
     # enhanceditemset shape : (itemset, count)
@@ -103,7 +99,7 @@ function bounce!(pbase::ConditionalPatternBase, miner::AbstractMiner)
     for enhanceditemset in pbase
         filter!(_item ->
             count_accumulator[_item] / _nworlds >= _lsupport_threshold,
-            enhanceditemset |> itemset |> items
+            enhanceditemset |> itemset
         )
     end
 
@@ -130,7 +126,7 @@ function projection(
 
     if length(pbase) > 0
         bounce!(pbase, miner)
-        grow!(fptree, pbase, miner)
+        grow!(fptree, pbase; miner=miner)
     end
 
     return fptree, HeaderTable(fptree; miner=miner)
@@ -141,7 +137,7 @@ end
 # fpgrowth implementation starts here
 
 """
-    fpgrowth(miner::Miner, X::MineableData; verbose::Bool=true)::Nothing
+    fpgrowth(miner::AbstractMiner, X::MineableData; verbose::Bool=true)::Nothing
 
 (Modal) FP-Growth algorithm, [as described here](http://ictcs2024.di.unito.it/wp-content/uploads/2024/08/ICTCS_2024_paper_16.pdf).
 
@@ -153,15 +149,21 @@ end
 - `distributed`: enable multi-processing execution, with `Distributed.nworkers()` processes;
 - `verbose`: print detailed informations while the algorithm runs.
 
-See also [`Miner`](@ref), [`FPTree`](@ref), [`HeaderTable`](@ref),
-[`SoleBase.AbstractDataset`](@ref)
+# Requirements
+This implementation requires a custom [`Bulldozer`](@ref) constructor capable of handling
+the given [`AbstractMiner`](@ref). In particular, the following dispatch must be
+implemented:
+
+```Bulldozer(miner::MyMinerType, ith_instance::Integer)```
+
+See also [`AbstractMiner`](@ref), [`Bulldozer`](@ref), [`FPTree`](@ref),
+[`HeaderTable`](@ref), [`SoleBase.AbstractDataset`](@ref)
 """
 function fpgrowth(
-    miner::Miner,
+    miner::AbstractMiner,
     X::MineableData;
     parallel::Bool=true,
-    distributed::Bool=false,
-    verbose::Bool=false
+    distributed::Bool=false
 )::Nothing
     @assert ModalAssociationRules.gsupport in reduce(vcat, itemsetmeasures(miner)) "" *
     "FP-Growth " *
@@ -170,29 +172,6 @@ function fpgrowth(
         "global support threshold) to miner.item_constrained_measures field.\n" *
         "Note that local support is needed too, but it is already considered internally " *
         "by global support."
-
-    _nthreads = Threads.nthreads()
-    _nworkers = Distributed.nworkers()
-
-    if verbose && parallel
-        printstyled("Multithreading enabled: # threads = $(_nthreads).\n", color=:green)
-        if _nthreads == 1
-            printstyled(
-                "You probably forget to set a higher number of threads!\n", color=:red)
-            printstyled("Remember to use --threads/-t flag, " *
-                "or change JULIA_NUM_THREADS environment variable\n", color=:red)
-        end
-    end
-
-    if verbose && distributed
-        printstyled("Workload distributed across #$(Distributed.nprocs()) processes.\n",
-            color=:green)
-        if _nworkers == 1
-            printstyled(
-                "You probably forget to set a higher number of processes!\n", color=:red)
-            printstyled("Remember to set the -p flag.\n",  color=:red)
-        end
-    end
 
     _ninstances = ninstances(X)
     local_results = Vector{Bulldozer}(undef, _ninstances)
@@ -215,14 +194,33 @@ function fpgrowth(
 
     # global setting
     for (itemset, gfrequency_int) in fpgrowth_fragments
+        # manually compute and save miner's global support if >= min threhsold;
         _threshold = getglobalthreshold(miner, gsupport)
         gfrequency = gfrequency_int / _ninstances
+
         if gfrequency >= _threshold
             globalmemo!(miner, GmeasMemoKey((Symbol(gsupport), itemset)), gfrequency)
-            push!(freqitems(miner), itemset)
-        end
 
-        # TODO - check other custom meaningfulness measures
+            # for those itemsets, also check other measures and save the frequent ones.
+            saveflag = true
+            for (gmeas_algo, lthreshold, gthreshold) in itemsetmeasures(miner)
+                if gmeas_algo == gsupport
+                    continue
+                end
+
+                # note that when calling a generic gmeas_algo created using @globalmemo,
+                # the result is automatically memoized and we do not need to also call
+                # globalmemo! like in the case before, where we computed gsupport manually.
+                if gmeas_algo(itemset, X, lthreshold, miner) < gthreshold
+                    saveflag = !saveflag
+                    break
+                end
+            end
+
+            if saveflag
+                push!(freqitems(miner), itemset)
+            end
+        end
     end
 end
 
@@ -234,11 +232,13 @@ function _fpgrowth(miner::Bulldozer{I}) where {I<:Item}
 
     # get the frequent 1-length itemsets from the first candidates set;
     frequents = [candidate
-        # TODO we take for granted that the only measure related to items is always support
-        for (_, lthreshold, _) in itemsetmeasures(miner)
         for candidate in Itemset{I}.(items(miner))
         for (gmeas_algo, lthreshold, gthreshold) in itemsetmeasures(miner)
+<<<<<<< HEAD
         # in all the existing literature, the only measure needed here is `lsupport`;
+=======
+        # in all the existing literature, the only measure needed here is be `lsupport`;
+>>>>>>> dev
         # however, we give the possibility to control more granularly what does it mean
         # for an itemset to be *locally frequent*.
         if localof(gmeas_algo)(candidate, data(miner), miner) >= lthreshold
@@ -266,7 +266,7 @@ function _fpgrowth(miner::Bulldozer{I}) where {I<:Item}
 
     # create an initial fptree and populate it
     fptree = FPTree()
-    grow!(fptree, nworld_to_itemset, miner)
+    grow!(fptree, nworld_to_itemset; miner=miner)
 
     # create and fill an header table, necessary to traverse FPTrees horizontally
     htable = HeaderTable(fptree; miner=miner)
@@ -383,10 +383,10 @@ function _fpgrowth_count_phase(
     count_increment_strategy::Function,
     miner::Bulldozer
 )
-    for combo in combine_items(items(survivor_itemset), items(leftout_itemset))
+    for combo in combine_items(survivor_itemset, leftout_itemset)
         # each combo must be reshaped, following a certain order specified
         # universally by the miner (lexicographi ordering).
-        sort!(items(combo))
+        sort!(combo)
 
         # instance for which we want to update local support
         memokey = (:lsupport, combo, instancenumber(miner))

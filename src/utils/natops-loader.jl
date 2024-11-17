@@ -16,26 +16,27 @@ function load_NATOPS(
     dirpath::String=joinpath(dirname(pathof(ModalAssociationRules)), "../test/data/NATOPS"),
     fileprefix::String="NATOPS"
 )
-    # if data is not locally available (e.g., in test/data/),
-    # then try download it using SoleData default loader.
-    try
-        _load_NATOPS(dirpath, fileprefix)
-    catch error
-        if error isa SystemError
-            SoleData.load_arff_dataset("NATOPS")
-        else
-            rethrow(error)
-        end
-    end
+    # A previous implementation of this loader was very kind with the user, and tried
+    # to download NATOPS by internet if an error occurred locally:
+    # try
+    #     _load_NATOPS(dirpath, fileprefix)
+    # catch error
+    #     if error isa SystemError
+    #         SoleData.load_arff_dataset("NATOPS")
+    #     else
+    #         rethrow(error)
+    #     end
+    # end
+
+    _load_NATOPS(dirpath, fileprefix)
 end
 
 function _load_NATOPS(dirpath::String, fileprefix::String)
-    (X_train, y_train), (X_test, y_test) = begin
+    (X_train, y_train), (X_test, y_test) =
         (
             read("$(dirpath)/$(fileprefix)_TEST.arff", String) |> SoleData.parseARFF,
             read("$(dirpath)/$(fileprefix)_TRAIN.arff", String) |> SoleData.parseARFF,
         )
-    end
 
     variablenames = [
         "X[Hand tip l]",
@@ -107,7 +108,10 @@ function _load_NATOPS(dirpath::String, fileprefix::String)
     y_train = map(fix_class_names, y_train)
     y_test  = map(fix_class_names, y_test)
 
-    @assert nrow(X_train) == length(y_train) "$(nrow(X_train)), $(length(y_train))"
+    # if !(nrow(X_train) == length(y_train))
+    #     throw(ArgumentError("Mismatching dimensions for X_train ($(nrow(X_train))) and " *
+    #         "y_train ($(length(y_train)))"))
+    # end
 
     y_train = categorical(y_train)
     y_test = categorical(y_test)

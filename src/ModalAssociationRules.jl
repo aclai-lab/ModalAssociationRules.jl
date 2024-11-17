@@ -32,33 +32,42 @@ using StatsBase
 include("core.jl")
 
 export Item, formula
-export Itemset, formula, slice
+export Itemset
 
-export Threshold
-export WorldMask, EnhancedItemset, ConditionalPatternBase
-
-export AbstractMiner
-export MineableData
+export EnhancedItemset, count
+export ConditionalPatternBase
 
 export ARule
-export antecedent, consequent
+export content, antecedent, consequent
 
+export ARMSubject
+
+export Threshold
 export MeaningfulnessMeasure
 export islocalof, isglobalof
 export localof, globalof
 
-export ARMSubject
+export WorldMask
+
 export LmeasMemoKey, LmeasMemo
 export GmeasMemoKey, GmeasMemo
-export Info, MiningState
 
-include("miner.jl")
+export MiningState
+export Info
+export MineableData
+
+export MineableData
+
+include("types/miner.jl")
+
+export AbstractMiner
+
+include("utils/miner.jl")
 
 export Miner
 export itemtype, datatype
 export data, algorithm
-export itemsetmeasures, additemsetmeasure
-export rulemeasures, addrulemeasure
+export itemsetmeasures, rulemeasures
 export freqitems, arules
 export measures, findmeasure
 export getlocalthreshold, getglobalthreshold
@@ -72,7 +81,7 @@ export analyze
 
 export frame, allworlds, nworlds
 
-include("bulldozer.jl")
+include("utils/bulldozer.jl")
 
 export Bulldozer
 export instance, instancenumber, frame
@@ -81,7 +90,7 @@ export bulldozer_reduce
 
 include("meaningfulness-measures.jl")
 
-export @localmeasure, @globalmeasure
+export @localmeasure, @globalmeasure, @linkmeas
 export lsupport, gsupport
 export lconfidence, gconfidence
 
@@ -91,7 +100,6 @@ export combine_items, prune, prune!
 export grow_prune, coalesce_contributors
 export anchor_rulecheck, non_selfabsorbed_rulecheck
 export generaterules
-export getlocalthreshold_integer, getglobalthreshold_integer
 
 include("algorithms/apriori.jl")
 
@@ -120,9 +128,8 @@ include("utils/natops-loader.jl")
 
 export load_NATOPS
 
-include("utils/literals-selector.jl")   # TODO -  move this in SoleData
-
-export equicut, quantilecut
-export makeconditions
+## include("utils/literals-selector.jl")   # TODO -  move this in SoleData
+# export equicut, quantilecut
+# export makeconditions
 
 end

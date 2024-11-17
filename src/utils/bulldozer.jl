@@ -5,7 +5,7 @@
     } <: AbstractMiner
         # reference to a modal dataset ith instance
         instance::SoleLogics.LogicalInstance
-        ith_instance::Int64
+        ith_instance::Integer
 
         items::Vector{I}                    # alphabet
 
@@ -38,7 +38,7 @@ See also [`AbstractMiner`](@ref), [`Miner`](@ref).
 struct Bulldozer{I<:Item} <: AbstractMiner
     # reference to a modal dataset ith instance
     instance::SoleLogics.LogicalInstance
-    ith_instance::Int64
+    ith_instance::Integer
 
     items::Vector{I}                # alphabet
 
@@ -56,7 +56,7 @@ struct Bulldozer{I<:Item} <: AbstractMiner
 
     function Bulldozer(
         instance::SoleLogics.LogicalInstance,
-        ith_instance::Int64,
+        ith_instance::Integer,
         items::Vector{I},
         itemsetmeasures::Vector{<:MeaningfulnessMeasure};
         miningstate::MiningState=MiningState()
@@ -67,11 +67,14 @@ struct Bulldozer{I<:Item} <: AbstractMiner
     end
 
     function Bulldozer(miner::Miner, ith_instance::Integer)
+<<<<<<< HEAD:src/bulldozer.jl
         # this works if I am managing one instance at a time in my parallel region;
         # ideally, I would like to avoid repeating 1,2,3,...360 calls but only performing
         # `nthreads` partitioning in (e.g., `nthreads=4`) 1:90, 91:180, ..., 281:360.
         # _logiset_slice = slicedataset(data(miner), ith_instance)
 
+=======
+>>>>>>> dev:src/utils/bulldozer.jl
         return Bulldozer(
                 # SoleLogics.getinstance(_logiset_slice, 1),
                 SoleLogics.getinstance(data(miner), ith_instance),
@@ -82,38 +85,6 @@ struct Bulldozer{I<:Item} <: AbstractMiner
             )
     end
 end
-
-"""
-TODO
-"""
-itemtype(::Bulldozer{I}) where {I<:Item} = I
-
-"""
-    data(bulldozer::Bulldozer)
-
-Getter for the instance wrapped by `bulldozer`.
-See also [`Bulldozer`](@ref), [`SoleLogics.LogicalInstance`](@ref).
-
-"""
-data(bulldozer::Bulldozer) = bulldozer.instance
-
-"""
-    instance(bulldozer::Bulldozer) = bulldozer.instance
-
-Getter for the instance wrapped by `bulldozer`'s.
-
-See also [`instancenumber(::Bulldozer)`](@ref).
-"""
-instance(bulldozer::Bulldozer) = bulldozer.instance
-
-"""
-    instancenumber(bulldozer::Bulldozer)
-
-Retrieve the instance number associated with `bulldozer`.
-
-See also [`Bulldozer`](@ref), [`data(::Bulldozer)`](@ref).
-"""
-instancenumber(bulldozer::Bulldozer) = bulldozer.ith_instance
 
 """
     datalock(bulldozer::Bulldozer)
@@ -140,23 +111,58 @@ a [`Bulldozer`](@ref).
 miningstatelock(bulldozer::Bulldozer) = bulldozer.miningstatelock
 
 """
-    localmemo!(bulldozer::Bulldozer, key::LmeasMemoKey, val::Threshold)
-
-Setter for [`Bulldozer`](@ref)'s memoization structure.
-
-See also [`localmemo`](@ref), [`LmeasMemo`](@ref), [`LmeasMemoKey`](@ref).
+TODO
 """
-localmemo!(
-    bulldozer::Bulldozer,
-    key::LmeasMemoKey,
-    val::Threshold
-) = lock(memolock(bulldozer)) do
-    bulldozer.localmemo[key] = val
-end
+itemtype(::Bulldozer{I}) where {I<:Item} = I
 
+"""
+    data(bulldozer::Bulldozer)
+
+See [`data(::AbstractMiner)`](@ref), [`SoleLogics.LogicalInstance`](@ref).
+"""
+data(bulldozer::Bulldozer) = bulldozer.instance
+
+"""
+    items(bulldozer::Bulldozer)
+
+See [`items(::AbstractMiner)`](@ref).
+"""
+items(bulldozer::Bulldozer) = bulldozer.items
+
+"""
+    instance(bulldozer::Bulldozer) = bulldozer.instance
+
+Getter for the instance wrapped by `bulldozer`'s.
+Synonym for [`data(::Bulldozer)`](@ref).
+
+See also [`instancenumber(::Bulldozer)`](@ref).
+"""
+instance(bulldozer::Bulldozer) = bulldozer.instance
+
+"""
+    instancenumber(bulldozer::Bulldozer)
+
+Retrieve the instance number associated with `bulldozer`.
+
+See also [`Bulldozer`](@ref), [`data(::Bulldozer)`](@ref).
+"""
+instancenumber(bulldozer::Bulldozer) = bulldozer.ith_instance
+
+"""
+    itemsetmeasures(bulldozer::Bulldozer)::Vector{<:MeaningfulnessMeasure}
+
+See also [`itemsetmeasures(::AbstractMiner)`](@ref).
+"""
 itemsetmeasures(
     bulldozer::Bulldozer
 )::Vector{<:MeaningfulnessMeasure} = bulldozer.itemsetmeasures
+
+"""
+    localmemo(miner::Bulldozer)
+
+See [`localmemo(::AbstractMiner)`](@ref).
+"""
+localmemo(miner::Bulldozer) = miner.localmemo
 
 """
     miningstate(bulldozer::Bulldozer)::MiningState
@@ -171,14 +177,14 @@ miningstate(bulldozer::Bulldozer)::MiningState = lock(miningstatelock(bulldozer)
     bulldozer.miningstate
 end
 miningstate(bulldozer::Bulldozer, key::Symbol)::Any = lock(miningstatelock(bulldozer)) do
-    bulldozer.miningstate[key]
+    miningstate(bulldozer)[key]
 end
 miningstate(
     bulldozer::Bulldozer,
     key::Symbol,
     inner_key
 )::Any = lock(miningstatelock(bulldozer)) do
-    (bulldozer.miningstate[key])[inner_key]
+    miningstate(bulldozer, key)[inner_key]
 end
 
 """
@@ -241,17 +247,16 @@ time.
 
 See also [`LmeasMemo`](@ref), [`localmemo(::Bulldozer)`](@ref);
 """
-function bulldozer_reduce(local_results::Vector{Bulldozer})
+function bulldozer_reduce(local_results::AbstractVector{Bulldozer})
     b1lmemo = local_results |> first |> localmemo
 
     for i in 2:length(local_results)
         b2lmemo = local_results[i] |> localmemo
         for k in keys(b2lmemo)
-            if haskey(b1lmemo, k)
-                b1lmemo[k] += b2lmemo[k]
-            else
-                b1lmemo[k] = b2lmemo[k]
-            end
+            # There is no need of the `if` statement below, since each Bulldozer
+            # refers to a different instance intrinsically for its nature.
+            # if haskey(b1lmemo, k) b1lmemo[k] += b2lmemo[k] else
+            b1lmemo[k] = b2lmemo[k]
         end
     end
 
@@ -265,7 +270,7 @@ its global support, in order to simplify `miner`'s job when working in the globa
 
 See also [`Itemset`](@ref), [`LmeasMemo`](@ref), [`lsupport`](@ref), [`Miner`](@ref).
 """
-function load_localmemo!(miner::Miner, localmemo::LmeasMemo)
+function load_localmemo!(miner::AbstractMiner, localmemo::LmeasMemo)
     # remember a local memo key is a Tuple{Symbol,ARMSubject,Int64}
 
     fpgrowth_fragments = DefaultDict{Itemset,Int64}(0)

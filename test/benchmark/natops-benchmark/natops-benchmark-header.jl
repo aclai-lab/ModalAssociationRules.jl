@@ -1,6 +1,6 @@
 # Include this file in every benchmark based on NATOPS
 
-#=
+#= Report example (this included also a "leveraging logiset memo" field)
 Apriori elapsed time:
 mining on fresh logiset -       132.475009557
 leveraging logiset memo -       88.724620054
@@ -31,6 +31,38 @@ mining on fresh logiset -       12.011446814s
 Parallel ModalFP-Growth benchmarking...
 Threads number: 12
 mining on fresh logiset -       11.765854723s
+=#
+
+#=
+Apriori elapsed benchmark:
+mining on fresh logiset -       141.908994805s
+
+Serial FPGrowth benchmark:
+mining on fresh logiset -       44.2044059s
+
+Parallel ModalFP-Growth benchmark:
+threads number: 2
+mining on fresh logiset -       23.378121s
+
+Parallel ModalFP-Growth benchmark:
+threads number: 4
+mining on fresh logiset -       13.720315797s
+
+Parallel ModalFP-Growth benchmark:
+threads number: 6
+mining on fresh logiset -       11.039609688s
+
+Parallel ModalFP-Growth benchmark:
+threads number: 8
+mining on fresh logiset -       10.741962272s
+
+Parallel ModalFP-Growth benchmark:
+threads number: 10
+mining on fresh logiset -       10.131204173s
+
+Parallel ModalFP-Growth benchmark:
+threads number: 12
+mining on fresh logiset -       9.713116011s
 =#
 
 using ModalAssociationRules

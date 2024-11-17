@@ -156,7 +156,7 @@ macro globalmeasure(measname, measlogic)
             subject::ARMSubject,
             X::SupportedLogiset,
             threshold::Threshold,
-            miner::Miner
+            miner::AbstractMiner
         )
             # key to access memoization structures
             memokey = GmeasMemoKey((Symbol($(esc(fname))), subject))
@@ -177,9 +177,11 @@ macro globalmeasure(measname, measlogic)
             globalmemo!(miner, memokey, measure)
 
             for state in GLOBAL_MINING_STATES
-                if hasminingstate(miner, state) && haskey(response, state)
-                    miningstate!(miner, state, (subject), response[state])
-                end
+                # Is this functionality useful?
+                # TODO - enable when finding an application
+                # if hasminingstate(miner, state) && haskey(response, state)
+                #     miningstate!(miner, state, (subject), response[state])
+                # end
             end
 
             return measure
@@ -210,6 +212,10 @@ macro linkmeas(gmeasname, lmeasname)
     end
 end
 
+
+
+# measures implementation
+
 # core logic of `lsupport`, as a lambda function;
 # `miner` is an unused argument, but is required since this function must adhere to local
 # measures interface (see `@localmeasure` macro)
@@ -235,11 +241,125 @@ _gsupport_logic = (itemset, X, threshold, miner) -> begin
     return Dict(:measure => _measure)
 end
 
+
+
+
+_lconfidence_logic = (rule, X, ith_instance, miner) -> begin
+    _instance = getinstance(X, ith_instance)
+    num = lsupport(convert(Itemset, rule), _instance, miner)
+    den = lsupport(antecedent(rule), _instance, miner)
+
+    return Dict(:measure => num/den)
+end
+
+_gconfidence_logic = (rule, X, threshold, miner) -> begin
+    _antecedent = antecedent(rule)
+    _consequent = consequent(rule)
+    _union = union(_antecedent, _consequent)
+
+    num = gsupport(_union, X, threshold, miner)
+    den = gsupport(_antecedent, X, threshold, miner)
+    return Dict(:measure => num/den)
+end
+
+
+
+_llift_logic = (rule, X, ith_instance, miner) -> begin
+    num = lconfidence(rule, X, ith_instance, miner)
+    den = lsupport(consequent(rule), getinstance(X, ith_instance), miner)
+
+    return Dict(:measure => num/den)
+end
+
+_glift_logic = (rule, X, threshold, miner) -> begin
+    num = gconfidence(rule, X, threshold, miner)
+    den = gsupport(consequent(rule), X, threshold, miner)
+
+    return Dict(:measure => num/den)
+end
+
+
+
+_lconviction_logic = (rule, X, ith_instance, miner) -> begin
+    _instance = getinstance(X, ith_instance)
+
+    num = 1 - lsupport(consequent(rule), X, _instance, miner)
+    den = 1 - lconfidence(rule, X, _instance, miner)
+
+    return Dict(:measure => num/den)
+end
+
+_gconviction_logic = (rule, X, threshold, miner) -> begin
+    num = 1 - gsupport(consequent(rule), X, threshold, miner)
+    den = 1 - gconfidence(rule, X, threshold, miner)
+
+    return Dict(:measure => num/den)
+end
+
+
+
+_lleverage_logic = (rule, X, ith_instance, miner) -> begin
+    _instance = getinstance(X, ith_instance)
+
+    _ans = lsupport(convert(Itemset, rule), X, _instance, miner) - \
+        lsupport(antecedent(rule), X, _instance, miner) * \
+        lsupport(consequent(rule), X, _instance, miner)
+
+    return Dict(:measure => _ans)
+end
+
+_gleverage_logic = (rule, X, threshold, miner) -> begin
+    _ans = gsupport(convert(Itemset, rule), X, threshod, miner) - \
+        gsupport(antecedent(rule), X, threshod, miner) * \
+        gsupport(consequent(rule), X, threshod, miner)
+
+    return Dict(:measure => _ans)
+end
+
+
+
+_lchisquared_logic = (rule, X, ith_instance, miner) -> begin
+    N = ninstances(X)
+    _instance = getinstance(X, ith_instance)
+
+    a1 = antecedent(rule)
+    a2 = NEGATION(a1 |> formula) |> Itemset
+
+    c1 = consequent(rule)
+    c2 = NEGATION(b1 |> formula) |> Itemset
+
+    _ans = N * sum((A,C) -> lleverage(ARule(A,C), X, _instance, miner)^2 /
+        (lsupport(A, X, _instance, miner) * lsupport(C, X, _instance, miner)),
+        IterTools.product([a1, a2], [c1, c2])
+    )
+
+    return Dict(:measure => _ans)
+end
+
+_gchisquared_logic = (rule, X, threshold, miner) -> begin
+    N = ninstances(X)
+
+    a1 = antecedent(rule)
+    a2 = NEGATION(a1 |> formula) |> Itemset
+
+    c1 = consequent(rule)
+    c2 = NEGATION(b1 |> formula) |> Itemset
+
+    _ans = N * sum((A,C) -> gleverage(ARule(A,C), X, threshold, miner)^2 /
+        (gsupport(A, X, threshold, miner) * gsupport(C, X, threshold, miner)),
+        IterTools.product([a1, a2], [c1, c2])
+    )
+
+    return Dict(:measure => _ans)
+end
+
+# measures definition
+
 """
     function lsupport(
         itemset::Itemset,
         instance::LogicalInstance;
-        miner::Union{Nothing,Miner}=nothing
+        miner::Union{Nothing,AbstractMiner}=nothing
     )::Float64
 
 Compute the local support for the given `itemset` in the given `instance`.
@@ -249,7 +369,7 @@ and [`Itemset`](@ref) is true and the total number of worlds in the same instanc
 
 If a miner is provided, then its internal state is updated and used to leverage memoization.
 
-See also [`Miner`](@ref), [`LogicalInstance`](@ref), [`Itemset`](@ref).
+See also [`Miner`](@ref), [`LogicalInstance`](@ref), [`Itemset`](@ref), [`Threshold`](@ref).
 """
 @localmeasure lsupport _lsupport_logic
 
@@ -258,7 +378,7 @@ See also [`Miner`](@ref), [`LogicalInstance`](@ref), [`Itemset`](@ref).
         itemset::Itemset,
         X::SupportedLogiset,
         threshold::Threshold;
-        miner::Union{Nothing,Miner}=nothing
+        miner::Union{Nothing,AbstractMiner}=nothing
     )::Float64
 
 Compute the global support for the given `itemset` on a logiset `X`, considering `threshold`
@@ -275,41 +395,25 @@ See also [`Miner`](@ref), [`LogicalInstance`](@ref), [`Itemset`](@ref),
 """
 @globalmeasure gsupport _gsupport_logic
 
-_lconfidence_logic = (rule, X, ith_instance, miner) -> begin
-    den = lsupport(antecedent(rule), getinstance(X, ith_instance), miner)
-    num = lsupport(convert(Itemset, rule), getinstance(X, ith_instance), miner)
 
-    # Return the result, and eventually the information needed to support miningstate
-    return Dict(:measure => num/den)
-end
-
-_gconfidence_logic = (rule, X, threshold, miner) -> begin
-    _antecedent = antecedent(rule)
-    _consequent = consequent(rule)
-    _union = union(_antecedent, _consequent)
-
-    num = gsupport(_union, X, threshold, miner)
-    den = gsupport(_antecedent, X, threshold, miner)
-    return Dict(:measure => num/den)
-end
 
 """
     function lconfidence(
         rule::ARule,
         ith_instance::LogicalInstance;
-        miner::Union{Nothing,Miner}=nothing
+        miner::Union{Nothing,AbstractMiner}=nothing
     )::Float64
 
-Compute the local confidence for the given `rule` in the given instance.
+Compute the local confidence for the given `rule`.
 
-Local confidence is the ratio between [`lsupport`](@ref) of an [`ARule`](@ref) on
-a [`LogicalInstance`](@ref) and the [`lsupport`](@ref) of the [`antecedent`](@ref) of the
+Local confidence is the ratio between [`lsupport`](@ref) of an [`ARule`](@ref) on a
+[`LogicalInstance`](@ref) and the [`lsupport`](@ref) of the [`antecedent`](@ref) of the
 same rule.
 
 If a miner is provided, then its internal state is updated and used to leverage memoization.
 
-See also [`antecedent`](@ref), [`ARule`](@ref), [`Miner`](@ref),
-[`LogicalInstance`](@ref), [`lsupport`](@ref).
+See also [`AbstractMiner`](@ref), [`antecedent`](@ref), [`ARule`](@ref),
+[`LogicalInstance`](@ref), [`lsupport`](@ref), [`Threshold`](@ref).
 """
 @localmeasure lconfidence _lconfidence_logic
 
@@ -318,25 +422,174 @@ See also [`antecedent`](@ref), [`ARule`](@ref), [`Miner`](@ref),
         rule::ARule,
         X::SupportedLogiset,
         threshold::Threshold;
-        miner::Union{Nothing,Miner}=nothing
+        miner::Union{Nothing,AbstractMiner}=nothing
     )::Float64
 
 Compute the global confidence for the given `rule` on a logiset `X`, considering
 `threshold` as the threshold for the global support called internally.
 
 Global confidence is the ratio between [`gsupport`](@ref) of an [`ARule`](@ref) on
-a [`SupportedLogiset`](@ref) and the [`gsupport`](@ref) of the [`antecedent`](@ref) of
+a [`SupportedLogiset`](@ref) and the [`gsupport`](@ref) of the only [`antecedent`](@ref) of
 the same rule.
 
-If a miner is provided, then its internal state is updated and used to leverage
-memoization.
+If a miner is provided, then its internal state is updated and used to leverage memoization.
 
-See also [`antecedent`](@ref), [`ARule`](@ref), [`Miner`](@ref), [`gsupport`](@ref),
+See also [`antecedent`](@ref), [`ARule`](@ref), [`AbstractMiner`](@ref), [`gsupport`](@ref),
 [`SupportedLogiset`](@ref).
 """
 @globalmeasure gconfidence _gconfidence_logic
 
+
+
+"""
+    function llift(
+        rule::ARule,
+        ith_instance::LogicalInstance;
+        miner::Union{Nothing,AbstractMiner}=nothing
+    )::Float64
+
+Compute the local lift for the given `rule`.
+
+Local lift measures how far from independence are `rule`'s [`antecedent`](@ref) and
+[`consequent`](@ref) on a modal logic instance.
+
+Given an [`ARule`](@ref) `X ⇒ Y`, if local lift value is around 1, then this means that
+`P(X ⋃ Y) = P(X)P(Y)`, and hence, the two [`Itemset`](@ref)s `X` and `Y` are independant.
+If value is greater than (lower than) 1, then this means that `X` and `Y` are dependant
+and positively (negatively) correlated [`Itemset`](@ref)s.
+
+If a miner is provided, then its internal state is updated and used to leverage memoization.
+
+See also [`AbstractMiner`](@ref), [`antecedent`](@ref), [`ARule`](@ref), [`glift`](@ref),
+[`LogicalInstance`](@ref), [`llift`](@ref), [`Threshold`](@ref).
+"""
+@localmeasure llift _llift_logic
+
+"""
+    function glift(
+        rule::ARule,
+        X::SupportedLogiset,
+        threshold::Threshold;
+        miner::Union{Nothing,AbstractMiner}=nothing
+    )::Float64
+
+See also [`llift`](@ref).
+"""
+@globalmeasure glift _glift_logic
+
+
+
+"""
+    function lconviction(
+        rule::ARule,
+        ith_instance::LogicalInstance;
+        miner::Union{Nothing,AbstractMiner}=nothing
+    )::Float64
+
+Compute the local conviction for the given `rule`.
+
+Conviction attempts to measure the degree of implication of a rule.
+It's value ranges from 0 to +∞.
+Unlike lift, conviction is sensitive to rule direction; like lift, values far from 1
+indicate interesting rules.
+
+If a miner is provided, then its internal state is updated and used to leverage memoization.
+
+See also [`AbstractMiner`](@ref), [`antecedent`](@ref), [`ARule`](@ref),
+[`LogicalInstance`](@ref), [`llift`](@ref), [`Threshold`](@ref).
+"""
+@localmeasure lconviction _lconviction_logic
+
+"""
+    function gconviction(
+        rule::ARule,
+        X::SupportedLogiset,
+        threshold::Threshold;
+        miner::Union{Nothing,AbstractMiner}=nothing
+    )::Float64
+
+See also [`lconviction`](@ref).
+"""
+@globalmeasure gconviction _gconviction_logic
+
+
+
+"""
+    function lleverage(
+        rule::ARule,
+        X::SupportedLogiset,
+        threshold::Threshold;
+        miner::Union{Nothing,AbstractMiner}=nothing
+    )::Float64
+
+Compute the local leverage for the given `rule`.
+
+Measures how much more counting is obtained from the co-occurrence of the
+[`antecedent`](@ref) and [`consequent`](@ref) from the expected (from independence).
+
+This value ranges between [-0.25,0.25].
+
+See also [`AbstractMiner`](@ref), [`antecedent`](@ref), [`ARule`](@ref),
+[`consequent`](@ref), [`LogicalInstance`](@ref), [`Threshold`](@ref).
+"""
+@localmeasure lleverage _lleverage_logic
+
+"""
+    function gleverage(
+        rule::ARule,
+        X::SupportedLogiset,
+        threshold::Threshold;
+        miner::Union{Nothing,AbstractMiner}=nothing
+    )::Float64
+
+See also [`lleverage`](@ref).
+"""
+@globalmeasure gleverage _gleverage_logic
+
+
+
+"""
+    function lchisquared(
+        rule::ARule,
+        X::SupportedLogiset,
+        threshold::Threshold;
+        miner::Union{Nothing,AbstractMiner}=nothing
+    )::Float64
+
+𝛸²-test for a `rule`, in the local setting (within a modal instance).
+
+This test assists in deciding about the independence of these items which suggests that the
+measure is not feasible for ranking purposes.
+
+[`AbstractMiner`](@ref), [`Threshold`](@ref).
+"""
+@localmeasure lchisquared _lchisquared_logic
+
+"""
+    function gchisquared(
+        rule::ARule,
+        X::SupportedLogiset,
+        threshold::Threshold;
+        miner::Union{Nothing,AbstractMiner}=nothing
+    )::Float64
+
+See also [`lchisquared`](@ref).
+"""
+@globalmeasure gchisquared _gchisquared_logic
+
+
+
 # all the meaningfulness measures defined in this file are linked here,
 # meaning that a global measure is associated to its corresponding local one.
+
 @linkmeas gsupport lsupport
+
 @linkmeas gconfidence lconfidence
+
+@linkmeas glift llift
+
+@linkmeas gconviction lconviction
+
+@linkmeas gleverage lleverage
+
+@linkmeas gchisquared lchisquared
