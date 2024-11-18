@@ -151,11 +151,11 @@ instancerange(bulldozer::Bulldozer) = bulldozer.instancerange
 
 
 """
-    originalinstance(bulldozer::Bulldozer, ith_instance::Integer)
+    instanceofslice(bulldozer::Bulldozer, ith_instance::Integer)
 
 TODO
 """
-originalinstance(bulldozer::Bulldozer, ith_instance::Integer) = begin
+instanceofslice(bulldozer::Bulldozer, ith_instance::Integer) = begin
     original_instance = ith_instance - first(instancerange(bulldozer)) + 1
 
     if original_instance <= 0

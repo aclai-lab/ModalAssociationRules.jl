@@ -188,7 +188,6 @@ function fpgrowth(
 
     # reduce all the local-memoization structures obtained before,
     # and proceed to compute global supports
-    # local_results = reduce(bulldozer_reduce, local_results)
     local_results = bulldozer_reduce(local_results)
     fpgrowth_fragments = load_localmemo!(miner, local_results)
 
@@ -231,8 +230,11 @@ function _fpgrowth(miner::Bulldozer{D,I}) where {D<:MineableData,I<:Item}
     nworld_to_itemset = [Itemset{I}() for _ in 1:_nworlds]
 
     for ith_instance in instancerange(miner)
-        # later, `ith_instance` will not be accessible and thus the miningstate will be used
-        # to keep track of which instance is currently being mined.
+
+        println("$(ith_instance) - $(instanceofslice(miner, ith_instance))")
+
+        # :current_instance miningstate represent the real instance in the original dataset
+        # that is, the non-sliced dataset.
         miningstate!(miner, :current_instance, ith_instance)
 
         # get the frequent 1-length itemsets from the first candidates set;
@@ -246,7 +248,7 @@ function _fpgrowth(miner::Bulldozer{D,I}) where {D<:MineableData,I<:Item}
                 candidate,
                 data(
                     miner,
-                    originalinstance(miner,ith_instance)
+                    instanceofslice(miner,ith_instance)
                 ),
                 miner
             ) >= lthreshold
@@ -259,7 +261,7 @@ function _fpgrowth(miner::Bulldozer{D,I}) where {D<:MineableData,I<:Item}
                 if miningstate(
                     miner,
                     :instance_item_toworlds
-                )[(originalinstance(miner,ith_instance), itemset)][nworld] > 0
+                )[(instanceofslice(miner,ith_instance), itemset)][nworld] > 0
             ]
 
             nworld_to_itemset[nworld] = length(_itemset_in_world) > 0 ?
@@ -386,7 +388,7 @@ function _fpgrowth_count_phase(
 )
     for combo in combine_items(survivor_itemset, leftout_itemset)
         # each combo must be reshaped, following a certain order specified
-        # universally by the miner (lexicographi ordering).
+        # universally by the miner (lexicographic ordering).
         sort!(combo)
 
         # instance for which we want to update local support
