@@ -162,8 +162,7 @@ See also [`AbstractMiner`](@ref), [`Bulldozer`](@ref), [`FPTree`](@ref),
 function fpgrowth(
     miner::AbstractMiner,
     X::MineableData;
-    parallel::Bool=true,
-    distributed::Bool=false
+    parallel::Bool=true
 )::Nothing
     @assert ModalAssociationRules.gsupport in reduce(vcat, itemsetmeasures(miner)) "" *
     "FP-Growth " *
@@ -175,11 +174,12 @@ function fpgrowth(
 
     _ninstances = ninstances(X)
     local_results = Vector{Bulldozer}(undef, _ninstances)
-    if parallel
-        # leverage multi-threading: apply fp-growth one time per instance,
-        Threads.@threads for ith_instance in 1:_ninstances
-            local_results[ith_instance] = _fpgrowth(Bulldozer(miner, ith_instance))
+    if parallel && Threads.nthreads() > 1
+        chunks = Iterators.partition(1:_ninstances, div(_ninstances, Threads.nthreads()))
+        tasks = map(chunks) do chunk
+            Threads.@spawn _fpgrowth(Bulldozer(miner, chunk))
         end
+        local_results = fetch.(tasks)
     else
         for ith_instance in 1:_ninstances
             local_results[ith_instance] = _fpgrowth(Bulldozer(miner, ith_instance))
@@ -225,55 +225,64 @@ function fpgrowth(
 end
 
 # `fpgrowth` main logic
-function _fpgrowth(miner::Bulldozer{I}) where {I<:Item}
+function _fpgrowth(miner::Bulldozer{D,I}) where {D<:MineableData,I<:Item}
     kripkeframe = frame(miner)
     _nworlds = kripkeframe |> SoleLogics.nworlds
     nworld_to_itemset = [Itemset{I}() for _ in 1:_nworlds]
 
-    # get the frequent 1-length itemsets from the first candidates set;
-    frequents = [candidate
-        for candidate in Itemset{I}.(items(miner))
-        for (gmeas_algo, lthreshold, gthreshold) in itemsetmeasures(miner)
-        # in all the existing literature, the only measure needed here is `lsupport`;
-        # however, we give the possibility to control more granularly what does it mean
-        # for an itemset to be *locally frequent*.
-        if localof(gmeas_algo)(candidate, data(miner), miner) >= lthreshold
-    ] |> unique
+    for ith_instance in instancerange(miner)
+        # later, `ith_instance` will not be accessible and thus the miningstate will be used
+        # to keep track of which instance is currently being mined.
+        miningstate!(miner, :current_instance, ith_instance)
 
-    for (nworld, w) in enumerate(kripkeframe |> SoleLogics.allworlds)
-        _itemset_in_world = [
-            itemset
-            for itemset in frequents
-            if miningstate(
-                miner,
-                :instance_item_toworlds
-                # uncomment if building Bulldozer without slicedataset
-                # )[(instancenumber(miner), itemset)][nworld] > 0
-                # uncomment if building Bulldozer through slicedataset
-                )[(1, itemset)][nworld] > 0
-        ]
+        # get the frequent 1-length itemsets from the first candidates set;
+        frequents = [candidate
+            for candidate in Itemset{I}.(items(miner))
+            for (gmeas_algo, lthreshold, gthreshold) in itemsetmeasures(miner)
+            # in all the existing literature, the only measure needed here is `lsupport`;
+            # however, we give the possibility to control more granularly what does it mean
+            # for an itemset to be *locally frequent*.
+            if localof(gmeas_algo)(
+                candidate,
+                data(
+                    miner,
+                    originalinstance(miner,ith_instance)
+                ),
+                miner
+            ) >= lthreshold
+        ] |> unique
 
-        nworld_to_itemset[nworld] = length(_itemset_in_world) > 0 ?
-            union(_itemset_in_world...) :
-            Itemset{I}()
+        for (nworld, w) in enumerate(kripkeframe |> SoleLogics.allworlds)
+            _itemset_in_world = [
+                itemset
+                for itemset in frequents
+                if miningstate(
+                    miner,
+                    :instance_item_toworlds
+                )[(originalinstance(miner,ith_instance), itemset)][nworld] > 0
+            ]
 
-        # count 1-length frequent itemsets frequency;
-        # a.k.a prepare miner internal miningstate state to handle an FPGrowth call.
-        for item in nworld_to_itemset[nworld]
-            miningstate(miner,
-                :current_items_frequency)[item] += 1
+            nworld_to_itemset[nworld] = length(_itemset_in_world) > 0 ?
+                union(_itemset_in_world...) :
+                Itemset{I}()
+
+            # count 1-length frequent itemsets frequency;
+            # a.k.a prepare miner internal miningstate state to handle an FPGrowth call.
+            for item in nworld_to_itemset[nworld]
+                miningstate(miner, :current_items_frequency)[item] += 1
+            end
         end
+
+        # create an initial fptree and populate it
+        fptree = FPTree()
+        grow!(fptree, nworld_to_itemset; miner=miner)
+
+        # create and fill an header table, necessary to traverse FPTrees horizontally
+        htable = HeaderTable(fptree; miner=miner)
+
+        # call main logic
+        _fpgrowth_kernel(fptree, htable, miner, FPTree())
     end
-
-    # create an initial fptree and populate it
-    fptree = FPTree()
-    grow!(fptree, nworld_to_itemset; miner=miner)
-
-    # create and fill an header table, necessary to traverse FPTrees horizontally
-    htable = HeaderTable(fptree; miner=miner)
-
-    # call main logic
-    _fpgrowth_kernel(fptree, htable, miner, FPTree())
 
     # return the given miner, whose internal state has been updated
     return miner
@@ -283,9 +292,9 @@ end
 function _fpgrowth_kernel(
     fptree::FPTree,
     htable::HeaderTable,
-    miner::Bulldozer{I},
+    miner::Bulldozer{D,I},
     leftout_fptree::FPTree
-) where {I<:Item}
+) where {D<:MineableData,I<:Item}
     # if `fptree` contains only one path (hence, it can be considered a linked list),
     # then combine all the Itemsets collected from previous step with the remained ones.
     if islist(fptree)
@@ -381,7 +390,7 @@ function _fpgrowth_count_phase(
         sort!(combo)
 
         # instance for which we want to update local support
-        memokey = (:lsupport, combo, instancenumber(miner))
+        memokey = (:lsupport, combo, miningstate(miner, :current_instance))
 
         # new local support value
         lsupport_value = lsupport_value_calculator(combo)
@@ -391,7 +400,8 @@ function _fpgrowth_count_phase(
 
         # local support needs to be updated
         if first_time_found || lsupport_value > localmemo(miner, memokey)
-            localmemo!(miner, (:lsupport, combo, instancenumber(miner)), lsupport_value)
+            localmemo!(miner, (
+                :lsupport, combo, miningstate(miner, :current_instance)), lsupport_value)
         end
     end
 end
@@ -417,5 +427,8 @@ function initminingstate(::typeof(fpgrowth), ::MineableData)::MiningState
         # has to know its specific 1-length itemsets ordering (that is, one Item);
         # otherwise, the building process of fptrees is not correct anymore.
         :current_items_frequency => DefaultDict{Item,Int}(0),
+
+        # keep track of which instance (of a generic MineableData) is currently being mined
+        :current_instance => 1
     ])
 end

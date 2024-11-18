@@ -3,17 +3,20 @@
         I<:Item,
         IMEAS<:MeaningfulnessMeasure
     } <: AbstractMiner
-        # reference to a modal dataset ith instance
-        instance::SoleLogics.LogicalInstance
-        ith_instance::Integer
+        # modal dataset data collection
+        data::Vector{SoleLogics.LogicalInstance}
 
-        items::Vector{I}                    # alphabet
+        # alphabet
+        items::Vector{I}
 
-        itemsetmeasures::Vector{IMEAS}      # measures associated with mined itemsets
+        # measures associated with mined itemsets
+        itemsetmeasures::Vector{<:MeaningfulnessMeasure}
 
-        localmemo::LmeasMemo                # meaningfulness measures memoization structure
+        # meaningfulness measures memoization structure
+        localmemo::LmeasMemo
 
-        miningstate::MiningState            # special fields related to mining algorithms
+        # special fields related to mining algorithms
+        miningstate::MiningState
 
         # locks on data, memoization structure and miningstate structure
         datalock::ReentrantLock
@@ -35,19 +38,26 @@ thread-safe.
 
 See also [`AbstractMiner`](@ref), [`Miner`](@ref).
 """
-struct Bulldozer{I<:Item} <: AbstractMiner
-    # reference to a modal dataset ith instance
-    instance::SoleLogics.LogicalInstance
-    ith_instance::Integer
+struct Bulldozer{D<:MineableData,I<:Item} <: AbstractMiner
+    # data mineable by the Bulldozer
+    data::D
 
-    items::Vector{I}                # alphabet
+    # original instance ids associated with the current slice of data
+    # if this is 5:10, this this means that the first instance of the slice is
+    # the original fifth and so on.
+    instancerange::UnitRange{<:Integer}
+
+    # alphabet
+    items::Vector{I}
 
     # measures associated with mined itemsets
     itemsetmeasures::Vector{<:MeaningfulnessMeasure}
 
-    localmemo::LmeasMemo            # meaningfulness measures memoization structure
+    # meaningfulness measures memoization structure
+    localmemo::LmeasMemo
 
-    miningstate::MiningState        # special fields related to mining algorithms
+    # special fields related to mining algorithms
+    miningstate::MiningState
 
     # locks on data, memoization structure and miningstate structure
     datalock::ReentrantLock
@@ -55,31 +65,32 @@ struct Bulldozer{I<:Item} <: AbstractMiner
     miningstatelock::ReentrantLock
 
     function Bulldozer(
-        instance::SoleLogics.LogicalInstance,
-        ith_instance::Integer,
+        data::D,
+        instancerange::UnitRange{<:Integer},
         items::Vector{I},
         itemsetmeasures::Vector{<:MeaningfulnessMeasure};
         miningstate::MiningState=MiningState()
-    ) where {I<:Item}
-        return new{I}(instance, ith_instance, items, itemsetmeasures, LmeasMemo(),
+    ) where {D<:MineableData,I<:Item}
+        return new{D,I}(data, instancerange, items, itemsetmeasures, LmeasMemo(),
             miningstate, ReentrantLock(), ReentrantLock(), ReentrantLock()
         )
     end
 
-    function Bulldozer(miner::Miner, ith_instance::Integer)
-        # this works if I am managing one instance at a time in my parallel region;
-        # ideally, I would like to avoid repeating 1,2,3,...360 calls but only performing
-        # `nthreads` partitioning in (e.g., `nthreads=4`) 1:90, 91:180, ..., 281:360.
-        _logiset_slice = slicedataset(data(miner), ith_instance)
+    function Bulldozer(miner::Miner, instancerange::UnitRange{<:Integer})
+        data_slice = slicedataset(data(miner), instancerange)
 
         return Bulldozer(
-                SoleLogics.getinstance(_logiset_slice, 1),
-                # SoleLogics.getinstance(data(miner), ith_instance),
-                ith_instance,
+                data_slice,
+                instancerange,
                 items(miner),
                 itemsetmeasures(miner),
                 miningstate=deepcopy(miningstate(miner))
             )
+    end
+
+    function Bulldozer(miner::Miner, ith_instance::Integer)
+        # fallback to UnitRange constructor
+        Bulldozer(miner, ith_instance:ith_instance)
     end
 end
 
@@ -110,51 +121,70 @@ miningstatelock(bulldozer::Bulldozer) = bulldozer.miningstatelock
 """
 TODO
 """
-itemtype(::Bulldozer{I}) where {I<:Item} = I
+datatype(::Bulldozer{D}) where {D<:MineableData} = D
+
+"""
+TODO
+"""
+itemtype(::Bulldozer{D,I}) where {D,I<:Item} = I
 
 """
     data(bulldozer::Bulldozer)
+    data(bulldozer::Bulldozer, ith_instance::Integer)
 
-See [`data(::AbstractMiner)`](@ref), [`SoleLogics.LogicalInstance`](@ref).
+Getter for the [`MineableData`](@ref) wrapped within `bulldozer`, or a specific instance.
+
+See [`data(::AbstractMiner)`](@ref), [`SoleLogics.LogicalInstance`](@ref),
+[`MineableData`](@ref).
 """
-data(bulldozer::Bulldozer) = bulldozer.instance
+data(bulldozer::Bulldozer) = bulldozer.data
+data(bulldozer::Bulldozer, ith_instance::Integer) = begin
+    SoleLogics.getinstance(data(bulldozer), ith_instance)
+end
 
 """
-    items(bulldozer::Bulldozer)
+    instancerange(bulldozer::Bulldozer)
+
+TODO
+"""
+instancerange(bulldozer::Bulldozer) = bulldozer.instancerange
+
+
+"""
+    originalinstance(bulldozer::Bulldozer, ith_instance::Integer)
+
+TODO
+"""
+originalinstance(bulldozer::Bulldozer, ith_instance::Integer) = begin
+    original_instance = ith_instance - first(instancerange(bulldozer)) + 1
+
+    if original_instance <= 0
+        throw(ArgumentError(
+            "Mapping from $(ith_instance) to original instance " *
+            "($(ith_instance) - $(first(instancerange(bulldozer))) + 1) is " *
+            "$(original_instance)"))
+    end
+
+    return original_instance
+end
+
+"""
+items(bulldozer::Bulldozer)
 
 See [`items(::AbstractMiner)`](@ref).
 """
 items(bulldozer::Bulldozer) = bulldozer.items
 
 """
-    instance(bulldozer::Bulldozer) = bulldozer.instance
-
-Getter for the instance wrapped by `bulldozer`'s.
-Synonym for [`data(::Bulldozer)`](@ref).
-
-See also [`instancenumber(::Bulldozer)`](@ref).
-"""
-instance(bulldozer::Bulldozer) = bulldozer.instance
-
-"""
-    instancenumber(bulldozer::Bulldozer)
-
-Retrieve the instance number associated with `bulldozer`.
-
-See also [`Bulldozer`](@ref), [`data(::Bulldozer)`](@ref).
-"""
-instancenumber(bulldozer::Bulldozer) = bulldozer.ith_instance
-
-"""
     itemsetmeasures(bulldozer::Bulldozer)::Vector{<:MeaningfulnessMeasure}
 
-See also [`itemsetmeasures(::AbstractMiner)`](@ref).
-"""
+    See also [`itemsetmeasures(::AbstractMiner)`](@ref).
+    """
 itemsetmeasures(
     bulldozer::Bulldozer
-)::Vector{<:MeaningfulnessMeasure} = bulldozer.itemsetmeasures
+    )::Vector{<:MeaningfulnessMeasure} = bulldozer.itemsetmeasures
 
-"""
+    """
     localmemo(miner::Bulldozer)
 
 See [`localmemo(::AbstractMiner)`](@ref).
@@ -228,11 +258,12 @@ measures(miner::Bulldozer) = itemsetmeasures(miner)
     function SoleLogics.frame(bulldozer::Bulldozer)
 
 Getter for the frame of the instance wrapped by `bulldozer`.
-See also [`instance(::Bulldozer)`](@ref).
 """
 function SoleLogics.frame(bulldozer::Bulldozer)
-    _instance = instance(bulldozer)
-    SoleLogics.frame(_instance.s, instancenumber(bulldozer))
+    ith_instance = miningstate(bulldozer, :current_instance)
+    instance = data(bulldozer, ith_instance)
+
+    SoleLogics.frame(instance.s, ith_instance)
 end
 
 
@@ -244,7 +275,7 @@ time.
 
 See also [`LmeasMemo`](@ref), [`localmemo(::Bulldozer)`](@ref);
 """
-function bulldozer_reduce(local_results::AbstractVector{Bulldozer})
+function bulldozer_reduce(local_results::AbstractVector{<:Bulldozer})
     b1lmemo = local_results |> first |> localmemo
 
     for i in 2:length(local_results)
@@ -261,6 +292,8 @@ function bulldozer_reduce(local_results::AbstractVector{Bulldozer})
 end
 
 """
+    function load_localmemo!(miner::AbstractMiner, localmemo::LmeasMemo)
+
 Load a local memoization structure inside `miner`.
 Also, returns a dictionary associating each loaded local [`Itemset`](@ref) loaded to its
 its global support, in order to simplify `miner`'s job when working in the global setting.
@@ -268,8 +301,6 @@ its global support, in order to simplify `miner`'s job when working in the globa
 See also [`Itemset`](@ref), [`LmeasMemo`](@ref), [`lsupport`](@ref), [`Miner`](@ref).
 """
 function load_localmemo!(miner::AbstractMiner, localmemo::LmeasMemo)
-    # remember a local memo key is a Tuple{Symbol,ARMSubject,Int64}
-
     fpgrowth_fragments = DefaultDict{Itemset,Int64}(0)
     min_lsupport_threshold = findmeasure(miner, lsupport)[2]
 
