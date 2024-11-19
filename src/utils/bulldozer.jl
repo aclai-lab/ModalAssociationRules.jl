@@ -176,12 +176,18 @@ itemsetmeasures(
     bulldozer::Bulldozer
     )::Vector{<:MeaningfulnessMeasure} = bulldozer.itemsetmeasures
 
-    """
+"""
     localmemo(miner::Bulldozer)
+    localmemo(miner::Bulldozer, key::LmeasMemoKey)
 
 See [`localmemo(::AbstractMiner)`](@ref).
 """
 localmemo(miner::Bulldozer) = miner.localmemo
+localmemo(miner::Bulldozer, key::LmeasMemoKey) = begin
+    _symbol, _armsubject, _ith_instance = key
+    # TODO: apply inverse projection to instance number calculation
+    _ith_instance + first(instancerange(bulldozer)) - 1
+end
 
 """
     miningstate(bulldozer::Bulldozer)::MiningState
