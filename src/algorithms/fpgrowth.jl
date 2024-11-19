@@ -230,9 +230,6 @@ function _fpgrowth(miner::Bulldozer{D,I}) where {D<:MineableData,I<:Item}
     nworld_to_itemset = [Itemset{I}() for _ in 1:_nworlds]
 
     for ith_instance in instancerange(miner)
-
-        println("$(ith_instance) - $(instanceofslice(miner, ith_instance))")
-
         # :current_instance miningstate represent the real instance in the original dataset
         # that is, the non-sliced dataset.
         miningstate!(miner, :current_instance, ith_instance)
@@ -246,10 +243,7 @@ function _fpgrowth(miner::Bulldozer{D,I}) where {D<:MineableData,I<:Item}
             # for an itemset to be *locally frequent*.
             if localof(gmeas_algo)(
                 candidate,
-                data(
-                    miner,
-                    instanceofslice(miner,ith_instance)
-                ),
+                data(miner, ith_instance), # TODO: istance is not projected properly
                 miner
             ) >= lthreshold
         ] |> unique
@@ -261,7 +255,7 @@ function _fpgrowth(miner::Bulldozer{D,I}) where {D<:MineableData,I<:Item}
                 if miningstate(
                     miner,
                     :instance_item_toworlds
-                )[(instanceofslice(miner,ith_instance), itemset)][nworld] > 0
+                )[(instanceprojection(miner, ith_instance), itemset)][nworld] > 0
             ]
 
             nworld_to_itemset[nworld] = length(_itemset_in_world) > 0 ?
@@ -284,6 +278,8 @@ function _fpgrowth(miner::Bulldozer{D,I}) where {D<:MineableData,I<:Item}
 
         # call main logic
         _fpgrowth_kernel(fptree, htable, miner, FPTree())
+
+        println(miner.localmemo)
     end
 
     # return the given miner, whose internal state has been updated

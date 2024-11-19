@@ -128,6 +128,23 @@ TODO
 """
 itemtype(::Bulldozer{D,I}) where {D,I<:Item} = I
 
+
+"""
+    instancerange(bulldozer::Bulldozer)
+
+TODO
+"""
+instancerange(bulldozer::Bulldozer) = bulldozer.instancerange
+
+"""
+    instanceprojection(bulldozer::Bulldozer, ith_instance::Integer)
+
+TODO
+"""
+instanceprojection(bulldozer::Bulldozer, ith_instance::Integer) = begin
+    return ith_instance - first(instancerange(bulldozer)) + 1
+end
+
 """
     data(bulldozer::Bulldozer)
     data(bulldozer::Bulldozer, ith_instance::Integer)
@@ -139,33 +156,8 @@ See [`data(::AbstractMiner)`](@ref), [`SoleLogics.LogicalInstance`](@ref),
 """
 data(bulldozer::Bulldozer) = bulldozer.data
 data(bulldozer::Bulldozer, ith_instance::Integer) = begin
-    SoleLogics.getinstance(data(bulldozer), ith_instance)
-end
-
-"""
-    instancerange(bulldozer::Bulldozer)
-
-TODO
-"""
-instancerange(bulldozer::Bulldozer) = bulldozer.instancerange
-
-
-"""
-    instanceofslice(bulldozer::Bulldozer, ith_instance::Integer)
-
-TODO
-"""
-instanceofslice(bulldozer::Bulldozer, ith_instance::Integer) = begin
-    original_instance = ith_instance - first(instancerange(bulldozer)) + 1
-
-    if original_instance <= 0
-        throw(ArgumentError(
-            "Mapping from $(ith_instance) to original instance " *
-            "($(ith_instance) - $(first(instancerange(bulldozer))) + 1) is " *
-            "$(original_instance)"))
-    end
-
-    return original_instance
+    instance_projection = ith_instance - first(instancerange(bulldozer)) + 1
+    SoleLogics.getinstance(data(bulldozer), instance_projection)
 end
 
 """
