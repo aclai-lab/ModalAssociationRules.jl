@@ -278,8 +278,6 @@ function _fpgrowth(miner::Bulldozer{D,I}) where {D<:MineableData,I<:Item}
 
         # call main logic
         _fpgrowth_kernel(fptree, htable, miner, FPTree())
-
-        println(miner.localmemo)
     end
 
     # return the given miner, whose internal state has been updated
@@ -397,9 +395,12 @@ function _fpgrowth_count_phase(
         first_time_found = !haskey(localmemo(miner), memokey)
 
         # local support needs to be updated
-        if first_time_found || lsupport_value > localmemo(miner, memokey)
-            localmemo!(miner, (
-                :lsupport, combo, miningstate(miner, :current_instance)), lsupport_value)
+        if first_time_found || lsupport_value > localmemo(miner, memokey, isprojected=true)
+            localmemo!(miner,
+                (:lsupport, combo, miningstate(miner, :current_instance)),
+                lsupport_value,
+                isprojected=true
+            )
         end
     end
 end

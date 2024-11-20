@@ -183,13 +183,18 @@ itemsetmeasures(
 See [`localmemo(::AbstractMiner)`](@ref).
 """
 localmemo(bulldozer::Bulldozer) = bulldozer.localmemo
-localmemo(bulldozer::Bulldozer, key::LmeasMemoKey) = begin
+localmemo(bulldozer::Bulldozer, key::LmeasMemoKey; isprojected::Bool=false) = begin
     # see localmemo!: when memoizing a new local measure,
     # the number of the instance is projected depending on
     # the `instancerange` of the Bulldozer.
-    _symbol, _armsubject, _ith_instance = key
-    __ith_instance = _ith_instance + first(instancerange(bulldozer)) - 1
-    localmemo(bulldozer)[LmeasMemoKey(_symbol, _armsubject, __ith_instance)]
+
+    if !isprojected
+        _symbol, _armsubject, _ith_instance = key
+        _ith_instance = _ith_instance + first(instancerange(bulldozer)) - 1
+        key = LmeasMemoKey((_symbol, _armsubject, _ith_instance))
+    end
+
+    get(localmemo(bulldozer), key, nothing)
 end
 
 """
@@ -197,10 +202,20 @@ end
 
 TODO
 """
-localmemo!(bulldozer::Bulldozer, key::LmeasMemoKey, val::Threshold) = begin
-    _symbol, _armsubject, _ith_instance = key
-    __ith_instance = _ith_instance + first(instancerange(bulldozer)) - 1
-    bulldozer.localmemo[LmeasMemoKey(_symbol, _armsubject, __ith_instance)] = val
+localmemo!(
+    bulldozer::Bulldozer,
+    key::LmeasMemoKey,
+    val::Threshold;
+    isprojected::Bool=false
+) = begin
+
+    if !isprojected
+        _symbol, _armsubject, _ith_instance = key
+        _ith_instance = _ith_instance + first(instancerange(bulldozer)) - 1
+        key = LmeasMemoKey((_symbol, _armsubject, _ith_instance))
+    end
+
+    bulldozer.localmemo[key] = val
 end
 
 """
