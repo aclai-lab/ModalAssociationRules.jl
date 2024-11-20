@@ -45,7 +45,7 @@ struct Bulldozer{D<:MineableData,I<:Item} <: AbstractMiner
     # original instance ids associated with the current slice of data
     # if this is 5:10, this this means that the first instance of the slice is
     # the original fifth and so on.
-    instancerange::UnitRange{<:Integer}
+    instancesrange::UnitRange{<:Integer}
 
     # alphabet
     items::Vector{I}
@@ -66,22 +66,22 @@ struct Bulldozer{D<:MineableData,I<:Item} <: AbstractMiner
 
     function Bulldozer(
         data::D,
-        instancerange::UnitRange{<:Integer},
+        instancesrange::UnitRange{<:Integer},
         items::Vector{I},
         itemsetmeasures::Vector{<:MeaningfulnessMeasure};
         miningstate::MiningState=MiningState()
     ) where {D<:MineableData,I<:Item}
-        return new{D,I}(data, instancerange, items, itemsetmeasures, LmeasMemo(),
+        return new{D,I}(data, instancesrange, items, itemsetmeasures, LmeasMemo(),
             miningstate, ReentrantLock(), ReentrantLock(), ReentrantLock()
         )
     end
 
-    function Bulldozer(miner::Miner, instancerange::UnitRange{<:Integer})
-        data_slice = slicedataset(data(miner), instancerange)
+    function Bulldozer(miner::Miner, instancesrange::UnitRange{<:Integer})
+        data_slice = slicedataset(data(miner), instancesrange)
 
         return Bulldozer(
                 data_slice,
-                instancerange,
+                instancesrange,
                 items(miner),
                 itemsetmeasures(miner),
                 miningstate=deepcopy(miningstate(miner))
@@ -130,11 +130,11 @@ itemtype(::Bulldozer{D,I}) where {D,I<:Item} = I
 
 
 """
-    instancerange(bulldozer::Bulldozer)
+    instancesrange(bulldozer::Bulldozer)
 
 TODO
 """
-instancerange(bulldozer::Bulldozer) = bulldozer.instancerange
+instancesrange(bulldozer::Bulldozer) = bulldozer.instancesrange
 
 """
     instanceprojection(bulldozer::Bulldozer, ith_instance::Integer)
@@ -142,7 +142,7 @@ instancerange(bulldozer::Bulldozer) = bulldozer.instancerange
 TODO
 """
 instanceprojection(bulldozer::Bulldozer, ith_instance::Integer) = begin
-    return ith_instance - first(instancerange(bulldozer)) + 1
+    return ith_instance - first(instancesrange(bulldozer)) + 1
 end
 
 """
@@ -156,7 +156,7 @@ See [`data(::AbstractMiner)`](@ref), [`SoleLogics.LogicalInstance`](@ref),
 """
 data(bulldozer::Bulldozer) = bulldozer.data
 data(bulldozer::Bulldozer, ith_instance::Integer) = begin
-    instance_projection = ith_instance - first(instancerange(bulldozer)) + 1
+    instance_projection = ith_instance - first(instancesrange(bulldozer)) + 1
     SoleLogics.getinstance(data(bulldozer), instance_projection)
 end
 
@@ -186,11 +186,11 @@ localmemo(bulldozer::Bulldozer) = bulldozer.localmemo
 localmemo(bulldozer::Bulldozer, key::LmeasMemoKey; isprojected::Bool=false) = begin
     # see localmemo!: when memoizing a new local measure,
     # the number of the instance is projected depending on
-    # the `instancerange` of the Bulldozer.
+    # the `instancesrange` of the Bulldozer.
 
     if !isprojected
         _symbol, _armsubject, _ith_instance = key
-        _ith_instance = _ith_instance + first(instancerange(bulldozer)) - 1
+        _ith_instance = _ith_instance + first(instancesrange(bulldozer)) - 1
         key = LmeasMemoKey((_symbol, _armsubject, _ith_instance))
     end
 
@@ -211,7 +211,7 @@ localmemo!(
 
     if !isprojected
         _symbol, _armsubject, _ith_instance = key
-        _ith_instance = _ith_instance + first(instancerange(bulldozer)) - 1
+        _ith_instance = _ith_instance + first(instancesrange(bulldozer)) - 1
         key = LmeasMemoKey((_symbol, _armsubject, _ith_instance))
     end
 

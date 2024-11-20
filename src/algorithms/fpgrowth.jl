@@ -229,7 +229,7 @@ function _fpgrowth(miner::Bulldozer{D,I}) where {D<:MineableData,I<:Item}
     _nworlds = kripkeframe |> SoleLogics.nworlds
     nworld_to_itemset = [Itemset{I}() for _ in 1:_nworlds]
 
-    for ith_instance in instancerange(miner)
+    for ith_instance in instancesrange(miner)
         # :current_instance miningstate represent the real instance in the original dataset
         # that is, the non-sliced dataset.
         miningstate!(miner, :current_instance, ith_instance)
