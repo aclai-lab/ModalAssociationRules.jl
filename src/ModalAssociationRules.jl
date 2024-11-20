@@ -84,9 +84,9 @@ export frame, allworlds, nworlds
 include("utils/bulldozer.jl")
 
 export Bulldozer
-export instance, instancenumber, frame
 export datalock, memolock, miningstatelock
 export bulldozer_reduce
+export frame
 
 include("meaningfulness-measures.jl")
 
