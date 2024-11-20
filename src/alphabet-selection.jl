@@ -10,29 +10,35 @@ end
         X_df::DataFrame,
         feature::Function,
         var::Integer;
-        distance::Integer = 3,
-        keepleftbound = true
+        distance::Integer=3,
+        keepleftbound=true
     )
 
 Bin [`DataFrame`](@ref) values into discrete, equispaced intervals.
+Spacing is given by the `distance` parameter. For example, the range 1:10 is splitted
+in unit ranges shaped as 1:(1+distance), (1+distance):(1+distance*2), and so on.
 
-Return the sorted separation values vector for each variable.
+Return the separation values between ranges, sorted increasingly.
 """
 function equicut(
     X_df::DataFrame,
     feature::Function,
     var::Integer;
-    distance::Integer = 3,
-    keepleftbound = true
+    distance::Integer=3,
+    keepleftbound=true
 )
     function _equicut(vals::Vector{Float64})
         unique!(vals)
         if !issorted(vals)
-        sort!(vals)
+            sort!(vals)
         end
+
         valslen = length(vals)
-        @assert distance < valslen "Distance $(distance) is higher than unique values to " *
-        "bin, which is $(valslen). Please lower the distance."
+        if distance >= valslen
+            throw(ErrorException("Distance $(distance) is higher than unique values to " *
+                "bin, which is $(valslen). Please lower the distance."))
+        end
+
         ranges = collect(Iterators.partition(1:valslen, distance))
         bounds = [vals[last(r)] for r in ranges]
         if keepleftbound
@@ -60,7 +66,7 @@ function quantilecut(
     X_df::DataFrame,
     feature::Function,
     var::Integer;
-    nbins::Integer = 3
+    nbins::Integer=3
 )
     function _quantilecut(vals::Vector{Float64})
         h = fit(Histogram, vals, nbins=nbins)
