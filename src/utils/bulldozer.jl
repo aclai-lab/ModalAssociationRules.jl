@@ -177,16 +177,30 @@ itemsetmeasures(
     )::Vector{<:MeaningfulnessMeasure} = bulldozer.itemsetmeasures
 
 """
-    localmemo(miner::Bulldozer)
-    localmemo(miner::Bulldozer, key::LmeasMemoKey)
+    localmemo(bulldozer::Bulldozer)
+    localmemo(bulldozer::Bulldozer, key::LmeasMemoKey)
 
 See [`localmemo(::AbstractMiner)`](@ref).
 """
-localmemo(miner::Bulldozer) = miner.localmemo
-localmemo(miner::Bulldozer, key::LmeasMemoKey) = begin
+localmemo(bulldozer::Bulldozer) = bulldozer.localmemo
+localmemo(bulldozer::Bulldozer, key::LmeasMemoKey) = begin
+    # see localmemo!: when memoizing a new local measure,
+    # the number of the instance is projected depending on
+    # the `instancerange` of the Bulldozer.
     _symbol, _armsubject, _ith_instance = key
-    # TODO: apply inverse projection to instance number calculation
-    _ith_instance + first(instancerange(bulldozer)) - 1
+    __ith_instance = _ith_instance + first(instancerange(bulldozer)) - 1
+    localmemo(bulldozer)[LmeasMemoKey(_symbol, _armsubject, __ith_instance)]
+end
+
+"""
+    localmemo!(bulldozer::Bulldozer, key::LmeasMemoKey, val::Threshold)
+
+TODO
+"""
+localmemo!(bulldozer::Bulldozer, key::LmeasMemoKey, val::Threshold) = begin
+    _symbol, _armsubject, _ith_instance = key
+    __ith_instance = _ith_instance + first(instancerange(bulldozer)) - 1
+    bulldozer.localmemo[LmeasMemoKey(_symbol, _armsubject, __ith_instance)] = val
 end
 
 """
@@ -213,40 +227,40 @@ miningstate(
 end
 
 """
-    miningstate!(miner::Bulldozer, key::Symbol, val)
-    miningstate!(miner::Bulldozer, key::Symbol, inner_key, val)
+    miningstate!(bulldozer::Bulldozer, key::Symbol, val)
+    miningstate!(bulldozer::Bulldozer, key::Symbol, inner_key, val)
 
-Setter for the content of a specific `miner`'s [`miningstate`](@ref).
+Setter for the content of a specific `bulldozer`'s [`miningstate`](@ref).
 """
-miningstate!(miner::Bulldozer, key::Symbol, val) = lock(miningstatelock(miner)) do
-    miner.miningstate[key] = val
+miningstate!(bulldozer::Bulldozer, key::Symbol, val) = lock(miningstatelock(bulldozer)) do
+    bulldozer.miningstate[key] = val
 end
-miningstate!(miner::Bulldozer, key::Symbol, inner_key, val) = begin
-    lock(miningstatelock(miner)) do
-        miner.miningstate[key][inner_key] = val
+miningstate!(bulldozer::Bulldozer, key::Symbol, inner_key, val) = begin
+    lock(miningstatelock(bulldozer)) do
+        bulldozer.miningstate[key][inner_key] = val
     end
 end
 
 """
-    hasminingstate(miner::Bulldozer, key::Symbol)
+    hasminingstate(bulldozer::Bulldozer, key::Symbol)
 
-Return whether `miner` miningstate field contains a field `key`.
+Return whether `bulldozer` miningstate field contains a field `key`.
 
 See also [`Bulldozer`](@ref), [`miningstate`](@ref), [`miningstate!`](@ref).
 """
-hasminingstate(miner::Bulldozer, key::Symbol) = lock(miningstatelock(miner)) do
-    haskey(miner |> miningstate, key)
+hasminingstate(bulldozer::Bulldozer, key::Symbol) = lock(miningstatelock(bulldozer)) do
+    haskey(bulldozer |> miningstate, key)
 end
 
 """
-    measures(miner::Bulldozer)
+    measures(bulldozer::Bulldozer)
 
 Synonym for [`itemsetmeasures`](ref).
 This exists to adhere to [`Miner`](@ref)'s interface.
 
-See also [`itemsetmeasures`](@ref), [`Miner`](@ref).
+See also [`Bulldozer`](@ref), [`itemsetmeasures`](@ref), [`Miner`](@ref).
 """
-measures(miner::Bulldozer) = itemsetmeasures(miner)
+measures(bulldozer::Bulldozer) = itemsetmeasures(bulldozer)
 
 
 
