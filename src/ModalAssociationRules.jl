@@ -128,8 +128,9 @@ include("utils/natops-loader.jl")
 
 export load_NATOPS
 
-## include("utils/literals-selector.jl")   # TODO -  move this in SoleData
-# export equicut, quantilecut
-# export makeconditions
+# TODO: this might be moved to SoleData
+include("alphabet-selection.jl")
+export equicut, quantilecut
+export makeconditions
 
 end
