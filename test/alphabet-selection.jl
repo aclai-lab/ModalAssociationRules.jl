@@ -59,17 +59,17 @@ function distribution_analysis(
     uniform_width_discretizer = DiscretizeUniformWidth(n_uniform_width_bins)
     uniform_width_binedges = binedges(uniform_width_discretizer, V)
     p3 = plot(xaxis, pdfᵥ, label="", title="Uniform width (nbins=$(n_uniform_width_bins))")
-    vline!(p3, uniform_width_binedges, color=:green, linestyle=:dash)
+    vline!(p3, uniform_width_binedges, label="", color=:green, linestyle=:dash)
 
     # plot quantile-based discretization
     quantile_discretizer = DiscretizeQuantile(n_quantile_bins)
     quantile_binedges = binedges(quantile_discretizer, V)
     p4 = plot(xaxis, pdfᵥ, label="", title="Uniform area (nbins=$(n_quantile_bins))")
-    vline!(p4, quantile_binedges, color=:green, linestyle=:dash)
+    vline!(p4, quantile_binedges, label="", color=:green, linestyle=:dash)
 
     layout = @layout [a b; c d]
     return plot(p1, p2, p3, p4, layout=layout, framestyle=:box, size=(1280, 1024))
 end
 
 X, _ = load_NATOPS();
-distribution_analysis(X[:,1])
+distribution_analysis(X[:,21])
