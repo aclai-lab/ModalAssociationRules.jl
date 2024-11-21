@@ -5,9 +5,6 @@ using Plots
 using Plots.Measures
 using Test
 
-# discretizers package notebook:
-# # https://nbviewer.org/github/sisl/Discretizers.jl/blob/master/doc/Discretizers.ipynb
-
 """
     function distribution_analysis(X::Vector{T}) where {T<:Vector{<:Float64}}
 
@@ -16,9 +13,14 @@ The study is returned under the form of plots. In particular:
 
 - all the normal distributions (the pairs (μ,σ) are computed for each vector);
 - the normal distribution obtained by computing the mean of all (μ,σ) pairs;
-- various binning techniques (see Arguments section) applied on the previous plot.
+- various binning techniques (see Arguments section) applied on the previous plot:
+    binning techniques are implemented in `Discretizers` package.
 
-
+# Arguments
+- `X`: a list of time series;
+- `n_uniform_width_bins`=5: number of bins computed by `DiscretizeUniformWidth` strategy;
+- `n_quantile_bins`=5: number of bins computed by `DiscretizeQuantile` strategy;
+- `palette`=palette(:batlow10): plots color palette.
 """
 function distribution_analysis(
     X::Vector{T};
@@ -69,30 +71,5 @@ function distribution_analysis(
     return plot(p1, p2, p3, p4, layout=layout, framestyle=:box, size=(1280, 1024))
 end
 
-# driver
-
-X, y = load_NATOPS();
-x_1 = X[:,1]
-
-# X_v1 = X[1:30,:]
-# x_v1 = X_v1[:,1]
-
-# try and plot different discretizers
-# x_1_all = reduce(vcat, x_1) |> sort
-# uniwidthbin_1_all = binedges(uniformwidth_discretizer, x_1_all)
-# quantilebin_1_all = binedges(quantile_discretizer, x_1_all)
-#
-# plot(x_1_all, label="V1 (all values)")
-# hline!(
-#     uniwidthbin_1_all,
-#     color=:green,
-#     linestyle=:dash,
-#     label="Uniform width ($(nuniforms)) bin edges"
-# )
-# hline!(
-#     quantilebin_1_all,
-#     color=:red,
-#     linestyle=:dash,
-#     label="Quantile ($(nquantiles)) bin edges"
-# )
-#
+X, _ = load_NATOPS();
+distribution_analysis(X[:,1])
