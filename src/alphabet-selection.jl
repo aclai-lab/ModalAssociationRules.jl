@@ -1,3 +1,6 @@
+# TODO: consider if this old code (which seems to be working) could be useful or
+# other packages are simply better (e.g., Discretizers.jl)
+
 # consider the variable targetted by feature (feature.i_variable);
 # return a sorted list of its separation values.
 function _cut(X_df::DataFrame, feature::Function, var::Integer, cutpolitic::Function)
@@ -55,7 +58,7 @@ end
         X_df::DataFrame,
         feature::Function,
         var::Integer;
-        nbins::Integer = 3
+        nbins::Integer=3
     )
 
 Bin [`DataFrame`](@ref) values in equal-sized bins.
