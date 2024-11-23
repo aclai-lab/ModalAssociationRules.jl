@@ -7,5 +7,6 @@
 # /test/experiments/results/*
 /docs/build/
 /statprof/*
+/test/analyses/*
 
 TODO
