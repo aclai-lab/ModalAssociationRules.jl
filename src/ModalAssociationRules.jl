@@ -124,13 +124,12 @@ include("algorithms/fpgrowth.jl")
 export patternbase, bounce!, projection
 export fpgrowth
 
+include("alphabet-selection.jl")
+export select_alphabet
+export distribution_analysis # TODO - this might be moved to SoleData
+
 include("utils/natops-loader.jl")
 
 export load_NATOPS
-
-# TODO: this might be moved to SoleData
-include("alphabet-selection.jl")
-export equicut, quantilecut
-export makeconditions
 
 end
