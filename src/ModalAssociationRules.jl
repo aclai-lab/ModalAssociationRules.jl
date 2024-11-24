@@ -126,7 +126,7 @@ export fpgrowth
 
 include("alphabet-selection.jl")
 export select_alphabet
-export distribution_analysis # TODO - this might be moved to SoleData
+export time_series_distribution_analysis # TODO - this might be moved to SoleData
 
 include("utils/natops-loader.jl")
 

@@ -142,7 +142,9 @@ function time_series_distribution_analysis(
 
     # the simplest plot: print everything
     plot_all_distributions = plot()
-
+    for v in X
+        plot!(xaxis, v, label="", title="Every time series")
+    end
 
     # aggregate all the vectors in X, in one vector (this will be needed later)
     V = reduce(vcat, X)
@@ -154,7 +156,7 @@ function time_series_distribution_analysis(
         μ, σ = mean(v), std(v)
         xaxis = range(minimum(v), stop=maximum(v), length=100)
         pdfᵥ = pdf.(Normal(μ, σ), xaxis)
-        plot!(xaxis, pdfᵥ, label="", title="All the distributions", show=false);
+        plot!(xaxis, pdfᵥ, label="", title="Every normal distribution", show=false);
     end
 
     # plot by mean of means and standard deviations
@@ -170,7 +172,9 @@ function time_series_distribution_analysis(
     uniform_width_binedges = binedges(DiscretizeUniformWidth(n_uniform_width_bins), V)
     uniform_width_binning_plot = plot(
         xaxis, pdfᵥ, label="", title="Uniform width (nbins=$(n_uniform_width_bins))")
-    vline!(uniform_width_binning_plot, uniform_width_binedges, label="", color=:red, alpha=0.75, linewidth=2)
+    vline!(
+        uniform_width_binning_plot, uniform_width_binedges,
+        label="", color=:red, alpha=0.75, linewidth=2)
     histogram!(V, bins=100, label="", alpha=0.25, normalize=true)
 
     # plot quantile-based discretization

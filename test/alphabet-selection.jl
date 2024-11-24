@@ -34,7 +34,7 @@ println(syntaxstring.(alphabet))
 
 # we also log a graphical report of all the binnings
 for variable in variables(X)
-    distribution_analysis(
+    time_series_distribution_analysis(
         X[1:30,variable],
         n_uniform_width_bins=5,
         n_quantile_bins=5,
