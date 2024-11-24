@@ -99,7 +99,7 @@ function select_alphabet(
 end
 
 """
-    function distribution_analysis(X::Vector{T}) where {T<:Vector{<:Float64}}
+    function time_series_distribution_analysis(X::Vector{T}) where {T<:Vector{<:Float64}}
 
 Study the column `X` of a dataset, where each element represents a time series.
 The study is returned under the form of plots. In particular:
@@ -124,7 +124,7 @@ The study is returned under the form of plots. In particular:
 - `filename_metadata::String=".plot"`: string injected before the .png extension of each
     plot.
 """
-function distribution_analysis(
+function time_series_distribution_analysis(
     X::Vector{<:Vector{<:Real}};
     n_uniform_width_bins::Integer=5,
     n_quantile_bins::Integer=5,
@@ -135,14 +135,21 @@ function distribution_analysis(
     savepath::String=joinpath(@__DIR__, "test", "analyses"),
     filename_metadata::String=".plt"
 )
-    default(palette = palette)
+    default(palette=palette)
+
+    global_minimum, global_maximum = (v -> (minimum(v), maximum(v)))(V)
+    xaxis = range(global_minimum, stop=global_maximum, length=100)
+
+    # the simplest plot: print everything
+    plot_all_distributions = plot()
+
 
     # aggregate all the vectors in X, in one vector (this will be needed later)
     V = reduce(vcat, X)
     μᵥ, σᵥ = mean(V), std(V)
 
     # plot of all the normal distributions for the first class
-    p1 = plot()
+    plot_all_normals = plot()
     for v in X
         μ, σ = mean(v), std(v)
         xaxis = range(minimum(v), stop=maximum(v), length=100)
@@ -151,10 +158,7 @@ function distribution_analysis(
     end
 
     # plot by mean of means and standard deviations
-    global_minimum, global_maximum = (v -> (minimum(v), maximum(v)))(V)
-    xaxis = range(global_minimum, stop=global_maximum, length=100)
-
-    p2 = plot()
+    plot_normals_aggregation = plot()
     μₓ, σₓ = mean(mean.(X)), mean(std.(X)) # note how this is different from mean(V), std(V)
     pdfₓ = pdf.(Normal(μₓ, σₓ), xaxis)
     plot!(xaxis, pdfₓ, label="", title="N(μ,σ) as means of N(μᵢ,σᵢ)", show=false)
@@ -164,18 +168,23 @@ function distribution_analysis(
 
     # plot equispaced discretization
     uniform_width_binedges = binedges(DiscretizeUniformWidth(n_uniform_width_bins), V)
-    p3 = plot(xaxis, pdfᵥ, label="", title="Uniform width (nbins=$(n_uniform_width_bins))")
-    vline!(p3, uniform_width_binedges, label="", color=:red, alpha=0.75, linewidth=2)
+    uniform_width_binning_plot = plot(
+        xaxis, pdfᵥ, label="", title="Uniform width (nbins=$(n_uniform_width_bins))")
+    vline!(uniform_width_binning_plot, uniform_width_binedges, label="", color=:red, alpha=0.75, linewidth=2)
     histogram!(V, bins=100, label="", alpha=0.25, normalize=true)
 
     # plot quantile-based discretization
     quantile_binedges = binedges(DiscretizeQuantile(n_quantile_bins), V)
-    p4 = plot(xaxis, pdfᵥ, label="", title="Uniform area (nbins=$(n_quantile_bins))")
-    vline!(p4, quantile_binedges, label="", color=:red, alpha=0.75, linewidth=2)
+    uniform_area_binning_plot = plot(
+        xaxis, pdfᵥ, label="", title="Uniform area (nbins=$(n_quantile_bins))")
+    vline!(uniform_area_binning_plot, quantile_binedges,
+        label="", color=:red, alpha=0.75, linewidth=2)
     histogram!(V, bins=100, label="", alpha=0.25, normalize=true)
 
-    layout = @layout [a b; c d]
-    final_plot = plot(p1, p2, p3, p4,
+    layout = @layout [a b c; d e]
+    final_plot = plot(
+        plot_all_distributions, plot_all_normals, plot_normals_aggregation,
+        uniform_width_binning_plot, uniform_area_binning_plot,
         layout=layout,
         framestyle=:box,
         size=(1280, 1024),

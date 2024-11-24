@@ -41,6 +41,7 @@ for variable in variables(X)
         plot_title_variable=variable,
         plot_title_additional_info="for the first class",
         save=true,
+        savepath=joinpath(@__DIR__, "test", "analyses"),
         filename_metadata="all"
     )
 end
