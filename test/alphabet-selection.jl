@@ -24,13 +24,13 @@ _quantile_discretizer = DiscretizeQuantile(nbins)
 discretizers = [_uniform_width_discretizer, _quantile_discretizer]
 
 # we obtain one alphabet for each strategy
-alphabets = select_alphabet(X[1:30,variable], metaconditions, discretizers)
+_alphabets = select_alphabet(X[1:30,variable], metaconditions, discretizers)
 
 # now, we choose how to mix up all the obtained literals;
 # for example, we choose to only focus on quantile-based discretization.
-alphabet = alphabets[_quantile_discretizer]
+_alphabet = _alphabets[_quantile_discretizer]
 println("Extracted alphabet for discretizer $(_quantile_discretizer)")
-println(syntaxstring.(alphabet))
+println(syntaxstring.(_alphabet))
 
 # we also log a graphical report of all the binnings
 for variable in variables(X)
@@ -38,10 +38,11 @@ for variable in variables(X)
         X[1:30,variable],
         n_uniform_width_bins=5,
         n_quantile_bins=5,
+        select_alphabet=true,
         plot_title_variable=variable,
         plot_title_additional_info="for the first class",
         save=true,
         savepath=joinpath(@__DIR__, "test", "analyses"),
-        filename_metadata="all"
+        filename_metadata="class1"
     )
 end
