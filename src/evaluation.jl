@@ -1,6 +1,8 @@
 """
 TODO
 """
-function evaluate()
+function evaluate(
+    miner::AbstractMiner
+)
 
 end

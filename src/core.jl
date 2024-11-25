@@ -234,6 +234,8 @@ struct ARule
     end
 end
 
+Itemset(rule::ARule) = convert(Itemset, rule)
+
 """
     content(rule::ARule)::Tuple{Itemset,Itemset}
 
