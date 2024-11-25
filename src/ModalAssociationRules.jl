@@ -124,6 +124,8 @@ include("algorithms/fpgrowth.jl")
 export patternbase, bounce!, projection
 export fpgrowth
 
+include("evaluation.jl")
+
 include("alphabet-selection.jl")
 export select_alphabet
 export time_series_distribution_analysis # TODO - this might be moved to SoleData
