@@ -126,6 +126,8 @@ export fpgrowth
 
 include("evaluation.jl")
 
+export plot_rules_analysis
+
 include("alphabet-selection.jl")
 export select_alphabet
 export time_series_distribution_analysis # TODO - this might be moved to SoleData
