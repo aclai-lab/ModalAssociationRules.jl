@@ -134,7 +134,10 @@ See also [`ARule`](@ref), [`Miner`](@ref), [`Itemset`](@ref), [`rulemeasures`](@
 """
 @resumable function generaterules(
     itemsets::AbstractVector{Itemset},
-    miner::Miner
+    miner::Miner;
+    # TODO: this parameter is momentary and enables the computation of additional metrics
+    # other than the `rulemeasures` specified within `miner`.
+    compute_additional_metrics::Bool=true
 )
     # From the original paper at 3.4 here:
     # http://www.rakesh.agrawal-family.com/papers/tkde96passoc_rj.pdf
@@ -197,6 +200,17 @@ See also [`ARule`](@ref), [`Miner`](@ref), [`Itemset`](@ref), [`rulemeasures`](@
 
             # all meaningfulness measure tests passed
             if interesting
+
+                if compute_additional_metrics
+                    # TODO: deprecate `compute_additional_metrics` kwarg and move this code
+                    # in the cycle where a generic global measure is computed.
+                    (_, __lthreshold, _) = rulemeasures(miner) |> first
+
+                    for gmeas_algo in [glift, gconviction, gleverage, gchisquared]
+                        gmeas_algo(currentrule, data(miner), __lthreshold, miner)
+                    end
+                end
+
                 push!(arules(miner), currentrule)
                 @yield currentrule
             # since a meaningfulness measure test failed,

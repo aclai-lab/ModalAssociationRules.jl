@@ -1320,19 +1320,21 @@ if 10 in EXPERIMENTS_IDS
         _10_right_elbow_Z_items
     )
 
-    _10_items = vcat(
-        _10_propositional_items,
-        box(IA_B).(_10_propositional_items),
-        # diamond(IA_Bi).(_10_propositional_items),
+    _10_items = Item.(
+        vcat(
+            _10_propositional_items,
+            box(IA_B).(_10_propositional_items),
+            # diamond(IA_Bi).(_10_propositional_items),
 
-        diamond(IA_E).(_10_propositional_items),
-        # diamond(IA_Ei).(_10_propositional_items),
+            diamond(IA_E).(_10_propositional_items),
+            # diamond(IA_Ei).(_10_propositional_items),
 
-        box(IA_D).(_10_propositional_items),
-        # diamond(IA_Di).(_10_propositional_items),
+            box(IA_D).(_10_propositional_items),
+            # diamond(IA_Di).(_10_propositional_items),
 
-        diamond(IA_O).(_10_propositional_items),
-    ) |> Vector{Formula}
+            diamond(IA_O).(_10_propositional_items),
+        )
+    )
 
     _10_itemsetmeasures = [(gsupport, 0.2, 0.2)]
     _10_rulemeasures = [(gconfidence, 0.2, 0.2)]
