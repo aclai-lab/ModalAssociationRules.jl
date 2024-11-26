@@ -309,9 +309,9 @@ _lleverage_logic = (rule, X, ith_instance, miner) -> begin
 end
 
 _gleverage_logic = (rule, X, threshold, miner) -> begin
-    _ans = gsupport(convert(Itemset, rule), X, threshod, miner) - \
-        gsupport(antecedent(rule), X, threshod, miner) * \
-        gsupport(consequent(rule), X, threshod, miner)
+    _ans = gsupport(convert(Itemset, rule), X, threshold, miner) -
+        gsupport(antecedent(rule), X, threshold, miner) *
+        gsupport(consequent(rule), X, threshold, miner)
 
     return Dict(:measure => _ans)
 end
@@ -319,6 +319,8 @@ end
 
 
 _lchisquared_logic = (rule, X, ith_instance, miner) -> begin
+    # TODO - this might be broken
+
     N = ninstances(X)
     _instance = getinstance(X, ith_instance)
 
@@ -328,8 +330,8 @@ _lchisquared_logic = (rule, X, ith_instance, miner) -> begin
     c1 = consequent(rule)
     c2 = NEGATION(b1 |> formula) |> Itemset
 
-    _ans = N * sum((A,C) -> lleverage(ARule(A,C), X, _instance, miner)^2 /
-        (lsupport(A, X, _instance, miner) * lsupport(C, X, _instance, miner)),
+    _ans = N * sum((R) -> lleverage(ARule(first(R),last(R)), X, _instance, miner)^2 /
+        (lsupport(first(R), X, _instance, miner) * lsupport(last(R), X, _instance, miner)),
         IterTools.product([a1, a2], [c1, c2])
     )
 
@@ -337,17 +339,19 @@ _lchisquared_logic = (rule, X, ith_instance, miner) -> begin
 end
 
 _gchisquared_logic = (rule, X, threshold, miner) -> begin
+    # TODO - this might be broken
+
     N = ninstances(X)
 
     a1 = antecedent(rule)
     a2 = NEGATION(a1 |> formula) |> Itemset
 
     c1 = consequent(rule)
-    c2 = NEGATION(b1 |> formula) |> Itemset
+    c2 = NEGATION(c1 |> formula) |> Itemset
 
-    _ans = N * sum((A,C) -> gleverage(ARule(A,C), X, threshold, miner)^2 /
-        (gsupport(A, X, threshold, miner) * gsupport(C, X, threshold, miner)),
-        IterTools.product([a1, a2], [c1, c2])
+    _ans = N * sum((R) -> gleverage(ARule(first(R),last(R)), X, threshold, miner)^2 /
+        (gsupport(first(R), X, threshold, miner) * gsupport(last(R), X, threshold, miner)),
+        IterTools.product([a1, a2], [c1, c2]) |> collect |> vec
     )
 
     return Dict(:measure => _ans)

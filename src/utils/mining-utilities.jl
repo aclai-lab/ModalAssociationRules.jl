@@ -206,7 +206,7 @@ See also [`ARule`](@ref), [`Miner`](@ref), [`Itemset`](@ref), [`rulemeasures`](@
                     # in the cycle where a generic global measure is computed.
                     (_, __lthreshold, _) = rulemeasures(miner) |> first
 
-                    for gmeas_algo in [glift, gconviction, gleverage, gchisquared]
+                    for gmeas_algo in [glift, gconviction, gleverage]
                         gmeas_algo(currentrule, data(miner), __lthreshold, miner)
                     end
                 end
