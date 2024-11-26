@@ -8,5 +8,6 @@
 /docs/build/
 /statprof/*
 /test/analyses/*
+/test/notes
 
 TODO

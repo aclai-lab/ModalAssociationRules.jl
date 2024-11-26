@@ -75,6 +75,8 @@ See [`antecedent`](@ref), [`ARule`](@ref), [`generaterules`](@ref), [`Item`](@re
 [`Miner`](@ref).
 """
 function anchor_rulecheck(rule::ARule)::Bool
+    # TODO - add kwarg npropositionals
+
     # not all items in the antecedent are modal
     return !all(it -> it isa SyntaxBranch && it |> token |> ismodal, antecedent(rule))
 end
@@ -114,6 +116,36 @@ function non_selfabsorbed_rulecheck(rule::ARule)::Bool
             ),
         antecedent(rule)
     )
+end
+
+"""
+TODO (defaulted to 1)
+"""
+function max_consequent_number()::Bool
+end
+
+"""
+TODO
+"""
+function max_itemset_length()::Bool
+end
+
+"""
+TODO
+Also, save this measures for each rule in an additional information field
+"""
+function min_number_of_lmeasures_satisfied()::Bool
+end
+
+"""
+TODO ()
+"""
+function min_worlds_dimensionality()
+end
+
+"""
+"""
+function similar_pattern()
 end
 
 """
