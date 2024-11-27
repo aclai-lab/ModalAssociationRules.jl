@@ -317,18 +317,38 @@ function apply!(miner::AbstractMiner, X::MineableData; forcemining::Bool=false, 
     return generaterules(freqitems(miner), miner)
 end
 
+
 """
-    generaterules!(miner::AbstractMiner; kwargs...)
+    generaterules(itemsets::AbstractVector{Itemset}, miner::AbstractMiner)
+
+Raw subroutine of [`generaterules!(miner::AbstractMiner; kwargs...)`](@ref).
+
+Generates [`ARule`](@ref) from the given collection of `itemsets` and `miner`.
+
+The strategy followed is
+[described here](https://rakesh.agrawal-family.com/papers/sigmod93assoc.pdf)
+at section 2.2.
+
+To establish the meaningfulness of each association rule, check if it meets the global
+constraints specified in `rulemeasures(miner)`, and yields the rule if so.
+
+See also [`AbstractMiner`](@ref), [`ARule`](@ref), [`Itemset`](@ref),
+[`rulemeasures`](@ref).
+"""
+@resumable function generaterules(
+    itemsets::AbstractVector{Itemset},
+    miner::AbstractMiner;
+)
+    error("Not implemented")
+end
+
+"""
+    generaterules!(miner::Miner; kwargs...)
 
 Return a generator of [`ARule`](@ref)s, given an already trained `miner`.
 
-See also [`ARule`](@ref), [`AbstractMiner`](@ref).
+See also [`AbstractMiner`](@ref), [`ARule`](@ref).
 """
 function generaterules!(miner::AbstractMiner)
-    if !info(miner, :istrained)
-        error("The miner should be trained before generating rules. " *
-            "Please, invoke `mine!`.")
-    end
-
-    return generaterules(freqitems(miner), miner)
+    error("Not implemented.")
 end

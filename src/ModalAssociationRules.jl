@@ -61,25 +61,24 @@ export MineableData
 include("types/miner.jl")
 
 export AbstractMiner
+export data, algorithm
+export items, freqitems, arules
+export itemsetmeasures, rulemeasures
+export measures, findmeasure
+export getlocalthreshold, getglobalthreshold
+export localmemo, localmemo!
+export globalmemo, globalmemo!
+export miningstate, miningstate!, hasminingstate, initminingstate
+export info, info!, hasinfo
+export mine!, apply!
+export generaterules, generaterules!
 
 include("utils/miner.jl")
 
 export Miner
 export itemtype, datatype
-export data, algorithm
-export itemsetmeasures, rulemeasures
-export freqitems, arules
-export measures, findmeasure
-export getlocalthreshold, getglobalthreshold
-export localmemo, localmemo!
-export globalmemo, globalmemo!
-
-export miningstate, miningstate!, hasminingstate, initminingstate
-export info, info!, hasinfo
-export mine!, apply!, generaterules!
-export analyze
-
 export frame, allworlds, nworlds
+export analyze
 
 include("utils/bulldozer.jl")
 
@@ -96,13 +95,11 @@ export lconfidence, gconfidence
 
 include("utils/mining-utilities.jl")
 
-export combine_items, prune, prune!
-export grow_prune, coalesce_contributors
 export anchor_rulecheck, non_selfabsorbed_rulecheck
-export generaterules
 
 include("algorithms/apriori.jl")
 
+export combine_items, grow_prune
 export apriori
 
 include("data-structures.jl")
@@ -132,7 +129,7 @@ include("alphabet-selection.jl")
 export select_alphabet
 export time_series_distribution_analysis # TODO - this might be moved to SoleData
 
-include("utils/natops-loader.jl")
+include("natops-loader.jl")
 
 export load_NATOPS
 

@@ -383,6 +383,116 @@ function analyze(
     end
 end
 
+"""
+    generaterules!(miner::Miner; kwargs...)
+
+
+See [`generaterules!(::Miner)`](@ref).
+"""
+function generaterules!(miner::Miner)
+    if !info(miner, :istrained)
+        error("The miner should be trained before generating rules. " *
+            "Please, invoke `mine!`.")
+    end
+
+    return generaterules(freqitems(miner), miner)
+end
+
+"""
+    generaterules(itemsets::AbstractVector{Itemset}, miner::Miner)
+
+See [`generaterules(::AbstractVector{Itemset}, ::AbstractMiner)`](@ref).
+"""
+@resumable function generaterules(
+    itemsets::AbstractVector{Itemset},
+    miner::Miner;
+    # TODO: this parameter is momentary and enables the computation of additional metrics
+    # other than the `rulemeasures` specified within `miner`.
+    compute_additional_metrics::Bool=true
+)
+    # From the original paper at 3.4 here:
+    # http://www.rakesh.agrawal-family.com/papers/tkde96passoc_rj.pdf
+    #
+    # Given a frequent itemset l, rule generation examines each non-empty subset a
+    # and generates the rule a => (l-a) with support = support(l) and
+    # confidence = support(l)/support(a).
+    # This computation can efficiently be done by examining the largest subsets of l first
+    # and only proceeding to smaller subsets if the generated rules have the required
+    # minimum confidence.
+    # For example, given a frequent itemset ABCD, if the rule ABC => D does not have minimum
+    # confidence, neither will AB => CD, and so we need not consider it.
+
+    for itemset in filter(x -> length(x) >= 2, itemsets)
+        subsets = powerset(itemset)
+
+        for subset in subsets
+            # subsets are built already sorted incrementally;
+            # hence, since we want the antecedent to be longer initially,
+            # the first subset values corresponds to (see comment below)
+            # (l-a)
+            _consequent = subset == Any[] ? Itemset{Item}() : subset
+            # a
+            _antecedent = symdiff(itemset, _consequent) |> Itemset
+
+            # degenerate case
+            if length(_antecedent) < 1 || length(_consequent) != 1
+                continue
+            end
+
+            currentrule = ARule((_antecedent, _consequent))
+
+            # sift pipeline to remove unwanted rules;
+            # this can be customized at construction time - see Miner constructor kwargs.
+            sifted = false
+            for sift in miningstate(miner, :rulesift)
+                if !sift(currentrule)
+                    sifted = true
+                    break
+                end
+            end
+
+            # this rule is unwanted, w.r.t sifting mechanism
+            if sifted
+                continue
+            end
+
+            interesting = true
+            for meas in rulemeasures(miner)
+                (gmeas_algo, lthreshold, gthreshold) = meas
+                gmeas_result = gmeas_algo(
+                    currentrule, data(miner), lthreshold, miner)
+
+                # some meaningfulness measure test is failed
+                if gmeas_result < gthreshold
+                    interesting = false
+                    break
+                end
+            end
+
+            # all meaningfulness measure tests passed
+            if interesting
+
+                if compute_additional_metrics
+                    # TODO: deprecate `compute_additional_metrics` kwarg and move this code
+                    # in the cycle where a generic global measure is computed.
+                    (_, __lthreshold, _) = rulemeasures(miner) |> first
+
+                    for gmeas_algo in [glift, gconviction, gleverage]
+                        gmeas_algo(currentrule, data(miner), __lthreshold, miner)
+                    end
+                end
+
+                push!(arules(miner), currentrule)
+                @yield currentrule
+            # since a meaningfulness measure test failed,
+            # we don't want to keep generating rules.
+            else
+                break
+            end
+        end
+    end
+end
+
 
 
 # Some utilities and new dispatches of external packages
