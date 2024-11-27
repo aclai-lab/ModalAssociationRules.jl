@@ -34,9 +34,6 @@ include("core.jl")
 export Item, formula
 export Itemset
 
-export EnhancedItemset, count
-export ConditionalPatternBase
-
 export ARule
 export content, antecedent, consequent
 
@@ -103,6 +100,9 @@ export combine_items, grow_prune
 export apriori
 
 include("data-structures.jl")
+
+export EnhancedItemset, count
+export ConditionalPatternBase
 
 export FPTree
 export content, parent, children, count

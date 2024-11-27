@@ -138,60 +138,6 @@ formula(itemset::Itemset)::SoleLogics.LeftmostConjunctiveForm = begin
 end
 
 """
-    const EnhancedItemset = Tuple{Itemset,UInt32}
-
-Compressed representation of multiple, identical [`Itemset`](@ref)s.
-
-See also [`Itemset`](@ref).
-"""
-const EnhancedItemset = Tuple{<:Itemset,Int64}
-
-"""
-    itemset(enhitemset::EnhancedItemset)::Itemset
-
-Getter for the [`Itemset`](@ref) wrapped within an [`EnhancedItemset`](@ref).
-
-See also [`EnhancedItemset`](@ref), [`Itemset`](@ref).
-"""
-itemset(enhitemset::EnhancedItemset) = first(enhitemset)
-
-"""
-    itemset(enhitemset::EnhancedItemset)::Integer
-
-Getter for the integer counter wrapped within `enhitemset`.
-
-See also [`EnhancedItemset`](@ref), [`Itemset`](@ref).
-"""
-count(enhitemset::EnhancedItemset)::Integer = last(enhitemset)
-
-function Base.convert(::Type{EnhancedItemset}, itemset::Itemset, count::Integer)
-    return EnhancedItemset((itemset, count))
-end
-
-function Base.convert(::Type{Itemset}, enhanceditemset::EnhancedItemset)
-    return first(enhanceditemset)
-end
-
-function Base.show(io::IO, enhanceditemset::EnhancedItemset)
-    print(io, "[$(first(enhanceditemset))] : $(last(enhanceditemset))")
-end
-
-"""
-    const ConditionalPatternBase = Vector{EnhancedItemset}
-
-Collection of [`EnhancedItemset`](@ref).
-
-!!! note
-    This plays a central role in the state-of-the-art algorithm [`fpgrowth`](@ref).
-    In this algorithm, in fact, a [`ConditionalPatternBase`](@ref) embodies all the
-    information needed to build an important data structure called [`FPTree`](@ref)
-    in the algorithm.
-
-See also [`EnhancedItemset`](@ref), [`fpgrowth`](@ref), [`FPTree`](@ref).
-"""
-const ConditionalPatternBase = Vector{EnhancedItemset}
-
-"""
     const ARule = Tuple{Itemset,Itemset}
 
 An association rule represents a *frequent* and *meaningful* co-occurrence relationship of
