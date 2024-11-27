@@ -8,8 +8,6 @@ using StatsBase
 
 import ModalAssociationRules.children
 
-include("common.jl")
-
 if Threads.nthreads() == 1
     printstyled("Skipping check on parallel ModalFP-Growth." *
         "\nDid you forget to set -t?\n", color=:light_yellow)

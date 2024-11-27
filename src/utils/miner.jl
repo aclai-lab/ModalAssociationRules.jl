@@ -391,8 +391,8 @@ See [`generaterules!(::Miner)`](@ref).
 """
 function generaterules!(miner::Miner)
     if !info(miner, :istrained)
-        error("The miner should be trained before generating rules. " *
-            "Please, invoke `mine!`.")
+        throw(ErrorException(
+            "The miner should be trained before generating rules.Please, invoke `mine!`."))
     end
 
     return generaterules(freqitems(miner), miner)

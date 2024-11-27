@@ -1,7 +1,12 @@
+# module Commons # TODO fix here. Try to make a module and add exports
+
+using ModalAssociationRules
+
 # check if global support coincides for each frequent itemset
 function isequal_gsupp(miner1::Miner, miner2::Miner)
     for itemset in freqitems(miner1)
-        @test miner1.globalmemo[(:gsupport, itemset)] == miner2.globalmemo[(:gsupport, itemset)]
+        @test miner1.globalmemo[
+            (:gsupport, itemset)] == miner2.globalmemo[(:gsupport, itemset)]
     end
 end
 
