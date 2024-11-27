@@ -90,7 +90,7 @@ export @localmeasure, @globalmeasure, @linkmeas
 export lsupport, gsupport
 export lconfidence, gconfidence
 
-include("utils/mining-utilities.jl")
+include("mining-utilities.jl")
 
 export anchor_rulecheck, non_selfabsorbed_rulecheck
 

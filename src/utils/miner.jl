@@ -113,7 +113,6 @@ struct Miner{
             anchor_rulecheck,
             non_selfabsorbed_rulecheck
         ]),
-        disable_rulesifting::Bool = false,
         info::Info = Info(:istrained => false)
     ) where {
         D<:MineableData,
@@ -137,9 +136,7 @@ struct Miner{
         end
 
         miningstate = initminingstate(algorithm, X)
-        if !disable_rulesifting
-            miningstate[:rulesift] = rulesift
-        end
+        miningstate[:rulesift] = rulesift
 
         new{D,I}(X, algorithm, unique(items),
             item_constrained_measures, rule_constrained_measures,
