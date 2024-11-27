@@ -241,9 +241,13 @@ function runcomparison(
     classnames::Vector{String} = CLASS_NAMES,
     variablenames::Union{Nothing, Vector{String}} = VARIABLE_NAMES
 ) where {L<:SoleData.AbstractLogiset}
-    @assert length(logisets) == length(classnames) "Given number of logisets and " *
-        "variable names mismatch: length(logisets) = $(length(logisets)), while " *
-        "length(classnames) = $(length(classnames))."
+    if length(logisets) != length(classnames)
+        throw(ArgumentError(
+            "Given number of logisets and " *
+            "variable names mismatch: length(logisets) = $(length(logisets)), while " *
+            "length(classnames) = $(length(classnames))."
+        ))
+    end
 
     miners = [
         Miner( # random Miner, its only purpose is to leverage memoization
@@ -258,8 +262,9 @@ function runcomparison(
     miners[targetclass] = miner
 
     targetminer = miners[targetclass]
-    @assert info(targetminer, :istrained) "Provided miner did not perform mine " *
-        "and is thus  empty."
+    if !info(targetminer, :istrained)
+        throw(ArgumentError("Provided miner did not perform mine and is thus  empty."))
+    end
 
     # report filepath preparation
     reportname = RESULTS_PATH * reportname
@@ -878,146 +883,6 @@ end
 #   1 - 𝑆   : confidence purity measures; higher means that target class is more pure
 # See also `runcomparison` documentation.
 ############################################################################################
-
-function runcomparison(
-    miner::Miner,
-    logisets::Vector{L},
-    confidencebouncer::Function;
-    suppthreshold::Float64,
-    sigdigits::Int8=2 |> Int8,
-    reportname::String = "comparison-report.exp",
-    classnames::Vector{String} = CLASS_NAMES
-) where {L<:SoleData.AbstractLogiset}
-    @assert length(logisets) == length(classnames) "Given number of logisets and " *
-        "variable names mismatch: length(logisets) = $(length(logisets)), while " *
-        "length(classnames) = $(length(classnames))."
-
-    @assert info(miner, :istrained) "Provided miner did not perform mine and is thus empty"
-
-    # report filepath preparation
-    reportname = RESULTS_PATH * reportname
-    # pretty table configuration
-    data = []
-    header = vcat("Rule", classnames)
-
-    # for each rule accepted by `confidencebouncer`
-    for rule in filter(x ->
-        confidencebouncer(globalmemo(miner, (:gconfidence, x))), arules(miner))
-
-        # prepare a data fragment, that is a row of the final pretty table
-        _data = Any[rule]
-
-        # consider each class, compute the meaningfulness measures and print them
-        for logiset in logisets
-            _antecedent, _consequent = antecedent(rule), consequent(rule)
-            _union = union(_antecedent, _consequent)
-
-            # confidence
-            _conf = round(
-                gconfidence(rule, logiset, suppthreshold), sigdigits=sigdigits)
-            # antecedent global support
-            _asupp = round(
-                gsupport(_antecedent, logiset, suppthreshold), sigdigits=sigdigits)
-            # consequent global support
-            _csupp = round(
-                gsupport(_consequent, logiset, suppthreshold), sigdigits=sigdigits)
-            # whole-rule global support
-            _usupp = round(
-                gsupport(_union, logiset, suppthreshold), sigdigits=sigdigits)
-
-            # new cell is added to the right of current row
-            _cellstring = "confidence: $(_conf)\nantecedent support: $(_asupp)\n" *
-                "consequent support: $(_csupp)\nunion support: $(_usupp)"
-            # push!(_data, [_conf, _asupp, _csupp, _usupp])
-            push!(_data, _cellstring)
-        end
-
-        # now, assemble a new row
-        data = isempty(data) ? _data : hcat(data, _data)
-    end
-
-    # print data table on file
-    open(reportname, "w") do out
-        redirect_stdout(out) do
-            pretty_table(
-                data |> permutedims;
-                header=header,
-                linebreaks=true,
-                body_hlines=collect(1:(data |> size |> first))
-            )
-        end
-    end
-end
-
-function runcomparison(
-    miner::Miner,
-    logisets::Vector{L},
-    confidencebouncer::Function;
-    suppthreshold::Float64,
-    sigdigits::Int8=2 |> Int8,
-    reportname::String = "comparison-report.exp",
-    classnames::Vector{String} = CLASS_NAMES
-) where {L<:SoleData.AbstractLogiset}
-    @assert length(logisets) == length(classnames) "Given number of logisets and " *
-        "variable names mismatch: length(logisets) = $(length(logisets)), while " *
-        "length(classnames) = $(length(classnames))."
-
-    @assert info(miner, :istrained) "Provided miner did not perform mine and is thus empty"
-
-    # report filepath preparation
-    reportname = RESULTS_PATH * reportname
-    # pretty table configuration
-    data = []
-    header = vcat("Rule", classnames)
-
-    # for each rule accepted by `confidencebouncer`
-    for rule in filter(x ->
-        confidencebouncer(globalmemo(miner, (:gconfidence, x))), arules(miner))
-
-        # prepare a data fragment, that is a row of the final pretty table
-        _data = Any[rule]
-
-        # consider each class, compute the meaningfulness measures and print them
-        for logiset in logisets
-            _antecedent, _consequent = antecedent(rule), consequent(rule)
-            _union = union(_antecedent, _consequent)
-
-            # confidence
-            _conf = round(
-                gconfidence(rule, logiset, suppthreshold), sigdigits=sigdigits)
-            # antecedent global support
-            _asupp = round(
-                gsupport(_antecedent, logiset, suppthreshold), sigdigits=sigdigits)
-            # consequent global support
-            _csupp = round(
-                gsupport(_consequent, logiset, suppthreshold), sigdigits=sigdigits)
-            # whole-rule global support
-            _usupp = round(
-                gsupport(_union, logiset, suppthreshold), sigdigits=sigdigits)
-
-            # new cell is added to the right of current row
-            _cellstring = "confidence: $(_conf)\nantecedent support: $(_asupp)\n" *
-                "consequent support: $(_csupp)\nunion support: $(_usupp)"
-            # push!(_data, [_conf, _asupp, _csupp, _usupp])
-            push!(_data, _cellstring)
-        end
-
-        # now, assemble a new row
-        data = isempty(data) ? _data : hcat(data, _data)
-    end
-
-    # print data table on file
-    open(reportname, "w") do out
-        redirect_stdout(out) do
-            pretty_table(
-                data |> permutedims;
-                header=header,
-                linebreaks=true,
-                body_hlines=collect(1:(data |> size |> first))
-            )
-        end
-    end
-end
 
 if 7 in EXPERIMENTS_IDS
     if !isnothing(_1_miner) && !isnothing(_4_miner)

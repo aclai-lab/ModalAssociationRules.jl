@@ -164,13 +164,15 @@ function fpgrowth(
     X::MineableData;
     parallel::Bool=true
 )::Nothing
-    @assert ModalAssociationRules.gsupport in reduce(vcat, itemsetmeasures(miner)) "" *
-    "FP-Growth " *
-    "requires global support (gsupport) as meaningfulness measure in order to " *
-        "work. Please, add a tuple (gsupport, local support threshold, " *
-        "global support threshold) to miner.item_constrained_measures field.\n" *
-        "Note that local support is needed too, but it is already considered internally " *
-        "by global support."
+    if !(ModalAssociationRules.gsupport in reduce(vcat, itemsetmeasures(miner)))
+        throw(ArgumentError("FP-Growth " *
+            "requires global support (gsupport) as meaningfulness measure in order to " *
+            "work. Please, add a tuple (gsupport, local support threshold, " *
+            "global support threshold) to miner.item_constrained_measures field.\n" *
+            "Note that local support is needed too, but it is already considered " *
+            "internally by global support."
+        ))
+    end
 
     _ninstances = ninstances(X)
     local_results = Vector{Bulldozer}(undef, _ninstances)

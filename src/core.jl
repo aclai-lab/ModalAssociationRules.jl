@@ -169,8 +169,11 @@ struct ARule
 
     function ARule(antecedent::Itemset, consequent::Itemset)
         intersection = intersect(antecedent, consequent)
-        @assert intersection |> length == 0 "Invalid rule. " *
-        "Antecedent and consequent share the following items: $(intersection)."
+        if !(intersection |> length == 0)
+            throw(ArgumentError("Invalid rule. " *
+                "Antecedent and consequent share the following items: $(intersection)."
+            ))
+        end
 
         new(antecedent, consequent)
     end

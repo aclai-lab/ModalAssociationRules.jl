@@ -72,7 +72,7 @@ end
 !!! note
     Miner's constructor provides a `rulesfit` keyword argument, which is a collection of
     functions defining an association rules generation politic.
-    To know more, see [`anchor_rulecheck`](@ref) and [`non_selfabsorbed_rulecheck`](@ref).
+    To know more, see [`isanchored_arule`](@ref) and [`isheterogeneous_arule`](@ref).
 
 See also  [`ARule`](@ref), [`Bulldozer`](@ref), [`MeaningfulnessMeasure`](@ref),
 [`Info`](@ref), [`Itemset`](@ref), [`GmeasMemo`](@ref), [`LmeasMemo`](@ref),
@@ -110,8 +110,8 @@ struct Miner{
             (gconfidence, 0.2, 0.2)
         ];
         rulesift::Vector{<:Function} = Vector{Function}([
-            anchor_rulecheck,
-            non_selfabsorbed_rulecheck
+            isanchored_arule,
+            isheterogeneous_arule
         ]),
         info::Info = Info(:istrained => false)
     ) where {
@@ -119,10 +119,13 @@ struct Miner{
         I<:Item,
     }
         # dataset frames must be equal
-        @assert allequal([SoleLogics.frame(X, ith_instance)
-            for ith_instance in 1:ninstances(X)]) "Instances frame is shaped " *
-            "differently. Please, provide an uniform dataset to guarantee " *
-            "mining correctness."
+        if !(allequal([SoleLogics.frame(X, ith_instance)
+            for ith_instance in 1:ninstances(X)]))
+            throw(ArgumentError("Instances frame is shaped " *
+                "differently. Please, provide an uniform dataset to guarantee " *
+                "mining correctness."
+            ))
+        end
 
         # gsupport is indispensable to mine association rule
         if !(ModalAssociationRules.gsupport in first.(item_constrained_measures))
@@ -443,12 +446,12 @@ See [`generaterules(::AbstractVector{Itemset}, ::AbstractMiner)`](@ref).
             sifted = false
             for sift in miningstate(miner, :rulesift)
                 if !sift(currentrule)
+                    # current rule is unwanted, w.r.t sifting mechanism
                     sifted = true
                     break
                 end
             end
 
-            # this rule is unwanted, w.r.t sifting mechanism
             if sifted
                 continue
             end

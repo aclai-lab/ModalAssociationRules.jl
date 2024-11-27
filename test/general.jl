@@ -93,7 +93,7 @@ arule3 = ARule(Itemset([manual_q, manual_p]), Itemset([manual_r]))
 @test arule != arule2
 @test arule == arule3
 
-@test_throws AssertionError ARule(qr, Itemset([manual_q]))
+@test_throws ArgumentError ARule(qr, Itemset([manual_q]))
 
 @test MeaningfulnessMeasure <: Tuple{Function,Threshold,Threshold}
 

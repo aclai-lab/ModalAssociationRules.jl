@@ -90,9 +90,9 @@ export @localmeasure, @globalmeasure, @linkmeas
 export lsupport, gsupport
 export lconfidence, gconfidence
 
-include("mining-utilities.jl")
+include("mining-limitators.jl")
 
-export anchor_rulecheck, non_selfabsorbed_rulecheck
+export isanchored_arule, isheterogeneous_arule
 
 include("algorithms/apriori.jl")
 

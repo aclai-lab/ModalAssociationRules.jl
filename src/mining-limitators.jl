@@ -1,25 +1,36 @@
-# ARule utilities
-
 """
-    function anchor_rulecheck(rule::ARule)::Bool
+    function isanchored_arule(rule::ARule)::Bool
 
 Return true if the given [`ARule`](@ref) contains a propositional anchor, that is,
-atleast one [`Item`](@ref) in its [`antecedent`](@ref) is a propositional letter.
+atleast one [`Item`](@ref) in its [`antecedent`](@ref) is a proposition with no modal
+operators.
 
 See [`antecedent`](@ref), [`ARule`](@ref), [`generaterules`](@ref), [`Item`](@ref),
 [`Miner`](@ref).
 """
-function anchor_rulecheck(rule::ARule)::Bool
-    # TODO - add kwarg npropositionals
+function isanchored_arule(rule::ARule; npropositions::Integer=1)::Bool
+    # atleast `npropositions` items in the antecedent are not modal
 
-    # not all items in the antecedent are modal
-    return !all(it -> it isa SyntaxBranch && it |> token |> ismodal, antecedent(rule))
+    if npropositions < 1
+        throw(ArgumentError("Parameter npropositions=$(npropositions) must be >=1."))
+    end
+
+    if npropositions == 1
+        # specific optimization
+        return !all(it -> it isa SyntaxBranch && it |> token |> ismodal, antecedent(rule))
+    else
+        # general case
+        return count(
+            it -> it isa SyntaxBranch && it |> token |> ismodal,
+            antecedent(rule)
+        ) >= npropositions
+    end
 end
 
 """
-    function non_selfabsorbed_rulecheck(rule::ARule)::Bool
+    function isheterogeneous_arule(rule::ARule)::Bool
 
-Return true if the given [`ARule`](@ref) is not self-absorbing, that is,
+Return true if the given [`ARule`](@ref) is heterogeneous, that is,
 for each [`Item`](@ref) in its [`antecedent`](@ref) wrapping a variable `V`,
 the other items in the antecedent does not refer to `V`, and
 every item in the [`consequent`](@ref) does not refer to `V` too.
@@ -27,7 +38,7 @@ every item in the [`consequent`](@ref) does not refer to `V` too.
 See [`antecedent`](@ref), [`ARule`](@ref), [`consequent`](@ref), [`generaterules`](@ref),
 [`Item`](@ref), [`Miner`](@ref).
 """
-function non_selfabsorbed_rulecheck(rule::ARule)::Bool
+function isheterogeneous_arule(rule::ARule)::Bool
     # TODO - this could be moved to SoleData
     function _extract_variable(item::Item)::Integer
         # if `item` is already an Atom, do nothing.
