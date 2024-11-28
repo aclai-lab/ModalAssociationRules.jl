@@ -8,8 +8,6 @@ using DataFrames
 
 using SoleData: VariableMin, VariableMax
 
-include("common.jl")
-
 _X, y = @load_iris
 X1 = DataFrame(hcat(values(_X)...), collect(keys(_X)))
 
@@ -38,6 +36,8 @@ _1_rulemeasures = [(gconfidence, 0.7, 0.7)]
 
 apriori_miner = Miner(X, apriori, _1_items, _1_itemsetmeasures, _1_rulemeasures)
 fpgrowth_miner = Miner(X, fpgrowth, _1_items, _1_itemsetmeasures, _1_rulemeasures)
+mine!(apriori_miner)
+mine!(fpgrowth_miner)
 
 compare_arules(apriori_miner, fpgrowth_miner)
 
@@ -47,6 +47,8 @@ _2_rulemeasures = [(gconfidence, 0.3, 0.5)]
 
 apriori_miner = Miner(X, apriori, _1_items, _2_itemsetmeasures, _2_rulemeasures)
 fpgrowth_miner = Miner(X, fpgrowth, _1_items, _2_itemsetmeasures, _2_rulemeasures)
+mine!(apriori_miner)
+mine!(fpgrowth_miner)
 
 compare_arules(apriori_miner, fpgrowth_miner)
 
@@ -56,6 +58,8 @@ _3_rulemeasures = [(gconfidence, 0.1, 0.1)]
 
 apriori_miner = Miner(X, apriori, _1_items, _3_itemsetmeasures, _3_rulemeasures)
 fpgrowth_miner = Miner(X, fpgrowth, _1_items, _3_itemsetmeasures, _3_rulemeasures)
+mine!(apriori_miner)
+mine!(fpgrowth_miner)
 
 compare_arules(apriori_miner, fpgrowth_miner)
 

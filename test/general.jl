@@ -210,11 +210,23 @@ _temp_apriori_miner = Miner(X1, apriori, manual_items, _itemsetmeasures, _ruleme
 @test localof(gsupport) == lsupport
 @test localof(lconfidence) |> isnothing
 @test localof(gconfidence) == lconfidence
+@test localof(llift) |> isnothing
+@test localof(glift) == llift
+@test localof(lconviction) |> isnothing
+@test localof(gconviction) == lconviction
+@test localof(lleverage) |> isnothing
+@test localof(gleverage) == lleverage
 
 @test globalof(lsupport) == gsupport
 @test globalof(gsupport) |> isnothing
 @test globalof(lconfidence) == gconfidence
 @test globalof(gconfidence) |> isnothing
+@test globalof(llift) == glift
+@test globalof(glift) |> isnothing
+@test globalof(lconviction) == gconviction
+@test globalof(gconviction) |> isnothing
+@test globalof(lleverage) == gleverage
+@test globalof(gleverage) |> isnothing
 
 @test lsupport(pq, SoleLogics.getinstance(X2, 1), fpgrowth_miner) == 0.0
 

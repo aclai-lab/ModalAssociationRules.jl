@@ -384,15 +384,15 @@ function analyze(
 end
 
 """
-    generaterules!(miner::Miner; kwargs...)
-
+    generaterules!(miner::Miner)
 
 See [`generaterules!(::Miner)`](@ref).
 """
 function generaterules!(miner::Miner)
     if !info(miner, :istrained)
-        throw(ErrorException(
-            "The miner should be trained before generating rules.Please, invoke `mine!`."))
+        throw(ErrorException("The miner should be trained before generating rules. " *
+            "Please, invoke `mine!`."
+        ))
     end
 
     return generaterules(freqitems(miner), miner)

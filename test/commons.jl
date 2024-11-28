@@ -1,6 +1,7 @@
-# module Commons # TODO fix here. Try to make a module and add exports
+module Commons
 
 using ModalAssociationRules
+using Test
 
 # check if global support coincides for each frequent itemset
 function isequal_gsupp(miner1::Miner, miner2::Miner)
@@ -36,6 +37,7 @@ function isequal_lsupp(miner1::Miner, miner2::Miner)
     end
 end
 
+# check if frequent itemsets are the same, as well as their local and global supports
 function compare_freqitems(miner1::Miner, miner2::Miner)
     if !info(miner1, :istrained)
         mine!(miner1)
@@ -94,3 +96,9 @@ function compare(miner1::Miner, miner2::Miner)
     compare_freqitems(miner1, miner2)
     compare_arules(miner1, miner2)
 end
+
+export isequal_gsupp, isequal_lsupp
+export compare_freqitems, compare_arules
+export compare
+
+end # end of module

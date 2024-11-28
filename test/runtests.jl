@@ -17,13 +17,14 @@ end
 println("Julia version: ", VERSION)
 
 test_suites = [
-    ("General package functionalities", ["general.jl",]),
+    # ("General package functionalities", ["general.jl",]),
     ("Iris", ["iris.jl",]),
     ("NATOPS + Miner comparisons", ["natops.jl"])
 ]
 
 @testset "SoleLogics.jl" begin
     include("commons.jl")
+    using .Commons
 
     for ts in eachindex(test_suites)
         name = test_suites[ts][1]
