@@ -168,7 +168,7 @@ function fpgrowth(
         throw(ArgumentError("FP-Growth " *
             "requires global support (gsupport) as meaningfulness measure in order to " *
             "work. Please, add a tuple (gsupport, local support threshold, " *
-            "global support threshold) to miner.item_constrained_measures field.\n" *
+            "global support threshold) to miner.itemset_constrained_measures field.\n" *
             "Note that local support is needed too, but it is already considered " *
             "internally by global support."
         ))

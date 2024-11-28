@@ -139,8 +139,8 @@ function runexperiment(
             println("Parameterization:\n")
             map(item -> println(
                 syntaxstring(item, variable_names_map=VARIABLE_NAMES)) , items)
-            println(miner.item_constrained_measures)
-            println(miner.rule_constrained_measures)
+            println(miner.itemset_constrained_measures)
+            println(miner.arule_constrained_measures)
 
             if tracktime
                 println("\nRunning time:\n")
@@ -440,8 +440,8 @@ function runcomparison(
             println("Parameterization:\n")
             map(item -> println(
                 syntaxstring(item, variable_names_map=VARIABLE_NAMES)) , items(miner))
-            println(miner.item_constrained_measures)
-            println(miner.rule_constrained_measures)
+            println(miner.itemset_constrained_measures)
+            println(miner.arule_constrained_measures)
 
             pretty_table(
                 data |> permutedims;

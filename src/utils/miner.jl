@@ -10,8 +10,8 @@
         items::Vector{I}                # items considered during the extraction
 
         # meaningfulness measures
-        item_constrained_measures::Vector{IMEAS}
-        rule_constrained_measures::Vector{RMEAS}
+        itemset_constrained_measures::Vector{IMEAS}
+        arule_constrained_measures::Vector{RMEAS}
 
         freqitems::Vector{Itemset}      # collected frequent itemsets
         arules::Vector{ARule}           # collected association rules
@@ -89,8 +89,8 @@ struct Miner{
     items::Vector{I}                # alphabet
 
     # meaningfulness measures
-    item_constrained_measures::Vector{<:MeaningfulnessMeasure}
-    rule_constrained_measures::Vector{<:MeaningfulnessMeasure}
+    itemset_constrained_measures::Vector{<:MeaningfulnessMeasure}
+    arule_constrained_measures::Vector{<:MeaningfulnessMeasure}
 
     freqitems::Vector{Itemset}      # collected frequent itemsets
     arules::Vector{ARule}           # collected association rules
@@ -99,20 +99,32 @@ struct Miner{
     globalmemo::GmeasMemo           # global memoization structure
 
     miningstate::MiningState        # mining algorithm miningstate (see documentation)
+
+    itemset_mining_politics::Vector{<:Function}  # metarules about itemsets mining
+    arule_mining_politics::Vector{<:Function}     # metarules about arules mining
+
     info::Info                      # general informations
 
     function Miner(
         X::D,
         algorithm::Function,
         items::Vector{I},
-        item_constrained_measures::Vector{<:MeaningfulnessMeasure} = [(gsupport, 0.1, 0.1)],
-        rule_constrained_measures::Vector{<:MeaningfulnessMeasure} = [
+
+        itemset_constrained_measures::Vector{<:MeaningfulnessMeasure} = [
+            (gsupport, 0.1, 0.1)
+        ],
+        arule_constrained_measures::Vector{<:MeaningfulnessMeasure} = [
             (gconfidence, 0.2, 0.2)
         ];
-        rulesift::Vector{<:Function} = Vector{Function}([
+
+        itemset_mining_politics::Vector{<:Function} = Vector{Function}([
+
+        ]),
+        arule_mining_politics::Vector{<:Function} = Vector{Function}([
             isanchored_arule,
             isheterogeneous_arule
         ]),
+
         info::Info = Info(:istrained => false)
     ) where {
         D<:MineableData,
@@ -127,24 +139,26 @@ struct Miner{
             ))
         end
 
-        # gsupport is indispensable to mine association rule
-        if !(ModalAssociationRules.gsupport in first.(item_constrained_measures))
+        # gsupport is crucial to mine association rule
+        if !(ModalAssociationRules.gsupport in first.(itemset_constrained_measures))
             throw(ArgumentError(
                 "Miner requires global support " *
                 "(gsupport) as meaningfulness measure in order to work properly. " *
                 "Please, add a tuple (gsupport, local support threshold, global support " *
-                "threshold) to item_constrained_measures field.\n" *
+                "threshold) to itemset_constrained_measures field.\n" *
                 "Local support (lsupport) is needed too, but it is already considered " *
                 "internally by gsupport."))
         end
 
         miningstate = initminingstate(algorithm, X)
-        miningstate[:rulesift] = rulesift
 
         new{D,I}(X, algorithm, unique(items),
-            item_constrained_measures, rule_constrained_measures,
+            itemset_constrained_measures, arule_constrained_measures,
             Vector{Itemset}([]), Vector{ARule}([]),
-            LmeasMemo(), GmeasMemo(), miningstate, info
+            LmeasMemo(), GmeasMemo(),
+            miningstate,
+            itemset_mining_politics, arule_mining_politics,
+            info
         )
     end
 end
@@ -199,7 +213,7 @@ arules(miner::Miner) = miner.arules
 See [`itemsetmeasures(::AbstractMiner)`]
 """
 itemsetmeasures(miner::Miner)::Vector{<:MeaningfulnessMeasure} =
-    miner.item_constrained_measures
+    miner.itemset_constrained_measures
 
 """
     rulemeasures(miner::Miner)::Vector{<:MeaningfulnessMeasure}
@@ -207,7 +221,7 @@ itemsetmeasures(miner::Miner)::Vector{<:MeaningfulnessMeasure} =
 See [`rulemeasures(miner::AbstractMiner)`](@ref).
 """
 rulemeasures(miner::Miner)::Vector{<:MeaningfulnessMeasure} =
-    miner.rule_constrained_measures
+    miner.arule_constrained_measures
 
 """
     localmemo(miner::Miner)::LmeasMemo
@@ -271,18 +285,46 @@ end
 
 
 
-# More on mining state
-
 """
     initminingstate(::Function, ::MineableData)
 
 This trait defines how to initialize the [`MiningState`](@ref) structure of a
 [`Miner`](@ref).
 
-Se ealso [`hasminingstate`](@ref), [`Miner`](@ref), [`MiningState`](@ref),
+See ealso [`hasminingstate`](@ref), [`Miner`](@ref), [`MiningState`](@ref),
 [`miningstate`](@ref).
 """
 initminingstate(::Function, ::MineableData)::MiningState = MiningState()
+
+"""
+    function itemset_mining_politics(miner::Miner)
+
+Return the generation politics vector wrapped within `miner`.
+Each generation politics is a meta-rule describing which [`Itemset`](@ref) are accepted
+during the mining phase and which are discarded.
+
+!!! warning
+    These policies often require to be tailored ad-hoc for a specific mining algorithm,
+    and have the role of pruning unwanted explorations of the search space as early as
+    possible.
+
+    Keep in mind that you may need to modify some existing policies to make them correct
+    and effective for your custom algorithm.
+
+See also [`generaterules`](@ref), [`arule_mining_politics`](@ref), [`Miner`](@ref).
+"""
+itemset_mining_politics(miner::Miner) = miner.itemset_mining_politics
+
+"""
+    arule_mining_politics(miner::Miner)
+
+Return the association rules generation politics vector wrapped within `miner`.
+Each generation politics is a meta-rule describing which [`ARule`](@ref) are accepted
+during the generation algorithm and which are discarded.
+
+See also [`generaterules`](@ref), [`itemset_mining_politics`](@ref), [`Miner`](@ref).
+"""
+arule_mining_politics(miner::Miner) = miner.arule_mining_politics
 
 function Base.show(io::IO, miner::Miner)
     println(io, "$(data(miner))")
@@ -444,7 +486,7 @@ See [`generaterules(::AbstractVector{Itemset}, ::AbstractMiner)`](@ref).
             # sift pipeline to remove unwanted rules;
             # this can be customized at construction time - see Miner constructor kwargs.
             sifted = false
-            for sift in miningstate(miner, :rulesift)
+            for sift in arule_mining_politics(miner)
                 if !sift(currentrule)
                     # current rule is unwanted, w.r.t sifting mechanism
                     sifted = true
