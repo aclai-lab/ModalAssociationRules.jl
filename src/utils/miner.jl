@@ -164,12 +164,16 @@ struct Miner{
 end
 
 """
-TODO
+    datatype(::Miner{D,I}) where {D<:MineableData,I<:Item}
+
+Retrieve the type of [`MineableData`](@ref) wrapped within the [`Miner`](@ref).
 """
 datatype(::Miner{D,I}) where {D<:MineableData,I<:Item} = D
 
 """
-TODO
+    itemtype(::Miner{D,I}) where {D<:MineableData,I<:Item} = I
+
+Retrieve the most general type of [`Item`](@ref) wrapped within the [`Miner`](@ref).
 """
 itemtype(::Miner{D,I}) where {D<:MineableData,I<:Item} = I
 
