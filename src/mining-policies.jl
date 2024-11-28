@@ -42,13 +42,13 @@ function islimited_length_arule(;
     antecedent_maxlength::Union{Nothing,Integer}=nothing,
     consequent_maxlength::Union{Nothing,Integer}=1
 )::Function
-    function _check(t::Union{Nothing,Integer})::Integer
-        if isnothing(t)
+    function _check(threshold::Union{Nothing,Integer})::Integer
+        if isnothing(threshold)
             return typemax(Int16)
-        elseif meas > 0
-            return meas
+        elseif threshold > 0
+            return threshold
         else
-            throw(ArgumentError("Invalid maximum length threshold ($(meas))."))
+            throw(ArgumentError("Invalid maximum length threshold ($(threshold))."))
         end
     end
 
