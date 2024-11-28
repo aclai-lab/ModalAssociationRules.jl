@@ -100,7 +100,7 @@ struct Miner{
 
     miningstate::MiningState        # mining algorithm miningstate (see documentation)
 
-    itemset_mining_politics::Vector{<:Function}  # metarules about itemsets mining
+    itemset_mining_politics::Vector{<:Function}   # metarules about itemsets mining
     arule_mining_politics::Vector{<:Function}     # metarules about arules mining
 
     info::Info                      # general informations
