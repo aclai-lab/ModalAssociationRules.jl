@@ -90,9 +90,10 @@ export @localmeasure, @globalmeasure, @linkmeas
 export lsupport, gsupport
 export lconfidence, gconfidence
 
-include("mining-politics.jl")
+include("mining-policies.jl")
 
-export isanchored_arule, isheterogeneous_arule
+export islimited_itemset
+export islimited_length_arule, isanchored_arule, isheterogeneous_arule
 
 include("algorithms/apriori.jl")
 

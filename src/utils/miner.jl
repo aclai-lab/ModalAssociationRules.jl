@@ -100,8 +100,8 @@ struct Miner{
 
     miningstate::MiningState        # mining algorithm miningstate (see documentation)
 
-    itemset_mining_politics::Vector{<:Function}   # metarules about itemsets mining
-    arule_mining_politics::Vector{<:Function}     # metarules about arules mining
+    itemset_mining_policies::Vector{<:Function}   # metarules about itemsets mining
+    arule_mining_policies::Vector{<:Function}     # metarules about arules mining
 
     info::Info                      # general informations
 
@@ -117,12 +117,13 @@ struct Miner{
             (gconfidence, 0.2, 0.2)
         ];
 
-        itemset_mining_politics::Vector{<:Function} = Vector{Function}([
+        itemset_mining_policies::Vector{<:Function} = Vector{Function}([
 
         ]),
-        arule_mining_politics::Vector{<:Function} = Vector{Function}([
-            isanchored_arule, # TODO these are now closures: fix accordingly
-            isheterogeneous_arule
+        arule_mining_policies::Vector{<:Function} = Vector{Function}([
+            islimited_length_arule(),
+            isanchored_arule(),
+            isheterogeneous_arule(),
         ]),
 
         info::Info = Info(:istrained => false)
@@ -157,7 +158,7 @@ struct Miner{
             Vector{Itemset}([]), Vector{ARule}([]),
             LmeasMemo(), GmeasMemo(),
             miningstate,
-            itemset_mining_politics, arule_mining_politics,
+            itemset_mining_policies, arule_mining_policies,
             info
         )
     end
@@ -301,10 +302,10 @@ See ealso [`hasminingstate`](@ref), [`Miner`](@ref), [`MiningState`](@ref),
 initminingstate(::Function, ::MineableData)::MiningState = MiningState()
 
 """
-    function itemset_mining_politics(miner::Miner)
+    function itemset_mining_policies(miner::Miner)
 
-Return the generation politics vector wrapped within `miner`.
-Each generation politics is a meta-rule describing which [`Itemset`](@ref) are accepted
+Return the mining policies vector wrapped within `miner`.
+Each mining policies is a meta-rule describing which [`Itemset`](@ref) are accepted
 during the mining phase and which are discarded.
 
 !!! warning
@@ -315,20 +316,24 @@ during the mining phase and which are discarded.
     Keep in mind that you may need to modify some existing policies to make them correct
     and effective for your custom algorithm.
 
-See also [`generaterules`](@ref), [`arule_mining_politics`](@ref), [`Miner`](@ref).
+    As far as the algorithms already implemented in this package are concerned,
+    generation policies are applied before saving an itemset inside the miner:
+    thus, they reduce the waste of memory, but not necessarily of computational time.
+
+See also [`generaterules`](@ref), [`arule_mining_policies`](@ref), [`Miner`](@ref).
 """
-itemset_mining_politics(miner::Miner) = miner.itemset_mining_politics
+itemset_mining_policies(miner::Miner) = miner.itemset_mining_policies
 
 """
-    arule_mining_politics(miner::Miner)
+    arule_mining_policies(miner::Miner)
 
-Return the association rules generation politics vector wrapped within `miner`.
-Each generation politics is a meta-rule describing which [`ARule`](@ref) are accepted
+Return the association rules generation policies vector wrapped within `miner`.
+Each generation policies is a meta-rule describing which [`ARule`](@ref) are accepted
 during the generation algorithm and which are discarded.
 
-See also [`generaterules`](@ref), [`itemset_mining_politics`](@ref), [`Miner`](@ref).
+See also [`generaterules`](@ref), [`itemset_mining_policies`](@ref), [`Miner`](@ref).
 """
-arule_mining_politics(miner::Miner) = miner.arule_mining_politics
+arule_mining_policies(miner::Miner) = miner.arule_mining_policies
 
 function Base.show(io::IO, miner::Miner)
     println(io, "$(data(miner))")
@@ -490,7 +495,7 @@ See [`generaterules(::AbstractVector{Itemset}, ::AbstractMiner)`](@ref).
             # sift pipeline to remove unwanted rules;
             # this can be customized at construction time - see Miner constructor kwargs.
             sifted = false
-            for sift in arule_mining_politics(miner)
+            for sift in arule_mining_policies(miner)
                 if !sift(currentrule)
                     # current rule is unwanted, w.r.t sifting mechanism
                     sifted = true

@@ -1,11 +1,26 @@
-# politics related to frequent itemsets mining
+# this script collects policies regarding mining;
+# they are both structural, syntactical and semantical.
+
+# policies related to the mining structure
+"""
+TODO ()
+"""
+function islimited_dimensionality_world()
+end
 
 
-
-# politics related to association rule generation
+# policies related to frequent itemsets mining
 
 """
-    function islimited_arule(;
+TODO
+"""
+function islimited_length_itemset()::Bool
+end
+
+# policies related to association rule generation
+
+"""
+    function islimited_length_arule(;
         antecedent_maxlength::Union{Nothing,Integer}=nothing,
         consequent_maxlength::Union{Nothing,Integer}=1
     )::Function
@@ -23,7 +38,7 @@ not exceed the given limit.
 
 See also [`ARule`](@ref), [`antecedent`](@ref), [`consequent`](@ref).
 """
-function islimited_arule(;
+function islimited_length_arule(;
     antecedent_maxlength::Union{Nothing,Integer}=nothing,
     consequent_maxlength::Union{Nothing,Integer}=1
 )::Function
@@ -40,7 +55,7 @@ function islimited_arule(;
     antecedent_maxlength = _check(antecedent_maxlength)
     consequent_maxlength = _check(consequent_maxlength)
 
-    return function _islimited_arule(rule::ARule)::Bool
+    return function _islimited_length_arule(rule::ARule)::Bool
         return length(rule |> antecedent) <= antecedent_maxlength &&
             length(rule |> consequent) <= consequent_maxlength
     end
@@ -142,21 +157,9 @@ end
 
 """
 TODO
-"""
-function max_itemset_length()::Bool
-end
-
-"""
-TODO
 Also, save this measures for each rule in an additional information field
 """
 function min_number_of_lmeasures_satisfied()::Bool
-end
-
-"""
-TODO ()
-"""
-function min_worlds_dimensionality()
 end
 
 """
