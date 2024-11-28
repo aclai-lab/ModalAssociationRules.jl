@@ -121,7 +121,7 @@ struct Miner{
 
         ]),
         arule_mining_politics::Vector{<:Function} = Vector{Function}([
-            isanchored_arule,
+            isanchored_arule, # TODO these are now closures: fix accordingly
             isheterogeneous_arule
         ]),
 

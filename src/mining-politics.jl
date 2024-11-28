@@ -10,7 +10,7 @@
         consequent_maxlength::Union{Nothing,Integer}=1
     )::Function
 
-Clojure returning a boolean function `F` with one argument `rule::ARule`.
+Closure returning a boolean function `F` with one argument `rule::ARule`.
 
 `F` is true if the length of `rule`'s [`antecedent`](@ref) (and [`consequent`](@ref)) does
 not exceed the given limit.
@@ -49,7 +49,7 @@ end
 """
     function isanchored_arule(; npropositions::Integer=1)::Function
 
-Clojure returning a boolean function `F` with one argument `rule::ARule`.
+Closure returning a boolean function `F` with one argument `rule::ARule`.
 
 `F` is true if the given `rule` contains atleast `npropositions` *propositional anchors*
 (that is, propositions without modal operators).
@@ -90,7 +90,7 @@ end
         consequent_nrepetitions::Integer=0
     )::Function
 
-Clojure returning a boolean function `F` with one argument `rule::ARule`.
+Closure returning a boolean function `F` with one argument `rule::ARule`.
 
 `F` is true if the given `rule` is heterogeneous, that is, across all the [`Item`](@ref)
 in `rule` [`antecedent`](@ref) and [`consequent`](@ref), the number of identical variables
