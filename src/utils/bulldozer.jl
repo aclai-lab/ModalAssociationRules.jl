@@ -16,6 +16,7 @@
         localmemo::LmeasMemo
 
         # special fields related to mining algorithms
+        itemset_mining_policies::Vector{<:Function}
         miningstate::MiningState
 
         # locks on data, memoization structure and miningstate structure
@@ -57,6 +58,7 @@ struct Bulldozer{D<:MineableData,I<:Item} <: AbstractMiner
     localmemo::LmeasMemo
 
     # special fields related to mining algorithms
+    itemset_mining_policies::Vector{<:Function}
     miningstate::MiningState
 
     # locks on data, memoization structure and miningstate structure
@@ -69,10 +71,12 @@ struct Bulldozer{D<:MineableData,I<:Item} <: AbstractMiner
         instancesrange::UnitRange{<:Integer},
         items::Vector{I},
         itemsetmeasures::Vector{<:MeaningfulnessMeasure};
+        itemset_mining_policies::Vector{<:Function}=Function[],
         miningstate::MiningState=MiningState()
     ) where {D<:MineableData,I<:Item}
         return new{D,I}(data, instancesrange, items, itemsetmeasures, LmeasMemo(),
-            miningstate, ReentrantLock(), ReentrantLock(), ReentrantLock()
+            itemset_mining_policies, miningstate,
+            ReentrantLock(), ReentrantLock(), ReentrantLock()
         )
     end
 
@@ -84,6 +88,7 @@ struct Bulldozer{D<:MineableData,I<:Item} <: AbstractMiner
                 instancesrange,
                 items(miner),
                 itemsetmeasures(miner),
+                itemset_mining_policies=deepcopy(itemset_mining_policies(miner)),
                 miningstate=deepcopy(miningstate(miner))
             )
     end

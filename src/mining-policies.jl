@@ -26,7 +26,17 @@ Closure returning a boolean function `F` with one argument `itemset::Itemset`.
 See also [`Itemset`](@ref), [`itemset_mining_policies`](@ref).
 """
 function islimited_length_itemset(; maxlength::Union{Nothing,Integer}=nothing)::Function
+    if isnothing(maxlength)
+        maxlength = typemax(Int16)
+    end
 
+    if maxlength <= 0
+        throw(ArgumentError("maxlength must be > 0 (given value is $(maxlength))"))
+    end
+
+    return function _islimited_length_itemset(itemset::Itemset)
+        return length(itemset) <= maxlength
+    end
 end
 
 # policies related to association rule generation
@@ -137,6 +147,18 @@ function isheterogeneous_arule(;
     antecedent_nrepetitions::Integer=1,
     consequent_nrepetitions::Integer=0
 )::Function
+
+    if antecedent_nrepetitions < 1
+        throw(
+            ArgumentError("antecedent_nrepetitions must be >= 1 " *
+            "(given value is $(antecedent_nrepetitions))"))
+    end
+
+    if consequent_nrepetitions < 0
+        throw(
+            ArgumentError("consequent_nrepetitions must be >= 0 " *
+            "(given value is $(consequent_nrepetitions))"))
+    end
 
     function _extract_variable(item::Item)::Integer
         # if `item` is already an Atom, do nothing.

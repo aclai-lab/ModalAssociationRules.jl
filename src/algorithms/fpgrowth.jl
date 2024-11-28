@@ -195,6 +195,13 @@ function fpgrowth(
 
     # global setting
     for (itemset, gfrequency_int) in fpgrowth_fragments
+        # an itemsets is mined if the flag is still true at the end of the cycle
+        saveflag = true
+
+        # apply frequent items mining policies here
+        for policy in itemset_mining_policies(miner)
+        end
+
         # manually compute and save miner's global support if >= min threhsold;
         _threshold = getglobalthreshold(miner, gsupport)
         gfrequency = gfrequency_int / _ninstances
@@ -203,9 +210,9 @@ function fpgrowth(
             globalmemo!(miner, GmeasMemoKey((Symbol(gsupport), itemset)), gfrequency)
 
             # for those itemsets, also check other measures and save the frequent ones.
-            saveflag = true
             for (gmeas_algo, lthreshold, gthreshold) in itemsetmeasures(miner)
                 if gmeas_algo == gsupport
+                    # this is already computed by `gfrequency`
                     continue
                 end
 
@@ -213,12 +220,12 @@ function fpgrowth(
                 # the result is automatically memoized and we do not need to also call
                 # globalmemo! like in the case before, where we computed gsupport manually.
                 if gmeas_algo(itemset, X, lthreshold, miner) < gthreshold
-                    saveflag = !saveflag
+                    saveflag = false
                     break
                 end
             end
 
-            if saveflag # TODO: apply frequent items mining policies here
+            if saveflag
                 push!(freqitems(miner), itemset)
             end
         end
