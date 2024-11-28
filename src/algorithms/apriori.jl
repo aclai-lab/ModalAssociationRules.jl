@@ -23,10 +23,9 @@ Return a generator of [`Itemset`](@ref), which iterates the combinations of [`It
 in `variable` and prepend them to `fixed` vector.
 
 See also [`Item`](@ref), [`Itemset`](@ref).
-
-TODO - this may be deprecated
 """
 function combine_items(variable::AbstractVector{<:Item}, fixed::AbstractVector{<:Item})
+    # TODO - this may be deprecated
     return (Itemset(union(combo, fixed)) for combo in combinations(variable))
 end
 
@@ -95,6 +94,7 @@ function apriori(
         ] |> Vector{Itemset{_itemtype}}
 
         # save frequent itemsets inside the miner machine
+        # TODO add mining policies handling
         push!(freqitems(miner), frequents...)
 
         # retrieve the new generation of candidates by doing some combinatorics trick;
