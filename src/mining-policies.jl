@@ -2,19 +2,31 @@
 # they are both structural, syntactical and semantical.
 
 # policies related to the mining structure
+
 """
 TODO ()
 """
-function islimited_dimensionality_world()
+function islimited_dimensionality_world()::Function
 end
 
 
 # policies related to frequent itemsets mining
 
 """
-TODO
+    function islimited_length_itemset(; maxlength::Union{Nothing,Integer}=nothing)::Function
+
+Closure returning a boolean function `F` with one argument `itemset::Itemset`.
+
+`F` is true if the length of the given `itemset` does not exceed the given thresholds.
+
+# Arguments
+- `maxlength::Union{Nothing,Integer}=nothing`: maximum `itemset`'s length; when `nothing`,
+    defaults to `typemax(Int16)`.
+
+See also [`Itemset`](@ref), [`itemset_mining_policies`](@ref).
 """
-function islimited_length_itemset()::Bool
+function islimited_length_itemset(; maxlength::Union{Nothing,Integer}=nothing)::Function
+
 end
 
 # policies related to association rule generation
@@ -28,15 +40,16 @@ end
 Closure returning a boolean function `F` with one argument `rule::ARule`.
 
 `F` is true if the length of `rule`'s [`antecedent`](@ref) (and [`consequent`](@ref)) does
-not exceed the given limit.
+not exceed the given thresholds.
 
 # Arguments
 - `antecedent_maxlength::Union{Nothing,Integer}=nothing`: maximum antecedent length of
-    the given rule;
+    the given rule; when `nothing`, defaults to `typemax(Int16)`;
 - `consequent_maxlength::Union{Nothing,Integer}=1`: maximum consequent length of the given
-    rule.
+    rule; when `nothing`, defaults to `typemax(Int16)`.
 
-See also [`ARule`](@ref), [`antecedent`](@ref), [`consequent`](@ref).
+See also [`antecedent`](@ref), [`ARule`](@ref), [`arule_mining_policies`](@ref),
+[`consequent`](@ref).
 """
 function islimited_length_arule(;
     antecedent_maxlength::Union{Nothing,Integer}=nothing,
@@ -73,8 +86,8 @@ Closure returning a boolean function `F` with one argument `rule::ARule`.
 - `npropositions::Integer=1`: minimum number of propositional anchors (propositions with
     no modal operators) in the antecedent of the given rule.
 
-See [`antecedent`](@ref), [`ARule`](@ref), [`generaterules`](@ref), [`Item`](@ref),
-[`Miner`](@ref).
+See [`antecedent`](@ref), [`ARule`](@ref), [`arule_mining_policies`](@ref),
+[`generaterules`](@ref), [`Item`](@ref), [`Miner`](@ref).
 """
 function isanchored_arule(; npropositions::Integer=1)::Function
     # atleast `npropositions` items in the antecedent are not modal
@@ -163,6 +176,7 @@ function min_number_of_lmeasures_satisfied()::Bool
 end
 
 """
+TODO
 """
 function similar_pattern()
 end
