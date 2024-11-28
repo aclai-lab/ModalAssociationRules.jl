@@ -227,8 +227,6 @@ _lsupport_logic = (itemset, X, ith_instance, miner) -> begin
     # return the result, and eventually the information needed to support miningstate
     return Dict(
         :measure => count(wmask) / nworlds(X, ith_instance),
-        # TODO wmask should be a bitmask and not an integer vector
-        # TODO change Integer to Integer (almost everywhere)
         :instance_item_toworlds => wmask,
     )
 end

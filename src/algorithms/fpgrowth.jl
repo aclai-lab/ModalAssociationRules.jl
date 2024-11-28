@@ -159,11 +159,7 @@ implemented:
 See also [`AbstractMiner`](@ref), [`Bulldozer`](@ref), [`FPTree`](@ref),
 [`HeaderTable`](@ref), [`SoleBase.AbstractDataset`](@ref)
 """
-function fpgrowth(
-    miner::AbstractMiner,
-    X::MineableData;
-    parallel::Bool=true
-)::Nothing
+function fpgrowth(miner::AbstractMiner, X::MineableData)::Nothing
     if !(ModalAssociationRules.gsupport in reduce(vcat, itemsetmeasures(miner)))
         throw(ArgumentError("FP-Growth " *
             "requires global support (gsupport) as meaningfulness measure in order to " *
@@ -176,17 +172,12 @@ function fpgrowth(
 
     _ninstances = ninstances(X)
     local_results = Vector{Bulldozer}(undef, _ninstances)
-    if parallel && Threads.nthreads() > 1
-        chunks = Iterators.partition(1:_ninstances, div(_ninstances, Threads.nthreads()))
-        tasks = map(chunks) do chunk
-            Threads.@spawn _fpgrowth(Bulldozer(miner, chunk))
-        end
-        local_results = fetch.(tasks)
-    else
-        for ith_instance in 1:_ninstances
-            local_results[ith_instance] = _fpgrowth(Bulldozer(miner, ith_instance))
-        end
+
+    chunks = Iterators.partition(1:_ninstances, div(_ninstances, Threads.nthreads()))
+    tasks = map(chunks) do chunk
+        Threads.@spawn _fpgrowth(Bulldozer(miner, chunk))
     end
+    local_results = fetch.(tasks)
 
     # reduce all the local-memoization structures obtained before,
     # and proceed to compute global supports
@@ -254,18 +245,39 @@ function _fpgrowth(miner::Bulldozer{D,I}) where {D<:MineableData,I<:Item}
         miningstate!(miner, :current_instance, ith_instance)
 
         # get the frequent 1-length itemsets from the first candidates set;
-        frequents = [candidate
-            for candidate in Itemset{I}.(items(miner))
-            for (gmeas_algo, lthreshold, gthreshold) in itemsetmeasures(miner)
-            # in all the existing literature, the only measure needed here is `lsupport`;
-            # however, we give the possibility to control more granularly what does it mean
-            # for an itemset to be *locally frequent*.
-            if localof(gmeas_algo)(
-                candidate,
-                data(miner, ith_instance), # TODO: istance is not projected properly
-                miner
-            ) >= lthreshold
-        ] |> unique
+        # also leverage parallelization
+        __itemsetmeasures = itemsetmeasures(miner)
+        __items = items(miner)
+        frequents_channel = Channel{Itemset{I}}(length(__items))
+
+        Threads.@threads for candidate in Itemset{I}.(__items)
+            for (gmeas_algo, lthreshold, gthreshold) in __itemsetmeasures
+                if localof(gmeas_algo)(
+                    candidate,
+                    data(miner, ith_instance),
+                    miner
+                    ) >= lthreshold
+                    put!(frequents_channel, candidate)
+                end
+            end
+        end
+        close(frequents_channel)
+        frequents = unique(collect(frequents_channel))
+
+        # alternative way to get the frequent 1-length itemsets;
+        # this does not leverage Channel and Threads.@threads
+        # frequents = [candidate
+        #     for candidate in Itemset{I}.(items(miner))
+        #     for (gmeas_algo, lthreshold, gthreshold) in itemsetmeasures(miner)
+        #     # in all the existing literature, the only measure needed here is `lsupport`;
+        #     # however, we give the possibility to control more granularly what does it mean
+        #     # for an itemset to be *locally frequent*.
+        #     if localof(gmeas_algo)(
+        #         candidate,
+        #         data(miner, ith_instance),
+        #         miner
+        #     ) >= lthreshold
+        # ] |> unique
 
         for (nworld, w) in enumerate(kripkeframe |> SoleLogics.allworlds)
             _itemset_in_world = [
