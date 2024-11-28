@@ -90,7 +90,7 @@ export @localmeasure, @globalmeasure, @linkmeas
 export lsupport, gsupport
 export lconfidence, gconfidence
 
-include("generation-politics.jl")
+include("mining-politics.jl")
 
 export isanchored_arule, isheterogeneous_arule
 
