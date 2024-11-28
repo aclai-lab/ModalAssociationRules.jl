@@ -333,7 +333,7 @@ its global support, in order to simplify `miner`'s job when working in the globa
 See also [`Itemset`](@ref), [`LmeasMemo`](@ref), [`lsupport`](@ref), [`Miner`](@ref).
 """
 function load_localmemo!(miner::AbstractMiner, localmemo::LmeasMemo)
-    fpgrowth_fragments = DefaultDict{Itemset,Int64}(0)
+    fpgrowth_fragments = DefaultDict{Itemset,Integer}(0)
     min_lsupport_threshold = findmeasure(miner, lsupport)[2]
 
     for (lmemokey, lmeasvalue) in localmemo

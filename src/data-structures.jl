@@ -5,7 +5,7 @@ Compressed representation of multiple, identical [`Itemset`](@ref)s.
 
 See also [`Itemset`](@ref).
 """
-const EnhancedItemset = Tuple{<:Itemset,Int64}
+const EnhancedItemset = Tuple{<:Itemset,Integer}
 
 """
     itemset(enhitemset::EnhancedItemset)::Itemset

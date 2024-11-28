@@ -72,13 +72,13 @@ r = Itemset{Item}(manual_r)
 @test formula(pq).children |> first |> Item in [manual_p, manual_q]
 
 @test Threshold <: Float64
-@test WorldMask <: Vector{Int64}
+@test WorldMask <: Vector{Integer}
 
-@test EnhancedItemset <: Tuple{Itemset,Int64}
+@test EnhancedItemset <: Tuple{Itemset,Integer}
 enhanceditemset = convert(EnhancedItemset, pq, 42)
 @test length(enhanceditemset) == 2
 @test first(enhanceditemset) isa Itemset
-@test last(enhanceditemset) isa Int64
+@test last(enhanceditemset) isa Integer
 @test convert(Itemset, enhanceditemset) isa Itemset
 
 @test ConditionalPatternBase <: Vector{EnhancedItemset}
@@ -98,7 +98,7 @@ arule3 = ARule(Itemset([manual_q, manual_p]), Itemset([manual_r]))
 @test MeaningfulnessMeasure <: Tuple{Function,Threshold,Threshold}
 
 @test ARMSubject <: Union{ARule,Itemset}
-@test LmeasMemoKey <: Tuple{Symbol,ARMSubject,Int64}
+@test LmeasMemoKey <: Tuple{Symbol,ARMSubject,Integer}
 @test LmeasMemo <: Dict{LmeasMemoKey,Threshold}
 @test GmeasMemoKey <: Tuple{Symbol,ARMSubject}
 @test GmeasMemo <: Dict{GmeasMemoKey,Threshold}
@@ -320,7 +320,7 @@ manual_fptree = FPTree()
 @test count(x -> x == manual_r, content.(manual_fptree |> ModalAssociationRules.children)) == 1
 
 # 2nd property - the sum of counts for each item equals the total count we know manually
-item_to_count = Dict{Item, Int64}(
+item_to_count = Dict{Item, Integer}(
     manual_p => 0,
     manual_q => 0,
     manual_r => 0

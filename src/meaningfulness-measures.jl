@@ -221,14 +221,14 @@ end
 # measures interface (see `@localmeasure` macro)
 _lsupport_logic = (itemset, X, ith_instance, miner) -> begin
     # bool vector, representing on which world an Itemset holds
-    wmask = [
-        check(formula(itemset), X, ith_instance, w) for w in allworlds(X, ith_instance)]
+    wmask = WorldMask([
+        check(formula(itemset), X, ith_instance, w) for w in allworlds(X, ith_instance)])
 
     # return the result, and eventually the information needed to support miningstate
     return Dict(
         :measure => count(wmask) / nworlds(X, ith_instance),
         # TODO wmask should be a bitmask and not an integer vector
-        # TODO change Int64 to Integer (almost everywhere)
+        # TODO change Integer to Integer (almost everywhere)
         :instance_item_toworlds => wmask,
     )
 end

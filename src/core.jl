@@ -379,7 +379,7 @@ See also [`linkmeas`](@ref), [`islocalof`](@ref), [`isglobalof`](@ref), [`localo
 globalof(::Function) = nothing
 
 """
-    const WorldMask = Vector{Int64}
+    const WorldMask = BitVector
 
 Vector whose i-th position stores how many times a certain [`MeaningfulnessMeasure`](@ref)
 applied on a specific [`Itemset`](@ref)s is true on the i-th world of multiple instances.
@@ -394,14 +394,14 @@ is never true.
 
 See also [`Itemset`](@ref), [`MeaningfulnessMeasure`](@ref).
 """
- const WorldMask = Vector{Int64}
+ const WorldMask = BitVector
 
 
 
 # utility structures
 
 """
-    const LmeasMemoKey = Tuple{Symbol,ARMSubject,Int64}
+    const LmeasMemoKey = Tuple{Symbol,ARMSubject,Integer}
 
 Key of a [`LmeasMemo`](@ref) dictionary.
 Represents a local meaningfulness measure name (as a `Symbol`), a [`ARMSubject`](@ref),
@@ -410,7 +410,7 @@ and the number of a dataset instance where the measure is applied.
 See also [`ARMSubject`](@ref), [`LmeasMemo`](@ref), [`lsupport`](@ref),
 [`lconfidence`](@ref).
 """
-const LmeasMemoKey = Tuple{Symbol,ARMSubject,Int64}
+const LmeasMemoKey = Tuple{Symbol,ARMSubject,Integer}
 
 """
     const LmeasMemo = Dict{LmeasMemoKey,Threshold}

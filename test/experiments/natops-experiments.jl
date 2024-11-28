@@ -282,8 +282,8 @@ function runcomparison(
     # partial data (numeric) that has to be be manipulated,
     # before being converted to string format.
     # Each element in this collection is of type
-    # Tuple{ARule, Float64, Vector{Tuple{Int64, Vector{Float64}}}}
-    # (A::ARule, B::Float64, C::Tuple{Int64, Vector{Flaot64}})
+    # Tuple{ARule, Float64, Vector{Tuple{Integer, Vector{Float64}}}}
+    # (A::ARule, B::Float64, C::Tuple{Integer, Vector{Flaot64}})
     # where A is association rule,
     # B is the confidence measured considering all classes apart from `targetclass`,
     # and C is a vector of associations between i-th class and meaningfulness measures.
@@ -292,7 +292,7 @@ function runcomparison(
     # antecedent global support,
     # consequent global support,
     # antecedent and consequent global support.
-    datavals = Tuple{ARule, Float64, Float64, Vector{Tuple{Int64, Vector{Float64}}}}[]
+    datavals = Tuple{ARule, Float64, Float64, Vector{Tuple{Integer, Vector{Float64}}}}[]
 
     # final collection taht will be passed to PrettyTables.jl
     data = Any[]
@@ -310,7 +310,7 @@ function runcomparison(
 
         # prepare a data value fragment, that is,
         # a vector of tuples (logiset-index, [measures])
-        dataval = Tuple{Int64, Vector{Float64}}[]
+        dataval = Tuple{Integer, Vector{Float64}}[]
 
         # consider each class, compute the meaningfulness measures and print them
         for (i, logiset) in Iterators.enumerate(logisets)

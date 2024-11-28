@@ -78,7 +78,7 @@ See also [`ConditionalPatternBase`](@ref), [`EnhancedItemset`](@ref). [`FPTree`]
 """
 function bounce!(pbase::ConditionalPatternBase, miner::AbstractMiner)
     # accumulators needed to establish whether an enhanced itemset is promoted or no
-    count_accumulator = DefaultDict{Item, Int64}(0)
+    count_accumulator = DefaultDict{Item, Integer}(0)
 
     # to find local support threshold we need to search for its corresponding global
     # measure (global support), obtaining a MeaningfulnessMeasure tuple;
@@ -200,6 +200,15 @@ function fpgrowth(
 
         # apply frequent items mining policies here
         for policy in itemset_mining_policies(miner)
+            if !policy(itemset)
+                saveflag = false
+                break
+            end
+        end
+
+        if !saveflag
+            # atleast one policy does not hold
+            continue
         end
 
         # manually compute and save miner's global support if >= min threhsold;
@@ -226,6 +235,7 @@ function fpgrowth(
             end
 
             if saveflag
+                # all the meaningfulness measures holds
                 push!(freqitems(miner), itemset)
             end
         end

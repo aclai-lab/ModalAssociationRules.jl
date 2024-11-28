@@ -37,8 +37,8 @@ julia> metaconditions = [
     ScalarMetaCondition(VariableMin(variable), >=)
 ]
 2-element Vector{ScalarMetaCondition}:
- ScalarMetaCondition{VariableMax{Int64}, typeof(<=)}: max[V1] ≤ ⍰
- ScalarMetaCondition{VariableMin{Int64}, typeof(>=)}: min[V1] ≥ ⍰
+ ScalarMetaCondition{VariableMax{Integer}, typeof(<=)}: max[V1] ≤ ⍰
+ ScalarMetaCondition{VariableMin{Integer}, typeof(>=)}: min[V1] ≥ ⍰
 
 # we choose how we want to discretize the distribution of the variable
 julia> nbins = 5
