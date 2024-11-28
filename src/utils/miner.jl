@@ -492,18 +492,16 @@ See [`generaterules(::AbstractVector{Itemset}, ::AbstractMiner)`](@ref).
 
             currentrule = ARule((_antecedent, _consequent))
 
-            # sift pipeline to remove unwanted rules;
-            # this can be customized at construction time - see Miner constructor kwargs.
-            sifted = false
-            for sift in arule_mining_policies(miner)
-                if !sift(currentrule)
-                    # current rule is unwanted, w.r.t sifting mechanism
-                    sifted = true
+            # apply generation policies to remove unwanted rules
+            unwanted = false
+            for policy in arule_mining_policies(miner)
+                if !policy(currentrule)
+                    unwanted = true
                     break
                 end
             end
 
-            if sifted
+            if unwanted
                 continue
             end
 
