@@ -1,73 +1,143 @@
+# politics related to frequent itemsets mining
+
+
+
+# politics related to association rule generation
+
 """
-    function isanchored_arule(rule::ARule)::Bool
+    function islimited_arule(;
+        antecedent_maxlength::Union{Nothing,Integer}=nothing,
+        consequent_maxlength::Union{Nothing,Integer}=1
+    )::Function
 
-Return true if the given [`ARule`](@ref) contains a propositional anchor, that is,
-atleast one [`Item`](@ref) in its [`antecedent`](@ref) is a proposition with no modal
-operators.
+Clojure returning a boolean function `F` with one argument `rule::ARule`.
 
-See [`antecedent`](@ref), [`ARule`](@ref), [`generaterules`](@ref), [`Item`](@ref),
-[`Miner`](@ref).
+`F` is true if the length of `rule`'s [`antecedent`](@ref) (and [`consequent`](@ref)) does
+not exceed the given limit.
+
+# Arguments
+- `antecedent_maxlength::Union{Nothing,Integer}=nothing`: maximum antecedent length of
+    the given rule;
+- `consequent_maxlength::Union{Nothing,Integer}=1`: maximum consequent length of the given
+    rule.
+
+See also [`ARule`](@ref), [`antecedent`](@ref), [`consequent`](@ref).
 """
-function isanchored_arule(rule::ARule; npropositions::Integer=1)::Bool
-    # atleast `npropositions` items in the antecedent are not modal
-
-    if npropositions < 1
-        throw(ArgumentError("Parameter npropositions=$(npropositions) must be >=1."))
+function islimited_arule(;
+    antecedent_maxlength::Union{Nothing,Integer}=nothing,
+    consequent_maxlength::Union{Nothing,Integer}=1
+)::Function
+    function _check(t::Union{Nothing,Integer})::Integer
+        if isnothing(t)
+            return typemax(Int16)
+        elseif meas > 0
+            return meas
+        else
+            throw(ArgumentError("Invalid maximum length threshold ($(meas))."))
+        end
     end
 
-    if npropositions == 1
-        # specific optimization
-        return !all(it -> it isa SyntaxBranch && it |> token |> ismodal, antecedent(rule))
-    else
-        # general case
-        return count(
-            it -> it isa SyntaxBranch && it |> token |> ismodal,
-            antecedent(rule)
-        ) >= npropositions
+    antecedent_maxlength = _check(antecedent_maxlength)
+    consequent_maxlength = _check(consequent_maxlength)
+
+    return function _islimited_arule(rule::ARule)::Bool
+        return length(rule |> antecedent) <= antecedent_maxlength &&
+            length(rule |> consequent) <= consequent_maxlength
     end
 end
 
 """
-    function isheterogeneous_arule(rule::ARule)::Bool
+    function isanchored_arule(; npropositions::Integer=1)::Function
 
-Return true if the given [`ARule`](@ref) is heterogeneous, that is,
-for each [`Item`](@ref) in its [`antecedent`](@ref) wrapping a variable `V`,
-the other items in the antecedent does not refer to `V`, and
-every item in the [`consequent`](@ref) does not refer to `V` too.
+Clojure returning a boolean function `F` with one argument `rule::ARule`.
+
+`F` is true if the given `rule` contains atleast `npropositions` *propositional anchors*
+(that is, propositions without modal operators).
+
+# Arguments
+- `npropositions::Integer=1`: minimum number of propositional anchors (propositions with
+    no modal operators) in the antecedent of the given rule.
+
+See [`antecedent`](@ref), [`ARule`](@ref), [`generaterules`](@ref), [`Item`](@ref),
+[`Miner`](@ref).
+"""
+function isanchored_arule(; npropositions::Integer=1)::Function
+    # atleast `npropositions` items in the antecedent are not modal
+
+    if npropositions < 0
+        throw(
+            ArgumentError("npropositions must be >= 0 (given value is $(npropositions))"))
+    end
+
+    return function _isanchored_arule(rule::ARule)
+        if npropositions == 1
+            # specific optimization
+            return !all(
+                it -> it isa SyntaxBranch && it |> token |> ismodal, antecedent(rule))
+        else
+            # general case
+            return count(
+                it -> it isa SyntaxBranch && it |> token |> ismodal,
+                antecedent(rule)
+            ) >= npropositions
+        end
+    end
+end
+
+"""
+    function isheterogeneous_arule(;
+        antecedent_nrepetitions::Integer=1,
+        consequent_nrepetitions::Integer=0
+    )::Function
+
+Clojure returning a boolean function `F` with one argument `rule::ARule`.
+
+`F` is true if the given `rule` is heterogeneous, that is, across all the [`Item`](@ref)
+in `rule` [`antecedent`](@ref) and [`consequent`](@ref), the number of identical variables
+`V` is at most `nrepetitions`.
+
+# Arguments
+- `antecedent_nrepetitions::Integer=1`: maximum allowed number of identical variables in the
+    antecedent of the given rule.
+- `consequent_nrepetitions::Integer=0`: maximum allowed number of identical variables
+    between the antecedent and the consequent of the given rule.
 
 See [`antecedent`](@ref), [`ARule`](@ref), [`consequent`](@ref), [`generaterules`](@ref),
 [`Item`](@ref), [`Miner`](@ref).
 """
-function isheterogeneous_arule(rule::ARule)::Bool
-    # TODO - this could be moved to SoleData
+function isheterogeneous_arule(;
+    antecedent_nrepetitions::Integer=1,
+    consequent_nrepetitions::Integer=0
+)::Function
+
     function _extract_variable(item::Item)::Integer
         # if `item` is already an Atom, do nothing.
+        # TODO - this could be moved to SoleData
         _formula = formula(item)
         _formula = _formula isa Atom ? _formula : _formula.children |> first
         return _formula.value.metacond.feature.i_variable
     end
 
-    return all(
-        # for each antecedent item
-        ant_item ->
-            # no other items in antecedent share the same variable
-            count(
-                _ant_item -> _extract_variable(ant_item) == _extract_variable(_ant_item),
-                antecedent(rule)
-            ) == 1 &&
-            # every consequent item does not share the same variable
-            all(
-                cons_item -> _extract_variable(ant_item) != _extract_variable(cons_item),
-                consequent(rule)
-            ),
-        antecedent(rule)
-    )
-end
+    return function _isheterogeneous_arule(rule::ARule)
+        return all(
+            # for each antecedent item
+            ant_item ->
+                # no other items in antecedent shares (too much) the same variable
+                count(__ant_item ->
+                    _extract_variable(ant_item) == _extract_variable(__ant_item),
+                    antecedent(rule)
+                ) <= antecedent_nrepetitions &&
 
-"""
-TODO (defaulted to 1)
-"""
-function max_consequent_number()::Bool
+                # every consequent item does not shares (too much) the same variable
+                # with the fixed antecedent
+                count(cons_item ->
+                    _extract_variable(ant_item) == _extract_variable(cons_item),
+                    consequent(rule)
+                ) <= consequent_nrepetitions,
+            antecedent(rule)
+        )
+    end
+
 end
 
 """
