@@ -218,7 +218,7 @@ function fpgrowth(
                 end
             end
 
-            if saveflag
+            if saveflag # TODO: apply frequent items mining policies here
                 push!(freqitems(miner), itemset)
             end
         end
