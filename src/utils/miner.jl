@@ -288,7 +288,10 @@ function getglobalthreshold(miner::Miner, meas::Function)::Threshold
     return findmeasure(miner, meas) |> last
 end
 
-
+"""
+TODO
+"""
+data_mining_policies(miner::Miner) = error("TODO")
 
 """
     function itemset_mining_policies(miner::Miner)
