@@ -293,34 +293,14 @@ end
 """
     function itemset_mining_policies(miner::Miner)
 
-Return the mining policies vector wrapped within `miner`.
-Each mining policies is a meta-rule describing which [`Itemset`](@ref) are accepted
-during the mining phase and which are discarded.
-
-!!! warning
-    These policies often require to be tailored ad-hoc for a specific mining algorithm,
-    and have the role of pruning unwanted explorations of the search space as early as
-    possible.
-
-    Keep in mind that you may need to modify some existing policies to make them correct
-    and effective for your custom algorithm.
-
-    As far as the algorithms already implemented in this package are concerned,
-    generation policies are applied before saving an itemset inside the miner:
-    thus, they reduce the waste of memory, but not necessarily of computational time.
-
-See also [`generaterules`](@ref), [`arule_mining_policies`](@ref), [`Miner`](@ref).
+See [`itemset_mining_policies(::AbstractMiner)`](@ref).
 """
 itemset_mining_policies(miner::Miner) = miner.itemset_mining_policies
 
 """
     arule_mining_policies(miner::Miner)
 
-Return the association rules generation policies vector wrapped within `miner`.
-Each generation policies is a meta-rule describing which [`ARule`](@ref) are accepted
-during the generation algorithm and which are discarded.
-
-See also [`generaterules`](@ref), [`itemset_mining_policies`](@ref), [`Miner`](@ref).
+See [`itemset_mining_policies(::AbstractMiner)`](@ref).
 """
 arule_mining_policies(miner::Miner) = miner.arule_mining_policies
 
