@@ -477,3 +477,15 @@ Any type on which mining can be performed.
 See also [`Miner`](@info).
 """
 const MineableData = AbstractDataset
+
+"""
+    initminingstate(::Function, ::MineableData)
+
+This trait defines how to initialize the [`MiningState`](@ref) structure of an
+[`AbstractMiner`](@ref), in order to customize it to your needings depending on a specific
+function/data pairing.
+
+See ealso [`hasminingstate`](@ref), [`AbstractMiner`](@ref), [`MiningState`](@ref),
+[`miningstate`](@ref).
+"""
+initminingstate(::Function, ::MineableData)::MiningState = MiningState()

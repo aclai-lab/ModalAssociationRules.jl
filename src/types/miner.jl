@@ -21,6 +21,10 @@ For example, [`Miner`](@ref) does completely implement the interface while
 - localmemo(miner::AbstractMiner)
 - globalmemo(miner::AbstractMiner)
 
+- data_mining_policies(miner::AbstractMiner)
+- itemset_mining_policies(miner::AbstractMiner)
+- arule_mining_policies(miner::AbstractMiner)
+
 - miningstate(miner::AbstractMiner)
 - info(miner::AbstractMiner)
 

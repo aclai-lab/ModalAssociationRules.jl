@@ -291,17 +291,6 @@ end
 
 
 """
-    initminingstate(::Function, ::MineableData)
-
-This trait defines how to initialize the [`MiningState`](@ref) structure of a
-[`Miner`](@ref).
-
-See ealso [`hasminingstate`](@ref), [`Miner`](@ref), [`MiningState`](@ref),
-[`miningstate`](@ref).
-"""
-initminingstate(::Function, ::MineableData)::MiningState = MiningState()
-
-"""
     function itemset_mining_policies(miner::Miner)
 
 Return the mining policies vector wrapped within `miner`.
