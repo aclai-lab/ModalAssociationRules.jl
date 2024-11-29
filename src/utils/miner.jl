@@ -544,22 +544,20 @@ end
 
 
 
-# Some utilities and new dispatches of external packages
+# some utilities and new dispatches coming from external packages
 
 """
     function SoleLogics.frame(miner::AbstractMiner)
 
-Getter for the frame of a generic piece of miner`s data field.
-See also [`AbstractMiner`](@ref), [`data`](@ref), [`Miner`](@ref).
+Getter for the frame wrapped within `miner`'s data field.
+
+See also [`data`](@ref), [`Miner`](@ref).
 """
-function SoleLogics.frame(miner::AbstractMiner)
+function SoleLogics.frame(miner::Miner)
     return SoleLogics.frame(data(miner), 1)
 end
 
-function SoleLogics.allworlds(miner::Miner)
-    return frame(miner) |> SoleLogics.allworlds
-end
-
-function SoleLogics.nworlds(miner::Miner)
-    return frame(miner) |> SoleLogics.nworlds
-end
+# TODO remove this if test works
+# function SoleLogics.nworlds(miner::Miner)
+#     return frame(miner) |> SoleLogics.nworlds
+# end

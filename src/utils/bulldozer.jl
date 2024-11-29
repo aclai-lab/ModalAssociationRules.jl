@@ -287,19 +287,6 @@ measures(bulldozer::Bulldozer) = itemsetmeasures(bulldozer)
 # utilities
 
 """
-    function SoleLogics.frame(bulldozer::Bulldozer)
-
-Getter for the frame of the instance wrapped by `bulldozer`.
-"""
-function SoleLogics.frame(bulldozer::Bulldozer)
-    ith_instance = miningstate(bulldozer, :current_instance)
-    instance = data(bulldozer, ith_instance)
-
-    SoleLogics.frame(instance.s, ith_instance)
-end
-
-
-"""
     function bulldozer_reduce(b1::Bulldozer, b2::Bulldozer)::LmeasMemo
 
 Reduce many [`Bulldozer`](@ref)s together, merging their local memo structures in linear
@@ -345,4 +332,20 @@ function load_localmemo!(miner::AbstractMiner, localmemo::LmeasMemo)
     end
 
     return fpgrowth_fragments
+end
+
+# more utilities and new dispatches coming from external packages
+
+"""
+    function SoleLogics.frame(bulldozer::Bulldozer)
+
+Getter for the frame wrapped within `bulldozer`'s i-th instance.
+
+See also [`Bulldozer`](@ref), [`data`](@ref), [`miningstate`](@ref).
+"""
+function SoleLogics.frame(bulldozer::Bulldozer)
+    ith_instance = miningstate(bulldozer, :current_instance)
+    instance = data(bulldozer, ith_instance)
+
+    SoleLogics.frame(instance.s, ith_instance)
 end

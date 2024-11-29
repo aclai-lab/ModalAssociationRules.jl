@@ -23,6 +23,7 @@ using Reexport
 
 using SoleLogics: AbstractInterpretation, getinstance, LogicalInstance
 using SoleLogics: nworlds, frame, allworlds, nworlds
+using SoleLogics: filterworlds, WorldFilter
 
 using SoleData: SupportedLogiset
 using SoleData: VariableMin, VariableMax

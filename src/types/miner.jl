@@ -336,8 +336,8 @@ See also [`AbstractMiner`](@ref), [`ARule`](@ref), [`Itemset`](@ref),
 [`rulemeasures`](@ref).
 """
 @resumable function generaterules(
-    itemsets::AbstractVector{Itemset},
-    miner::AbstractMiner;
+    ::AbstractVector{Itemset},
+    ::AbstractMiner;
 )
     error("Not implemented")
 end
@@ -349,6 +349,49 @@ Return a generator of [`ARule`](@ref)s, given an already trained `miner`.
 
 See also [`AbstractMiner`](@ref), [`ARule`](@ref).
 """
-function generaterules!(miner::AbstractMiner)
+function generaterules!(::AbstractMiner)
     error("Not implemented.")
+end
+
+# interface extending dispatches coming from external packages
+
+"""
+    function SoleLogics.frame(::AbstractMiner)
+
+Get the frame wrapped within an [`AbstractMiner`](@ref).
+
+See also [`AbstractMiner`](@ref), `SoleLogics.frame`.
+"""
+function SoleLogics.frame(::AbstractMiner)
+    error("Not implemented.")
+end
+
+"""
+    function SoleLogics.allworlds(
+        miner::AbstractMiner;
+        worldfilter::Union{Nothing,WorldFilter}=nothing
+    )
+
+Return a generator iterating over all the worlds wrapped within `miner`.
+
+# Arguments
+- `miner::AbstractMiner`: miner wrapping atleast one modal instance;
+- `worldfilter::Union{Nothing,WorldFilter}=nothing`: a world filter, implementing a policy
+    to skip specific worlds when iterating them.
+
+See also [`AbstractMiner`](@ref), `SoleLogics.allworlds`, `SoleLogics.frame`,
+`SoleLogics.WorldFilter`.
+"""
+function SoleLogics.allworlds(
+    miner::AbstractMiner;
+    worldfilter::Union{Nothing,WorldFilter}=nothing
+)
+    if isnothing(worldfilter)
+        return frame(miner) |> SoleLogics.allworlds
+    else
+        SoleLogics.filterworlds(
+            worldfilter,
+            frame(miner) |> SoleLogics.allworlds
+        )
+    end
 end
