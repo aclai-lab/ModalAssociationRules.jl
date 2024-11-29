@@ -223,6 +223,15 @@ localmemo!(
     bulldozer.localmemo[key] = val
 end
 
+
+"""
+    itemset_mining_policies(bulldozer::Bulldozer)
+
+See also [`itemset_mining_policies(::AbstractMiner)`](@ref).
+"""
+itemset_mining_policies(bulldozer::Bulldozer) = bulldozer.itemset_mining_policies
+
+
 """
     miningstate(bulldozer::Bulldozer)::MiningState
     miningstate(bulldozer::Bulldozer, key::Symbol)::Any

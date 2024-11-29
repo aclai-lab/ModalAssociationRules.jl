@@ -153,6 +153,13 @@ globalmemo!(miner::AbstractMiner, key::GmeasMemoKey, val::Threshold) = begin
     miner.globalmemo[key] = val
 end
 
+
+
+"""
+TODO
+"""
+data_mining_policies(::AbstractMiner) = error("Not implemented.")
+
 """
     function itemset_mining_policies(::AbstractMiner)
 
@@ -188,6 +195,8 @@ See also [`AbstractMiner`](@ref), [`generaterules`](@ref),
 [`itemset_mining_policies`](@ref).
 """
 arule_mining_policies(::AbstractMiner) = error("Not implemented").
+
+
 
 """
     miningstate(miner::Miner)::MiningState
