@@ -67,7 +67,7 @@ r = Itemset{Item}(manual_r)
 @test pq in [pq, pqr, qr]
 
 @test formula(pq) isa LeftmostConjunctiveForm
-@test formula(pq) |> children |> first |> Item in [manual_p, manual_q]
+@test formula(pq) |> SoleLogics.children |> first |> Item in [manual_p, manual_q]
 
 @test Threshold <: Float64
 @test WorldMask <: BitVector
@@ -436,6 +436,9 @@ _genericMiner = genericMiner()
 @test_throws ErrorException rulemeasures(_genericMiner)
 @test_throws ErrorException localmemo(_genericMiner)
 @test_throws ErrorException globalmemo(_genericMiner)
+@test_throws ErrorException worldfilter(_genericMiner)
+@test_throws ErrorException itemset_mining_policies(_genericMiner)
+@test_throws ErrorException arule_mining_policies(_genericMiner)
 @test_throws ErrorException miningstate(_genericMiner)
 @test_throws ErrorException info(_genericMiner)
 @test_throws ErrorException itemtype(_genericMiner)

@@ -127,27 +127,39 @@ a [`Bulldozer`](@ref).
 miningstatelock(bulldozer::Bulldozer) = bulldozer.miningstatelock
 
 """
-TODO
+    datatype(::Bulldozer{D}) where {D<:MineableData} = D
+
+Return the type of the [`MineableData`](@ref) given by [`data(::Bulldozer)`](@ref).
+
+See also [`Bulldozer`](@ref), [`data(::Bulldozer)`](@ref), [`MineableData`](@ref).
 """
 datatype(::Bulldozer{D}) where {D<:MineableData} = D
 
+
 """
-TODO
+    itemtype(::Bulldozer{D,I}) where {D,I<:Item} = I
+
+Return the type of the [`Item`](@ref)s given by [`items(::Bulldozer)`](@ref).
+
+See also [`Bulldozer`](@ref), [`items(::Bulldozer)`](@ref), [`MineableData`](@ref).
 """
 itemtype(::Bulldozer{D,I}) where {D,I<:Item} = I
+
 
 
 """
     instancesrange(bulldozer::Bulldozer)
 
-TODO
+Return the instance slice range on which `bulldozer` is working.
 """
 instancesrange(bulldozer::Bulldozer) = bulldozer.instancesrange
 
 """
     instanceprojection(bulldozer::Bulldozer, ith_instance::Integer)
 
-TODO
+Maps the `ith_instance` on a range starting from 1, instead of [`instancerange`](@ref).
+
+See also [`Bulldozer`](@ref), [`instancerange`](@ref).
 """
 instanceprojection(bulldozer::Bulldozer, ith_instance::Integer) = begin
     return ith_instance - first(instancesrange(bulldozer)) + 1
@@ -164,8 +176,7 @@ See [`data(::AbstractMiner)`](@ref), [`SoleLogics.LogicalInstance`](@ref),
 """
 data(bulldozer::Bulldozer) = bulldozer.data
 data(bulldozer::Bulldozer, ith_instance::Integer) = begin
-    instance_projection = ith_instance - first(instancesrange(bulldozer)) + 1
-    SoleLogics.getinstance(data(bulldozer), instance_projection)
+    SoleLogics.getinstance(data(bulldozer), instanceprojection(bulldozer, ith_instance))
 end
 
 """
@@ -366,7 +377,7 @@ Getter for the frame wrapped within `bulldozer`'s i-th instance.
 
 See also [`Bulldozer`](@ref), [`data`](@ref), [`miningstate`](@ref).
 """
-function SoleLogics.frame(bulldozer::Bulldozer)
+function SoleLogics.frame(bulldozer::Bulldozer; kwargs...)
     ith_instance = miningstate(bulldozer, :current_instance)
     instance = data(bulldozer, ith_instance)
 
