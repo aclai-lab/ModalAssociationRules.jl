@@ -33,7 +33,7 @@ julia> using ModalAssociationRules
 julia> using SoleData
 
 # Load NATOPS DataFrame
-julia> X_df, y = load_arff_dataset("NATOPS");
+julia> X_df, y = load_NATOPS();
 
 # Convert NATOPS DataFrame to a Logiset
 julia> X = scalarlogiset(X_df)
@@ -46,26 +46,45 @@ julia> r = Atom(ScalarCondition(VariableMin(3), >, -3.6))
 # Prepare modal atoms using later relationship - see [`SoleLogics.IntervalRelation`](@ref))
 julia> lp = box(IA_L)(p)
 julia> lq = diamond(IA_L)(q)
-julia> lr = boxlater(r)
+julia> lr = box(IA_L)(r)
 
 # Compose a vector of items, regrouping the atoms defined before
-julia> manual_alphabet = Vector{Item}([p, q, r, lp, lq, lr])
+julia> my_alphabet = Vector{Item}([p, q, r, lp, lq, lr])
+
+# Establish which meaningfulness measures you want to define the notion of itemset and
+# association rule holding on an instance and on a modal dataset
+julia> my_itemsetmeasures = [(gsupport, 0.1, 0.1)]
+julia> my_rulemeasures = [(gconfidence, 0.1, 0.1)]
+
+# (optional) Establish a filter to iterate the worlds in a generic modal instance
+julia> my_worldfilter = SoleLogics.FunctionalWorldFilter(
+        x -> length(x) >= 3 && length(x) <= 10, Interval{Int}
+    )
+
+# (optional) Establish a policy to further restrict itemsets that can be considered frequent
+julia> my_itemset_mining_policies = [islimited_length_itemset()]
+
+# (optional) Establish a policy to further restrict rules that can be considered
+# association rules
+julia> my_arule_mining_policies = [
+        islimited_length_arule(), isanchored_arule(), isheterogeneous_arule()
+    ]
 
 # Create an association rule miner wrapping `fpgrowth` algorithm - see [`fpgrowth`](@ref);
-# note that meaningfulness measures are not explicited and, thus, are defaulted as in the
-# call below.
-julia> miner = Miner(X, fpgrowth(), manual_alphabet)
+julia> miner = Miner(X, fpgrowth, my_alphabet,
+        my_itemsetmeasures, my_rulemeasures,
+        worldfilter=my_worldfilter,
+        itemset_mining_policies=my_itemset_mining_policies,
+        arule_mining_policies=my_arule_mining_policies
+    )
 
-# Create an association rule miner, expliciting global meaningfulness measures with their
-# local and global thresholds, both for [`Itemset`](@ref)s and [`ARule`](@ref).
-julia> miner = Miner(X, fpgrowth(), manual_alphabet,
-    [(gsupport, 0.1, 0.1)], [(gconfidence, 0.2, 0.2)])
+# We mine using mine!
+# (optional) We could pass kwargs to forward them to the mining algorithm
+julia> mine!(miner)
 
-# Consider the dataset and learning algorithm wrapped by `miner` (resp., `X` and `fpgrowth`)
-# Mine the frequent itemsets, that is, those for which item measures are large enough.
-# Then iterate the generator returned by [`mine`](@ref) to enumerate association rules.
-julia> for arule in ModalAssociationRules.mine!(miner)
-    println(miner)
+# Print all the mined association rules
+julia> for arule in generaterules(miner)
+    println(arule)
 end
 ```
 
@@ -98,7 +117,7 @@ struct Miner{
     localmemo::LmeasMemo            # local memoization structure
     globalmemo::GmeasMemo           # global memoization structure
 
-    worldfilter::Union{Nothing,WorldFilter}      # metarules about world filterings
+    worldfilter::Union{Nothing,WorldFilter}       # metarules about world filterings
     itemset_mining_policies::Vector{<:Function}   # metarules about itemsets mining
     arule_mining_policies::Vector{<:Function}     # metarules about arules mining
 

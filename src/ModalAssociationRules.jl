@@ -93,7 +93,7 @@ export lconfidence, gconfidence
 
 include("mining-policies.jl")
 
-export islimited_itemset
+export islimited_length_itemset
 export islimited_length_arule, isanchored_arule, isheterogeneous_arule
 
 include("algorithms/apriori.jl")
