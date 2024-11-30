@@ -51,8 +51,6 @@ r = Itemset{Item}(manual_r)
 @test qr in pqr
 @test (pqr in [pq,qr]) == false
 
-
-
 @test Itemset{Item} <: Itemset{<:Item}
 @test Itemset{Item}(Item[manual_p]) == Item[manual_p]
 @test all(item -> item in [manual_p, manual_q], pq)
@@ -69,10 +67,10 @@ r = Itemset{Item}(manual_r)
 @test pq in [pq, pqr, qr]
 
 @test formula(pq) isa LeftmostConjunctiveForm
-@test formula(pq).children |> first |> Item in [manual_p, manual_q]
+@test formula(pq) |> children |> first |> Item in [manual_p, manual_q]
 
 @test Threshold <: Float64
-@test WorldMask <: Vector{Integer}
+@test WorldMask <: BitVector
 
 @test EnhancedItemset <: Tuple{Itemset,Integer}
 enhanceditemset = convert(EnhancedItemset, pq, 42)
