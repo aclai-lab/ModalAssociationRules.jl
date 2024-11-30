@@ -103,13 +103,13 @@ rulemeasures(::AbstractMiner) = error("Not implemented")
 
 
 """
-    localmemo(miner::Miner)::LmeasMemo
-    localmemo(miner::Miner, key::LmeasMemoKey)
+    localmemo(miner::AbstractMiner)::LmeasMemo
+    localmemo(miner::AbstractMiner, key::LmeasMemoKey)
 
 Return the local memoization structure inside `miner`, or a specific entry if a
 [`LmeasMemoKey`](@ref) is provided.
 
-See also [`Miner`](@ref), [`LmeasMemo`](@ref), [`LmeasMemoKey`](@ref).
+See also [`AbstractMiner`](@ref), [`LmeasMemo`](@ref), [`LmeasMemoKey`](@ref).
 """
 localmemo(::AbstractMiner)::LmeasMemo = error("Not implemented.")
 localmemo(miner::AbstractMiner, key::LmeasMemoKey)::Union{Nothing,Threshold} = begin
@@ -117,24 +117,24 @@ localmemo(miner::AbstractMiner, key::LmeasMemoKey)::Union{Nothing,Threshold} = b
 end
 
 """
-    localmemo!(miner::Miner, key::LmeasMemoKey, val::Threshold)
+    localmemo!(miner::AbstractMiner, key::LmeasMemoKey, val::Threshold)
 
 Setter for a specific entry `key` inside the local memoization structure wrapped by `miner`.
 
-See also [`Miner`](@ref), [`LmeasMemo`](@ref), [`LmeasMemoKey`](@ref).
+See also [`AbstractMiner`](@ref), [`LmeasMemo`](@ref), [`LmeasMemoKey`](@ref).
 """
 localmemo!(miner::AbstractMiner, key::LmeasMemoKey, val::Threshold) = begin
     miner.localmemo[key] = val
 end
 
 """
-    globalmemo(miner::Miner)::GmeasMemo
-    globalmemo(miner::Miner, key::GmeasMemoKey)
+    globalmemo(miner::AbstractMiner)::GmeasMemo
+    globalmemo(miner::AbstractMiner, key::GmeasMemoKey)
 
 Return the global memoization structure inside `miner`, or a specific entry if a
 [`GmeasMemoKey`](@ref) is provided.
 
-See also [`Miner`](@ref), [`GmeasMemo`](@ref), [`GmeasMemoKey`](@ref).
+See also [`AbstractMiner`](@ref), [`GmeasMemo`](@ref), [`GmeasMemoKey`](@ref).
 """
 globalmemo(::AbstractMiner)::GmeasMemo = error("Not implemented.")
 globalmemo(miner::AbstractMiner, key::GmeasMemoKey)::Union{Nothing,Threshold} = begin
@@ -142,12 +142,12 @@ globalmemo(miner::AbstractMiner, key::GmeasMemoKey)::Union{Nothing,Threshold} = 
 end
 
 """
-    globalmemo!(miner::Miner, key::GmeasMemoKey, val::Threshold)
+    globalmemo!(miner::AbstractMiner, key::GmeasMemoKey, val::Threshold)
 
 Setter for a specific entry `key` inside the global memoization structure wrapped by
 `miner`.
 
-See also [`Miner`](@ref), [`GmeasMemo`](@ref), [`GmeasMemoKey`](@ref).
+See also [`AbstractMiner`](@ref), [`GmeasMemo`](@ref), [`GmeasMemoKey`](@ref).
 """
 globalmemo!(miner::AbstractMiner, key::GmeasMemoKey, val::Threshold) = begin
     miner.globalmemo[key] = val
@@ -156,7 +156,13 @@ end
 
 
 """
-TODO
+    data_mining_policies(::AbstractMiner)
+
+Return the mining policies vector wrapped within an [`AbstractMiner`](@ref).
+Each mining policies is a meta-rule describing which how [`data(::AbstractMiner)`](@ref)
+must be mined (e.g., filtering the worlds that are iterated within modal instance).
+
+See also [`AbstractMiner`](@ref), [`data(::AbstractMiner)`](@ref).
 """
 data_mining_policies(::AbstractMiner) = error("Not implemented.")
 

@@ -289,9 +289,11 @@ function getglobalthreshold(miner::Miner, meas::Function)::Threshold
 end
 
 """
-TODO
+    data_mining_policies(miner::Miner)
+
+See also [`data_mining_policies(::AbstractMiner)`](@ref).
 """
-data_mining_policies(miner::Miner) = error("TODO")
+data_mining_policies(miner::Miner) = miner.data_mining_policies
 
 """
     function itemset_mining_policies(miner::Miner)

@@ -58,6 +58,7 @@ struct Bulldozer{D<:MineableData,I<:Item} <: AbstractMiner
     localmemo::LmeasMemo
 
     # special fields related to mining algorithms
+    data_mining_policies::Vector{<:Function}
     itemset_mining_policies::Vector{<:Function}
     miningstate::MiningState
 
@@ -185,7 +186,7 @@ itemsetmeasures(
     localmemo(bulldozer::Bulldozer)
     localmemo(bulldozer::Bulldozer, key::LmeasMemoKey)
 
-See [`localmemo(::AbstractMiner)`](@ref).
+See [`localmemo(::AbstractMiner)`](@ref), [`LmeasMemo`](@ref), [`LmeasMemoKey`](@ref).
 """
 localmemo(bulldozer::Bulldozer) = bulldozer.localmemo
 localmemo(bulldozer::Bulldozer, key::LmeasMemoKey; isprojected::Bool=false) = begin
@@ -205,7 +206,10 @@ end
 """
     localmemo!(bulldozer::Bulldozer, key::LmeasMemoKey, val::Threshold)
 
-TODO
+Setter for a specific entry `key` inside the local memoization structure wrapped by
+`bulldozer`.
+
+See also [`Bulldozer`](@ref), [`LmeasMemo`](@ref), [`LmeasMemoKey`](@ref).
 """
 localmemo!(
     bulldozer::Bulldozer,
@@ -226,9 +230,11 @@ end
 
 
 """
-TODO
+    data_mining_policies(bulldozer::Bulldozer) = bulldozer.data_mining_policies
+
+See also [`data_mining_policies(::AbstractMiner)`](@ref).
 """
-data_mining_policies(bulldozer::Bulldozer) = error("TODO")
+data_mining_policies(bulldozer::Bulldozer) = bulldozer.data_mining_policies
 
 """
     itemset_mining_policies(bulldozer::Bulldozer)
