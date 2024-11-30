@@ -98,10 +98,11 @@ struct Miner{
     localmemo::LmeasMemo            # local memoization structure
     globalmemo::GmeasMemo           # global memoization structure
 
-    miningstate::MiningState        # mining algorithm miningstate (see documentation)
-
+    worldfilter::Union{Nothing,WorldFilter}      # metarules about world filterings
     itemset_mining_policies::Vector{<:Function}   # metarules about itemsets mining
     arule_mining_policies::Vector{<:Function}     # metarules about arules mining
+
+    miningstate::MiningState        # mining algorithm miningstate (see documentation)
 
     info::Info                      # general informations
 
@@ -110,23 +111,24 @@ struct Miner{
         algorithm::Function,
         items::Vector{I},
 
-        itemset_constrained_measures::Vector{<:MeaningfulnessMeasure} = [
+        itemset_constrained_measures::Vector{<:MeaningfulnessMeasure}=[
             (gsupport, 0.1, 0.1)
         ],
-        arule_constrained_measures::Vector{<:MeaningfulnessMeasure} = [
+        arule_constrained_measures::Vector{<:MeaningfulnessMeasure}=[
             (gconfidence, 0.2, 0.2)
         ];
 
-        itemset_mining_policies::Vector{<:Function} = Vector{Function}([
+        worldfilter::Union{Nothing,WorldFilter}=nothing,
+        itemset_mining_policies::Vector{<:Function}=Vector{Function}([
 
         ]),
-        arule_mining_policies::Vector{<:Function} = Vector{Function}([
+        arule_mining_policies::Vector{<:Function}=Vector{Function}([
             islimited_length_arule(),
             isanchored_arule(),
             isheterogeneous_arule(),
         ]),
 
-        info::Info = Info(:istrained => false)
+        info::Info=Info(:istrained => false)
     ) where {
         D<:MineableData,
         I<:Item,
@@ -157,9 +159,8 @@ struct Miner{
             itemset_constrained_measures, arule_constrained_measures,
             Vector{Itemset}([]), Vector{ARule}([]),
             LmeasMemo(), GmeasMemo(),
-            miningstate,
-            itemset_mining_policies, arule_mining_policies,
-            info
+            worldfilter, itemset_mining_policies, arule_mining_policies,
+            miningstate, info
         )
     end
 end
@@ -207,7 +208,7 @@ See [`freqitems(::AbstractMiner)`](@ref).
 freqitems(miner::Miner) = miner.freqitems
 
 """
-    arules(miner::Miner)
+arules(miner::Miner)
 See [`arules(::AbstractMiner)`](@ref).
 """
 arules(miner::Miner) = miner.arules
@@ -218,32 +219,53 @@ arules(miner::Miner) = miner.arules
 See [`itemsetmeasures(::AbstractMiner)`]
 """
 itemsetmeasures(miner::Miner)::Vector{<:MeaningfulnessMeasure} =
-    miner.itemset_constrained_measures
+miner.itemset_constrained_measures
 
 """
-    rulemeasures(miner::Miner)::Vector{<:MeaningfulnessMeasure}
+rulemeasures(miner::Miner)::Vector{<:MeaningfulnessMeasure}
 
 See [`rulemeasures(miner::AbstractMiner)`](@ref).
 """
 rulemeasures(miner::Miner)::Vector{<:MeaningfulnessMeasure} =
-    miner.arule_constrained_measures
+miner.arule_constrained_measures
 
 """
-    localmemo(miner::Miner)::LmeasMemo
+localmemo(miner::Miner)::LmeasMemo
 
 See [`localmemo(::AbstractMiner)`](@ref).
 """
 localmemo(miner::Miner) = miner.localmemo
 
 """
-    globalmemo(miner::Miner)::GmeasMemo
+globalmemo(miner::Miner)::GmeasMemo
 
 See [`globalmemo(::AbstractMiner)`](@ref).
 """
 globalmemo(miner::Miner) = miner.globalmemo
 
 """
-    miningstate(miner::Miner)
+    worldfilter(miner::Miner)
+
+See also [`worldfilter(::AbstractMiner)`](@ref).
+"""
+worldfilter(miner::Miner) = miner.worldfilter
+
+"""
+    function itemset_mining_policies(miner::Miner)
+
+See [`itemset_mining_policies(::AbstractMiner)`](@ref).
+"""
+itemset_mining_policies(miner::Miner) = miner.itemset_mining_policies
+
+"""
+    arule_mining_policies(miner::Miner)
+
+See [`itemset_mining_policies(::AbstractMiner)`](@ref).
+"""
+arule_mining_policies(miner::Miner) = miner.arule_mining_policies
+
+"""
+miningstate(miner::Miner)
 
 See [`miningstate(::AbstractMiner)`](@ref).
 """
@@ -287,27 +309,6 @@ See [`Miner`](@ref), [`MeaningfulnessMeasure`](@ref), [`Threshold`](@ref).
 function getglobalthreshold(miner::Miner, meas::Function)::Threshold
     return findmeasure(miner, meas) |> last
 end
-
-"""
-    data_mining_policies(miner::Miner)
-
-See also [`data_mining_policies(::AbstractMiner)`](@ref).
-"""
-data_mining_policies(miner::Miner) = miner.data_mining_policies
-
-"""
-    function itemset_mining_policies(miner::Miner)
-
-See [`itemset_mining_policies(::AbstractMiner)`](@ref).
-"""
-itemset_mining_policies(miner::Miner) = miner.itemset_mining_policies
-
-"""
-    arule_mining_policies(miner::Miner)
-
-See [`itemset_mining_policies(::AbstractMiner)`](@ref).
-"""
-arule_mining_policies(miner::Miner) = miner.arule_mining_policies
 
 function Base.show(io::IO, miner::Miner)
     println(io, "$(data(miner))")
@@ -527,8 +528,8 @@ Getter for the frame wrapped within `miner`'s data field.
 
 See also [`data`](@ref), [`Miner`](@ref).
 """
-function SoleLogics.frame(miner::Miner)
-    return SoleLogics.frame(data(miner), 1)
+function SoleLogics.frame(miner::Miner; ith_instance::Integer=1)
+    return SoleLogics.frame(data(miner), ith_instance)
 end
 
 # TODO remove this if test works

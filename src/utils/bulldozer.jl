@@ -58,7 +58,7 @@ struct Bulldozer{D<:MineableData,I<:Item} <: AbstractMiner
     localmemo::LmeasMemo
 
     # special fields related to mining algorithms
-    data_mining_policies::Vector{<:Function}
+    worldfilter::Union{Nothing,WorldFilter}
     itemset_mining_policies::Vector{<:Function}
     miningstate::MiningState
 
@@ -72,11 +72,12 @@ struct Bulldozer{D<:MineableData,I<:Item} <: AbstractMiner
         instancesrange::UnitRange{<:Integer},
         items::Vector{I},
         itemsetmeasures::Vector{<:MeaningfulnessMeasure};
+        worldfilter::Union{Nothing,WorldFilter}=nothing,
         itemset_mining_policies::Vector{<:Function}=Function[],
         miningstate::MiningState=MiningState()
     ) where {D<:MineableData,I<:Item}
         return new{D,I}(data, instancesrange, items, itemsetmeasures, LmeasMemo(),
-            itemset_mining_policies, miningstate,
+            worldfilter, itemset_mining_policies, miningstate,
             ReentrantLock(), ReentrantLock(), ReentrantLock()
         )
     end
@@ -89,6 +90,7 @@ struct Bulldozer{D<:MineableData,I<:Item} <: AbstractMiner
                 instancesrange,
                 items(miner),
                 itemsetmeasures(miner),
+                worldfilter=deepcopy(worldfilter(miner)),
                 itemset_mining_policies=deepcopy(itemset_mining_policies(miner)),
                 miningstate=deepcopy(miningstate(miner))
             )
@@ -230,11 +232,11 @@ end
 
 
 """
-    data_mining_policies(bulldozer::Bulldozer) = bulldozer.data_mining_policies
+    worldfilter(bulldozer::Bulldozer) = bulldozer.worldfilter
 
-See also [`data_mining_policies(::AbstractMiner)`](@ref).
+See also [`worldfilter(::AbstractMiner)`](@ref).
 """
-data_mining_policies(bulldozer::Bulldozer) = bulldozer.data_mining_policies
+worldfilter(bulldozer::Bulldozer) = bulldozer.worldfilter
 
 """
     itemset_mining_policies(bulldozer::Bulldozer)

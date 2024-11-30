@@ -1,43 +1,10 @@
 # this script collects policies regarding mining;
 # they are both structural, syntactical and semantical.
 
-using SoleLogics: WorldFilter
 
 # policies related to the mining structure
-
-"""
-    function islimited_dimensionality_world(; worldfilter::WorldFilter)::Function
-
-
-See also `SoleLogics.IntervalLengthFilter`, `SoleLogics.FunctionalWorldFilter`,
-`SoleLogics.WorldFilter`.
-"""
-function islimited_dimensionality_world(; worldfilter::WorldFilter)::Function
-    # TODO
-    # Actually, this is not a policy.
-    # If you want to limit the dimensionality of each world, use `filterworlds`
-    # as in the script below.
-    #
-    # frame, allworlds, etc. should have a dispatch ad-hoc for AbstractMiner,
-    # and the behaviour should be controlled by a kwarg.
-    #
-    # The behaviour must be changed in meaningfulness measures too (e.g., lsupport),
-    # when allworlds is invoked.
-
-    # X_df, y = load_NATOPS();
-    # X = scalarlogiset(X_df)
-    #
-    # lengthfilter = SoleLogics.IntervalLengthFilter(>=, 3)
-    #
-    # f1(i::Interval{Int})::Bool = length(i) >= 3 && length(i) <= 10
-    # functionalfilter = SoleLogics.FunctionalWorldFilter(f1, Interval{Int})
-    #
-    # myworlds = allworlds(X, 1) |> collect
-    #
-    # SoleLogics.filterworlds(lengthfilter, myworlds) |> collect
-    # SoleLogics.filterworlds(functionalfilter, myworlds) |> collect
-end
-
+# deprecated: there are no such filters at the moment.
+# see "data_mining_policies(::AbstractMiner)".
 
 # policies related to frequent itemsets mining
 

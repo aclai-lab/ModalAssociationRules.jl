@@ -21,7 +21,7 @@ For example, [`Miner`](@ref) does completely implement the interface while
 - localmemo(miner::AbstractMiner)
 - globalmemo(miner::AbstractMiner)
 
-- data_mining_policies(miner::AbstractMiner)
+- worldfilter(miner::AbstractMiner)
 - itemset_mining_policies(miner::AbstractMiner)
 - arule_mining_policies(miner::AbstractMiner)
 
@@ -156,15 +156,14 @@ end
 
 
 """
-    data_mining_policies(::AbstractMiner)
+    worldfilter(::AbstractMiner)
 
-Return the mining policies vector wrapped within an [`AbstractMiner`](@ref).
-Each mining policies is a meta-rule describing which how [`data(::AbstractMiner)`](@ref)
-must be mined (e.g., filtering the worlds that are iterated within modal instance).
+Return the world filter policy wrapped within the [`AbstractMiner`](@ref).
+This specifies how the worlds of a modal instance must be iterated.
 
-See also [`AbstractMiner`](@ref), [`data(::AbstractMiner)`](@ref).
+See also [`AbstractMiner`](@ref), [`data(::AbstractMiner)`](@ref), `SoleLogics.WorldFilter`.
 """
-data_mining_policies(::AbstractMiner) = error("Not implemented.")
+worldfilter(::AbstractMiner) = error("Not implemented.")
 
 """
     function itemset_mining_policies(::AbstractMiner)
@@ -429,22 +428,25 @@ Return a generator iterating over all the worlds wrapped within `miner`.
 
 # Arguments
 - `miner::AbstractMiner`: miner wrapping atleast one modal instance;
-- `worldfilter::Union{Nothing,WorldFilter}=nothing`: a world filter, implementing a policy
-    to skip specific worlds when iterating them.
+- `ith_instance::Integer=1`: the specific instance you are considering.
+
+!!! note
+    If a [`worldfilter`](@ref) is loaded within `miner`, then it is leveareged.
 
 See also [`AbstractMiner`](@ref), `SoleLogics.allworlds`, `SoleLogics.frame`,
-`SoleLogics.WorldFilter`.
+[`worldfilter`](@ref).
 """
 function SoleLogics.allworlds(
     miner::AbstractMiner;
-    worldfilter::Union{Nothing,WorldFilter}=nothing
+    ith_instance::Integer=1
 )
-    if isnothing(worldfilter)
-        return frame(miner) |> SoleLogics.allworlds
+    _worldfilter = worldfilter(miner)
+    if isnothing(_worldfilter)
+        return frame(miner; ith_instance=ith_instance) |> SoleLogics.allworlds
     else
         SoleLogics.filterworlds(
-            worldfilter,
-            frame(miner) |> SoleLogics.allworlds
+            _worldfilter,
+            frame(miner; ith_instance=ith_instance) |> SoleLogics.allworlds
         )
     end
 end

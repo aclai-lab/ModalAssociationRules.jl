@@ -216,13 +216,15 @@ end
 
 # measures implementation
 
-# core logic of `lsupport`, as a lambda function;
-# `miner` is an unused argument, but is required since this function must adhere to local
-# measures interface (see `@localmeasure` macro)
+# core logic of `lsupport`, as a lambda function
 _lsupport_logic = (itemset, X, ith_instance, miner) -> begin
-    # bool vector, representing on which world an Itemset holds
     wmask = WorldMask([
-        check(formula(itemset), X, ith_instance, w) for w in allworlds(X, ith_instance)])
+        # for each world, compute on which worlds the model checking algorithm returns true
+        check(formula(itemset), X, ith_instance, w)
+
+        # NOTE: the `worldfilter` wrapped within `miner` is levereaged, if given
+        for w in allworlds(miner; ith_instance=ith_instance)
+    ])
 
     # return the result, and eventually the information needed to support miningstate
     return Dict(
@@ -234,7 +236,11 @@ end
 # core logic of `gsupport`, as a lambda function
 _gsupport_logic = (itemset, X, threshold, miner) -> begin
     _measure = sum([
+        # for each instance, compute how many times the local support overpass the threshold
         lsupport(itemset, getinstance(X, ith_instance), miner) >= threshold
+
+        # NOTE: an instance filter could be provided by the user to avoid iterating
+        # every instance, depending on the needings.
         for ith_instance in 1:ninstances(X)
     ]) / ninstances(X)
 
