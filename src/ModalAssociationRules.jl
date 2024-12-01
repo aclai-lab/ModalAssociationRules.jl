@@ -62,10 +62,15 @@ export AbstractMiner
 export data, algorithm
 export items, freqitems, arules
 export itemsetmeasures, rulemeasures
+
 export measures, findmeasure
 export getlocalthreshold, getglobalthreshold
 export localmemo, localmemo!
 export globalmemo, globalmemo!
+
+export worldfilter
+export itemset_mining_policies, arule_mining_policies
+
 export miningstate, miningstate!, hasminingstate, initminingstate
 export info, info!, hasinfo
 export mine!, apply!
