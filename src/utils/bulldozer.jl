@@ -3,8 +3,13 @@
         I<:Item,
         IMEAS<:MeaningfulnessMeasure
     } <: AbstractMiner
-        # modal dataset data collection
-        data::Vector{SoleLogics.LogicalInstance}
+        # data mineable by the Bulldozer
+        data::D
+
+        # original instance ids associated with the current slice of data
+        # if this is 5:10, this this means that the first instance of the slice is
+        # the original fifth and so on.
+        instancesrange::UnitRange{<:Integer}
 
         # alphabet
         items::Vector{I}
@@ -16,6 +21,7 @@
         localmemo::LmeasMemo
 
         # special fields related to mining algorithms
+        worldfilter::Union{Nothing,WorldFilter}
         itemset_mining_policies::Vector{<:Function}
         miningstate::MiningState
 
