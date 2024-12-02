@@ -1,17 +1,17 @@
 """
     struct Miner{
         D<:MineableData,
-        I<:Item,
+        I<:Item
     } <: AbstractMiner
         X::D                            # target dataset
 
         algorithm::Function             # algorithm used to perform extraction
 
-        items::Vector{I}                # items considered during the extraction
+        items::Vector{I}                # alphabet
 
         # meaningfulness measures
-        itemset_constrained_measures::Vector{IMEAS}
-        arule_constrained_measures::Vector{RMEAS}
+        itemset_constrained_measures::Vector{<:MeaningfulnessMeasure}
+        arule_constrained_measures::Vector{<:MeaningfulnessMeasure}
 
         freqitems::Vector{Itemset}      # collected frequent itemsets
         arules::Vector{ARule}           # collected association rules
@@ -19,7 +19,11 @@
         localmemo::LmeasMemo            # local memoization structure
         globalmemo::GmeasMemo           # global memoization structure
 
-        miningstate::MiningState        # special fields related to mining algorithm
+        worldfilter::Union{Nothing,WorldFilter}       # metarules about world filterings
+        itemset_mining_policies::Vector{<:Function}   # metarules about itemsets mining
+        arule_mining_policies::Vector{<:Function}     # metarules about arules mining
+
+        miningstate::MiningState        # mining algorithm miningstate (see documentation)
 
         info::Info                      # general informations
     end
