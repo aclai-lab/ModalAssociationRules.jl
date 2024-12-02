@@ -98,8 +98,10 @@ end
     To know more, see [`isanchored_arule`](@ref) and [`isheterogeneous_arule`](@ref).
 
 See also  [`ARule`](@ref), [`Bulldozer`](@ref), [`MeaningfulnessMeasure`](@ref),
-[`Info`](@ref), [`Itemset`](@ref), [`GmeasMemo`](@ref), [`LmeasMemo`](@ref),
-[`MiningState`](@ref).
+[`Info`](@ref), [`isanchored_arule`](@ref), [`isheterogeneous_arule`](@ref),
+[`islimited_length_arule()`](@ref), [`islimited_length_itemset()`](@ref),
+[`Item`](@ref), [`Itemset`](@ref), [`GmeasMemo`](@ref), [`LmeasMemo`](@ref),
+[`MiningState`](@ref), `SoleLogics.WorldFilter`.
 """
 struct Miner{
     D<:MineableData,
