@@ -92,11 +92,6 @@ julia> for arule in generaterules(miner)
 end
 ```
 
-!!! note
-    Miner's constructor provides a `rulesfit` keyword argument, which is a collection of
-    functions defining an association rules generation politic.
-    To know more, see [`isanchored_arule`](@ref) and [`isheterogeneous_arule`](@ref).
-
 See also  [`ARule`](@ref), [`Bulldozer`](@ref), [`MeaningfulnessMeasure`](@ref),
 [`Info`](@ref), [`isanchored_arule`](@ref), [`isheterogeneous_arule`](@ref),
 [`islimited_length_arule()`](@ref), [`islimited_length_itemset()`](@ref),
