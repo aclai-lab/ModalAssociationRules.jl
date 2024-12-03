@@ -223,7 +223,7 @@ _lsupport_logic = (itemset, X, ith_instance, miner) -> begin
         check(formula(itemset), X, ith_instance, w)
 
         # NOTE: the `worldfilter` wrapped within `miner` is levereaged, if given
-        for w in allworlds(miner; ith_instance=ith_instance) # TODO: ith_instance not supported by Bulldozer!
+        for w in allworlds(miner; ith_instance=ith_instance)
     ])
 
     # return the result, and eventually the information needed to support miningstate

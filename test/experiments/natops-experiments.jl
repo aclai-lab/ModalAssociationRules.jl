@@ -14,6 +14,7 @@ using Test
 
 using ModalAssociationRules
 using Dates
+using Discretizers
 using Plots
 using PrettyTables
 using SoleData
@@ -36,6 +37,9 @@ VARIABLE_NAMES = [
 	"X[Thumb r]", "Y[Thumb r]", "Z[Thumb r]",          # 22 24
     "ΔY[Hand tip r and thumb r]"                       # 25
 ]
+
+LEFT_BODY_VARIABLES = [1,2,3,7,8,9,13,14,15,19,20,21,25]
+RIGHT_BODY_VARIABLES = [4,5,6,10,11,12,16,17,18,22,23,24,25]
 
 CLASS_NAMES = [
 	"I have command",
@@ -86,19 +90,24 @@ LOGISETS = [
 
 # Each experiment is identified by an ID;
 # put here the ids of the experiments you want to run.
-EXPERIMENTS_IDS = [11]
+EXPERIMENTS_IDS = [12]
+println("You are running the following NATOPS experiments: $(EXPERIMENTS_IDS)")
 
 """
+    function runexperiment(
+        miner::Miner;
+        returnminer::Bool = false,
+        tracktime::Bool = true,
+        reportname::String = "experiment-report.exp",
+        variablenames::Union{Nothing, Vector{String}} = nothing
+    )
     function runexperiment(
         X::MineableData,
         algorithm::Function,
         items::Vector{Item},
         itemsetmeasures::Vector{<:MeaningfulnessMeasure},
         rulemeasures::Vector{<:MeaningfulnessMeasure};
-        returnminer::Bool = false,
-        tracktime::Bool = true,
-        reportname::String = "experiment-report.exp",
-        variablenames::Union{Nothing, Vector{String}} = nothing
+        kwargs...
     )
 
 Mine frequent [`Itemset`](@ref)s and [`ARule`](@ref) from dataset `X` using `algorithm`.
@@ -113,17 +122,21 @@ function runexperiment(
 	items::Vector{Item},
 	itemsetmeasures::Vector{<:MeaningfulnessMeasure},
 	rulemeasures::Vector{<:MeaningfulnessMeasure};
+    kwargs...
+)
+    runexperiment(
+        Miner(deepcopy(X), algorithm, items, itemsetmeasures, rulemeasures);
+        kwargs...
+    )
+end
+
+function runexperiment(
+    miner::Miner;
     returnminer::Bool = false,
     tracktime::Bool = true,
 	reportname::String = "experiment-report.exp",
 	variablenames::Union{Nothing, Vector{String}} = nothing
 )
-    # avoid filling the given dataset with infos necessary to optimize future minings,
-    # and don't use those metadata if already loaded up!
-    # In fact, that could make experiments uncorrect (e.g., confidences over 1.0).
-    _X = deepcopy(X)
-
-	miner = Miner(_X, algorithm, items, itemsetmeasures, rulemeasures)
 	miningtime = @elapsed mine!(miner)
 	generationtime = @elapsed collect(generaterules!(miner))
 
@@ -138,7 +151,7 @@ function runexperiment(
             # a MethodError here (maybe this is caused by stdout redirection?).
             println("Parameterization:\n")
             map(item -> println(
-                syntaxstring(item, variable_names_map=VARIABLE_NAMES)) , items)
+                syntaxstring(item, variable_names_map=VARIABLE_NAMES)) , items(Miner))
             println(miner.itemset_constrained_measures)
             println(miner.arule_constrained_measures)
 
@@ -1298,6 +1311,93 @@ runcomparison(
     suppthreshold=0.1,
     reportname="e11-tc-3-not-clear-rhand-rthumb-BEDO-comparison.exp"
 )
+
+############################################################################################
+# Experiment #12
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
+# General experiment levereging the alphabet selection mechanism for each variable.
+# TODO - at the moment, rules are extract from X_1_have_command
+#
+############################################################################################
+
+# we want to generate an "useful" alphabet of propositions;
+# given a set of metaconditions, we want to find the thresholds to plug in.
+
+_12_items = Item[]
+
+# there is no need to consider left-sided body variables (left arm is not moving in class 1)
+for variable_index = RIGHT_BODY_VARIABLES
+    # each proposition follows this schema
+    metaconditions = [
+        ScalarMetaCondition(VariableMax(variable_index), <=),
+        ScalarMetaCondition(VariableMin(variable_index), >=)
+    ]
+
+    # as binning strategy, we choose to cut the distribution in 5 pieces with same area
+    nbins = 3
+    quantilediscretizer = Discretizers.DiscretizeQuantile(nbins)
+
+    for metacondition in metaconditions
+        # since we are studying time series, we want to consider each sub-interval and
+        # apply the current feature function (e.g., minimum, maximum) on each sub-interval;
+        # the resulting float vector is the new distribution on which we perform binning.
+        X_df_1_with_feature_applied_to_all_intervals = [
+            SoleData.computeunivariatefeature(metacondition |> SoleData.feature, v[i:j])
+            for v in X_df_1_have_command[:,variable_index]
+            for i in 1:length(v)
+            for j in i+1:length(v)
+        ]
+
+        alphabet = select_alphabet(
+            X_df_1_with_feature_applied_to_all_intervals,
+            [metacondition],
+            quantilediscretizer
+        ) .|> Atom .|> Item
+
+        push!(_12_items, alphabet...)
+    end
+end
+
+_12_itemsetmeasures = [(gsupport, 0.5, 0.5)]
+_12_rulemeasures = [(gconfidence, 0.5, 0.5)]
+
+_12_miner = Miner(
+    deepcopy(X_1_have_command),
+    fpgrowth,
+
+    _12_items,
+    _12_itemsetmeasures,
+    _12_rulemeasures,
+
+    worldfilter=SoleLogics.FunctionalWorldFilter(
+        x -> length(x) >= 3 && length(x) <= 10, Interval{Int}), # TODO choose intervals len
+
+    itemset_mining_policies=[islimited_length_itemset(; maxlength=5)],
+
+    arule_mining_policies=[
+        islimited_length_arule(; antecedent_maxlength=5),
+        isanchored_arule(; npropositions=1),
+        isheterogeneous_arule(; antecedent_nrepetitions=1, consequent_nrepetitions=0),
+    ],
+)
+
+runexperiment(
+    _12_miner;
+    reportname = "e12-tc-1-i-have-command-auto-alphabet-full-propositional.exp",
+    variablenames = VARIABLE_NAMES,
+)
+
+# TODO - uncomment
+# runcomparison(
+#     _12_miner,
+#     LOGISETS,
+#     (conf) -> conf >= 0.5;
+#     sigdigits=3 |> Int8,
+#     targetclass=3 |> Int8,
+#     suppthreshold=0.1,
+#     reportname="e12-tc-1-i-have-command-auto-alphabet-full-propositional-comparison.exp"
+# )
 
 ############################################################################################
 # Useful plots

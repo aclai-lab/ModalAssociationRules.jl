@@ -11,6 +11,12 @@ using SoleData: AbstractCondition, computeunivariatefeature, feature
         discretizers::Vector{<:DiscretizationAlgorithm}
     )
     function select_alphabet(
+        X::Vector{<:Real},
+        metaconditions::Vector{<:AbstractCondition},
+        discretizers::DiscretizationAlgorithm;
+        kwargs...
+    )
+    function select_alphabet(
         X::Vector{<:Vector{<:Real}},
         metaconditions::Vector{<:AbstractCondition},
         discretizers::Vector{<:DiscretizationAlgorithm}
@@ -128,13 +134,25 @@ function select_alphabet(
 end
 
 function select_alphabet(
+    X::Vector{<:Real},
+    metaconditions::Vector{<:AbstractCondition},
+    discretizers::DiscretizationAlgorithm;
+    kwargs...
+)
+    # the only difference here is that a vector is returned,
+    # instead of a one-entry dictionary.
+    select_alphabet(X, metaconditions, [discretizers]; kwargs...)[discretizers]
+end
+
+function select_alphabet(
     X::Vector{<:Vector{<:Real}},
     metaconditions::Vector{<:AbstractCondition},
-    discretizers::Vector{<:DiscretizationAlgorithm};
+    discretizers::Union{DiscretizationAlgorithm,Vector{<:DiscretizationAlgorithm}};
     kwargs...
 )
     return select_alphabet(reduce(vcat,X), metaconditions, discretizers; kwargs...)
 end
+
 
 """
     function time_series_distribution_analysis(
