@@ -104,17 +104,7 @@ function isanchored_arule(; npropositions::Integer=1)::Function
     end
 
     return function _isanchored_arule(rule::ARule)
-        if npropositions == 1
-            # specific optimization
-            return !all(
-                it -> it isa SyntaxBranch && it |> token |> ismodal, antecedent(rule))
-        else
-            # general case
-            return count(
-                it -> it isa SyntaxBranch && it |> token |> ismodal,
-                antecedent(rule)
-            ) >= npropositions
-        end
+        count(it -> formula(it) isa Atom, antecedent(rule)) >= npropositions
     end
 end
 
