@@ -111,6 +111,7 @@ function Base.:(==)(itemset1::Itemset, itemset2::Itemset)
     # return items(itemset1) == items(itemset2)
 
     # order is ignored
+    # TODO test using ⊂ instead of in
     return length(itemset1) == length(itemset2) && itemset1 in itemset2
 end
 
