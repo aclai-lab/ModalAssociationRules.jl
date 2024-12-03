@@ -74,15 +74,15 @@ julia> syntaxstring.(alphabets[_quantile_discretizer])
     before perform binning.
 
     ```julia
-    m = ScalarMetaCondition(VariableMax(variable), <=)
+    _metacondition = ScalarMetaCondition(VariableMax(variable), <=)
 
     # for each time series in X (or for the only time series X), consider each possible
     # interval and apply the feature on it; if you are considering other kind of dimensional
     # data (e.g., spatial), adapt the following list comprehension.
     max_applied_on_all_intervals = [
-        SoleData.computeunivariatefeature(feature(m), v[i:j])
-        for i in 1:length(a)
-        for j in i+1:length(a)
+        SoleData.computeunivariatefeature(_metacondition |> feature, v[i:j])
+        for i in 1:length(v)
+        for j in i+1:length(v)
         for v in X[1:30, 1]
     ]
 
