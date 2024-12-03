@@ -1267,50 +1267,53 @@ plot(
 )
 =#
 ############################################################################################
-_11_right_hand_tip_Y_items = [
-    Atom(ScalarCondition(VariableMin(5), >=, -0.5))
-]
 
-_11_right_hand_delta_items = [
-    Atom(ScalarCondition(VariableMax(25), <=, 0.0))
-]
+if 11 in EXPERIMENTS_IDS
+    _11_right_hand_tip_Y_items = [
+        Atom(ScalarCondition(VariableMin(5), >=, -0.5))
+    ]
 
-_11_propositional_items = vcat(
-    _11_right_hand_tip_Y_items,
-    _11_right_hand_delta_items
-)
+    _11_right_hand_delta_items = [
+        Atom(ScalarCondition(VariableMax(25), <=, 0.0))
+    ]
 
-_11_items = vcat(
-    _11_propositional_items,
-    diamond(IA_B).(_11_propositional_items),
-    box(IA_E).(_11_propositional_items),
-    diamond(IA_D).(_11_propositional_items),
-    box(IA_O).(_11_propositional_items),
-) |> Vector{Formula}
+    _11_propositional_items = vcat(
+        _11_right_hand_tip_Y_items,
+        _11_right_hand_delta_items
+    )
 
-_11_itemsetmeasures = [(gsupport, 0.01, 0.01)]
-_11_rulemeasures = [(gconfidence, 0.1, 0.1)]
+    _11_items = vcat(
+        _11_propositional_items,
+        diamond(IA_B).(_11_propositional_items),
+        box(IA_E).(_11_propositional_items),
+        diamond(IA_D).(_11_propositional_items),
+        box(IA_O).(_11_propositional_items),
+    ) |> Vector{Formula}
 
-_11_miner = runexperiment(
-    X_3_not_clear,
-    fpgrowth,
-    _11_items,
-    _11_itemsetmeasures,
-    _11_rulemeasures;
-    returnminer = true,
-    reportname = "e11-tc-3-not-clear-rhand-rthumb-BEDO.exp",
-    variablenames = VARIABLE_NAMES,
-)
+    _11_itemsetmeasures = [(gsupport, 0.01, 0.01)]
+    _11_rulemeasures = [(gconfidence, 0.1, 0.1)]
 
-runcomparison(
-    _11_miner,
-    LOGISETS,
-    (conf) -> conf >= 0.5;
-    sigdigits=3 |> Int8,
-    targetclass=3 |> Int8,
-    suppthreshold=0.1,
-    reportname="e11-tc-3-not-clear-rhand-rthumb-BEDO-comparison.exp"
-)
+    _11_miner = runexperiment(
+        X_3_not_clear,
+        fpgrowth,
+        _11_items,
+        _11_itemsetmeasures,
+        _11_rulemeasures;
+        returnminer = true,
+        reportname = "e11-tc-3-not-clear-rhand-rthumb-BEDO.exp",
+        variablenames = VARIABLE_NAMES,
+    )
+
+    runcomparison(
+        _11_miner,
+        LOGISETS,
+        (conf) -> conf >= 0.5;
+        sigdigits=3 |> Int8,
+        targetclass=3 |> Int8,
+        suppthreshold=0.1,
+        reportname="e11-tc-3-not-clear-rhand-rthumb-BEDO-comparison.exp"
+    )
+end
 
 ############################################################################################
 # Experiment #12
@@ -1321,83 +1324,84 @@ runcomparison(
 #
 ############################################################################################
 
-# we want to generate an "useful" alphabet of propositions;
-# given a set of metaconditions, we want to find the thresholds to plug in.
+if 12 in EXPERIMENTS_IDS
+    # we want to generate an "useful" alphabet of propositions;
+    # given a set of metaconditions, we want to find the thresholds to plug in.
 
-_12_items = Item[]
+    _12_items = Item[]
 
-# there is no need to consider left-sided body variables (left arm is not moving in class 1)
-for variable_index = RIGHT_BODY_VARIABLES
-    # each proposition follows this schema
-    metaconditions = [
-        ScalarMetaCondition(VariableMax(variable_index), <=),
-        ScalarMetaCondition(VariableMin(variable_index), >=)
-    ]
-
-    # as binning strategy, we choose to cut the distribution in 5 pieces with same area
-    nbins = 3
-    quantilediscretizer = Discretizers.DiscretizeQuantile(nbins)
-
-    for metacondition in metaconditions
-        # since we are studying time series, we want to consider each sub-interval and
-        # apply the current feature function (e.g., minimum, maximum) on each sub-interval;
-        # the resulting float vector is the new distribution on which we perform binning.
-        X_df_1_with_feature_applied_to_all_intervals = [
-            SoleData.computeunivariatefeature(metacondition |> SoleData.feature, v[i:j])
-            for v in X_df_1_have_command[:,variable_index]
-            for i in 1:length(v)
-            for j in i+1:length(v)
+    # there is no need to consider left-sided body variables (left arm is not moving in class 1)
+    for variable_index = RIGHT_BODY_VARIABLES
+        # each proposition follows this schema
+        metaconditions = [
+            ScalarMetaCondition(VariableMax(variable_index), <=),
+            ScalarMetaCondition(VariableMin(variable_index), >=)
         ]
 
-        alphabet = select_alphabet(
-            X_df_1_with_feature_applied_to_all_intervals,
-            [metacondition],
-            quantilediscretizer
-        ) .|> Atom .|> Item
+        # as binning strategy, we choose to cut the distribution in 5 pieces with same area
+        nbins = 3
+        quantilediscretizer = Discretizers.DiscretizeQuantile(nbins)
 
-        push!(_12_items, alphabet...)
+        for metacondition in metaconditions
+            # since we are studying time series, we want to consider each sub-interval and
+            # apply the current feature function (e.g., minimum, maximum) on each sub-interval;
+            # the resulting float vector is the new distribution on which we perform binning.
+            X_df_1_with_feature_applied_to_all_intervals = [
+                SoleData.computeunivariatefeature(metacondition |> SoleData.feature, v[i:j])
+                for v in X_df_1_have_command[:,variable_index]
+                for i in 1:length(v)
+                for j in i+1:length(v)
+            ]
+
+            alphabet = select_alphabet(
+                X_df_1_with_feature_applied_to_all_intervals,
+                [metacondition],
+                quantilediscretizer
+            ) .|> Atom .|> Item
+
+            push!(_12_items, alphabet...)
+        end
     end
+
+    _12_itemsetmeasures = [(gsupport, 0.5, 0.5)]
+    _12_rulemeasures = [(gconfidence, 0.5, 0.5)]
+
+    _12_miner = Miner(
+        deepcopy(X_1_have_command),
+        fpgrowth,
+
+        _12_items,
+        _12_itemsetmeasures,
+        _12_rulemeasures,
+
+        # TODO regulate this parameter
+        worldfilter=SoleLogics.FunctionalWorldFilter(x -> length(x) >= 20, Interval{Int}),
+
+        itemset_mining_policies=[islimited_length_itemset(; maxlength=5)],
+
+        arule_mining_policies=[
+            islimited_length_arule(; antecedent_maxlength=5),
+            isanchored_arule(; npropositions=1),
+            isheterogeneous_arule(; antecedent_nrepetitions=1, consequent_nrepetitions=0),
+        ],
+    )
+
+    runexperiment(
+        _12_miner;
+        reportname = "e12-tc-1-i-have-command-auto-alphabet-full-propositional.exp",
+        variablenames = VARIABLE_NAMES,
+    )
+    # TODO - uncomment
+    # runcomparison(
+        #     _12_miner,
+        #     LOGISETS,
+        #     (conf) -> conf >= 0.5;
+        #     sigdigits=3 |> Int8,
+        #     targetclass=3 |> Int8,
+        #     suppthreshold=0.1,
+        #     reportname="e12-tc-1-i-have-command-auto-alphabet-full-propositional-comparison.exp"
+    # )
 end
-
-_12_itemsetmeasures = [(gsupport, 0.5, 0.5)]
-_12_rulemeasures = [(gconfidence, 0.5, 0.5)]
-
-_12_miner = Miner(
-    deepcopy(X_1_have_command),
-    fpgrowth,
-
-    _12_items,
-    _12_itemsetmeasures,
-    _12_rulemeasures,
-
-    # TODO regulate this parameter
-    worldfilter=SoleLogics.FunctionalWorldFilter(x -> length(x) >= 20, Interval{Int}),
-
-    itemset_mining_policies=[islimited_length_itemset(; maxlength=5)],
-
-    arule_mining_policies=[
-        islimited_length_arule(; antecedent_maxlength=5),
-        isanchored_arule(; npropositions=1),
-        isheterogeneous_arule(; antecedent_nrepetitions=1, consequent_nrepetitions=0),
-    ],
-)
-
-runexperiment(
-    _12_miner;
-    reportname = "e12-tc-1-i-have-command-auto-alphabet-full-propositional.exp",
-    variablenames = VARIABLE_NAMES,
-)
-
-# TODO - uncomment
-# runcomparison(
-#     _12_miner,
-#     LOGISETS,
-#     (conf) -> conf >= 0.5;
-#     sigdigits=3 |> Int8,
-#     targetclass=3 |> Int8,
-#     suppthreshold=0.1,
-#     reportname="e12-tc-1-i-have-command-auto-alphabet-full-propositional-comparison.exp"
-# )
 
 ############################################################################################
 # Useful plots
