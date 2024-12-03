@@ -65,6 +65,20 @@ julia> syntaxstring.(alphabets[_quantile_discretizer])
  "min[V1] ≥ -0.44"
  "max[V1] ≤ -0.31"
  "min[V1] ≥ -0.31"
+
+# for each time series in X (or for the only time series X), consider each possible
+# interval and apply the feature on it; if you are considering other kind of dimensional
+# data (e.g., spatial), adapt the following list comprehension.
+julia> max_metacondition = ScalarMetaCondition(VariableMax(variable), <=)
+julia> max_applied_on_all_intervals = [
+        SoleData.computeunivariatefeature(max_metacondition |> feature, v[i:j])
+        for i in 1:length(v)
+        for j in i+1:length(v)
+        for v in X[1:30, 1]
+    ]
+
+# now you can call `select_alphabet` with the new preprocessed time series.
+julia> select_alphabet(max_applied_on_all_intervals, [metaconditions[1]], discretizers)
 ```
 
 !!! note
@@ -72,22 +86,6 @@ julia> syntaxstring.(alphabets[_quantile_discretizer])
     for example, when working with a `ScalarMetaCondition` `max[V1] ≤ ⍰` on a time series,
     we could consider each possible sub-interval in the time series and apply `max` on it
     before perform binning.
-
-    ```julia
-    _metacondition = ScalarMetaCondition(VariableMax(variable), <=)
-
-    # for each time series in X (or for the only time series X), consider each possible
-    # interval and apply the feature on it; if you are considering other kind of dimensional
-    # data (e.g., spatial), adapt the following list comprehension.
-    max_applied_on_all_intervals = [
-        SoleData.computeunivariatefeature(_metacondition |> feature, v[i:j])
-        for i in 1:length(v)
-        for j in i+1:length(v)
-        for v in X[1:30, 1]
-    ]
-
-    # now you can call `select_alphabet` with the new preprocessed time series.
-    ```
 
 See also `Discretizers.DiscretizationAlgorithm`, [`Item`](@ref),
 `SoleData.AbstractCondition`, `SoleData.ScalarMetaCondition`.
