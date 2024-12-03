@@ -111,7 +111,8 @@ end
 """
     function isheterogeneous_arule(;
         antecedent_nrepetitions::Integer=1,
-        consequent_nrepetitions::Integer=0
+        consequent_nrepetitions::Integer=0,
+        consider_thresholds::Bool=false
     )::Function
 
 Closure returning a boolean function `F` with one argument `rule::ARule`.
@@ -125,13 +126,16 @@ in `rule` [`antecedent`](@ref) and [`consequent`](@ref), the number of identical
     antecedent of the given rule.
 - `consequent_nrepetitions::Integer=0`: maximum allowed number of identical variables
     between the antecedent and the consequent of the given rule.
+- `consider_thresholds::Bool=false`: if true, both identical variables and thresholds
+    are considered in the counting.
 
 See [`antecedent`](@ref), [`ARule`](@ref), [`consequent`](@ref), [`generaterules`](@ref),
 [`Item`](@ref), [`Miner`](@ref).
 """
 function isheterogeneous_arule(;
     antecedent_nrepetitions::Integer=1,
-    consequent_nrepetitions::Integer=0
+    consequent_nrepetitions::Integer=0,
+    consider_thresholds::Bool=false
 )::Function
 
     if antecedent_nrepetitions < 1
@@ -146,12 +150,25 @@ function isheterogeneous_arule(;
             "(given value is $(consequent_nrepetitions))"))
     end
 
-    function _extract_variable(item::Item)::Integer
-        # if `item` is already an Atom, do nothing.
-        # TODO - this could be moved to SoleData
+    function __extract_value(item::Item)
         _formula = formula(item)
         _formula = _formula isa Atom ? _formula : _formula.children |> first
-        return _formula.value.metacond.feature.i_variable
+        return _formula |> SoleLogics.value
+    end
+
+    function _extract_variable_number(item::Item)
+        return __extract_value(item) |> SoleData.metacond |> SoleData.feature |>
+            SoleData.i_variable
+    end
+
+    function _extract_threshold(item::Item)
+        return __extract_value(item) |> SoleData.value |> SoleData.threshold
+    end
+
+    # two items are too similar
+    function ishomogeneous(item1::Item, item2::Item)
+        return _extract_variable_number(item1) == _extract_variable_number(item2) &&
+            (!consider_thresholds || _extract_threshold(item1) == _extract_threshold(item2))
     end
 
     return function _isheterogeneous_arule(rule::ARule)
@@ -160,16 +177,15 @@ function isheterogeneous_arule(;
             ant_item ->
                 # no other items in antecedent shares (too much) the same variable
                 count(__ant_item ->
-                    _extract_variable(ant_item) == _extract_variable(__ant_item),
-                    antecedent(rule)
+                    ishomogeneous(ant_item, __ant_item), antecedent(rule)
                 ) <= antecedent_nrepetitions &&
 
                 # every consequent item does not shares (too much) the same variable
                 # with the fixed antecedent
                 count(cons_item ->
-                    _extract_variable(ant_item) == _extract_variable(cons_item),
-                    consequent(rule)
+                    ishomogeneous(ant_item, cons_item), consequent(rule)
                 ) <= consequent_nrepetitions,
+
             antecedent(rule)
         )
     end
