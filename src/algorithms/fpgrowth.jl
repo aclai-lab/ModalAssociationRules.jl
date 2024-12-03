@@ -85,7 +85,7 @@ function bounce!(pbase::ConditionalPatternBase, miner::AbstractMiner)
     # its second element is the threshold we are looking for.
     _lsupport_threshold = findmeasure(miner, lsupport)[2]
 
-    _nworlds = frame(miner) |> SoleLogics.nworlds
+    _nworlds = nworlds(miner)
 
     # enhanceditemset shape : (itemset, count)
     for enhanceditemset in pbase
@@ -236,7 +236,7 @@ end
 # `fpgrowth` main logic
 function _fpgrowth(miner::Bulldozer{D,I}) where {D<:MineableData,I<:Item}
     kripkeframe = frame(miner)
-    _nworlds = kripkeframe |> SoleLogics.nworlds
+    _nworlds = nworlds(miner)
     nworld_to_itemset = [Itemset{I}() for _ in 1:_nworlds]
 
     for ith_instance in instancesrange(miner)
@@ -279,7 +279,7 @@ function _fpgrowth(miner::Bulldozer{D,I}) where {D<:MineableData,I<:Item}
         #     ) >= lthreshold
         # ] |> unique
 
-        for (nworld, w) in enumerate(kripkeframe |> SoleLogics.allworlds)
+        for (nworld, w) in enumerate(SoleLogics.allworlds(miner; ith_instance=ith_instance))
             _itemset_in_world = [
                 itemset
                 for itemset in frequents
@@ -337,7 +337,7 @@ function _fpgrowth_kernel(
             end
         end
 
-        _nworlds = frame(miner) |> SoleLogics.nworlds
+        _nworlds = nworlds(miner)
 
         _fpgrowth_count_phase(
             survivor_itemset,

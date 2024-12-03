@@ -123,7 +123,7 @@ in `rule` [`antecedent`](@ref) and [`consequent`](@ref), the number of identical
 
 # Arguments
 - `antecedent_nrepetitions::Integer=1`: maximum allowed number of identical variables in the
-    antecedent of the given rule.
+    antecedent of the given rule.+
 - `consequent_nrepetitions::Integer=0`: maximum allowed number of identical variables
     between the antecedent and the consequent of the given rule.
 - `consider_thresholds::Bool=false`: if true, both identical variables and thresholds

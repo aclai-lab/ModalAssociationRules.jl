@@ -1370,8 +1370,8 @@ _12_miner = Miner(
     _12_itemsetmeasures,
     _12_rulemeasures,
 
-    worldfilter=SoleLogics.FunctionalWorldFilter(
-        x -> length(x) >= 3 && length(x) <= 10, Interval{Int}), # TODO choose intervals len
+    # TODO regulate this parameter
+    worldfilter=SoleLogics.FunctionalWorldFilter(x -> length(x) >= 20, Interval{Int}),
 
     itemset_mining_policies=[islimited_length_itemset(; maxlength=5)],
 

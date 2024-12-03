@@ -50,7 +50,7 @@ see the note below to know more about this.
         # return the result enriched with more informations, that will eventually will be
         # used if miner's miningstate has specific fields (e.g., :instance_item_toworlds).
         return Dict(
-            :measure => count(wmask) / nworlds(X, ith_instance),
+            :measure => count(wmask) / length(wmask),
             :instance_item_toworlds => wmask,
         )
     end
@@ -228,7 +228,7 @@ _lsupport_logic = (itemset, X, ith_instance, miner) -> begin
 
     # return the result, and eventually the information needed to support miningstate
     return Dict(
-        :measure => count(wmask) / nworlds(X, ith_instance),
+        :measure => count(wmask) / length(wmask),
         :instance_item_toworlds => wmask,
     )
 end
@@ -246,7 +246,6 @@ _gsupport_logic = (itemset, X, threshold, miner) -> begin
 
     return Dict(:measure => _measure)
 end
-
 
 
 

@@ -450,3 +450,19 @@ function SoleLogics.allworlds(
         )
     end
 end
+
+
+"""
+    function SoleLogics.nworlds(miner::AbstractMiner)
+
+Return the number of worlds returned by [`allworlds(::AbstractMiner)`](@ref).
+
+!!! warning
+    Call this method sparingly, as this method does not perform a single lookup but its
+    time complexity is linear w.r.t the worlds.
+
+    For now, this is inevitable for implementative reasons.
+"""
+function SoleLogics.nworlds(miner::AbstractMiner)
+    SoleLogics.allworlds(miner) |> collect |> length
+end
