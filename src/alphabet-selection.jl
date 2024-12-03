@@ -2,7 +2,7 @@ using Discretizers
 using Distributions
 using Plots
 using Plots.Measures
-using SoleData: AbstractCondition
+using SoleData: AbstractCondition, computeunivariatefeature, feature
 
 """
     function select_alphabet(
@@ -28,6 +28,9 @@ Select an alphabet, that is, a set of [`Item`](@ref)s wrapping `SoleData.Abstrac
 
 # Examples
 ```julia
+julia> using ModalAssociationRules
+julia> using Discretizers
+
 julia> X, _ = load_NATOPS()
 
 # to generate an alphabet, we choose a variable (a column of X) and our metaconditions
@@ -62,16 +65,38 @@ julia> syntaxstring.(alphabets[_quantile_discretizer])
  "min[V1] ≥ -0.44"
  "max[V1] ≤ -0.31"
  "min[V1] ≥ -0.31"
+```
+
+!!! note
+    We could also consider an ad-hoc distribution for a certain feature type;
+    for example, when working with a `ScalarMetaCondition` `max[V1] ≤ ⍰` on a time series,
+    we could consider each possible sub-interval in the time series and apply `max` on it
+    before perform binning.
+
+    ```julia
+    m = ScalarMetaCondition(VariableMax(variable), <=)
+
+    # for each time series in X (or for the only time series X), consider each possible
+    # interval and apply the feature on it; if you are considering other kind of dimensional
+    # data (e.g., spatial), adapt the following list comprehension.
+    max_applied_on_all_intervals = [
+        SoleData.computeunivariatefeature(feature(m), v[i:j])
+        for i in 1:length(a)
+        for j in i+1:length(a)
+        for v in X[1:30, 1]
+    ]
+
+    # now you can call `select_alphabet` with the new preprocessed time series.
+    ```
 
 See also `Discretizers.DiscretizationAlgorithm`, [`Item`](@ref),
-`SoleData.AbstractCondition`.
- ```
+`SoleData.AbstractCondition`, `SoleData.ScalarMetaCondition`.
 """
 function select_alphabet(
     X::Vector{<:Real},
     metaconditions::Vector{<:AbstractCondition},
     discretizers::Vector{<:DiscretizationAlgorithm};
-    remove_extrema::Bool=true
+    cutextrema::Bool=true
 )
     alphabets = Dict{DiscretizationAlgorithm,Vector{<:AbstractCondition}}()
 
@@ -80,7 +105,7 @@ function select_alphabet(
         _binedges = binedges(discretizer, X)
 
         # extrema bins are removed, if requested and if possible
-        if remove_extrema
+        if cutextrema
             _binedges_length = length(_binedges)
             if _binedges_length <= 2
                 throw(
@@ -91,8 +116,8 @@ function select_alphabet(
             end
         end
 
-        # for each metacondition, apply a threshold (a bin edge)
         alphabets[discretizer] = Vector{AbstractCondition}()
+        # for each metacondition, apply a threshold (a bin edge)
         for (condition, threshold) in Iterators.product(metaconditions, _binedges)
             push!(
                 alphabets[discretizer],
@@ -107,9 +132,10 @@ end
 function select_alphabet(
     X::Vector{<:Vector{<:Real}},
     metaconditions::Vector{<:AbstractCondition},
-    discretizers::Vector{<:DiscretizationAlgorithm}
+    discretizers::Vector{<:DiscretizationAlgorithm};
+    kwargs...
 )
-    return select_alphabet(reduce(vcat,X), metaconditions, discretizers)
+    return select_alphabet(reduce(vcat,X), metaconditions, discretizers; kwargs...)
 end
 
 """
