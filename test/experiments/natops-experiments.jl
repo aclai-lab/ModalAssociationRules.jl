@@ -1364,7 +1364,7 @@ if 12 in EXPERIMENTS_IDS
         deepcopy(X_1_have_command),
         fpgrowth,
 
-        _12_items[1:12],
+        _12_items[1:8],
         _12_itemsetmeasures,
         _12_rulemeasures,
 

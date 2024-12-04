@@ -265,7 +265,7 @@ function _fpgrowth(miner::Bulldozer{D,I}) where {D<:MineableData,I<:Item}
         frequents = unique(collect(frequents_channel))
 
         # alternative way to get the frequent 1-length itemsets;
-        # this does not leverage Channel and Threads.@threads
+        # this is serial, thus does not leverage Channel nor Threads.@threads
         # frequents = [candidate
         #     for candidate in Itemset{I}.(items(miner))
         #     for (gmeas_algo, lthreshold, gthreshold) in itemsetmeasures(miner)
@@ -279,7 +279,7 @@ function _fpgrowth(miner::Bulldozer{D,I}) where {D<:MineableData,I<:Item}
         #     ) >= lthreshold
         # ] |> unique
 
-        for (nworld, w) in enumerate(SoleLogics.allworlds(miner; ith_instance=ith_instance))
+        for (nworld, _) in enumerate(SoleLogics.allworlds(miner; ith_instance=ith_instance))
             _itemset_in_world = [
                 itemset
                 for itemset in frequents

@@ -330,6 +330,32 @@ function findmeasure(
     end
 end
 
+"""
+    getlocalthreshold(miner::AbstractMiner, meas::Function)::Threshold
+
+Getter for the [`Threshold`](@ref) associated with the function wrapped by some
+[`MeaningfulnessMeasure`](@ref) tailored to work locally (that is, analyzing "the inside"
+of a dataset's instances) in `miner`.
+
+See [`AbstractMiner`](@ref), [`MeaningfulnessMeasure`](@ref), [`Threshold`](@ref).
+"""
+function getlocalthreshold(miner::AbstractMiner, meas::Function)::Threshold
+    return findmeasure(miner, meas)[2]
+end
+
+"""
+    getglobalthreshold(miner::AbstractMiner, meas::Function)::Threshold
+
+Getter for the [`Threshold`](@ref) associated with the function wrapped by some
+[`MeaningfulnessMeasure`](@ref) tailored to work globally (that is, measuring the behavior
+of a specific local-measure across all dataset's instances) in `miner`.
+
+See [`AbstractMiner`](@ref), [`MeaningfulnessMeasure`](@ref), [`Threshold`](@ref).
+"""
+function getglobalthreshold(miner::AbstractMiner, meas::Function)::Threshold
+    return findmeasure(miner, meas) |> last
+end
+
 
 
 """

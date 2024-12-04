@@ -192,6 +192,25 @@ See also [`count!`](@ref), [`FPTree`](@ref), [`Item`](@ref).
 Base.count(fptree::FPTree)::Integer = fptree.count
 
 """
+    count!(fptree::FPTree, newcount::Integer)
+
+Setter for `fptree`'s internal counter to a fixed value `newcount`.
+
+See also [`count`](@ref), [`FPTree`](@ref).
+"""
+count!(fptree::FPTree, newcount::Integer) = fptree.count = newcount
+
+"""
+    addcount!(fptree::FPTree, newcount::Integer)
+
+Add `newcount` to `fptree`'s internal counter.
+
+See also [`count`](@ref), [`FPTree`](@ref).
+"""
+addcount!(fptree::FPTree, deltacount::Integer) = fptree.count += deltacount
+
+
+"""
     link(fptree::FPTree)::Union{Nothing,FPTree}
 
 Getter for `fptree`'s next brother [`FPTree`](@ref).
@@ -239,24 +258,6 @@ children!(fptree::FPTree, child::FPTree) = begin
     push!(children(fptree), child)
     parent!(child, fptree)
 end
-
-"""
-    count!(fptree::FPTree, newcount::Integer)
-
-Setter for `fptree`'s internal counter to a fixed value `newcount`.
-
-See also [`count`](@ref), [`FPTree`](@ref).
-"""
-count!(fptree::FPTree, newcount::Integer) = fptree.count = newcount
-
-"""
-    addcount!(fptree::FPTree, newcount::Integer)
-
-Add `newcount` to `fptree`'s internal counter.
-
-See also [`count`](@ref), [`FPTree`](@ref).
-"""
-addcount!(fptree::FPTree, deltacount::Integer) = fptree.count += deltacount
 
 function isroot(fptree::FPTree)::Bool
     return fptree |> content |> isnothing

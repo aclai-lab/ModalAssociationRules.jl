@@ -148,3 +148,15 @@ fpgrowth_miner = Miner(X_1_have_command,
     fpgrowth, _6_items, _6_itemsetmeasures, _6_rulemeasures)
 
 @test_nowarn mine!(fpgrowth_miner)
+
+# TODO - it seems that mining is broken when support thresholds are set to 0.
+# This may be due to a tricky > / >= which is well hidden...
+_7_items = _1_items
+_7_itemsetmeasures = [(gsupport, 0.0, 0.0)]
+_7_rulemeasures = [(gconfidence, 0.0, 0.0)]
+
+apriori_miner = Miner(deepcopy(X1), apriori, _7_items, _7_itemsetmeasures, _7_rulemeasures)
+fpgrowth_miner = Miner(
+    deepcopy(X1), fpgrowth, _7_items, _7_itemsetmeasures, _7_rulemeasures)
+
+@test_broken compare(apriori_miner, fpgrowth_miner)
