@@ -149,16 +149,18 @@ function runexperiment(
 		redirect_stdout(out) do
             # For some reason, `itemsetmeasures` and `rulemeasures` getters triggers
             # a MethodError here (maybe this is caused by stdout redirection?).
-            println("Parameterization:\n")
+            println("Alphabet:\n")
             map(item -> println(
-                syntaxstring(item, variable_names_map=VARIABLE_NAMES)) , items(Miner))
+                syntaxstring(item, variable_names_map=VARIABLE_NAMES)) , items(miner))
+
+            println("\n\nThresholds:")
             println(miner.itemset_constrained_measures)
             println(miner.arule_constrained_measures)
 
             if tracktime
                 println("\nRunning time:\n")
                 println("Frequent itemsets extraction: $(miningtime)")
-                println("Association rules generation (w. sift engine): $(generationtime)")
+                println("Association rules generation: $(generationtime)")
                 println("Total elapsed time: $(miningtime + generationtime)")
             end
 
@@ -1344,21 +1346,11 @@ if 12 in EXPERIMENTS_IDS
         quantilediscretizer = Discretizers.DiscretizeQuantile(nbins)
 
         for metacondition in metaconditions
-            # since we are studying time series, we want to consider each sub-interval and
-            # apply the current feature function (e.g., minimum, maximum) ∀ sub-interval;
-            # the resulting vector is the new distribution on which we perform binning.
-            X_df_1_with_feature_applied_to_all_intervals = [
-                # NOTE - could be done using allfeatstruct
-                SoleData.computeunivariatefeature(metacondition |> SoleData.feature, v[i:j])
-                for v in X_df_1_have_command[:,variable_index]
-                for i in 1:length(v)
-                for j in i+1:length(v)
-            ]
-
             alphabet = __arm_select_alphabet(
-                X_df_1_with_feature_applied_to_all_intervals,
-                [metacondition],
-                quantilediscretizer
+                X_df_1_have_command[:,variable_index],
+                metacondition,
+                quantilediscretizer;
+                consider_all_subintervals=true
             ) .|> Atom .|> Item
 
             push!(_12_items, alphabet...)
@@ -1372,7 +1364,7 @@ if 12 in EXPERIMENTS_IDS
         deepcopy(X_1_have_command),
         fpgrowth,
 
-        _12_items,
+        _12_items[1:20],
         _12_itemsetmeasures,
         _12_rulemeasures,
 
@@ -1393,6 +1385,7 @@ if 12 in EXPERIMENTS_IDS
         reportname = "e12-tc-1-i-have-command-auto-alphabet-full-propositional.exp",
         variablenames = VARIABLE_NAMES,
     )
+
     # TODO - uncomment
     # runcomparison(
         #     _12_miner,
