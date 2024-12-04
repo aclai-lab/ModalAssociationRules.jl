@@ -243,6 +243,7 @@ localmemo!(
         key = LmeasMemoKey((_symbol, _armsubject, _ith_instance))
     end
 
+    # actually, lock is not necessary
     # lock(datalock(bulldozer)) do
     bulldozer.localmemo[key] = val
     # end
