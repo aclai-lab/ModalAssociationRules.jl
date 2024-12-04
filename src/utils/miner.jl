@@ -551,8 +551,3 @@ See also [`data`](@ref), [`Miner`](@ref).
 function SoleLogics.frame(miner::Miner; ith_instance::Integer=1)
     return SoleLogics.frame(data(miner), ith_instance)
 end
-
-# TODO remove this if test works
-# function SoleLogics.nworlds(miner::Miner)
-#     return frame(miner) |> SoleLogics.nworlds
-# end

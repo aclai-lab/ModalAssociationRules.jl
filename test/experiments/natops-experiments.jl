@@ -1290,7 +1290,7 @@ if 11 in EXPERIMENTS_IDS
         box(IA_E).(_11_propositional_items),
         diamond(IA_D).(_11_propositional_items),
         box(IA_O).(_11_propositional_items),
-    ) |> Vector{Formula}
+    ) .|> Item
 
     _11_itemsetmeasures = [(gsupport, 0.01, 0.01)]
     _11_rulemeasures = [(gconfidence, 0.1, 0.1)]
@@ -1350,26 +1350,27 @@ if 12 in EXPERIMENTS_IDS
                 X_df_1_have_command[:,variable_index],
                 metacondition,
                 quantilediscretizer;
-                consider_all_subintervals=true
+                consider_all_subintervals=false
             ) .|> Atom .|> Item
 
             push!(_12_items, alphabet...)
         end
     end
 
-    _12_itemsetmeasures = [(gsupport, 0.5, 0.5)]
-    _12_rulemeasures = [(gconfidence, 0.5, 0.5)]
+    _12_itemsetmeasures = [(gsupport, 0.0, 0.0)]
+    _12_rulemeasures = [(gconfidence, 0.0, 0.0)]
 
     _12_miner = Miner(
         deepcopy(X_1_have_command),
         fpgrowth,
 
-        _12_items[1:20],
+        _12_items[1:5],
         _12_itemsetmeasures,
         _12_rulemeasures,
 
-        # TODO regulate this parameter
-        worldfilter=SoleLogics.FunctionalWorldFilter(x -> length(x) >= 20, Interval{Int}),
+        # TODO it seems that if you apply a filter on worlds,
+        # the local support computation messes up
+        worldfilter=nothing, #SoleLogics.FunctionalWorldFilter(x -> length(x) >= 20, Interval{Int}),
 
         itemset_mining_policies=[islimited_length_itemset(; maxlength=5)],
 
