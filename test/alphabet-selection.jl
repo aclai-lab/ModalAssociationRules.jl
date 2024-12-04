@@ -24,7 +24,7 @@ _quantile_discretizer = DiscretizeQuantile(nbins)
 discretizers = [_uniform_width_discretizer, _quantile_discretizer]
 
 # we obtain one alphabet for each strategy
-_alphabets = select_alphabet(X[1:30,variable], metaconditions, discretizers)
+_alphabets = __arm_select_alphabet(X[1:30,variable], metaconditions, discretizers)
 
 # now, we choose how to mix up all the obtained literals;
 # for example, we choose to only focus on quantile-based discretization.
@@ -38,7 +38,7 @@ for variable in variables(X)
         X[1:30,variable],
         n_uniform_width_bins=5,
         n_quantile_bins=5,
-        select_alphabet=true,
+        __arm_select_alphabet=true,
         plot_title_variable=variable,
         plot_title_additional_info="for the first class",
         save=true,

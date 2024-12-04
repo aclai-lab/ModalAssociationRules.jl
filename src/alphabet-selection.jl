@@ -5,31 +5,25 @@ using Plots.Measures
 using SoleData: AbstractCondition, computeunivariatefeature, feature
 
 """
-    function select_alphabet(
+    function __arm_select_alphabet(
         X::Vector{<:Real},
-        metaconditions::Vector{<:AbstractCondition},
-        discretizers::Vector{<:DiscretizationAlgorithm}
+        metacondition::Vector{<:AbstractCondition},
+        discretizer::Vector{<:DiscretizationAlgorithm}
     )
-    function select_alphabet(
-        X::Vector{<:Real},
-        metaconditions::Vector{<:AbstractCondition},
-        discretizers::DiscretizationAlgorithm;
-        kwargs...
-    )
-    function select_alphabet(
+    function __arm_select_alphabet(
         X::Vector{<:Vector{<:Real}},
-        metaconditions::Vector{<:AbstractCondition},
-        discretizers::Vector{<:DiscretizationAlgorithm}
+        metacondition::Vector{<:AbstractCondition},
+        discretizer::Vector{<:DiscretizationAlgorithm}
     )
 
 Select an alphabet, that is, a set of [`Item`](@ref)s wrapping `SoleData.AbstractCondition`.
 
 # Arguments
 - `X::Vector{<:Vector{<:Real}}`: dataset column containing real numbers or real vectors;
-- `metaconditions::Vector{<:AbstractCondition}`: abstract type for representing conditions
+- `metacondition::Vector{<:AbstractCondition}`: abstract type for representing a condition
     that can be interpreted end evaluated on worlds of logical dataset instances
     (e.g., a generic "max[V1] ≤ ⍰" where "?" is a threshold that has to be defined);
-- `discretizers::Vector{<:DiscretizationAlgoritm}`: a strategy to perform binning over
+- `discretizer::Vector{<:DiscretizationAlgoritm}`: a strategy to perform binning over
     a distribution.
 
 # Examples
@@ -39,52 +33,54 @@ julia> using Discretizers
 
 julia> X, _ = load_NATOPS()
 
-# to generate an alphabet, we choose a variable (a column of X) and our metaconditions
+# to generate an alphabet, we choose a variable (a column of X) and our metacondition
 julia> variable = 1
-julia> metaconditions = [
-    ScalarMetaCondition(VariableMax(variable), <=),
-    ScalarMetaCondition(VariableMin(variable), >=)
-]
-2-element Vector{ScalarMetaCondition}:
+julia> max_metacondition = ScalarMetaCondition(VariableMax(variable), <=)
  ScalarMetaCondition{VariableMax{Integer}, typeof(<=)}: max[V1] ≤ ⍰
- ScalarMetaCondition{VariableMin{Integer}, typeof(>=)}: min[V1] ≥ ⍰
 
 # we choose how we want to discretize the distribution of the variable
 julia> nbins = 5
-julia> _uniform_width_discretizer = Discretizers.DiscretizeUniformWidth(nbins)
-julia> _quantile_discretizer = Discretizers.DiscretizeQuantile(nbins)
-julia> discretizers = [_uniform_width_discretizer, _quantile_discretizer]
+# we specify a strategy to perform discretization
+julia> discretizer = Discretizers.DiscretizeQuantile(nbins)
 
-# we obtain one alphabet for each strategy
-julia> alphabets = select_alphabet(X[1:30,variable], metaconditions, discretizers)
-julia> syntaxstring.(alphabets[_quantile_discretizer])
-12-element Vector{String}:
- "max[V1] ≤ -1.02"
- "min[V1] ≥ -1.02"
+# we obtain one alphabet and pretty print it
+julia> alphabet1 = __arm_select_alphabet(X[1:30,variable], max_metacondition, discretizer)
+julia> syntaxstring.(alphabet1[_quantile_discretizer])
+4-element Vector{String}:
  "max[V1] ≤ -0.63"
- "min[V1] ≥ -0.63"
  "max[V1] ≤ -0.57"
- "min[V1] ≥ -0.57"
  "max[V1] ≤ -0.5"
- "min[V1] ≥ -0.5"
  "max[V1] ≤ -0.44"
- "min[V1] ≥ -0.44"
- "max[V1] ≤ -0.31"
- "min[V1] ≥ -0.31"
 
 # for each time series in X (or for the only time series X), consider each possible
 # interval and apply the feature on it; if you are considering other kind of dimensional
 # data (e.g., spatial), adapt the following list comprehension.
-julia> max_metacondition = ScalarMetaCondition(VariableMax(variable), <=)
 julia> max_applied_on_all_intervals = [
-        SoleData.computeunivariatefeature(max_metacondition |> feature, v[i:j])
+        SoleData.computeunivariatefeature(max_metacondition |> SoleData.feature, v[i:j])
+        for v in X[1:30, 1]
         for i in 1:length(v)
         for j in i+1:length(v)
-        for v in X[1:30, 1]
     ]
 
-# now you can call `select_alphabet` with the new preprocessed time series.
-julia> select_alphabet(max_applied_on_all_intervals, [metaconditions[1]], discretizers)
+# now you can call `__arm_select_alphabet` with the new preprocessed time series.
+julia> alphabet2 = __arm_select_alphabet(
+    max_applied_on_all_intervals, max_metacondition, discretizer)
+julia> syntaxstring.(alphabet2)
+4-element Vector{String}:
+ "max[V1] ≤ -0.61"
+ "max[V1] ≤ -0.53"
+ "max[V1] ≤ -0.47"
+ "max[V1] ≤ -0.4"
+
+# we can obtain the same result as before by simplying setting `consider_all_subintervals`
+julia> alphabet3 = __arm_select_alphabet(X[1:30,variable], max_metacondition, discretizer;
+            consider_all_subintervals=true)
+julia> syntaxstring.(alphabet2)
+4-element Vector{String}:
+ "max[V1] ≤ -0.61"
+ "max[V1] ≤ -0.53"
+ "max[V1] ≤ -0.47"
+ "max[V1] ≤ -0.4"
 ```
 
 !!! note
@@ -96,70 +92,66 @@ julia> select_alphabet(max_applied_on_all_intervals, [metaconditions[1]], discre
 See also `Discretizers.DiscretizationAlgorithm`, [`Item`](@ref),
 `SoleData.AbstractCondition`, `SoleData.ScalarMetaCondition`.
 """
-function select_alphabet(
+function __arm_select_alphabet(
     X::Vector{<:Real},
-    metaconditions::Vector{<:AbstractCondition},
-    discretizers::Vector{<:DiscretizationAlgorithm};
+    metacondition::AbstractCondition,
+    discretizer::DiscretizationAlgorithm;
     cutextrema::Bool=true
 )
-    alphabets = Dict{DiscretizationAlgorithm,Vector{<:AbstractCondition}}()
+    alphabet = Vector{AbstractCondition}()
 
     # for each strategy, found the edges of each bin
-    for discretizer in discretizers
-        _binedges = binedges(discretizer, X)
+    _binedges = binedges(discretizer, X)
 
-        # extrema bins are removed, if requested and if possible
-        if cutextrema
-            _binedges_length = length(_binedges)
-            if _binedges_length <= 2
-                throw(
-                    ArgumentError("Cannot remove extrema: $(_binedges_length) bins found"))
-            else
-                popfirst!(_binedges)
-                pop!(_binedges)
-            end
-        end
-
-        alphabets[discretizer] = Vector{AbstractCondition}()
-        # for each metacondition, apply a threshold (a bin edge)
-        for (condition, threshold) in Iterators.product(metaconditions, _binedges)
-            push!(
-                alphabets[discretizer],
-                ScalarCondition(condition, round(threshold, digits=2))
-            )
+    # extrema bins are removed, if requested and if possible
+    if cutextrema
+        _binedges_length = length(_binedges)
+        if _binedges_length <= 2
+            throw(
+                ArgumentError("Cannot remove extrema: $(_binedges_length) bins found"))
+        else
+            popfirst!(_binedges)
+            pop!(_binedges)
         end
     end
 
-    return alphabets
+    # for each metacondition, apply a threshold (a bin edge)
+
+    for threshold in _binedges
+        push!(alphabet, ScalarCondition(metacondition, round(threshold, digits=2)))
+    end
+
+    return alphabet
 end
 
-function select_alphabet(
-    X::Vector{<:Real},
-    metaconditions::Vector{<:AbstractCondition},
-    discretizers::DiscretizationAlgorithm;
-    kwargs...
-)
-    # the only difference here is that a vector is returned,
-    # instead of a one-entry dictionary.
-    select_alphabet(X, metaconditions, [discretizers]; kwargs...)[discretizers]
-end
-
-function select_alphabet(
+function __arm_select_alphabet(
     X::Vector{<:Vector{<:Real}},
-    metaconditions::Vector{<:AbstractCondition},
-    discretizers::Union{DiscretizationAlgorithm,Vector{<:DiscretizationAlgorithm}};
+    metacondition::AbstractCondition,
+    discretizer::DiscretizationAlgorithm;
+    consider_all_subintervals::Bool=false,
     kwargs...
 )
-    return select_alphabet(reduce(vcat,X), metaconditions, discretizers; kwargs...)
-end
+    if consider_all_subintervals
+        _X = [
+                SoleData.computeunivariatefeature(metacondition |> SoleData.feature, v[i:j])
+                # for each vector, we consider the superior triangular matrix
+                for v in X
+                for i in 1:length(v)
+                for j in i+1:length(v)
+            ]
+    else
+        _X = reduce(vcat, X)
+    end
 
+    return __arm_select_alphabet(_X, metacondition, discretizer; kwargs...)
+end
 
 """
     function time_series_distribution_analysis(
         X::Vector{<:Vector{<:Real}};
         n_uniform_width_bins::Integer=5,
         n_quantile_bins::Integer=5,
-        select_alphabet::Bool=true,
+        __arm_select_alphabet::Bool=true,
         palette::ColorPalette=palette(:batlow10),
         plot_title_variable="?",
         plot_title_additional_info="",
@@ -182,8 +174,8 @@ The study is returned under the form of plots. In particular:
 - `n_uniform_width_bins::Integer=5`: number of bins computed by `DiscretizeUniformWidth`
     strategy;
 - `n_quantile_bins::Integer=5`: number of bins computed by `DiscretizeQuantile` strategy;
-- `select_alphabet::Bool=true`: show a possible extracted alphabet in an additional plot,
-    using [`select_alphabet`](@ref) with two default [`ScalarMetaCondition`](@ref)s and
+- `__arm_select_alphabet::Bool=true`: show a possible extracted alphabet in an additional plot,
+    using [`__arm_select_alphabet`](@ref) with two default [`ScalarMetaCondition`](@ref)s and
     `Discretizers.DiscretizeQuantile(n_quantile_bins)` as discretization strategy.
 - `palette::ColorPalette=palette(:batlow10)`: plots color palette;
 - `plot_title_variable::Any="?"`: string which specifies which variable is being analysed;
@@ -198,7 +190,7 @@ function time_series_distribution_analysis(
     X::Vector{<:Vector{<:Real}};
     n_uniform_width_bins::Integer=5,
     n_quantile_bins::Integer=5,
-    select_alphabet::Bool=true,
+    __arm_select_alphabet::Bool=true,
     palette::ColorPalette=palette(:batlow10),
     plot_title_variable="?",
     plot_title_additional_info="",
@@ -260,12 +252,12 @@ function time_series_distribution_analysis(
 
 
     # dummy plot for printing a possible alphabet
-    if !select_alphabet
-        text_content = "No additional informations.\nSet `select_alphabet=true` to show."
+    if !__arm_select_alphabet
+        text_content = "No additional informations.\nSet `__arm_select_alphabet=true` to show."
     else
-        # `select_alphabet` returns a map from strategy to alphabet,
+        # `__arm_select_alphabet` returns a map from strategy to alphabet,
         # this is why there are square brackets at the end of the function call.
-        alphabet = ModalAssociationRules.select_alphabet(
+        alphabet = ModalAssociationRules.__arm_select_alphabet(
             V, [ScalarMetaCondition(VariableMax(Symbol(plot_title_variable)), <=),
                 ScalarMetaCondition(VariableMin(Symbol(plot_title_variable)), >=)],
             [_quantile_discretizer]

@@ -1330,7 +1330,8 @@ if 12 in EXPERIMENTS_IDS
 
     _12_items = Item[]
 
-    # there is no need to consider left-sided body variables (left arm is not moving in class 1)
+    # there is no need to consider left-sided body variables
+    # (left arm is not moving in class 1)
     for variable_index = RIGHT_BODY_VARIABLES
         # each proposition follows this schema
         metaconditions = [
@@ -1344,16 +1345,17 @@ if 12 in EXPERIMENTS_IDS
 
         for metacondition in metaconditions
             # since we are studying time series, we want to consider each sub-interval and
-            # apply the current feature function (e.g., minimum, maximum) on each sub-interval;
-            # the resulting float vector is the new distribution on which we perform binning.
+            # apply the current feature function (e.g., minimum, maximum) ∀ sub-interval;
+            # the resulting vector is the new distribution on which we perform binning.
             X_df_1_with_feature_applied_to_all_intervals = [
+                # NOTE - could be done using allfeatstruct
                 SoleData.computeunivariatefeature(metacondition |> SoleData.feature, v[i:j])
                 for v in X_df_1_have_command[:,variable_index]
                 for i in 1:length(v)
                 for j in i+1:length(v)
             ]
 
-            alphabet = select_alphabet(
+            alphabet = __arm_select_alphabet(
                 X_df_1_with_feature_applied_to_all_intervals,
                 [metacondition],
                 quantilediscretizer
