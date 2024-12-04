@@ -5,6 +5,9 @@ using Plots.Measures
 using SoleData: AbstractCondition, computeunivariatefeature, feature
 
 """
+NOTE: this is currently being moved in SoleData, under the name of `select_alphabet`.
+Pull request is currently under revision, this method will then be deprecated.
+
     function __arm_select_alphabet(
         X::Vector{<:Real},
         metacondition::Vector{<:AbstractCondition},
