@@ -1350,7 +1350,7 @@ if 12 in EXPERIMENTS_IDS
                 X_df_1_have_command[:,variable_index],
                 metacondition,
                 quantilediscretizer;
-                consider_all_subintervals=false
+                consider_all_subintervals=true
             ) .|> Atom .|> Item
 
             push!(_12_items, alphabet...)
@@ -1364,13 +1364,13 @@ if 12 in EXPERIMENTS_IDS
         deepcopy(X_1_have_command),
         fpgrowth,
 
-        _12_items[8:12],
+        _12_items[1:12],
         _12_itemsetmeasures,
         _12_rulemeasures,
 
         # TODO it seems that if you apply a filter on worlds,
         # the local support computation messes up
-        worldfilter=SoleLogics.FunctionalWorldFilter(x -> length(x) >= 20, Interval{Int}),
+        worldfilter=SoleLogics.FunctionalWorldFilter(x -> length(x) >= 30, Interval{Int}),
 
         itemset_mining_policies=[islimited_length_itemset(; maxlength=5)],
 

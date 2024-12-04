@@ -93,6 +93,7 @@ function apriori(
             # all the itemset mining policies must be honored too.
             if gmeas_algo(candidate, X, lthreshold, miner) >= gthreshold &&
                 all(__policy -> __policy(itemset), itemset_mining_policies(miner))
+                # TODO test using new policies; maybe there is need of a casting on itemset?
         ] |> Vector{Itemset{_itemtype}}
 
         push!(freqitems(miner), frequents...)
