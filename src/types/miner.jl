@@ -21,6 +21,10 @@ For example, [`Miner`](@ref) does completely implement the interface while
 - localmemo(miner::AbstractMiner)
 - globalmemo(miner::AbstractMiner)
 
+- worldfilter(miner::AbstractMiner)
+- itemset_mining_policies(miner::AbstractMiner)
+- arule_mining_policies(miner::AbstractMiner)
+
 - miningstate(miner::AbstractMiner)
 - info(miner::AbstractMiner)
 
@@ -99,13 +103,13 @@ rulemeasures(::AbstractMiner) = error("Not implemented")
 
 
 """
-    localmemo(miner::Miner)::LmeasMemo
-    localmemo(miner::Miner, key::LmeasMemoKey)
+    localmemo(miner::AbstractMiner)::LmeasMemo
+    localmemo(miner::AbstractMiner, key::LmeasMemoKey)
 
 Return the local memoization structure inside `miner`, or a specific entry if a
 [`LmeasMemoKey`](@ref) is provided.
 
-See also [`Miner`](@ref), [`LmeasMemo`](@ref), [`LmeasMemoKey`](@ref).
+See also [`AbstractMiner`](@ref), [`LmeasMemo`](@ref), [`LmeasMemoKey`](@ref).
 """
 localmemo(::AbstractMiner)::LmeasMemo = error("Not implemented.")
 localmemo(miner::AbstractMiner, key::LmeasMemoKey)::Union{Nothing,Threshold} = begin
@@ -113,24 +117,24 @@ localmemo(miner::AbstractMiner, key::LmeasMemoKey)::Union{Nothing,Threshold} = b
 end
 
 """
-    localmemo!(miner::Miner, key::LmeasMemoKey, val::Threshold)
+    localmemo!(miner::AbstractMiner, key::LmeasMemoKey, val::Threshold)
 
 Setter for a specific entry `key` inside the local memoization structure wrapped by `miner`.
 
-See also [`Miner`](@ref), [`LmeasMemo`](@ref), [`LmeasMemoKey`](@ref).
+See also [`AbstractMiner`](@ref), [`LmeasMemo`](@ref), [`LmeasMemoKey`](@ref).
 """
 localmemo!(miner::AbstractMiner, key::LmeasMemoKey, val::Threshold) = begin
     miner.localmemo[key] = val
 end
 
 """
-    globalmemo(miner::Miner)::GmeasMemo
-    globalmemo(miner::Miner, key::GmeasMemoKey)
+    globalmemo(miner::AbstractMiner)::GmeasMemo
+    globalmemo(miner::AbstractMiner, key::GmeasMemoKey)
 
 Return the global memoization structure inside `miner`, or a specific entry if a
 [`GmeasMemoKey`](@ref) is provided.
 
-See also [`Miner`](@ref), [`GmeasMemo`](@ref), [`GmeasMemoKey`](@ref).
+See also [`AbstractMiner`](@ref), [`GmeasMemo`](@ref), [`GmeasMemoKey`](@ref).
 """
 globalmemo(::AbstractMiner)::GmeasMemo = error("Not implemented.")
 globalmemo(miner::AbstractMiner, key::GmeasMemoKey)::Union{Nothing,Threshold} = begin
@@ -138,16 +142,64 @@ globalmemo(miner::AbstractMiner, key::GmeasMemoKey)::Union{Nothing,Threshold} = 
 end
 
 """
-    globalmemo!(miner::Miner, key::GmeasMemoKey, val::Threshold)
+    globalmemo!(miner::AbstractMiner, key::GmeasMemoKey, val::Threshold)
 
 Setter for a specific entry `key` inside the global memoization structure wrapped by
 `miner`.
 
-See also [`Miner`](@ref), [`GmeasMemo`](@ref), [`GmeasMemoKey`](@ref).
+See also [`AbstractMiner`](@ref), [`GmeasMemo`](@ref), [`GmeasMemoKey`](@ref).
 """
 globalmemo!(miner::AbstractMiner, key::GmeasMemoKey, val::Threshold) = begin
     miner.globalmemo[key] = val
 end
+
+
+
+"""
+    worldfilter(::AbstractMiner)
+
+Return the world filter policy wrapped within the [`AbstractMiner`](@ref).
+This specifies how the worlds of a modal instance must be iterated.
+
+See also [`AbstractMiner`](@ref), [`data(::AbstractMiner)`](@ref), `SoleLogics.WorldFilter`.
+"""
+worldfilter(::AbstractMiner) = error("Not implemented.")
+
+"""
+    function itemset_mining_policies(::AbstractMiner)
+
+Return the mining policies vector wrapped within an [`AbstractMiner`](@ref).
+Each mining policies is a meta-rule describing which [`Itemset`](@ref) are accepted
+during the mining phase and which are discarded.
+
+!!! warning
+    These policies often require to be tailored ad-hoc for a specific mining algorithm,
+    and have the role of pruning unwanted explorations of the search space as early as
+    possible.
+
+    Keep in mind that you may need to modify some existing policies to make them correct
+    and effective for your custom algorithm.
+
+    As far as the algorithms already implemented in this package are concerned,
+    generation policies are applied before saving an itemset inside the miner:
+    thus, they reduce the waste of memory, but not necessarily of computational time.
+
+See also [`AbstractMiner`](@ref), [`generaterules`](@ref), [`arule_mining_policies`](@ref).
+"""
+itemset_mining_policies(::AbstractMiner) = error("Not implemented.")
+
+"""
+    arule_mining_policies(::AbstractMiner)
+
+Return the association rules generation policies vector wrapped within an
+[`AbstractMiner`](@ref).
+Each generation policies is a meta-rule describing which [`ARule`](@ref) are accepted
+during the generation algorithm and which are discarded.
+
+See also [`AbstractMiner`](@ref), [`generaterules`](@ref),
+[`itemset_mining_policies`](@ref).
+"""
+arule_mining_policies(::AbstractMiner) = error("Not implemented").
 
 
 
@@ -317,18 +369,100 @@ function apply!(miner::AbstractMiner, X::MineableData; forcemining::Bool=false, 
     return generaterules(freqitems(miner), miner)
 end
 
+
 """
-    generaterules!(miner::AbstractMiner; kwargs...)
+    generaterules(itemsets::AbstractVector{Itemset}, miner::AbstractMiner)
+
+Raw subroutine of [`generaterules!(miner::AbstractMiner; kwargs...)`](@ref).
+
+Generates [`ARule`](@ref) from the given collection of `itemsets` and `miner`.
+
+The strategy followed is
+[described here](https://rakesh.agrawal-family.com/papers/sigmod93assoc.pdf)
+at section 2.2.
+
+To establish the meaningfulness of each association rule, check if it meets the global
+constraints specified in `rulemeasures(miner)`, and yields the rule if so.
+
+See also [`AbstractMiner`](@ref), [`ARule`](@ref), [`Itemset`](@ref),
+[`rulemeasures`](@ref).
+"""
+@resumable function generaterules(
+    ::AbstractVector{Itemset},
+    ::AbstractMiner;
+)
+    error("Not implemented")
+end
+
+"""
+    generaterules!(miner::Miner; kwargs...)
 
 Return a generator of [`ARule`](@ref)s, given an already trained `miner`.
 
-See also [`ARule`](@ref), [`AbstractMiner`](@ref).
+See also [`AbstractMiner`](@ref), [`ARule`](@ref).
 """
-function generaterules!(miner::AbstractMiner)
-    if !info(miner, :istrained)
-        error("The miner should be trained before generating rules. " *
-            "Please, invoke `mine!`.")
-    end
+function generaterules!(::AbstractMiner)
+    error("Not implemented.")
+end
 
-    return generaterules(freqitems(miner), miner)
+# interface extending dispatches coming from external packages
+
+"""
+    function SoleLogics.frame(::AbstractMiner)
+
+Get the frame wrapped within an [`AbstractMiner`](@ref).
+
+See also [`AbstractMiner`](@ref), `SoleLogics.frame`.
+"""
+function SoleLogics.frame(::AbstractMiner)
+    error("Not implemented.")
+end
+
+"""
+    function SoleLogics.allworlds(
+        miner::AbstractMiner;
+        worldfilter::Union{Nothing,WorldFilter}=nothing
+    )
+
+Return a generator iterating over all the worlds wrapped within `miner`.
+
+# Arguments
+- `miner::AbstractMiner`: miner wrapping atleast one modal instance;
+- `ith_instance::Integer=1`: the specific instance you are considering.
+
+!!! note
+    If a [`worldfilter`](@ref) is loaded within `miner`, then it is leveareged.
+
+See also [`AbstractMiner`](@ref), `SoleLogics.allworlds`, `SoleLogics.frame`,
+[`worldfilter`](@ref).
+"""
+function SoleLogics.allworlds(
+    miner::AbstractMiner;
+    ith_instance::Integer=1
+)
+    _worldfilter = worldfilter(miner)
+    if isnothing(_worldfilter)
+        return frame(miner; ith_instance=ith_instance) |> SoleLogics.allworlds
+    else
+        SoleLogics.filterworlds(
+            _worldfilter,
+            frame(miner; ith_instance=ith_instance) |> SoleLogics.allworlds
+        )
+    end
+end
+
+
+"""
+    function SoleLogics.nworlds(miner::AbstractMiner)
+
+Return the number of worlds returned by [`allworlds(::AbstractMiner)`](@ref).
+
+!!! warning
+    Call this method sparingly, as this method does not perform a single lookup but its
+    time complexity is linear w.r.t the worlds.
+
+    For now, this is inevitable for implementative reasons.
+"""
+function SoleLogics.nworlds(miner::AbstractMiner)
+    SoleLogics.allworlds(miner) |> collect |> length
 end

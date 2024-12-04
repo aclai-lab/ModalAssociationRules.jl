@@ -50,7 +50,7 @@ see the note below to know more about this.
         # return the result enriched with more informations, that will eventually will be
         # used if miner's miningstate has specific fields (e.g., :instance_item_toworlds).
         return Dict(
-            :measure => count(wmask) / nworlds(X, ith_instance),
+            :measure => count(wmask) / length(wmask),
             :instance_item_toworlds => wmask,
         )
     end
@@ -216,17 +216,19 @@ end
 
 # measures implementation
 
-# core logic of `lsupport`, as a lambda function;
-# `miner` is an unused argument, but is required since this function must adhere to local
-# measures interface (see `@localmeasure` macro)
+# core logic of `lsupport`, as a lambda function
 _lsupport_logic = (itemset, X, ith_instance, miner) -> begin
-    # bool vector, representing on which world an Itemset holds
-    wmask = [
-        check(formula(itemset), X, ith_instance, w) for w in allworlds(X, ith_instance)]
+    wmask = WorldMask([
+        # for each world, compute on which worlds the model checking algorithm returns true
+        check(formula(itemset), X, ith_instance, w)
+
+        # NOTE: the `worldfilter` wrapped within `miner` is levereaged, if given
+        for w in allworlds(miner; ith_instance=ith_instance)
+    ])
 
     # return the result, and eventually the information needed to support miningstate
     return Dict(
-        :measure => count(wmask) / nworlds(X, ith_instance),
+        :measure => count(wmask) / length(wmask),
         :instance_item_toworlds => wmask,
     )
 end
@@ -234,13 +236,16 @@ end
 # core logic of `gsupport`, as a lambda function
 _gsupport_logic = (itemset, X, threshold, miner) -> begin
     _measure = sum([
+        # for each instance, compute how many times the local support overpass the threshold
         lsupport(itemset, getinstance(X, ith_instance), miner) >= threshold
+
+        # NOTE: an instance filter could be provided by the user to avoid iterating
+        # every instance, depending on the needings.
         for ith_instance in 1:ninstances(X)
     ]) / ninstances(X)
 
     return Dict(:measure => _measure)
 end
-
 
 
 
@@ -309,9 +314,9 @@ _lleverage_logic = (rule, X, ith_instance, miner) -> begin
 end
 
 _gleverage_logic = (rule, X, threshold, miner) -> begin
-    _ans = gsupport(convert(Itemset, rule), X, threshod, miner) - \
-        gsupport(antecedent(rule), X, threshod, miner) * \
-        gsupport(consequent(rule), X, threshod, miner)
+    _ans = gsupport(convert(Itemset, rule), X, threshold, miner) -
+        gsupport(antecedent(rule), X, threshold, miner) *
+        gsupport(consequent(rule), X, threshold, miner)
 
     return Dict(:measure => _ans)
 end
@@ -319,6 +324,8 @@ end
 
 
 _lchisquared_logic = (rule, X, ith_instance, miner) -> begin
+    # TODO - this might be broken
+
     N = ninstances(X)
     _instance = getinstance(X, ith_instance)
 
@@ -328,8 +335,8 @@ _lchisquared_logic = (rule, X, ith_instance, miner) -> begin
     c1 = consequent(rule)
     c2 = NEGATION(b1 |> formula) |> Itemset
 
-    _ans = N * sum((A,C) -> lleverage(ARule(A,C), X, _instance, miner)^2 /
-        (lsupport(A, X, _instance, miner) * lsupport(C, X, _instance, miner)),
+    _ans = N * sum((R) -> lleverage(ARule(first(R),last(R)), X, _instance, miner)^2 /
+        (lsupport(first(R), X, _instance, miner) * lsupport(last(R), X, _instance, miner)),
         IterTools.product([a1, a2], [c1, c2])
     )
 
@@ -337,17 +344,19 @@ _lchisquared_logic = (rule, X, ith_instance, miner) -> begin
 end
 
 _gchisquared_logic = (rule, X, threshold, miner) -> begin
+    # TODO - this might be broken
+
     N = ninstances(X)
 
     a1 = antecedent(rule)
     a2 = NEGATION(a1 |> formula) |> Itemset
 
     c1 = consequent(rule)
-    c2 = NEGATION(b1 |> formula) |> Itemset
+    c2 = NEGATION(c1 |> formula) |> Itemset
 
-    _ans = N * sum((A,C) -> gleverage(ARule(A,C), X, threshold, miner)^2 /
-        (gsupport(A, X, threshold, miner) * gsupport(C, X, threshold, miner)),
-        IterTools.product([a1, a2], [c1, c2])
+    _ans = N * sum((R) -> gleverage(ARule(first(R),last(R)), X, threshold, miner)^2 /
+        (gsupport(first(R), X, threshold, miner) * gsupport(last(R), X, threshold, miner)),
+        IterTools.product([a1, a2], [c1, c2]) |> collect |> vec
     )
 
     return Dict(:measure => _ans)

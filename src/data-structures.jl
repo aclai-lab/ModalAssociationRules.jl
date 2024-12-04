@@ -1,4 +1,57 @@
 """
+    const EnhancedItemset = Tuple{Itemset,UInt32}
+
+Compressed representation of multiple, identical [`Itemset`](@ref)s.
+
+See also [`Itemset`](@ref).
+"""
+const EnhancedItemset = Tuple{<:Itemset,Integer}
+
+"""
+    itemset(enhitemset::EnhancedItemset)::Itemset
+
+Getter for the [`Itemset`](@ref) wrapped within an [`EnhancedItemset`](@ref).
+
+See also [`EnhancedItemset`](@ref), [`Itemset`](@ref).
+"""
+itemset(enhitemset::EnhancedItemset) = first(enhitemset)
+
+"""
+    itemset(enhitemset::EnhancedItemset)::Integer
+
+Getter for the integer counter wrapped within `enhitemset`.
+
+See also [`EnhancedItemset`](@ref), [`Itemset`](@ref).
+"""
+count(enhitemset::EnhancedItemset)::Integer = last(enhitemset)
+
+function Base.convert(::Type{EnhancedItemset}, itemset::Itemset, count::Integer)
+    return EnhancedItemset((itemset, count))
+end
+function Base.convert(::Type{Itemset}, enhanceditemset::EnhancedItemset)
+    return first(enhanceditemset)
+end
+
+function Base.show(io::IO, enhanceditemset::EnhancedItemset)
+    print(io, "[$(first(enhanceditemset))] : $(last(enhanceditemset))")
+end
+
+"""
+    const ConditionalPatternBase = Vector{EnhancedItemset}
+
+Collection of [`EnhancedItemset`](@ref).
+
+!!! note
+    This plays a central role in the state-of-the-art algorithm [`fpgrowth`](@ref),
+    where a [`ConditionalPatternBase`](@ref) embodies all the information needed to build
+    an [`FPTree`](@ref) data structure in the algorithm.
+
+See also [`EnhancedItemset`](@ref), [`fpgrowth`](@ref), [`FPTree`](@ref).
+"""
+const ConditionalPatternBase = Vector{EnhancedItemset}
+
+
+"""
     mutable struct FPTree
         content::Union{Nothing,Item}        # Item contained in this node (nothing if root)
 
@@ -237,7 +290,9 @@ Return all the unique [`Item`](@ref)s appearing in `fptree`.
 See also [`FPTree`](@ref), [`Item`](@ref), [`Itemset`](@ref).
 """
 function itemset_from_fplist(fptree::FPTree)::Itemset
-    @assert islist(fptree) "FPTree is not shaped as list, function call is ambiguous."
+    if !islist(fptree)
+        throw(ArgumentError("FPTree is not shaped as list, function call is ambiguous."))
+    end
 
     function _retrieve(fptree::FPTree)::Itemset
         # TODO - I am forced to parametrize Itemset, but here I cannot be dependant from
@@ -261,7 +316,9 @@ function itemset_from_fplist(fptree::FPTree)::Itemset
 end
 
 function retrievebycontent(fptree::FPTree, target::Item)::Union{Nothing,FPTree}
-    @assert islist(fptree) "FPTree is not shaped as list, function call is ambiguous."
+    if !islist(fptree)
+        throw(ArgumentError("FPTree is not shaped as list, function call is ambiguous."))
+    end
 
     if content(fptree) == target
         return fptree
@@ -280,7 +337,9 @@ Return a reference to the last node in a list-shaped [`FPTree`](@ref).
 See also [`FPTree`](@ref);
 """
 function retrieveleaf(fptree::FPTree)::FPTree
-    @assert islist(fptree) "FPTree is not shaped as list, function call is ambiguous."
+    if !islist(fptree)
+        throw(ArgumentError("FPTree is not shaped as list, function call is ambiguous."))
+    end
 
     if length(fptree |> children) == 0
         return fptree
@@ -312,7 +371,9 @@ See also [`follow`](@ref), [`FPTree`](@ref), [`HeaderTable`](@ref).
 """
 function link!(from::FPTree, to::FPTree)
     # find the last FPTree by iteratively following the internal link
-    @assert from !== link(from) "Error - self linking the following FPTree: \n$(from)"
+    if from === link(from)
+        throw(ErrorException("Error - self linking the following FPTree: \n$(from)."))
+    end
 
     from = follow(from)
     from.link = to
@@ -344,9 +405,10 @@ struct HeaderTable
     # association Item -> FPTree
     link::Dict{Item,Union{Nothing,FPTree}}
 
-    function HeaderTable()
-        new(Item[], Dict{Item,Union{Nothing,FPTree}}())
-    end
+    # deprecated
+    # function HeaderTable()
+    #     new(Item[], Dict{Item,Union{Nothing,FPTree}}())
+    # end
 
     function HeaderTable(
         fptseed::FPTree;

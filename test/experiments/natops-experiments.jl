@@ -14,6 +14,7 @@ using Test
 
 using ModalAssociationRules
 using Dates
+using Discretizers
 using Plots
 using PrettyTables
 using SoleData
@@ -36,6 +37,9 @@ VARIABLE_NAMES = [
 	"X[Thumb r]", "Y[Thumb r]", "Z[Thumb r]",          # 22 24
     "ΔY[Hand tip r and thumb r]"                       # 25
 ]
+
+LEFT_BODY_VARIABLES = [1,2,3,7,8,9,13,14,15,19,20,21,25]
+RIGHT_BODY_VARIABLES = [4,5,6,10,11,12,16,17,18,22,23,24,25]
 
 CLASS_NAMES = [
 	"I have command",
@@ -86,19 +90,24 @@ LOGISETS = [
 
 # Each experiment is identified by an ID;
 # put here the ids of the experiments you want to run.
-EXPERIMENTS_IDS = [11]
+EXPERIMENTS_IDS = [12]
+println("You are running the following NATOPS experiments: $(EXPERIMENTS_IDS)")
 
 """
+    function runexperiment(
+        miner::Miner;
+        returnminer::Bool = false,
+        tracktime::Bool = true,
+        reportname::String = "experiment-report.exp",
+        variablenames::Union{Nothing, Vector{String}} = nothing
+    )
     function runexperiment(
         X::MineableData,
         algorithm::Function,
         items::Vector{Item},
         itemsetmeasures::Vector{<:MeaningfulnessMeasure},
         rulemeasures::Vector{<:MeaningfulnessMeasure};
-        returnminer::Bool = false,
-        tracktime::Bool = true,
-        reportname::String = "experiment-report.exp",
-        variablenames::Union{Nothing, Vector{String}} = nothing
+        kwargs...
     )
 
 Mine frequent [`Itemset`](@ref)s and [`ARule`](@ref) from dataset `X` using `algorithm`.
@@ -113,17 +122,21 @@ function runexperiment(
 	items::Vector{Item},
 	itemsetmeasures::Vector{<:MeaningfulnessMeasure},
 	rulemeasures::Vector{<:MeaningfulnessMeasure};
+    kwargs...
+)
+    runexperiment(
+        Miner(deepcopy(X), algorithm, items, itemsetmeasures, rulemeasures);
+        kwargs...
+    )
+end
+
+function runexperiment(
+    miner::Miner;
     returnminer::Bool = false,
     tracktime::Bool = true,
 	reportname::String = "experiment-report.exp",
 	variablenames::Union{Nothing, Vector{String}} = nothing
 )
-    # avoid filling the given dataset with infos necessary to optimize future minings,
-    # and don't use those metadata if already loaded up!
-    # In fact, that could make experiments uncorrect (e.g., confidences over 1.0).
-    _X = deepcopy(X)
-
-	miner = Miner(_X, algorithm, items, itemsetmeasures, rulemeasures)
 	miningtime = @elapsed mine!(miner)
 	generationtime = @elapsed collect(generaterules!(miner))
 
@@ -136,16 +149,18 @@ function runexperiment(
 		redirect_stdout(out) do
             # For some reason, `itemsetmeasures` and `rulemeasures` getters triggers
             # a MethodError here (maybe this is caused by stdout redirection?).
-            println("Parameterization:\n")
+            println("Alphabet:\n")
             map(item -> println(
-                syntaxstring(item, variable_names_map=VARIABLE_NAMES)) , items)
-            println(miner.item_constrained_measures)
-            println(miner.rule_constrained_measures)
+                syntaxstring(item, variable_names_map=VARIABLE_NAMES)) , items(miner))
+
+            println("\n\nThresholds:")
+            println(miner.itemset_constrained_measures)
+            println(miner.arule_constrained_measures)
 
             if tracktime
                 println("\nRunning time:\n")
                 println("Frequent itemsets extraction: $(miningtime)")
-                println("Association rules generation (w. sift engine): $(generationtime)")
+                println("Association rules generation: $(generationtime)")
                 println("Total elapsed time: $(miningtime + generationtime)")
             end
 
@@ -241,9 +256,13 @@ function runcomparison(
     classnames::Vector{String} = CLASS_NAMES,
     variablenames::Union{Nothing, Vector{String}} = VARIABLE_NAMES
 ) where {L<:SoleData.AbstractLogiset}
-    @assert length(logisets) == length(classnames) "Given number of logisets and " *
-        "variable names mismatch: length(logisets) = $(length(logisets)), while " *
-        "length(classnames) = $(length(classnames))."
+    if length(logisets) != length(classnames)
+        throw(ArgumentError(
+            "Given number of logisets and " *
+            "variable names mismatch: length(logisets) = $(length(logisets)), while " *
+            "length(classnames) = $(length(classnames))."
+        ))
+    end
 
     miners = [
         Miner( # random Miner, its only purpose is to leverage memoization
@@ -258,8 +277,9 @@ function runcomparison(
     miners[targetclass] = miner
 
     targetminer = miners[targetclass]
-    @assert info(targetminer, :istrained) "Provided miner did not perform mine " *
-        "and is thus  empty."
+    if !info(targetminer, :istrained)
+        throw(ArgumentError("Provided miner did not perform mine and is thus  empty."))
+    end
 
     # report filepath preparation
     reportname = RESULTS_PATH * reportname
@@ -277,8 +297,8 @@ function runcomparison(
     # partial data (numeric) that has to be be manipulated,
     # before being converted to string format.
     # Each element in this collection is of type
-    # Tuple{ARule, Float64, Vector{Tuple{Int64, Vector{Float64}}}}
-    # (A::ARule, B::Float64, C::Tuple{Int64, Vector{Flaot64}})
+    # Tuple{ARule, Float64, Vector{Tuple{Integer, Vector{Float64}}}}
+    # (A::ARule, B::Float64, C::Tuple{Integer, Vector{Flaot64}})
     # where A is association rule,
     # B is the confidence measured considering all classes apart from `targetclass`,
     # and C is a vector of associations between i-th class and meaningfulness measures.
@@ -287,7 +307,7 @@ function runcomparison(
     # antecedent global support,
     # consequent global support,
     # antecedent and consequent global support.
-    datavals = Tuple{ARule, Float64, Float64, Vector{Tuple{Int64, Vector{Float64}}}}[]
+    datavals = Tuple{ARule, Float64, Float64, Vector{Tuple{Integer, Vector{Float64}}}}[]
 
     # final collection taht will be passed to PrettyTables.jl
     data = Any[]
@@ -305,7 +325,7 @@ function runcomparison(
 
         # prepare a data value fragment, that is,
         # a vector of tuples (logiset-index, [measures])
-        dataval = Tuple{Int64, Vector{Float64}}[]
+        dataval = Tuple{Integer, Vector{Float64}}[]
 
         # consider each class, compute the meaningfulness measures and print them
         for (i, logiset) in Iterators.enumerate(logisets)
@@ -435,8 +455,8 @@ function runcomparison(
             println("Parameterization:\n")
             map(item -> println(
                 syntaxstring(item, variable_names_map=VARIABLE_NAMES)) , items(miner))
-            println(miner.item_constrained_measures)
-            println(miner.rule_constrained_measures)
+            println(miner.itemset_constrained_measures)
+            println(miner.arule_constrained_measures)
 
             pretty_table(
                 data |> permutedims;
@@ -879,146 +899,6 @@ end
 # See also `runcomparison` documentation.
 ############################################################################################
 
-function runcomparison(
-    miner::Miner,
-    logisets::Vector{L},
-    confidencebouncer::Function;
-    suppthreshold::Float64,
-    sigdigits::Int8=2 |> Int8,
-    reportname::String = "comparison-report.exp",
-    classnames::Vector{String} = CLASS_NAMES
-) where {L<:SoleData.AbstractLogiset}
-    @assert length(logisets) == length(classnames) "Given number of logisets and " *
-        "variable names mismatch: length(logisets) = $(length(logisets)), while " *
-        "length(classnames) = $(length(classnames))."
-
-    @assert info(miner, :istrained) "Provided miner did not perform mine and is thus empty"
-
-    # report filepath preparation
-    reportname = RESULTS_PATH * reportname
-    # pretty table configuration
-    data = []
-    header = vcat("Rule", classnames)
-
-    # for each rule accepted by `confidencebouncer`
-    for rule in filter(x ->
-        confidencebouncer(globalmemo(miner, (:gconfidence, x))), arules(miner))
-
-        # prepare a data fragment, that is a row of the final pretty table
-        _data = Any[rule]
-
-        # consider each class, compute the meaningfulness measures and print them
-        for logiset in logisets
-            _antecedent, _consequent = antecedent(rule), consequent(rule)
-            _union = union(_antecedent, _consequent)
-
-            # confidence
-            _conf = round(
-                gconfidence(rule, logiset, suppthreshold), sigdigits=sigdigits)
-            # antecedent global support
-            _asupp = round(
-                gsupport(_antecedent, logiset, suppthreshold), sigdigits=sigdigits)
-            # consequent global support
-            _csupp = round(
-                gsupport(_consequent, logiset, suppthreshold), sigdigits=sigdigits)
-            # whole-rule global support
-            _usupp = round(
-                gsupport(_union, logiset, suppthreshold), sigdigits=sigdigits)
-
-            # new cell is added to the right of current row
-            _cellstring = "confidence: $(_conf)\nantecedent support: $(_asupp)\n" *
-                "consequent support: $(_csupp)\nunion support: $(_usupp)"
-            # push!(_data, [_conf, _asupp, _csupp, _usupp])
-            push!(_data, _cellstring)
-        end
-
-        # now, assemble a new row
-        data = isempty(data) ? _data : hcat(data, _data)
-    end
-
-    # print data table on file
-    open(reportname, "w") do out
-        redirect_stdout(out) do
-            pretty_table(
-                data |> permutedims;
-                header=header,
-                linebreaks=true,
-                body_hlines=collect(1:(data |> size |> first))
-            )
-        end
-    end
-end
-
-function runcomparison(
-    miner::Miner,
-    logisets::Vector{L},
-    confidencebouncer::Function;
-    suppthreshold::Float64,
-    sigdigits::Int8=2 |> Int8,
-    reportname::String = "comparison-report.exp",
-    classnames::Vector{String} = CLASS_NAMES
-) where {L<:SoleData.AbstractLogiset}
-    @assert length(logisets) == length(classnames) "Given number of logisets and " *
-        "variable names mismatch: length(logisets) = $(length(logisets)), while " *
-        "length(classnames) = $(length(classnames))."
-
-    @assert info(miner, :istrained) "Provided miner did not perform mine and is thus empty"
-
-    # report filepath preparation
-    reportname = RESULTS_PATH * reportname
-    # pretty table configuration
-    data = []
-    header = vcat("Rule", classnames)
-
-    # for each rule accepted by `confidencebouncer`
-    for rule in filter(x ->
-        confidencebouncer(globalmemo(miner, (:gconfidence, x))), arules(miner))
-
-        # prepare a data fragment, that is a row of the final pretty table
-        _data = Any[rule]
-
-        # consider each class, compute the meaningfulness measures and print them
-        for logiset in logisets
-            _antecedent, _consequent = antecedent(rule), consequent(rule)
-            _union = union(_antecedent, _consequent)
-
-            # confidence
-            _conf = round(
-                gconfidence(rule, logiset, suppthreshold), sigdigits=sigdigits)
-            # antecedent global support
-            _asupp = round(
-                gsupport(_antecedent, logiset, suppthreshold), sigdigits=sigdigits)
-            # consequent global support
-            _csupp = round(
-                gsupport(_consequent, logiset, suppthreshold), sigdigits=sigdigits)
-            # whole-rule global support
-            _usupp = round(
-                gsupport(_union, logiset, suppthreshold), sigdigits=sigdigits)
-
-            # new cell is added to the right of current row
-            _cellstring = "confidence: $(_conf)\nantecedent support: $(_asupp)\n" *
-                "consequent support: $(_csupp)\nunion support: $(_usupp)"
-            # push!(_data, [_conf, _asupp, _csupp, _usupp])
-            push!(_data, _cellstring)
-        end
-
-        # now, assemble a new row
-        data = isempty(data) ? _data : hcat(data, _data)
-    end
-
-    # print data table on file
-    open(reportname, "w") do out
-        redirect_stdout(out) do
-            pretty_table(
-                data |> permutedims;
-                header=header,
-                linebreaks=true,
-                body_hlines=collect(1:(data |> size |> first))
-            )
-        end
-    end
-end
-
 if 7 in EXPERIMENTS_IDS
     if !isnothing(_1_miner) && !isnothing(_4_miner)
         runcomparison(
@@ -1320,19 +1200,21 @@ if 10 in EXPERIMENTS_IDS
         _10_right_elbow_Z_items
     )
 
-    _10_items = vcat(
-        _10_propositional_items,
-        box(IA_B).(_10_propositional_items),
-        # diamond(IA_Bi).(_10_propositional_items),
+    _10_items = Item.(
+        vcat(
+            _10_propositional_items,
+            box(IA_B).(_10_propositional_items),
+            # diamond(IA_Bi).(_10_propositional_items),
 
-        diamond(IA_E).(_10_propositional_items),
-        # diamond(IA_Ei).(_10_propositional_items),
+            diamond(IA_E).(_10_propositional_items),
+            # diamond(IA_Ei).(_10_propositional_items),
 
-        box(IA_D).(_10_propositional_items),
-        # diamond(IA_Di).(_10_propositional_items),
+            box(IA_D).(_10_propositional_items),
+            # diamond(IA_Di).(_10_propositional_items),
 
-        diamond(IA_O).(_10_propositional_items),
-    ) |> Vector{Formula}
+            diamond(IA_O).(_10_propositional_items),
+        )
+    )
 
     _10_itemsetmeasures = [(gsupport, 0.2, 0.2)]
     _10_rulemeasures = [(gconfidence, 0.2, 0.2)]
@@ -1387,50 +1269,134 @@ plot(
 )
 =#
 ############################################################################################
-_11_right_hand_tip_Y_items = [
-    Atom(ScalarCondition(VariableMin(5), >=, -0.5))
-]
 
-_11_right_hand_delta_items = [
-    Atom(ScalarCondition(VariableMax(25), <=, 0.0))
-]
+if 11 in EXPERIMENTS_IDS
+    _11_right_hand_tip_Y_items = [
+        Atom(ScalarCondition(VariableMin(5), >=, -0.5))
+    ]
 
-_11_propositional_items = vcat(
-    _11_right_hand_tip_Y_items,
-    _11_right_hand_delta_items
-)
+    _11_right_hand_delta_items = [
+        Atom(ScalarCondition(VariableMax(25), <=, 0.0))
+    ]
 
-_11_items = vcat(
-    _11_propositional_items,
-    diamond(IA_B).(_11_propositional_items),
-    box(IA_E).(_11_propositional_items),
-    diamond(IA_D).(_11_propositional_items),
-    box(IA_O).(_11_propositional_items),
-) |> Vector{Formula}
+    _11_propositional_items = vcat(
+        _11_right_hand_tip_Y_items,
+        _11_right_hand_delta_items
+    )
 
-_11_itemsetmeasures = [(gsupport, 0.01, 0.01)]
-_11_rulemeasures = [(gconfidence, 0.1, 0.1)]
+    _11_items = vcat(
+        _11_propositional_items,
+        diamond(IA_B).(_11_propositional_items),
+        box(IA_E).(_11_propositional_items),
+        diamond(IA_D).(_11_propositional_items),
+        box(IA_O).(_11_propositional_items),
+    ) |> Vector{Formula}
 
-_11_miner = runexperiment(
-    X_3_not_clear,
-    fpgrowth,
-    _11_items,
-    _11_itemsetmeasures,
-    _11_rulemeasures;
-    returnminer = true,
-    reportname = "e11-tc-3-not-clear-rhand-rthumb-BEDO.exp",
-    variablenames = VARIABLE_NAMES,
-)
+    _11_itemsetmeasures = [(gsupport, 0.01, 0.01)]
+    _11_rulemeasures = [(gconfidence, 0.1, 0.1)]
 
-runcomparison(
-    _11_miner,
-    LOGISETS,
-    (conf) -> conf >= 0.5;
-    sigdigits=3 |> Int8,
-    targetclass=3 |> Int8,
-    suppthreshold=0.1,
-    reportname="e11-tc-3-not-clear-rhand-rthumb-BEDO-comparison.exp"
-)
+    _11_miner = runexperiment(
+        X_3_not_clear,
+        fpgrowth,
+        _11_items,
+        _11_itemsetmeasures,
+        _11_rulemeasures;
+        returnminer = true,
+        reportname = "e11-tc-3-not-clear-rhand-rthumb-BEDO.exp",
+        variablenames = VARIABLE_NAMES,
+    )
+
+    runcomparison(
+        _11_miner,
+        LOGISETS,
+        (conf) -> conf >= 0.5;
+        sigdigits=3 |> Int8,
+        targetclass=3 |> Int8,
+        suppthreshold=0.1,
+        reportname="e11-tc-3-not-clear-rhand-rthumb-BEDO-comparison.exp"
+    )
+end
+
+############################################################################################
+# Experiment #12
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
+# General experiment levereging the alphabet selection mechanism for each variable.
+# TODO - at the moment, rules are extract from X_1_have_command
+#
+############################################################################################
+
+if 12 in EXPERIMENTS_IDS
+    # we want to generate an "useful" alphabet of propositions;
+    # given a set of metaconditions, we want to find the thresholds to plug in.
+
+    _12_items = Item[]
+
+    # there is no need to consider left-sided body variables
+    # (left arm is not moving in class 1)
+    for variable_index = RIGHT_BODY_VARIABLES
+        # each proposition follows this schema
+        metaconditions = [
+            ScalarMetaCondition(VariableMax(variable_index), <=),
+            ScalarMetaCondition(VariableMin(variable_index), >=)
+        ]
+
+        # as binning strategy, we choose to cut the distribution in 5 pieces with same area
+        nbins = 3
+        quantilediscretizer = Discretizers.DiscretizeQuantile(nbins)
+
+        for metacondition in metaconditions
+            alphabet = __arm_select_alphabet(
+                X_df_1_have_command[:,variable_index],
+                metacondition,
+                quantilediscretizer;
+                consider_all_subintervals=true
+            ) .|> Atom .|> Item
+
+            push!(_12_items, alphabet...)
+        end
+    end
+
+    _12_itemsetmeasures = [(gsupport, 0.5, 0.5)]
+    _12_rulemeasures = [(gconfidence, 0.5, 0.5)]
+
+    _12_miner = Miner(
+        deepcopy(X_1_have_command),
+        fpgrowth,
+
+        _12_items[1:20],
+        _12_itemsetmeasures,
+        _12_rulemeasures,
+
+        # TODO regulate this parameter
+        worldfilter=SoleLogics.FunctionalWorldFilter(x -> length(x) >= 20, Interval{Int}),
+
+        itemset_mining_policies=[islimited_length_itemset(; maxlength=5)],
+
+        arule_mining_policies=[
+            islimited_length_arule(; antecedent_maxlength=5),
+            isanchored_arule(; npropositions=1),
+            isheterogeneous_arule(; antecedent_nrepetitions=1, consequent_nrepetitions=0),
+        ],
+    )
+
+    runexperiment(
+        _12_miner;
+        reportname = "e12-tc-1-i-have-command-auto-alphabet-full-propositional.exp",
+        variablenames = VARIABLE_NAMES,
+    )
+
+    # TODO - uncomment
+    # runcomparison(
+        #     _12_miner,
+        #     LOGISETS,
+        #     (conf) -> conf >= 0.5;
+        #     sigdigits=3 |> Int8,
+        #     targetclass=3 |> Int8,
+        #     suppthreshold=0.1,
+        #     reportname="e12-tc-1-i-have-command-auto-alphabet-full-propositional-comparison.exp"
+    # )
+end
 
 ############################################################################################
 # Useful plots
