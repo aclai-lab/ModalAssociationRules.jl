@@ -409,18 +409,18 @@ function analyze(
             globalmeasure = first(measure)
             gmeassym = globalmeasure |> Symbol
 
-            println(io, "\t$(gmeassym) - (antecedent): " *
+            println(io, "\t$(gmeassym)(X): " *
                 "$(globalmemo(miner, (gmeassym, antecedent(arule))))")
             # if itemsets_local_info
             # TODO -  report local measures for the antecedent (use `itemsets_localities`)
 
-            println(io, "\t$(gmeassym) - (consequent): " *
+            println(io, "\t$(gmeassym)(Y): " *
                 "$(globalmemo(miner, (gmeassym, consequent(arule))))")
             # if itemsets_local_info
             # TODO -  report local measures for the consequent (use `itemsets_localities`)
 
             _entire_content = union(antecedent(arule), consequent(arule))
-            println(io, "\t$(gmeassym) - (entire): " *
+            println(io, "\t$(gmeassym)(X⋃Y): " *
                 "$(globalmemo(miner, (gmeassym, _entire_content)))")
             # if itemsets_local_info
             # TODO -  report local measures for the consequent (use `itemsets_localities`)
