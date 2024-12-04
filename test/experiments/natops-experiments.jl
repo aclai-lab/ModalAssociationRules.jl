@@ -158,7 +158,7 @@ function runexperiment(
             println(miner.arule_constrained_measures)
 
             if tracktime
-                println("\nRunning time:\n")
+                println("\nRunning time [s]:\n")
                 println("Frequent itemsets extraction: $(miningtime)")
                 println("Association rules generation: $(generationtime)")
                 println("Total elapsed time: $(miningtime + generationtime)")
@@ -168,7 +168,7 @@ function runexperiment(
 			for r in sort(
                 arules(miner), by = x -> miner.globalmemo[(:gconfidence, x)], rev=true)
 				ModalAssociationRules.analyze(
-                    r, miner; variablenames=variablenames, itemsets_global_info=true)
+                    r, miner; variablenames=variablenames, itemset_global_info=true)
 			end
 		end
 	end
@@ -1357,20 +1357,18 @@ if 12 in EXPERIMENTS_IDS
         end
     end
 
-    _12_itemsetmeasures = [(gsupport, 0.0, 0.0)]
-    _12_rulemeasures = [(gconfidence, 0.0, 0.0)]
+    _12_itemsetmeasures = [(gsupport, 0.1, 0.1)]
+    _12_rulemeasures = [(gconfidence, 0.1, 0.1)]
 
     _12_miner = Miner(
         deepcopy(X_1_have_command),
         fpgrowth,
 
-        _12_items[1:8],
+        _12_items,
         _12_itemsetmeasures,
         _12_rulemeasures,
 
-        # TODO it seems that if you apply a filter on worlds,
-        # the local support computation messes up
-        worldfilter=SoleLogics.FunctionalWorldFilter(x -> length(x) >= 30, Interval{Int}),
+        worldfilter=SoleLogics.FunctionalWorldFilter(x -> length(x) >= 20, Interval{Int}),
 
         itemset_mining_policies=[islimited_length_itemset(; maxlength=5)],
 
@@ -1398,89 +1396,3 @@ if 12 in EXPERIMENTS_IDS
         #     reportname="e12-tc-1-i-have-command-auto-alphabet-full-propositional-comparison.exp"
     # )
 end
-
-############################################################################################
-# Useful plots
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# More plots, useful to further observe data. See `Data Observation` section.
-############################################################################################
-
-# Left hand (V1, V2, V3) ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Involved in: "Spread wings", "Fold wings", "Lock wings".
-#=
-plot(
-	map(i->plot(collect(X_df[i,1:3]), labels=["x" "y" "z"], title=y[i]), 1:30:180)...,
-	layout = (2, 3),
-	size = (1500,400)
-)
-=#
-
-# Right hand ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Involved in: every class.
-#=
-plot(
-	map(i->plot(collect(X_df[i,4:6]), labels=["x" "y" "z"], title=y[i]), 1:30:180)...,
-	layout = (2, 3),
-	size = (1500,400)
-)
-=#
-
-# Left elbow ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Involved in: "All clear", "Spread wings", "Fold wings", "Lock wings".
-#=
-plot(
-	map(i->plot(collect(X_df[i,7:9]), labels=["x" "y" "z"], title=y[i]), 1:30:180)...,
-	layout = (2, 3),
-	size = (1500,400)
-)
-=#
-
-# Right elbow ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Involved in: every class.
-#=
-plot(
-	map(i->plot(collect(X_df[i,10:12]), labels=["x" "y" "z"], title=y[i]), 1:30:180)...,
-	layout = (2, 3),
-	size = (1500,400)
-)
-=#
-
-# Left wrist ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Involved in: "Spread wings", "Fold wings", "Lock wings".
-#=
-plot(
-	map(i->plot(collect(X_df[i,13:15]), labels=["x" "y" "z"], title=y[i]), 1:30:180)...,
-	layout = (2, 3),
-	size = (1500,400)
-)
-=#
-
-# Right wrist ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Involved in: every class
-#=
-plot(
-	map(i->plot(collect(X_df[i,16:18]), labels=["x" "y" "z"], title=y[i]), 1:30:180)...,
-	layout = (2, 3),
-	size = (1500,400)
-)
-=#
-
-# Left thumb ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Involved in: "Spread wings", "Fold wings", "Lock wings".
-#=
-plot(
-	map(i->plot(collect(X_df[i,19:21]), labels=["x" "y" "z"], title=y[i]), 1:30:180)...,
-	layout = (2, 3),
-	size = (1500,400)
-)
-=#
-
-# Right thumb ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Involved in: "Spread wings", "Fold wings", "Lock wings".
-#=
-plot(
-	map(i->plot(collect(X_df[i,22:24]), labels=["x" "y" "z"], title=y[i]), 1:30:180)...,
-	layout = (2, 3),
-	size = (1500,400)
-)
-=#
