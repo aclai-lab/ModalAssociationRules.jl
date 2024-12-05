@@ -107,7 +107,7 @@ fpgrowth_miner = Miner(X_1_have_command,
 compare(apriori_miner, fpgrowth_miner)
 
 arule = fpgrowth_miner |> arules |> first
-@test_nowarn analyze(arule, fpgrowth_miner; io=devnull, verbose=true)
+@test_nowarn arule_analysis(arule, fpgrowth_miner; io=devnull, verbose=true)
 @test_nowarn convert(Itemset, arule)
 
 @test frame(fpgrowth_miner) isa SoleLogics.FullDimensionalFrame

@@ -43,7 +43,7 @@ consequent(rule::ARule)
 
 To print an [`ARule`](@ref) enriched with more informations (at the moment, this is everything we need to know), we can use the following.
 ```@docs
-analyze(arule::ARule, miner::Miner; io::IO=stdout)
+arule_analysis(arule::ARule, miner::Miner; io::IO=stdout)
 ```
 
 Sometimes we could be interested in writing a function that consider a generic entity obtained through an association rule mining algorithm (*frequent itemsets* and, of course, *association rules*). Think about a dictionary mapping some extracted pattern to metadata. We call that generic entity "an ARM subject", and the following union type comes in help.
@@ -120,7 +120,7 @@ mine!(miner::Miner)
 apply!(miner::Miner, X::AbstractDataset)
 ```
 
-The mining call returns an [`ARule`](@ref) generator. Since the extracted rules could be several, it's up to you to collect all the rules in a step or analyze them lazily, collecting them one at a time. You can also call the mining function ignoring it's return value, and then generate the rules later by calling the following.
+The mining call returns an [`ARule`](@ref) generator. Since the extracted rules could be several, it's up to you to collect all the rules in a step or arule_analysis them lazily, collecting them one at a time. You can also call the mining function ignoring it's return value, and then generate the rules later by calling the following.
 
 ```@docs
 generaterules!(miner::Miner)

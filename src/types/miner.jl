@@ -434,7 +434,9 @@ See also [`AbstractMiner`](@ref), [`ARule`](@ref), [`Itemset`](@ref),
 """
 @resumable function generaterules(
     ::AbstractVector{Itemset},
-    ::AbstractMiner;
+    ::AbstractMiner,
+    args...;
+    kwargs...
 )
     error("Not implemented")
 end
@@ -446,9 +448,43 @@ Return a generator of [`ARule`](@ref)s, given an already trained `miner`.
 
 See also [`AbstractMiner`](@ref), [`ARule`](@ref).
 """
-function generaterules!(::AbstractMiner)
+function generaterules!(::AbstractMiner, args...; kwargs...)
     error("Not implemented.")
 end
+
+
+"""
+    function arule_analysis(::ARule, ::AbstractMiner, args...; kwargs...)
+
+Detailed print of an [`ARule`](@ref) to standard output.
+
+See also [`AbstractMiner`](@ref), [`ARule`](@ref).
+"""
+function arule_analysis(::ARule, ::AbstractMiner, args...; kwargs...)
+    error("Not implemented.")
+end
+
+"""
+    all_arule_analysis(miner::AbstractMiner, args...; kwargs...)
+
+Map [`arule_analysis`](@ref) on [`arules`](@ref)(`miner`).
+The collection of [`ARule`](@ref)s is sorted decreasingly by [`gconfidence`](@ref).
+
+See also [`AbstractMiner`](@ref), [`ARule`](@ref), [`arule_analysis`](@ref),
+[`gconfidence`](@ref).
+"""
+function all_arule_analysis(miner::AbstractMiner, args...; kwargs...)
+    # for each rule, sorted by global confidence, print them
+    for r in sort(arules(miner), by = x -> miner.globalmemo[(:gconfidence, x)], rev=true)
+        ModalAssociationRules.arule_analysis(
+            r, miner, args...;
+            variablenames=variablenames,
+            itemset_global_info=true,
+            kwargs...
+        )
+    end
+end
+
 
 # interface extending dispatches coming from external packages
 

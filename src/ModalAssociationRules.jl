@@ -81,7 +81,7 @@ include("utils/miner.jl")
 export Miner
 export itemtype, datatype
 export frame, allworlds, nworlds
-export analyze
+export arule_analysis, all_arule_analysis
 
 include("utils/bulldozer.jl")
 
@@ -129,12 +129,12 @@ export patternbase, bounce!, projection
 export fpgrowth
 
 include("analysis.jl")
-
-export plot_rules_analysis
+export plot_arule_analyses
+# TODO - move this to SoleData, or just delete it
+export time_series_distribution_analysis
 
 include("alphabet-selection.jl")
 export __arm_select_alphabet
-export time_series_distribution_analysis # TODO - this might be moved to SoleData
 
 include("natops-loader.jl")
 

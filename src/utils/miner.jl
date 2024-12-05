@@ -325,18 +325,12 @@ function Base.show(io::IO, miner::Miner)
 end
 
 """
-    analyze(arule::ARule, miner::Miner; io::IO=stdout, localities=false)
+    arule_analysis(arule::ARule, miner::Miner; io::IO=stdout, localities=false)
 
-Detailed print of an [`ARule`](@ref) to the console, including related meaningfulness
-measures values.
-
-!!! warning
-    Printing may be missing some information, as this needs to be refactored.
-    We reccomend to realy on a custom dispatch at the moment.
-
-See also [`ARule`](@ref), [`Miner`](@ref).
+See also [`arule_analysis(::Arule, ::AbstractMiner)`](@ref), [`ARule`](@ref),
+[`Miner`](@ref).
 """
-function analyze(
+function arule_analysis(
     arule::ARule,
     miner::Miner;
     io::IO=stdout,
