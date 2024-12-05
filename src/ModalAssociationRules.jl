@@ -128,7 +128,7 @@ include("algorithms/fpgrowth.jl")
 export patternbase, bounce!, projection
 export fpgrowth
 
-include("evaluation.jl")
+include("analysis.jl")
 
 export plot_rules_analysis
 
