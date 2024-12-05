@@ -432,12 +432,7 @@ constraints specified in `rulemeasures(miner)`, and yields the rule if so.
 See also [`AbstractMiner`](@ref), [`ARule`](@ref), [`Itemset`](@ref),
 [`rulemeasures`](@ref).
 """
-@resumable function generaterules(
-    ::AbstractVector{Itemset},
-    ::AbstractMiner,
-    args...;
-    kwargs...
-)
+@resumable function generaterules(::AbstractVector{Itemset}, ::AbstractMiner)
     error("Not implemented")
 end
 

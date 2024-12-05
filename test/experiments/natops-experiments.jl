@@ -1363,7 +1363,7 @@ if 12 in EXPERIMENTS_IDS
     _12_miner = Miner(
         deepcopy(X_1_have_command),
         fpgrowth,
-        _12_items[1:50],
+        _12_items[1:20],
         _12_itemsetmeasures,
         _12_rulemeasures,
 
