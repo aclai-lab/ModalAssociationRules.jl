@@ -148,7 +148,7 @@ struct Miner{
             isheterogeneous_arule(),
         ]),
 
-        info::Info=Info(:istrained => false)
+        info::Info=Info(:istrained => false, :size => nothing)
     ) where {
         D<:MineableData,
         I<:Item,

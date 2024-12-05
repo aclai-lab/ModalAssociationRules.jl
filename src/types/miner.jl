@@ -253,7 +253,10 @@ Getter `miner`'s metadata, such as the elapsed time of the mining algorithm.
 See also [`Miner`](@ref), [`MiningState`](@ref).
 """
 info(::AbstractMiner)::Info = error("Not implemented")
-info(miner::AbstractMiner, key::Symbol) = info(miner)[key]
+info(miner::AbstractMiner, key::Symbol) = begin
+    _info = info(miner)
+    return haskey(_info, key) ? _info[key] : false
+end
 
 """
     info!(miner::Miner, key::Symbol, val)
@@ -390,7 +393,10 @@ function apply!(miner::AbstractMiner, X::MineableData; forcemining::Bool=false, 
     end
 
     algorithm(miner)(miner, X; kwargs...)
-    info!(miner, :istrained, true)
+
+    if haskey(info(miner), :size)
+        info!(miner, :size, Base.summarysize(miner))
+    end
 
     return generaterules(freqitems(miner), miner)
 end
