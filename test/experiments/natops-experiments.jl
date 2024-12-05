@@ -1357,13 +1357,13 @@ if 12 in EXPERIMENTS_IDS
         end
     end
 
-    _12_itemsetmeasures = [(gsupport, 0.5, 0.5)]
-    _12_rulemeasures = [(gconfidence, 0.5, 0.5)]
+    _12_itemsetmeasures = [(gsupport, 0.3, 0.3)]
+    _12_rulemeasures = [(gconfidence, 0.3, 0.3)]
 
     _12_miner = Miner(
         deepcopy(X_1_have_command),
         fpgrowth,
-        _12_items[1:15],
+        _12_items[1:25],
         _12_itemsetmeasures,
         _12_rulemeasures,
 
