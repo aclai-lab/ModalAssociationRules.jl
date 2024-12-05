@@ -387,17 +387,30 @@ Return a generator of interesting [`ARule`](@ref)s.
 See also [`ARule`](@ref), [`data`](@ref), [`freqitems`](@ref), [`Itemset`](@ref).
 """
 function apply!(miner::AbstractMiner, X::MineableData; forcemining::Bool=false, kwargs...)
-    if info(miner, :istrained) && !forcemining
-        @warn "The miner has already been trained. To force mining, set `forcemining=true`."
-        return Nothing
+    _info = info(miner)
+
+    # if miner is already trained, do not perform mining and return the arules generator
+    if haskey(_info, :istrained) && !forcemining
+        if _info[:istrained] == true
+            @warn "The miner has already been trained. " *
+                "To force mining, please set `forcemining=true`."
+            return generaterules(freqitems(miner), miner)
+        end
     end
 
+    # apply mining algorithm
     algorithm(miner)(miner, X; kwargs...)
 
-    if haskey(info(miner), :size)
+    # fill the info field
+    if haskey(_info, :istrained)
+        info!(miner, :istrained, true)
+    end
+
+    if haskey(_info, :size)
         info!(miner, :size, Base.summarysize(miner))
     end
 
+    # return an association rule generator
     return generaterules(freqitems(miner), miner)
 end
 
