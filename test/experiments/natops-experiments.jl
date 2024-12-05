@@ -1367,7 +1367,8 @@ if 12 in EXPERIMENTS_IDS
         _12_itemsetmeasures,
         _12_rulemeasures,
 
-        worldfilter=SoleLogics.FunctionalWorldFilter(x -> length(x) >= 20, Interval{Int}),
+        worldfilter=SoleLogics.FunctionalWorldFilter(
+            x -> length(x) >= 10 && length(x) <= 20, Interval{Int}),
 
         itemset_mining_policies=[islimited_length_itemset(; maxlength=5)],
 
