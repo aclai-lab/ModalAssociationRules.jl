@@ -1335,7 +1335,8 @@ if 12 in EXPERIMENTS_IDS
     # there is no need to consider left-sided body variables
     # (left arm is not moving in class 1)
     for variable_index = RIGHT_BODY_VARIABLES
-        # each proposition follows this schema
+        # each proposition follows this schema;
+        # it can be shown that those pairings are more informative than (max, >=), (min, <=)
         metaconditions = [
             ScalarMetaCondition(VariableMax(variable_index), <=),
             ScalarMetaCondition(VariableMin(variable_index), >=)
@@ -1385,14 +1386,13 @@ if 12 in EXPERIMENTS_IDS
         variablenames = VARIABLE_NAMES,
     )
 
-    # TODO - uncomment
     # runcomparison(
-        #     _12_miner,
-        #     LOGISETS,
-        #     (conf) -> conf >= 0.5;
-        #     sigdigits=3 |> Int8,
-        #     targetclass=3 |> Int8,
-        #     suppthreshold=0.1,
-        #     reportname="e12-tc-1-i-have-command-auto-alphabet-full-propositional-comparison.exp"
+    #     _12_miner,
+    #     LOGISETS,
+    #     (conf) -> conf >= 0.4;
+    #     sigdigits=3 |> Int8,
+    #     targetclass=1 |> Int8,
+    #     suppthreshold=0.4,
+    #     reportname="e12-tc-1-i-have-command-auto-alphabet-full-propositional-comparison.exp"
     # )
 end

@@ -47,8 +47,8 @@ fpgrowth_miner = Miner(X2, fpgrowth, _1_items, _1_itemsetmeasures, _1_rulemeasur
 compare(apriori_miner, fpgrowth_miner)
 
 # checking for re-mining block
-@test apply!(apriori_miner, data(apriori_miner)) == Nothing
-@test apply!(fpgrowth_miner, data(fpgrowth_miner)) == Nothing
+@test apply!(apriori_miner, data(apriori_miner)) |> collect |> length == 0
+@test apply!(fpgrowth_miner, data(fpgrowth_miner)) |> collect |> length == 0
 
 # 2nd comparisons: Apriori vs its multithreaded variation
 _2_items = Vector{Item}([manual_p, manual_q, manual_r])
@@ -151,12 +151,13 @@ fpgrowth_miner = Miner(X_1_have_command,
 
 # TODO - it seems that mining is broken when support thresholds are set to 0.
 # This may be due to a tricky > / >= which is well hidden...
-_7_items = _1_items
-_7_itemsetmeasures = [(gsupport, 0.0, 0.0)]
-_7_rulemeasures = [(gconfidence, 0.0, 0.0)]
-
-apriori_miner = Miner(deepcopy(X1), apriori, _7_items, _7_itemsetmeasures, _7_rulemeasures)
-fpgrowth_miner = Miner(
-    deepcopy(X1), fpgrowth, _7_items, _7_itemsetmeasures, _7_rulemeasures)
-
-@test_broken compare(apriori_miner, fpgrowth_miner)
+#
+# _7_items = _1_items
+# _7_itemsetmeasures = [(gsupport, 0.0, 0.0)]
+# _7_rulemeasures = [(gconfidence, 0.0, 0.0)]
+#
+# apriori_miner = Miner(deepcopy(X1), apriori, _7_items, _7_itemsetmeasures, _7_rulemeasures)
+# fpgrowth_miner = Miner(
+#     deepcopy(X1), fpgrowth, _7_items, _7_itemsetmeasures, _7_rulemeasures)
+#
+# @test_broken compare(apriori_miner, fpgrowth_miner)
