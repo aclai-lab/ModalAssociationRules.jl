@@ -82,9 +82,13 @@ julia> ModalAssociationRules.plot_binning(
 function plot_binning(
     X::Vector{<:Vector{<:Real}},
     _feature::AbstractFeature,
-    discretizer::DiscretizationAlgorithm,
-    worldfilter::SoleLogics.FunctionalWorldFilter;
-    label=""
+    discretizer::DiscretizationAlgorithm;
+    worldfilter::SoleLogics.FunctionalWorldFilter=SoleLogics.FunctionalWorldFilter(
+        _ -> true, Interval{Int}
+    ),
+    label="",
+    savefig_path="",
+    _display::Bool=false
 )
     _X = [
         SoleData.computeunivariatefeature(_feature, v[i:j])
@@ -106,9 +110,14 @@ function plot_binning(
         vline!([edge], color=:red, linewidth=2, label=false)
     end
 
-    plot!(_histogram, margin=5mm, framestyle=:box)
+    p = plot!(_histogram, margin=5mm, framestyle=:box)
+    savefig(p, savefig_path)
 
-    display(_histogram)
+    if _display
+        display(_histogram)
+    end
+
+    return p
 end
 
 

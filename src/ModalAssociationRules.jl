@@ -130,6 +130,7 @@ export fpgrowth
 
 include("analysis.jl")
 export plot_arule_analyses
+export plot_binning
 # TODO - move this to SoleData, or just delete it
 export time_series_distribution_analysis
 

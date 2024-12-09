@@ -1321,6 +1321,8 @@ end
 # Extra, plots to study how to parametrize binning
 ############################################################################################
 
+default(palette=palette(:batlow10))
+
 # let's consider a metacondition, one discretizer strategy, and a world filtering policy
 variable = 5 # we consider right hand Y axis
 _feature = VariableMax(nvariable) # max(V5)
@@ -1334,9 +1336,12 @@ small_intervals_worldfilter = worldfilter=SoleLogics.FunctionalWorldFilter(
     x -> length(x) <= 10, Interval{Int})
 
 # first of all, let's plot the right hand Y original signal
-rhand_y_signal_plot = plot(X_df[1,5], labels="Right hand Y")
-
+rhand_y_signal_plot = plot(X_df[1,5], labels="Right hand tips Y coordinate")
+hline!([-1, 1], color=:red, linestyle=:dash, labels="Intuitive thresholding point")
 savefig(rhand_y_signal_plot, "test/experiments/results/rhand_y_signal_plot.png")
+
+# now, we apply the feature to each subinterval and show the result
+plot_binning(X_df_1_have_command[:,5], _feature, discretizer)
 
 ############################################################################################
 # Experiment #12

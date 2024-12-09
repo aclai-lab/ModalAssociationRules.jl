@@ -134,7 +134,9 @@ function __arm_select_alphabet(
     metacondition::AbstractCondition,
     discretizer::DiscretizationAlgorithm;
     consider_all_subintervals::Bool=false,
-    worldfilter::SoleLogics.FunctionalWorldFilter,
+    worldfilter::SoleLogics.FunctionalWorldFilter=SoleLogics.FunctionalWorldFilter(
+            _ -> true, Interval{Int}
+        ),
     kwargs...
 )
     if consider_all_subintervals
