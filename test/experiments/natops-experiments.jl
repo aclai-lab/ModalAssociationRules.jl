@@ -1318,6 +1318,27 @@ if 11 in EXPERIMENTS_IDS
 end
 
 ############################################################################################
+# Extra, plots to study how to parametrize binning
+############################################################################################
+
+# let's consider a metacondition, one discretizer strategy, and a world filtering policy
+variable = 5 # we consider right hand Y axis
+_feature = VariableMax(nvariable) # max(V5)
+
+# we choose a discretization strategy
+nbins = 3
+discretizer = Discretizers.DiscretizeQuantile(nbins)
+
+# we only consider small intervals
+small_intervals_worldfilter = worldfilter=SoleLogics.FunctionalWorldFilter(
+    x -> length(x) <= 10, Interval{Int})
+
+# first of all, let's plot the right hand Y original signal
+rhand_y_signal_plot = plot(X_df[1,5], labels="Right hand Y")
+
+savefig(rhand_y_signal_plot, "test/experiments/results/rhand_y_signal_plot.png")
+
+############################################################################################
 # Experiment #12
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
@@ -1334,7 +1355,7 @@ if 12 in EXPERIMENTS_IDS
 
     # there is no need to consider left-sided body variables
     # (left arm is not moving in class 1)
-    for variable_index = RIGHT_BODY_VARIABLES
+    for variable_index in RIGHT_BODY_VARIABLES
         # each proposition follows this schema;
         # it can be shown that those pairings are more informative than (max, >=), (min, <=)
         metaconditions = [
@@ -1348,7 +1369,7 @@ if 12 in EXPERIMENTS_IDS
 
         for metacondition in metaconditions
             alphabet = __arm_select_alphabet(
-                X_df_1_have_command[:,variable_index],
+                X_df_1_have_command[:,variable_index], # TODO Use FilteredFrame
                 metacondition,
                 quantilediscretizer;
                 consider_all_subintervals=true
@@ -1361,6 +1382,8 @@ if 12 in EXPERIMENTS_IDS
     _12_itemsetmeasures = [(gsupport, 0.4, 0.4)]
     _12_rulemeasures = [(gconfidence, 0.4, 0.4)]
 
+    # 1thread w. 30 literals:  ~381s
+    # 8threads w. 30 literals: ~66s
     _12_miner = Miner(
         deepcopy(X_1_have_command),
         fpgrowth,
@@ -1369,7 +1392,7 @@ if 12 in EXPERIMENTS_IDS
         _12_rulemeasures,
 
         worldfilter=SoleLogics.FunctionalWorldFilter(
-            x -> length(x) >= 10 && length(x) <= 20, Interval{Int}),
+            x -> length(x) <= 10, Interval{Int}),
 
         itemset_mining_policies=[islimited_length_itemset(; maxlength=5)],
 

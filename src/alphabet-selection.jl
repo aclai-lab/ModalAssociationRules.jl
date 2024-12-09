@@ -126,11 +126,15 @@ function __arm_select_alphabet(
     return alphabet
 end
 
+"""
+TODO: this is designed to only work with Interval.
+"""
 function __arm_select_alphabet(
     X::Vector{<:Vector{<:Real}},
     metacondition::AbstractCondition,
     discretizer::DiscretizationAlgorithm;
     consider_all_subintervals::Bool=false,
+    worldfilter::SoleLogics.FunctionalWorldFilter,
     kwargs...
 )
     if consider_all_subintervals
@@ -140,6 +144,8 @@ function __arm_select_alphabet(
                 for v in X
                 for i in 1:length(v)
                 for j in i+1:length(v)
+
+                if worldfilter.filter(SoleLogics.Interval(i,j))
             ]
     else
         _X = reduce(vcat, X)

@@ -1,9 +1,10 @@
+using Discretizers
 using Plots
 using Plots.Measures
 
 
 """
-
+TODO
 """
 function plot_arule_analyses(
     miner::AbstractMiner;
@@ -45,6 +46,71 @@ function plot_arule_analyses(
 
     return supp_vs_confidence_plot
 end
+
+
+"""
+Utility function to generate ad-hoc plots for certain kind of experiments.
+Simply plot how binning is performed
+
+# Examples
+```julia
+
+using ModalAssociationRules
+using Discretizers
+
+julia> X_df, _ = load_NATOPS()
+julia> X = scalarlogiset(X_df)
+julia> X_df_1_have_command = X_df[1:30,:]
+
+# choose the feature that is going to be applied to each sub-interval
+julia> nvariable = 5 # this column (V5) represents the Y axis of the right hand
+julia> _feature = VariableMax(nvariable)
+
+# choose the discretization strategy (same area, 3 bins)
+julia> nbins = 3
+julia> discretizer = Discretizers.DiscretizeQuantile(nbins)
+
+# choose a world filtering rule
+julia> worldfilter = SoleLogics.FunctionalWorldFilter(
+    x -> length(x) >= 10 && length(x) <= 20, Interval{Int})
+
+# now we can visualize the binning across a column
+julia> ModalAssociationRules.plot_binning(
+    X_df_1_have_command[:,nvariable], _feature, discretizer, worldfilter)
+```
+"""
+function plot_binning(
+    X::Vector{<:Vector{<:Real}},
+    _feature::AbstractFeature,
+    discretizer::DiscretizationAlgorithm,
+    worldfilter::SoleLogics.FunctionalWorldFilter;
+    label=""
+)
+    _X = [
+        SoleData.computeunivariatefeature(_feature, v[i:j])
+        # for each vector, we consider the superior triangular matrix
+        for v in X
+        for i in 1:length(v)
+        for j in i+1:length(v)
+
+        if worldfilter.filter(Interval(i,j))
+    ]
+
+    sort!(_X)
+
+    _binedges = binedges(discretizer, _X)
+    _histogram = histogram(
+        _X, label=label, xlabel=syntaxstring(_feature), ylabel="# occurrences")
+
+    for edge in _binedges
+        vline!([edge], color=:red, linewidth=2, label=false)
+    end
+
+    plot!(_histogram, margin=5mm, framestyle=:box)
+
+    display(_histogram)
+end
+
 
 """
     function time_series_distribution_analysis(
