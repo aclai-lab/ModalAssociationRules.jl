@@ -1321,10 +1321,12 @@ end
 # Extra, plots to study how to parametrize binning
 ############################################################################################
 
+using Plots.Measures
 default(palette=palette(:batlow10))
+results_folder = "test/experiments/results/"
 
 # let's consider a metacondition, one discretizer strategy, and a world filtering policy
-variable = 5 # we consider right hand Y axis
+nvariable = 5 # we consider right hand Y axis
 _feature = VariableMax(nvariable) # max(V5)
 
 # we choose a discretization strategy
@@ -1336,12 +1338,37 @@ small_intervals_worldfilter = worldfilter=SoleLogics.FunctionalWorldFilter(
     x -> length(x) <= 10, Interval{Int})
 
 # first of all, let's plot the right hand Y original signal
-rhand_y_signal_plot = plot(X_df[1,5], labels="Right hand tips Y coordinate")
+rhand_y_signal_plot = plot(
+    X_df[1,5], framestyle=:box, labels="Right hand tips Y coordinate")
 hline!([-1, 1], color=:red, linestyle=:dash, labels="Intuitive thresholding point")
-savefig(rhand_y_signal_plot, "test/experiments/results/rhand_y_signal_plot.png")
+title!("Right hand signal")
+savefig(rhand_y_signal_plot, joinpath(results_folder, "v5_3bin.png"))
 
 # now, we apply the feature to each subinterval and show the result
-plot_binning(X_df_1_have_command[:,5], _feature, discretizer)
+plot_binning(
+    X_df_1_have_command[:,5], _feature, discretizer;
+    savefig_path=joinpath(results_folder, "v5_modal_max_3bin")
+)
+
+# we try to use a filter to consider coarse worlds
+
+
+# we try to use a filter to consider worlds in a more granular fashion;
+# then, we plot the just found thresholds in the original distribution
+_, _binedges = plot_binning(
+    X_df_1_have_command[:,5], _feature, discretizer;
+    worldfilter = worldfilter=SoleLogics.FunctionalWorldFilter(
+        x -> length(x) <= 10 && length(x) >= 5, Interval{Int}),
+    savefig_path=joinpath(results_folder, "v5_modal_min_3bin_wleq20g4")
+)
+
+rhand_y_modal_plot = plot(
+    X_df[1,5], framestyle=:box, labels="Right hand tips Y coordinate")
+hline!([-1, 1], color=:red, linestyle=:dash, labels="Intuitive thresholding point")
+hline!(_binedges[2:length(_binedges)-1],
+    color=:green, linewidth=2, linestyle=:dot, labels="Binning thresholding point")
+title!("Right hand signal")
+savefig(rhand_y_modal_plot, joinpath(results_folder, "v5_3bin_wleq20g4.png"))
 
 ############################################################################################
 # Experiment #12

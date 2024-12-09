@@ -87,7 +87,7 @@ function plot_binning(
         _ -> true, Interval{Int}
     ),
     label="",
-    savefig_path="",
+    savefig_path::String="",
     _display::Bool=false
 )
     _X = [
@@ -117,7 +117,7 @@ function plot_binning(
         display(_histogram)
     end
 
-    return p
+    return p, _binedges
 end
 
 
