@@ -95,6 +95,9 @@ include("meaningfulness-measures.jl")
 export @localmeasure, @globalmeasure, @linkmeas
 export lsupport, gsupport
 export lconfidence, gconfidence
+export llift, glift
+export lconviction, gconviction
+export lleverage, gleverage
 
 include("mining-policies.jl")
 
