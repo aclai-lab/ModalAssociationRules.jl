@@ -1322,11 +1322,15 @@ end
 ############################################################################################
 
 using Plots.Measures
-default(palette=palette(:batlow10))
+default(palette=palette(:viridis))
 results_folder = "test/experiments/results/"
 
+signal_color = :blue
+threshold_color = :red
+bin_edge_color = :green
+
 # let's consider a metacondition, one discretizer strategy, and a world filtering policy
-nvariable = 5 # we consider right hand Y axis
+nvariable = 5
 _feature = VariableMax(nvariable) # max(V5)
 
 # we choose a discretization strategy
@@ -1339,36 +1343,73 @@ small_intervals_worldfilter = worldfilter=SoleLogics.FunctionalWorldFilter(
 
 # first of all, let's plot the right hand Y original signal
 rhand_y_signal_plot = plot(
-    X_df[1,5], framestyle=:box, labels="Right hand tips Y coordinate")
-hline!([-1, 1], color=:red, linestyle=:dash, labels="Intuitive thresholding point")
+    X_df[1,nvariable], framestyle=:box, labels="Right hand tips Y coordinate", color=signal_color)
+hline!(
+    [-1, 1], linestyle=:dash, labels="Intuitive thresholding point", color=threshold_color)
 title!("Right hand signal")
-savefig(rhand_y_signal_plot, joinpath(results_folder, "v5_3bin.png"))
+savefig(rhand_y_signal_plot, joinpath(results_folder, "v$(nvariable)_3bin.png"))
 
 # now, we apply the feature to each subinterval and show the result
 plot_binning(
-    X_df_1_have_command[:,5], _feature, discretizer;
-    savefig_path=joinpath(results_folder, "v5_modal_max_3bin")
+    X_df_1_have_command[:,nvariable], _feature, discretizer;
+    savefig_path=joinpath(results_folder, "v$(nvariable)_modal_max_3bin")
 )
 
-# we try to use a filter to consider coarse worlds
-
-
-# we try to use a filter to consider worlds in a more granular fashion;
-# then, we plot the just found thresholds in the original distribution
-_, _binedges = plot_binning(
-    X_df_1_have_command[:,5], _feature, discretizer;
+# we try to use a filter to consider granular worlds ...
+_, _granular_binedges = plot_binning(
+    X_df_1_have_command[:,nvariable], _feature, discretizer;
     worldfilter = worldfilter=SoleLogics.FunctionalWorldFilter(
-        x -> length(x) <= 10 && length(x) >= 5, Interval{Int}),
-    savefig_path=joinpath(results_folder, "v5_modal_min_3bin_wleq20g4")
+        # bounds are 0% and 50% of the original series length (GRANULAR RESULT)
+        x -> length(x) >= 1 && length(x) <= 25, Interval{Int}),
+    savefig_path=joinpath(results_folder, "v$(nvariable)_modal_min_3bin_wleq25g1")
 )
 
 rhand_y_modal_plot = plot(
-    X_df[1,5], framestyle=:box, labels="Right hand tips Y coordinate")
-hline!([-1, 1], color=:red, linestyle=:dash, labels="Intuitive thresholding point")
-hline!(_binedges[2:length(_binedges)-1],
-    color=:green, linewidth=2, linestyle=:dot, labels="Binning thresholding point")
-title!("Right hand signal")
-savefig(rhand_y_modal_plot, joinpath(results_folder, "v5_3bin_wleq20g4.png"))
+    X_df[1,nvariable], framestyle=:box, labels="Right hand tips Y coordinate", color=signal_color)
+hline!(
+    [-1, 1], linestyle=:dash, labels="Intuitive thresholding point", color=threshold_color)
+hline!(_granular_binedges[2:length(_granular_binedges)-1],
+    linewidth=2, linestyle=:dash, labels="Bin edge", color=bin_edge_color)
+title!("Right hand signal, intervals i such that 1 <= |i| <= 25")
+savefig(rhand_y_modal_plot, joinpath(results_folder, "v$(nvariable)_3bin_granular_wleq25g1.png"))
+
+# ... coarse worlds ...
+_, _coarse_binedges = plot_binning(
+    X_df_1_have_command[:,nvariable], _feature, discretizer;
+    worldfilter = worldfilter=SoleLogics.FunctionalWorldFilter(
+        # bounds are 50% and 99% of the original series length (GRANULAR RESULT)
+        x -> length(x) >= 25 && length(x) <= 50, Interval{Int}),
+    savefig_path=joinpath(results_folder, "v$(nvariable)_modal_min_3bin_wleq50g25")
+)
+
+rhand_y_modal_plot = plot(
+    X_df[1,nvariable], framestyle=:box, labels="Right hand tips Y coordinate", color=signal_color)
+hline!(
+    [-1, 1], linestyle=:dash, labels="Intuitive thresholding point", color=threshold_color)
+hline!(_coarse_binedges[2:length(_coarse_binedges)-1],
+    linewidth=2, linestyle=:dash, labels="Bin edge", color=bin_edge_color)
+title!("Right hand signal, intervals i such that 25 <= |i| <= 50")
+savefig(rhand_y_modal_plot, joinpath(results_folder, "v$(nvariable)_3bin_granular_wleq50g25.png"))
+
+# and just the right size:
+# we try to use a filter to consider worlds in a more granular fashion;
+# then, we plot the just found thresholds in the original distribution
+_, _good_binedges = plot_binning(
+    X_df_1_have_command[:,nvariable], _feature, discretizer;
+    worldfilter = worldfilter=SoleLogics.FunctionalWorldFilter(
+        # bounds are 5 and 10, which are 10% and 20% of the original series length
+        x -> length(x) >= 5 && length(x) <= 10, Interval{Int}),
+    savefig_path=joinpath(results_folder, "v$(nvariable)_modal_min_3bin_wleq10g5")
+)
+
+rhand_y_modal_plot = plot(
+    X_df[1,nvariable], framestyle=:box, labels="Right hand tips Y coordinate", color=signal_color)
+hline!(
+    [-1, 1], linestyle=:dash, labels="Intuitive thresholding point", color=threshold_color)
+hline!(_good_binedges[2:length(_good_binedges)-1],
+    linewidth=2, linestyle=:dash, labels="Bin edge", color=bin_edge_color)
+title!("Right hand signal, intervals i such that 5 <= |i| <= 10")
+savefig(rhand_y_modal_plot, joinpath(results_folder, "v$(nvariable)_3bin_granular_wleq10g5.png"))
 
 ############################################################################################
 # Experiment #12

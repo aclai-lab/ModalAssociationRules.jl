@@ -103,11 +103,13 @@ function plot_binning(
     sort!(_X)
 
     _binedges = binedges(discretizer, _X)
-    _histogram = histogram(
-        _X, label=label, xlabel=syntaxstring(_feature), ylabel="# occurrences")
+    _histogram = histogram(_X,
+        label=label, xlabel=syntaxstring(_feature), color=:darkorange,
+        ylabel="# occurrences"
+    )
 
     for edge in _binedges
-        vline!([edge], color=:red, linewidth=2, label=false)
+        vline!([edge], color=:blue, linewidth=2, label=false)
     end
 
     p = plot!(_histogram, margin=5mm, framestyle=:box)
