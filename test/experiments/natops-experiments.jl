@@ -1326,8 +1326,8 @@ default(palette=palette(:viridis))
 results_folder = "test/experiments/results/"
 
 signal_color = :blue
-threshold_color = :red
-bin_edge_color = :green
+threshold_color = :darkgreen
+bin_edge_color = :red
 
 # let's consider a metacondition, one discretizer strategy, and a world filtering policy
 nvariable = 5
@@ -1343,9 +1343,9 @@ small_intervals_worldfilter = worldfilter=SoleLogics.FunctionalWorldFilter(
 
 # first of all, let's plot the right hand Y original signal
 rhand_y_signal_plot = plot(
-    X_df[1,nvariable], framestyle=:box, labels="Right hand tips Y coordinate", color=signal_color)
+    X_df[1,nvariable], framestyle=:box, labels="Right hand tips Y coordinate", color=signal_color, alpha=0.25)
 hline!(
-    [-1, 1], linestyle=:dash, labels="Intuitive thresholding point", color=threshold_color)
+    [-1, 1], linestyle=:dash, linewidth=2, labels="Intuitive thresholding point", color=threshold_color)
 title!("Right hand signal")
 savefig(rhand_y_signal_plot, joinpath(results_folder, "v$(nvariable)_3bin.png"))
 
@@ -1365,9 +1365,9 @@ _, _granular_binedges = plot_binning(
 )
 
 rhand_y_modal_plot = plot(
-    X_df[1,nvariable], framestyle=:box, labels="Right hand tips Y coordinate", color=signal_color)
+    X_df[1:30,nvariable], framestyle=:box, labels="", color=signal_color, alpha=0.25)
 hline!(
-    [-1, 1], linestyle=:dash, labels="Intuitive thresholding point", color=threshold_color)
+    [-1, 1], linestyle=:dash, linewidth=2, labels="Intuitive thresholding point", color=threshold_color)
 hline!(_granular_binedges[2:length(_granular_binedges)-1],
     linewidth=2, linestyle=:dash, labels="Bin edge", color=bin_edge_color)
 title!("Right hand signal, intervals i such that 1 <= |i| <= 25")
@@ -1383,9 +1383,9 @@ _, _coarse_binedges = plot_binning(
 )
 
 rhand_y_modal_plot = plot(
-    X_df[1,nvariable], framestyle=:box, labels="Right hand tips Y coordinate", color=signal_color)
+    X_df[1:30,nvariable], framestyle=:box, labels="", color=signal_color, alpha=0.25)
 hline!(
-    [-1, 1], linestyle=:dash, labels="Intuitive thresholding point", color=threshold_color)
+    [-1, 1], linestyle=:dash, linewidth=2, labels="Intuitive thresholding point", color=threshold_color)
 hline!(_coarse_binedges[2:length(_coarse_binedges)-1],
     linewidth=2, linestyle=:dash, labels="Bin edge", color=bin_edge_color)
 title!("Right hand signal, intervals i such that 25 <= |i| <= 50")
@@ -1403,13 +1403,34 @@ _, _good_binedges = plot_binning(
 )
 
 rhand_y_modal_plot = plot(
-    X_df[1,nvariable], framestyle=:box, labels="Right hand tips Y coordinate", color=signal_color)
+    X_df[1:30,nvariable], framestyle=:box, labels="", color=signal_color, alpha=0.25)
 hline!(
-    [-1, 1], linestyle=:dash, labels="Intuitive thresholding point", color=threshold_color)
+    [-1, 1], linestyle=:dash, linewidth=2, labels="Intuitive thresholding point", color=threshold_color)
 hline!(_good_binedges[2:length(_good_binedges)-1],
     linewidth=2, linestyle=:dash, labels="Bin edge", color=bin_edge_color)
 title!("Right hand signal, intervals i such that 5 <= |i| <= 10")
 savefig(rhand_y_modal_plot, joinpath(results_folder, "v$(nvariable)_3bin_granular_wleq10g5.png"))
+
+# let's see if the strategy of always considering intervals whose length is between 5 and 10
+# is always feasible
+for nvariable in [4,6]
+    _feature = VariableMax(nvariable)
+
+    _, _good_binedges = plot_binning(
+        X_df_1_have_command[:,nvariable], _feature, discretizer;
+        worldfilter = worldfilter=SoleLogics.FunctionalWorldFilter(
+            # bounds are 5 and 10, which are 10% and 20% of the original series length
+            x -> length(x) >= 5 && length(x) <= 10, Interval{Int}),
+        savefig_path=joinpath(results_folder, "v$(nvariable)_modal_min_3bin_wleq10g5")
+    )
+
+    _modal_plot = plot(
+        X_df[1:30,nvariable], framestyle=:box, label="", color=signal_color, alpha=0.25)
+    hline!(_good_binedges[2:length(_good_binedges)-1],
+        linewidth=2, linestyle=:dash, labels="Bin edge", color=bin_edge_color)
+    title!("V$(nvariable), intervals i such that 5 <= |i| <= 10")
+    savefig(_modal_plot, joinpath(results_folder, "v$(nvariable)_3bin_granular_wleq10g5.png"))
+end
 
 ############################################################################################
 # Experiment #12
