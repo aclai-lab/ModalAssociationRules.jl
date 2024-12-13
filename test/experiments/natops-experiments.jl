@@ -1338,7 +1338,7 @@ nbins = 3
 discretizer = Discretizers.DiscretizeQuantile(nbins)
 
 # we only consider small intervals
-small_intervals_worldfilter = worldfilter=SoleLogics.FunctionalWorldFilter(
+small_intervals_worldfilter = SoleLogics.FunctionalWorldFilter(
     x -> length(x) <= 10, Interval{Int})
 
 # first of all, let's plot the right hand Y original signal
@@ -1362,7 +1362,7 @@ plot_binning(
 # we try to use a filter to consider granular worlds ...
 _, _granular_binedges = plot_binning(
     X_df_1_have_command[:,nvariable], _feature, discretizer;
-    worldfilter = worldfilter=SoleLogics.FunctionalWorldFilter(
+    worldfilter=SoleLogics.FunctionalWorldFilter(
         # bounds are 0% and 50% of the original series length (GRANULAR RESULT)
         x -> length(x) >= 1 && length(x) <= 25, Interval{Int}),
     savefig_path=joinpath(results_folder, "v$(nvariable)_modal_min_3bin_wleq25g1")
@@ -1385,7 +1385,7 @@ savefig(
 # ... coarse worlds ...
 _, _coarse_binedges = plot_binning(
     X_df_1_have_command[:,nvariable], _feature, discretizer;
-    worldfilter = worldfilter=SoleLogics.FunctionalWorldFilter(
+    worldfilter=SoleLogics.FunctionalWorldFilter(
         # bounds are 50% and 99% of the original series length (GRANULAR RESULT)
         x -> length(x) >= 25 && length(x) <= 50, Interval{Int}),
     savefig_path=joinpath(results_folder, "v$(nvariable)_modal_min_3bin_wleq50g25")
@@ -1409,11 +1409,13 @@ savefig(rhand_y_modal_plot,
 # then, we plot the just found thresholds in the original distribution
 _, _good_binedges = plot_binning(
     X_df_1_have_command[:,nvariable], _feature, discretizer;
-    worldfilter = worldfilter=SoleLogics.FunctionalWorldFilter(
+    worldfilter=SoleLogics.FunctionalWorldFilter(
         # bounds are 5 and 10, which are 10% and 20% of the original series length
-        x -> length(x) >= 5 && length(x) <= 10, Interval{Int}),
+        x -> length(x) >= 1 && length(x) <= 10, Interval{Int}),
     savefig_path=joinpath(results_folder, "v$(nvariable)_modal_min_3bin_wleq10g5")
 )
+# remove extrema from the binning edges
+_good_binedges = _good_binedges[2:length(_good_binedges)-1]
 
 rhand_y_modal_plot = plot(
     X_df[1:30,nvariable], framestyle=:box, labels="", color=signal_color, alpha=0.25)
@@ -1421,7 +1423,7 @@ hline!(
     [-1, 1], linestyle=:dash, linewidth=2, labels="Intuitive thresholding point",
     color=threshold_color
 )
-hline!(_good_binedges[2:length(_good_binedges)-1],
+hline!(_good_binedges,
     linewidth=2, linestyle=:dash, labels="Bin edge", color=bin_edge_color)
 title!("Right hand signal, intervals i such that 5 <= |i| <= 10")
 savefig(
@@ -1436,7 +1438,7 @@ for nvariable in [4,6]
 
     _, _good_binedges = plot_binning(
         X_df_1_have_command[:,nvariable], _feature, discretizer;
-        worldfilter = worldfilter=SoleLogics.FunctionalWorldFilter(
+        worldfilter=SoleLogics.FunctionalWorldFilter(
             # bounds are 5 and 10, which are 10% and 20% of the original series length
             x -> length(x) >= 5 && length(x) <= 10, Interval{Int}),
         savefig_path=joinpath(results_folder, "v$(nvariable)_modal_min_3bin_wleq10g5")
