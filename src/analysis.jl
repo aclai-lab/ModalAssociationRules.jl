@@ -88,7 +88,8 @@ function plot_binning(
     ),
     label="",
     savefig_path::String="",
-    _display::Bool=false
+    _display::Bool=false,
+    _binedges_only::Bool=false
 )
     _X = [
         SoleData.computeunivariatefeature(_feature, v[i:j])
@@ -103,6 +104,11 @@ function plot_binning(
     sort!(_X)
 
     _binedges = binedges(discretizer, _X)
+
+    if _binedges_only
+        return Nothing, _binedges
+    end
+
     _histogram = histogram(_X,
         label=label, xlabel=syntaxstring(_feature), color=:darkorange,
         ylabel="# occurrences"

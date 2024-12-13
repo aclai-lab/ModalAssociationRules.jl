@@ -1332,6 +1332,12 @@ bin_edge_color = :red
 # let's consider a metacondition, one discretizer strategy, and a world filtering policy
 nvariable = 5
 _feature = VariableMax(nvariable) # max(V5)
+_domainexpert_thresholds = [-1.0,1.0] # thresholds given by an expert of V5 signals
+
+function _mse_between_pairs(v1::T, v2::T) where {T<:Vector{<:Real}}
+    # compute mse pairwise
+    sum(v -> (first(v)-last(v))^2, zip(v1,v2)) / length(v1)
+end
 
 # we choose a discretization strategy
 nbins = 3
@@ -1347,8 +1353,9 @@ rhand_y_signal_plot = plot(
     color=signal_color, alpha=0.25
 )
 hline!(
-    [-1, 1], linestyle=:dash, linewidth=2, labels="Intuitive thresholding point",
-    color=threshold_color
+    _domainexpert_thresholds,
+    linestyle=:dash, linewidth=2,
+    labels="Intuitive thresholding point", color=threshold_color
 )
 title!("Right hand signal")
 savefig(rhand_y_signal_plot, joinpath(results_folder, "v$(nvariable)_3bin.png"))
@@ -1371,8 +1378,9 @@ _, _granular_binedges = plot_binning(
 rhand_y_modal_plot = plot(
     X_df[1:30,nvariable], framestyle=:box, labels="", color=signal_color, alpha=0.25)
 hline!(
-    [-1, 1], linestyle=:dash, linewidth=2, labels="Intuitive thresholding point",
-    color=threshold_color
+    _domainexpert_thresholds,
+    linestyle=:dash, linewidth=2,
+    labels="Intuitive thresholding point", color=threshold_color
 )
 hline!(_granular_binedges[2:length(_granular_binedges)-1],
     linewidth=2, linestyle=:dash, labels="Bin edge", color=bin_edge_color)
@@ -1394,8 +1402,9 @@ _, _coarse_binedges = plot_binning(
 rhand_y_modal_plot = plot(
     X_df[1:30,nvariable], framestyle=:box, labels="", color=signal_color, alpha=0.25)
 hline!(
-    [-1, 1], linestyle=:dash, linewidth=2, labels="Intuitive thresholding point",
-    color=threshold_color
+    _domainexpert_thresholds,
+    linestyle=:dash, linewidth=2,
+    labels="Intuitive thresholding point", color=threshold_color
 )
 hline!(_coarse_binedges[2:length(_coarse_binedges)-1],
     linewidth=2, linestyle=:dash, labels="Bin edge", color=bin_edge_color)
@@ -1403,6 +1412,19 @@ title!("Right hand signal, intervals i such that 25 <= |i| <= 50")
 savefig(rhand_y_modal_plot,
     joinpath(results_folder, "v$(nvariable)_3bin_granular_wleq50g25.png")
 )
+
+# let's find the right size by trying all the possible ranges
+for (_start, _end) in Iterators.product(1:51, 1:51)
+    _, _binedges = plot_binning(
+        X_df_1_have_command[:,nvariable], _feature, discretizer;
+        worldfilter=SoleLogics.FunctionalWorldFilter(
+            # bounds are 5 and 10, which are 10% and 20% of the original series length
+            x -> length(x) >= _start && length(x) <= _end, Interval{Int}),
+        _binedges_only=true
+    )
+
+
+end
 
 # and just the right size:
 # we try to use a filter to consider worlds in a more granular fashion;
@@ -1420,8 +1442,9 @@ _good_binedges = _good_binedges[2:length(_good_binedges)-1]
 rhand_y_modal_plot = plot(
     X_df[1:30,nvariable], framestyle=:box, labels="", color=signal_color, alpha=0.25)
 hline!(
-    [-1, 1], linestyle=:dash, linewidth=2, labels="Intuitive thresholding point",
-    color=threshold_color
+    _domainexpert_thresholds,
+    linestyle=:dash, linewidth=2,
+    labels="Intuitive thresholding point", color=threshold_color
 )
 hline!(_good_binedges,
     linewidth=2, linestyle=:dash, labels="Bin edge", color=bin_edge_color)
