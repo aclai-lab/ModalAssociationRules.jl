@@ -1343,9 +1343,13 @@ small_intervals_worldfilter = worldfilter=SoleLogics.FunctionalWorldFilter(
 
 # first of all, let's plot the right hand Y original signal
 rhand_y_signal_plot = plot(
-    X_df[1,nvariable], framestyle=:box, labels="Right hand tips Y coordinate", color=signal_color, alpha=0.25)
+    X_df[1,nvariable], framestyle=:box, labels="Right hand tips Y coordinate",
+    color=signal_color, alpha=0.25
+)
 hline!(
-    [-1, 1], linestyle=:dash, linewidth=2, labels="Intuitive thresholding point", color=threshold_color)
+    [-1, 1], linestyle=:dash, linewidth=2, labels="Intuitive thresholding point",
+    color=threshold_color
+)
 title!("Right hand signal")
 savefig(rhand_y_signal_plot, joinpath(results_folder, "v$(nvariable)_3bin.png"))
 
@@ -1367,11 +1371,16 @@ _, _granular_binedges = plot_binning(
 rhand_y_modal_plot = plot(
     X_df[1:30,nvariable], framestyle=:box, labels="", color=signal_color, alpha=0.25)
 hline!(
-    [-1, 1], linestyle=:dash, linewidth=2, labels="Intuitive thresholding point", color=threshold_color)
+    [-1, 1], linestyle=:dash, linewidth=2, labels="Intuitive thresholding point",
+    color=threshold_color
+)
 hline!(_granular_binedges[2:length(_granular_binedges)-1],
     linewidth=2, linestyle=:dash, labels="Bin edge", color=bin_edge_color)
 title!("Right hand signal, intervals i such that 1 <= |i| <= 25")
-savefig(rhand_y_modal_plot, joinpath(results_folder, "v$(nvariable)_3bin_granular_wleq25g1.png"))
+savefig(
+    rhand_y_modal_plot,
+    joinpath(results_folder, "v$(nvariable)_3bin_granular_wleq25g1.png")
+)
 
 # ... coarse worlds ...
 _, _coarse_binedges = plot_binning(
@@ -1385,11 +1394,15 @@ _, _coarse_binedges = plot_binning(
 rhand_y_modal_plot = plot(
     X_df[1:30,nvariable], framestyle=:box, labels="", color=signal_color, alpha=0.25)
 hline!(
-    [-1, 1], linestyle=:dash, linewidth=2, labels="Intuitive thresholding point", color=threshold_color)
+    [-1, 1], linestyle=:dash, linewidth=2, labels="Intuitive thresholding point",
+    color=threshold_color
+)
 hline!(_coarse_binedges[2:length(_coarse_binedges)-1],
     linewidth=2, linestyle=:dash, labels="Bin edge", color=bin_edge_color)
 title!("Right hand signal, intervals i such that 25 <= |i| <= 50")
-savefig(rhand_y_modal_plot, joinpath(results_folder, "v$(nvariable)_3bin_granular_wleq50g25.png"))
+savefig(rhand_y_modal_plot,
+    joinpath(results_folder, "v$(nvariable)_3bin_granular_wleq50g25.png")
+)
 
 # and just the right size:
 # we try to use a filter to consider worlds in a more granular fashion;
@@ -1405,11 +1418,16 @@ _, _good_binedges = plot_binning(
 rhand_y_modal_plot = plot(
     X_df[1:30,nvariable], framestyle=:box, labels="", color=signal_color, alpha=0.25)
 hline!(
-    [-1, 1], linestyle=:dash, linewidth=2, labels="Intuitive thresholding point", color=threshold_color)
+    [-1, 1], linestyle=:dash, linewidth=2, labels="Intuitive thresholding point",
+    color=threshold_color
+)
 hline!(_good_binedges[2:length(_good_binedges)-1],
     linewidth=2, linestyle=:dash, labels="Bin edge", color=bin_edge_color)
 title!("Right hand signal, intervals i such that 5 <= |i| <= 10")
-savefig(rhand_y_modal_plot, joinpath(results_folder, "v$(nvariable)_3bin_granular_wleq10g5.png"))
+savefig(
+    rhand_y_modal_plot,
+    joinpath(results_folder, "v$(nvariable)_3bin_granular_wleq10g5.png")
+)
 
 # let's see if the strategy of always considering intervals whose length is between 5 and 10
 # is always feasible
@@ -1429,7 +1447,8 @@ for nvariable in [4,6]
     hline!(_good_binedges[2:length(_good_binedges)-1],
         linewidth=2, linestyle=:dash, labels="Bin edge", color=bin_edge_color)
     title!("V$(nvariable), intervals i such that 5 <= |i| <= 10")
-    savefig(_modal_plot, joinpath(results_folder, "v$(nvariable)_3bin_granular_wleq10g5.png"))
+    savefig(
+        _modal_plot, joinpath(results_folder, "v$(nvariable)_3bin_granular_wleq10g5.png"))
 end
 
 ############################################################################################
