@@ -23,6 +23,9 @@ test_suites = [
 ]
 
 @testset "SoleLogics.jl" begin
+    include("commons.jl")
+    using .Commons
+
     for ts in eachindex(test_suites)
         name = test_suites[ts][1]
         list = test_suites[ts][2]

@@ -111,6 +111,7 @@ function Base.:(==)(itemset1::Itemset, itemset2::Itemset)
     # return items(itemset1) == items(itemset2)
 
     # order is ignored
+    # TODO test using ⊂ instead of in
     return length(itemset1) == length(itemset2) && itemset1 in itemset2
 end
 
@@ -136,60 +137,6 @@ See also [`Item`](@ref), [`Itemset`](@ref),
 formula(itemset::Itemset)::SoleLogics.LeftmostConjunctiveForm = begin
     formula.(itemset) |> LeftmostConjunctiveForm
 end
-
-"""
-    const EnhancedItemset = Tuple{Itemset,UInt32}
-
-Compressed representation of multiple, identical [`Itemset`](@ref)s.
-
-See also [`Itemset`](@ref).
-"""
-const EnhancedItemset = Tuple{<:Itemset,Int64}
-
-"""
-    itemset(enhitemset::EnhancedItemset)::Itemset
-
-Getter for the [`Itemset`](@ref) wrapped within an [`EnhancedItemset`](@ref).
-
-See also [`EnhancedItemset`](@ref), [`Itemset`](@ref).
-"""
-itemset(enhitemset::EnhancedItemset) = first(enhitemset)
-
-"""
-    itemset(enhitemset::EnhancedItemset)::Integer
-
-Getter for the integer counter wrapped within `enhitemset`.
-
-See also [`EnhancedItemset`](@ref), [`Itemset`](@ref).
-"""
-count(enhitemset::EnhancedItemset)::Integer = last(enhitemset)
-
-function Base.convert(::Type{EnhancedItemset}, itemset::Itemset, count::Integer)
-    return EnhancedItemset((itemset, count))
-end
-
-function Base.convert(::Type{Itemset}, enhanceditemset::EnhancedItemset)
-    return first(enhanceditemset)
-end
-
-function Base.show(io::IO, enhanceditemset::EnhancedItemset)
-    print(io, "[$(first(enhanceditemset))] : $(last(enhanceditemset))")
-end
-
-"""
-    const ConditionalPatternBase = Vector{EnhancedItemset}
-
-Collection of [`EnhancedItemset`](@ref).
-
-!!! note
-    This plays a central role in the state-of-the-art algorithm [`fpgrowth`](@ref).
-    In this algorithm, in fact, a [`ConditionalPatternBase`](@ref) embodies all the
-    information needed to build an important data structure called [`FPTree`](@ref)
-    in the algorithm.
-
-See also [`EnhancedItemset`](@ref), [`fpgrowth`](@ref), [`FPTree`](@ref).
-"""
-const ConditionalPatternBase = Vector{EnhancedItemset}
 
 """
     const ARule = Tuple{Itemset,Itemset}
@@ -223,8 +170,11 @@ struct ARule
 
     function ARule(antecedent::Itemset, consequent::Itemset)
         intersection = intersect(antecedent, consequent)
-        @assert intersection |> length == 0 "Invalid rule. " *
-        "Antecedent and consequent share the following items: $(intersection)."
+        if !(intersection |> length == 0)
+            throw(ArgumentError("Invalid rule. " *
+                "Antecedent and consequent share the following items: $(intersection)."
+            ))
+        end
 
         new(antecedent, consequent)
     end
@@ -233,6 +183,8 @@ struct ARule
         ARule(first(doublet), last(doublet))
     end
 end
+
+Itemset(rule::ARule) = convert(Itemset, rule)
 
 """
     content(rule::ARule)::Tuple{Itemset,Itemset}
@@ -428,7 +380,7 @@ See also [`linkmeas`](@ref), [`islocalof`](@ref), [`isglobalof`](@ref), [`localo
 globalof(::Function) = nothing
 
 """
-    const WorldMask = Vector{Int64}
+    const WorldMask = BitVector
 
 Vector whose i-th position stores how many times a certain [`MeaningfulnessMeasure`](@ref)
 applied on a specific [`Itemset`](@ref)s is true on the i-th world of multiple instances.
@@ -443,14 +395,14 @@ is never true.
 
 See also [`Itemset`](@ref), [`MeaningfulnessMeasure`](@ref).
 """
- const WorldMask = Vector{Int64}
+ const WorldMask = BitVector
 
 
 
 # utility structures
 
 """
-    const LmeasMemoKey = Tuple{Symbol,ARMSubject,Int64}
+    const LmeasMemoKey = Tuple{Symbol,ARMSubject,Integer}
 
 Key of a [`LmeasMemo`](@ref) dictionary.
 Represents a local meaningfulness measure name (as a `Symbol`), a [`ARMSubject`](@ref),
@@ -459,7 +411,7 @@ and the number of a dataset instance where the measure is applied.
 See also [`ARMSubject`](@ref), [`LmeasMemo`](@ref), [`lsupport`](@ref),
 [`lconfidence`](@ref).
 """
-const LmeasMemoKey = Tuple{Symbol,ARMSubject,Int64}
+const LmeasMemoKey = Tuple{Symbol,ARMSubject,Integer}
 
 """
     const LmeasMemo = Dict{LmeasMemoKey,Threshold}
@@ -526,3 +478,15 @@ Any type on which mining can be performed.
 See also [`Miner`](@info).
 """
 const MineableData = AbstractDataset
+
+"""
+    initminingstate(::Function, ::MineableData)
+
+This trait defines how to initialize the [`MiningState`](@ref) structure of an
+[`AbstractMiner`](@ref), in order to customize it to your needings depending on a specific
+function/data pairing.
+
+See ealso [`hasminingstate`](@ref), [`AbstractMiner`](@ref), [`MiningState`](@ref),
+[`miningstate`](@ref).
+"""
+initminingstate(::Function, ::MineableData)::MiningState = MiningState()

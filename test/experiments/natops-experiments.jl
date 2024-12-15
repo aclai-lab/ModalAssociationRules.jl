@@ -14,6 +14,7 @@ using Test
 
 using ModalAssociationRules
 using Dates
+using Discretizers
 using Plots
 using PrettyTables
 using SoleData
@@ -36,6 +37,9 @@ VARIABLE_NAMES = [
 	"X[Thumb r]", "Y[Thumb r]", "Z[Thumb r]",          # 22 24
     "ΔY[Hand tip r and thumb r]"                       # 25
 ]
+
+LEFT_BODY_VARIABLES = [1,2,3,7,8,9,13,14,15,19,20,21,25]
+RIGHT_BODY_VARIABLES = [4,5,6,10,11,12,16,17,18,22,23,24,25]
 
 CLASS_NAMES = [
 	"I have command",
@@ -86,19 +90,24 @@ LOGISETS = [
 
 # Each experiment is identified by an ID;
 # put here the ids of the experiments you want to run.
-EXPERIMENTS_IDS = [11]
+EXPERIMENTS_IDS = [12]
+println("You are running the following NATOPS experiments: $(EXPERIMENTS_IDS)")
 
 """
+    function runexperiment(
+        miner::Miner;
+        returnminer::Bool = false,
+        tracktime::Bool = true,
+        reportname::String = "experiment-report.exp",
+        variablenames::Union{Nothing, Vector{String}} = nothing
+    )
     function runexperiment(
         X::MineableData,
         algorithm::Function,
         items::Vector{Item},
         itemsetmeasures::Vector{<:MeaningfulnessMeasure},
         rulemeasures::Vector{<:MeaningfulnessMeasure};
-        returnminer::Bool = false,
-        tracktime::Bool = true,
-        reportname::String = "experiment-report.exp",
-        variablenames::Union{Nothing, Vector{String}} = nothing
+        kwargs...
     )
 
 Mine frequent [`Itemset`](@ref)s and [`ARule`](@ref) from dataset `X` using `algorithm`.
@@ -113,17 +122,21 @@ function runexperiment(
 	items::Vector{Item},
 	itemsetmeasures::Vector{<:MeaningfulnessMeasure},
 	rulemeasures::Vector{<:MeaningfulnessMeasure};
+    kwargs...
+)
+    runexperiment(
+        Miner(deepcopy(X), algorithm, items, itemsetmeasures, rulemeasures);
+        kwargs...
+    )
+end
+
+function runexperiment(
+    miner::Miner;
     returnminer::Bool = false,
     tracktime::Bool = true,
 	reportname::String = "experiment-report.exp",
 	variablenames::Union{Nothing, Vector{String}} = nothing
 )
-    # avoid filling the given dataset with infos necessary to optimize future minings,
-    # and don't use those metadata if already loaded up!
-    # In fact, that could make experiments uncorrect (e.g., confidences over 1.0).
-    _X = deepcopy(X)
-
-	miner = Miner(_X, algorithm, items, itemsetmeasures, rulemeasures)
 	miningtime = @elapsed mine!(miner)
 	generationtime = @elapsed collect(generaterules!(miner))
 
@@ -136,24 +149,26 @@ function runexperiment(
 		redirect_stdout(out) do
             # For some reason, `itemsetmeasures` and `rulemeasures` getters triggers
             # a MethodError here (maybe this is caused by stdout redirection?).
-            println("Parameterization:\n")
+            println("Alphabet:\n")
             map(item -> println(
-                syntaxstring(item, variable_names_map=VARIABLE_NAMES)) , items)
-            println(miner.item_constrained_measures)
-            println(miner.rule_constrained_measures)
+                syntaxstring(item, variable_names_map=VARIABLE_NAMES)) , items(miner))
+
+            println("\n\nThresholds:")
+            println(miner.itemset_constrained_measures)
+            println(miner.arule_constrained_measures)
 
             if tracktime
-                println("\nRunning time:\n")
+                println("\nRunning time [s]:\n")
                 println("Frequent itemsets extraction: $(miningtime)")
-                println("Association rules generation (w. sift engine): $(generationtime)")
+                println("Association rules generation: $(generationtime)")
                 println("Total elapsed time: $(miningtime + generationtime)")
             end
 
             println("\nResults:\n")
 			for r in sort(
                 arules(miner), by = x -> miner.globalmemo[(:gconfidence, x)], rev=true)
-				ModalAssociationRules.analyze(
-                    r, miner; variablenames=variablenames, itemsets_global_info=true)
+				ModalAssociationRules.arule_analysis(
+                    r, miner; variablenames=variablenames, itemset_global_info=true)
 			end
 		end
 	end
@@ -241,9 +256,13 @@ function runcomparison(
     classlabels::Vector{String} = CLASS_NAMES,
     variablenames::Union{Nothing, Vector{String}} = VARIABLE_NAMES
 ) where {L<:SoleData.AbstractLogiset}
-    @assert length(logisets) == length(classlabels) "Given number of logisets and " *
-        "variable names mismatch: length(logisets) = $(length(logisets)), while " *
-        "length(classlabels) = $(length(classlabels))."
+    if length(logisets) != length(classlabels)
+        throw(ArgumentError(
+            "Given number of logisets and " *
+            "variable names mismatch: length(logisets) = $(length(logisets)), while " *
+            "length(classlabels) = $(length(classlabels))."
+        ))
+    end
 
     miners = [
         Miner( # random Miner, its only purpose is to leverage memoization
@@ -258,8 +277,9 @@ function runcomparison(
     miners[targetclass] = miner
 
     targetminer = miners[targetclass]
-    @assert info(targetminer, :istrained) "Provided miner did not perform mine " *
-        "and is thus  empty."
+    if !info(targetminer, :istrained)
+        throw(ArgumentError("Provided miner did not perform mine and is thus  empty."))
+    end
 
     # report filepath preparation
     reportname = RESULTS_PATH * reportname
@@ -277,8 +297,8 @@ function runcomparison(
     # partial data (numeric) that has to be be manipulated,
     # before being converted to string format.
     # Each element in this collection is of type
-    # Tuple{ARule, Float64, Vector{Tuple{Int64, Vector{Float64}}}}
-    # (A::ARule, B::Float64, C::Tuple{Int64, Vector{Flaot64}})
+    # Tuple{ARule, Float64, Vector{Tuple{Integer, Vector{Float64}}}}
+    # (A::ARule, B::Float64, C::Tuple{Integer, Vector{Flaot64}})
     # where A is association rule,
     # B is the confidence measured considering all classes apart from `targetclass`,
     # and C is a vector of associations between i-th class and meaningfulness measures.
@@ -287,7 +307,7 @@ function runcomparison(
     # antecedent global support,
     # consequent global support,
     # antecedent and consequent global support.
-    datavals = Tuple{ARule, Float64, Float64, Vector{Tuple{Int64, Vector{Float64}}}}[]
+    datavals = Tuple{ARule, Float64, Float64, Vector{Tuple{Integer, Vector{Float64}}}}[]
 
     # final collection taht will be passed to PrettyTables.jl
     data = Any[]
@@ -305,7 +325,7 @@ function runcomparison(
 
         # prepare a data value fragment, that is,
         # a vector of tuples (logiset-index, [measures])
-        dataval = Tuple{Int64, Vector{Float64}}[]
+        dataval = Tuple{Integer, Vector{Float64}}[]
 
         # consider each class, compute the meaningfulness measures and print them
         for (i, logiset) in Iterators.enumerate(logisets)
@@ -435,8 +455,8 @@ function runcomparison(
             println("Parameterization:\n")
             map(item -> println(
                 syntaxstring(item, variable_names_map=VARIABLE_NAMES)) , items(miner))
-            println(miner.item_constrained_measures)
-            println(miner.rule_constrained_measures)
+            println(miner.itemset_constrained_measures)
+            println(miner.arule_constrained_measures)
 
             pretty_table(
                 data |> permutedims;
@@ -879,146 +899,6 @@ end
 # See also `runcomparison` documentation.
 ############################################################################################
 
-function runcomparison(
-    miner::Miner,
-    logisets::Vector{L},
-    confidencebouncer::Function;
-    suppthreshold::Float64,
-    sigdigits::Int8=2 |> Int8,
-    reportname::String = "comparison-report.exp",
-    classlabels::Vector{String} = CLASS_NAMES
-) where {L<:SoleData.AbstractLogiset}
-    @assert length(logisets) == length(classlabels) "Given number of logisets and " *
-        "variable names mismatch: length(logisets) = $(length(logisets)), while " *
-        "length(classlabels) = $(length(classlabels))."
-
-    @assert info(miner, :istrained) "Provided miner did not perform mine and is thus empty"
-
-    # report filepath preparation
-    reportname = RESULTS_PATH * reportname
-    # pretty table configuration
-    data = []
-    header = vcat("Rule", classlabels)
-
-    # for each rule accepted by `confidencebouncer`
-    for rule in filter(x ->
-        confidencebouncer(globalmemo(miner, (:gconfidence, x))), arules(miner))
-
-        # prepare a data fragment, that is a row of the final pretty table
-        _data = Any[rule]
-
-        # consider each class, compute the meaningfulness measures and print them
-        for logiset in logisets
-            _antecedent, _consequent = antecedent(rule), consequent(rule)
-            _union = union(_antecedent, _consequent)
-
-            # confidence
-            _conf = round(
-                gconfidence(rule, logiset, suppthreshold), sigdigits=sigdigits)
-            # antecedent global support
-            _asupp = round(
-                gsupport(_antecedent, logiset, suppthreshold), sigdigits=sigdigits)
-            # consequent global support
-            _csupp = round(
-                gsupport(_consequent, logiset, suppthreshold), sigdigits=sigdigits)
-            # whole-rule global support
-            _usupp = round(
-                gsupport(_union, logiset, suppthreshold), sigdigits=sigdigits)
-
-            # new cell is added to the right of current row
-            _cellstring = "confidence: $(_conf)\nantecedent support: $(_asupp)\n" *
-                "consequent support: $(_csupp)\nunion support: $(_usupp)"
-            # push!(_data, [_conf, _asupp, _csupp, _usupp])
-            push!(_data, _cellstring)
-        end
-
-        # now, assemble a new row
-        data = isempty(data) ? _data : hcat(data, _data)
-    end
-
-    # print data table on file
-    open(reportname, "w") do out
-        redirect_stdout(out) do
-            pretty_table(
-                data |> permutedims;
-                header=header,
-                linebreaks=true,
-                body_hlines=collect(1:(data |> size |> first))
-            )
-        end
-    end
-end
-
-function runcomparison(
-    miner::Miner,
-    logisets::Vector{L},
-    confidencebouncer::Function;
-    suppthreshold::Float64,
-    sigdigits::Int8=2 |> Int8,
-    reportname::String = "comparison-report.exp",
-    classlabels::Vector{String} = CLASS_NAMES
-) where {L<:SoleData.AbstractLogiset}
-    @assert length(logisets) == length(classlabels) "Given number of logisets and " *
-        "variable names mismatch: length(logisets) = $(length(logisets)), while " *
-        "length(classlabels) = $(length(classlabels))."
-
-    @assert info(miner, :istrained) "Provided miner did not perform mine and is thus empty"
-
-    # report filepath preparation
-    reportname = RESULTS_PATH * reportname
-    # pretty table configuration
-    data = []
-    header = vcat("Rule", classlabels)
-
-    # for each rule accepted by `confidencebouncer`
-    for rule in filter(x ->
-        confidencebouncer(globalmemo(miner, (:gconfidence, x))), arules(miner))
-
-        # prepare a data fragment, that is a row of the final pretty table
-        _data = Any[rule]
-
-        # consider each class, compute the meaningfulness measures and print them
-        for logiset in logisets
-            _antecedent, _consequent = antecedent(rule), consequent(rule)
-            _union = union(_antecedent, _consequent)
-
-            # confidence
-            _conf = round(
-                gconfidence(rule, logiset, suppthreshold), sigdigits=sigdigits)
-            # antecedent global support
-            _asupp = round(
-                gsupport(_antecedent, logiset, suppthreshold), sigdigits=sigdigits)
-            # consequent global support
-            _csupp = round(
-                gsupport(_consequent, logiset, suppthreshold), sigdigits=sigdigits)
-            # whole-rule global support
-            _usupp = round(
-                gsupport(_union, logiset, suppthreshold), sigdigits=sigdigits)
-
-            # new cell is added to the right of current row
-            _cellstring = "confidence: $(_conf)\nantecedent support: $(_asupp)\n" *
-                "consequent support: $(_csupp)\nunion support: $(_usupp)"
-            # push!(_data, [_conf, _asupp, _csupp, _usupp])
-            push!(_data, _cellstring)
-        end
-
-        # now, assemble a new row
-        data = isempty(data) ? _data : hcat(data, _data)
-    end
-
-    # print data table on file
-    open(reportname, "w") do out
-        redirect_stdout(out) do
-            pretty_table(
-                data |> permutedims;
-                header=header,
-                linebreaks=true,
-                body_hlines=collect(1:(data |> size |> first))
-            )
-        end
-    end
-end
-
 if 7 in EXPERIMENTS_IDS
     if !isnothing(_1_miner) && !isnothing(_4_miner)
         runcomparison(
@@ -1320,19 +1200,21 @@ if 10 in EXPERIMENTS_IDS
         _10_right_elbow_Z_items
     )
 
-    _10_items = vcat(
-        _10_propositional_items,
-        box(IA_B).(_10_propositional_items),
-        # diamond(IA_Bi).(_10_propositional_items),
+    _10_items = Item.(
+        vcat(
+            _10_propositional_items,
+            box(IA_B).(_10_propositional_items),
+            # diamond(IA_Bi).(_10_propositional_items),
 
-        diamond(IA_E).(_10_propositional_items),
-        # diamond(IA_Ei).(_10_propositional_items),
+            diamond(IA_E).(_10_propositional_items),
+            # diamond(IA_Ei).(_10_propositional_items),
 
-        box(IA_D).(_10_propositional_items),
-        # diamond(IA_Di).(_10_propositional_items),
+            box(IA_D).(_10_propositional_items),
+            # diamond(IA_Di).(_10_propositional_items),
 
-        diamond(IA_O).(_10_propositional_items),
-    ) |> Vector{Formula}
+            diamond(IA_O).(_10_propositional_items),
+        )
+    )
 
     _10_itemsetmeasures = [(gsupport, 0.2, 0.2)]
     _10_rulemeasures = [(gconfidence, 0.2, 0.2)]
@@ -1387,133 +1269,291 @@ plot(
 )
 =#
 ############################################################################################
-_11_right_hand_tip_Y_items = [
-    Atom(ScalarCondition(VariableMin(5), >=, -0.5))
-]
 
-_11_right_hand_delta_items = [
-    Atom(ScalarCondition(VariableMax(25), <=, 0.0))
-]
+if 11 in EXPERIMENTS_IDS
+    _11_right_hand_tip_Y_items = [
+        Atom(ScalarCondition(VariableMin(5), >=, -0.5))
+    ]
 
-_11_propositional_items = vcat(
-    _11_right_hand_tip_Y_items,
-    _11_right_hand_delta_items
-)
+    _11_right_hand_delta_items = [
+        Atom(ScalarCondition(VariableMax(25), <=, 0.0))
+    ]
 
-_11_items = vcat(
-    _11_propositional_items,
-    diamond(IA_B).(_11_propositional_items),
-    box(IA_E).(_11_propositional_items),
-    diamond(IA_D).(_11_propositional_items),
-    box(IA_O).(_11_propositional_items),
-) |> Vector{Formula}
+    _11_propositional_items = vcat(
+        _11_right_hand_tip_Y_items,
+        _11_right_hand_delta_items
+    )
 
-_11_itemsetmeasures = [(gsupport, 0.01, 0.01)]
-_11_rulemeasures = [(gconfidence, 0.1, 0.1)]
+    _11_items = vcat(
+        _11_propositional_items,
+        diamond(IA_B).(_11_propositional_items),
+        box(IA_E).(_11_propositional_items),
+        diamond(IA_D).(_11_propositional_items),
+        box(IA_O).(_11_propositional_items),
+    ) .|> Item
 
-_11_miner = runexperiment(
-    X_3_not_clear,
-    fpgrowth,
-    _11_items,
-    _11_itemsetmeasures,
-    _11_rulemeasures;
-    returnminer = true,
-    reportname = "e11-tc-3-not-clear-rhand-rthumb-BEDO.exp",
-    variablenames = VARIABLE_NAMES,
-)
+    _11_itemsetmeasures = [(gsupport, 0.01, 0.01)]
+    _11_rulemeasures = [(gconfidence, 0.1, 0.1)]
 
-runcomparison(
-    _11_miner,
-    LOGISETS,
-    (conf) -> conf >= 0.5;
-    sigdigits=3 |> Int8,
-    targetclass=3 |> Int8,
-    suppthreshold=0.1,
-    reportname="e11-tc-3-not-clear-rhand-rthumb-BEDO-comparison.exp"
-)
+    _11_miner = runexperiment(
+        X_3_not_clear,
+        fpgrowth,
+        _11_items,
+        _11_itemsetmeasures,
+        _11_rulemeasures;
+        returnminer = true,
+        reportname = "e11-tc-3-not-clear-rhand-rthumb-BEDO.exp",
+        variablenames = VARIABLE_NAMES,
+    )
+
+    runcomparison(
+        _11_miner,
+        LOGISETS,
+        (conf) -> conf >= 0.5;
+        sigdigits=3 |> Int8,
+        targetclass=3 |> Int8,
+        suppthreshold=0.1,
+        reportname="e11-tc-3-not-clear-rhand-rthumb-BEDO-comparison.exp"
+    )
+end
 
 ############################################################################################
-# Useful plots
+# Extra, plots to study how to parametrize binning
+############################################################################################
+
+using Plots.Measures
+default(palette=palette(:viridis))
+results_folder = "test/experiments/results/"
+
+signal_color = :blue
+threshold_color = :darkgreen
+bin_edge_color = :red
+
+# let's consider a metacondition, one discretizer strategy, and a world filtering policy
+nvariable = 5
+_feature = VariableMax(nvariable) # max(V5)
+_domainexpert_thresholds = [-1.0,1.0] # thresholds given by an expert of V5 signals
+
+function _mse_between_pairs(v1::T, v2::T) where {T<:Vector{<:Real}}
+    # compute mse pairwise
+    sum(v -> (first(v)-last(v))^2, zip(v1,v2)) / length(v1)
+end
+
+# we choose a discretization strategy
+nbins = 3
+discretizer = Discretizers.DiscretizeQuantile(nbins)
+
+# we only consider small intervals
+small_intervals_worldfilter = SoleLogics.FunctionalWorldFilter(
+    x -> length(x) <= 10, Interval{Int})
+
+# first of all, let's plot the right hand Y original signal
+rhand_y_signal_plot = plot(
+    X_df[1,nvariable], framestyle=:box, labels="Right hand tips Y coordinate",
+    color=signal_color, alpha=0.25
+)
+hline!(
+    _domainexpert_thresholds,
+    linestyle=:dash, linewidth=2,
+    labels="Intuitive thresholding point", color=threshold_color
+)
+title!("Right hand signal")
+savefig(rhand_y_signal_plot, joinpath(results_folder, "v$(nvariable)_3bin.png"))
+
+# now, we apply the feature to each subinterval and show the result
+plot_binning(
+    X_df_1_have_command[:,nvariable], _feature, discretizer;
+    savefig_path=joinpath(results_folder, "v$(nvariable)_modal_max_3bin")
+)
+
+# we try to use a filter to consider granular worlds ...
+_, _granular_binedges = plot_binning(
+    X_df_1_have_command[:,nvariable], _feature, discretizer;
+    worldfilter=SoleLogics.FunctionalWorldFilter(
+        # bounds are 0% and 50% of the original series length (GRANULAR RESULT)
+        x -> length(x) >= 1 && length(x) <= 25, Interval{Int}),
+    savefig_path=joinpath(results_folder, "v$(nvariable)_modal_min_3bin_wleq25g1")
+)
+
+rhand_y_modal_plot = plot(
+    X_df[1:30,nvariable], framestyle=:box, labels="", color=signal_color, alpha=0.25)
+hline!(
+    _domainexpert_thresholds,
+    linestyle=:dash, linewidth=2,
+    labels="Intuitive thresholding point", color=threshold_color
+)
+hline!(_granular_binedges[2:length(_granular_binedges)-1],
+    linewidth=2, linestyle=:dash, labels="Bin edge", color=bin_edge_color)
+title!("Right hand signal, intervals i such that 1 <= |i| <= 25")
+savefig(
+    rhand_y_modal_plot,
+    joinpath(results_folder, "v$(nvariable)_3bin_granular_wleq25g1.png")
+)
+
+# ... coarse worlds ...
+_, _coarse_binedges = plot_binning(
+    X_df_1_have_command[:,nvariable], _feature, discretizer;
+    worldfilter=SoleLogics.FunctionalWorldFilter(
+        # bounds are 50% and 99% of the original series length (GRANULAR RESULT)
+        x -> length(x) >= 25 && length(x) <= 50, Interval{Int}),
+    savefig_path=joinpath(results_folder, "v$(nvariable)_modal_min_3bin_wleq50g25")
+)
+
+rhand_y_modal_plot = plot(
+    X_df[1:30,nvariable], framestyle=:box, labels="", color=signal_color, alpha=0.25)
+hline!(
+    _domainexpert_thresholds,
+    linestyle=:dash, linewidth=2,
+    labels="Intuitive thresholding point", color=threshold_color
+)
+hline!(_coarse_binedges[2:length(_coarse_binedges)-1],
+    linewidth=2, linestyle=:dash, labels="Bin edge", color=bin_edge_color)
+title!("Right hand signal, intervals i such that 25 <= |i| <= 50")
+savefig(rhand_y_modal_plot,
+    joinpath(results_folder, "v$(nvariable)_3bin_granular_wleq50g25.png")
+)
+
+# let's find the right size by trying all the possible ranges
+for (_start, _end) in Iterators.product(1:51, 1:51)
+    _, _binedges = plot_binning(
+        X_df_1_have_command[:,nvariable], _feature, discretizer;
+        worldfilter=SoleLogics.FunctionalWorldFilter(
+            # bounds are 5 and 10, which are 10% and 20% of the original series length
+            x -> length(x) >= _start && length(x) <= _end, Interval{Int}),
+        _binedges_only=true
+    )
+
+
+end
+
+# and just the right size:
+# we try to use a filter to consider worlds in a more granular fashion;
+# then, we plot the just found thresholds in the original distribution
+_, _good_binedges = plot_binning(
+    X_df_1_have_command[:,nvariable], _feature, discretizer;
+    worldfilter=SoleLogics.FunctionalWorldFilter(
+        # bounds are 5 and 10, which are 10% and 20% of the original series length
+        x -> length(x) >= 1 && length(x) <= 10, Interval{Int}),
+    savefig_path=joinpath(results_folder, "v$(nvariable)_modal_min_3bin_wleq10g5")
+)
+# remove extrema from the binning edges
+_good_binedges = _good_binedges[2:length(_good_binedges)-1]
+
+rhand_y_modal_plot = plot(
+    X_df[1:30,nvariable], framestyle=:box, labels="", color=signal_color, alpha=0.25)
+hline!(
+    _domainexpert_thresholds,
+    linestyle=:dash, linewidth=2,
+    labels="Intuitive thresholding point", color=threshold_color
+)
+hline!(_good_binedges,
+    linewidth=2, linestyle=:dash, labels="Bin edge", color=bin_edge_color)
+title!("Right hand signal, intervals i such that 5 <= |i| <= 10")
+savefig(
+    rhand_y_modal_plot,
+    joinpath(results_folder, "v$(nvariable)_3bin_granular_wleq10g5.png")
+)
+
+# let's see if the strategy of always considering intervals whose length is between 5 and 10
+# is always feasible
+for nvariable in [4,6]
+    _feature = VariableMax(nvariable)
+
+    _, _good_binedges = plot_binning(
+        X_df_1_have_command[:,nvariable], _feature, discretizer;
+        worldfilter=SoleLogics.FunctionalWorldFilter(
+            # bounds are 5 and 10, which are 10% and 20% of the original series length
+            x -> length(x) >= 5 && length(x) <= 10, Interval{Int}),
+        savefig_path=joinpath(results_folder, "v$(nvariable)_modal_min_3bin_wleq10g5")
+    )
+
+    _modal_plot = plot(
+        X_df[1:30,nvariable], framestyle=:box, label="", color=signal_color, alpha=0.25)
+    hline!(_good_binedges[2:length(_good_binedges)-1],
+        linewidth=2, linestyle=:dash, labels="Bin edge", color=bin_edge_color)
+    title!("V$(nvariable), intervals i such that 5 <= |i| <= 10")
+    savefig(
+        _modal_plot, joinpath(results_folder, "v$(nvariable)_3bin_granular_wleq10g5.png"))
+end
+
+############################################################################################
+# Experiment #12
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# More plots, useful to further observe data. See `Data Observation` section.
+#
+# General experiment levereging the alphabet selection mechanism for each variable.
+# TODO - at the moment, rules are extract from X_1_have_command
+#
 ############################################################################################
 
-# Left hand (V1, V2, V3) ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Involved in: "Spread wings", "Fold wings", "Lock wings".
-#=
-plot(
-	map(i->plot(collect(X_df[i,1:3]), labels=["x" "y" "z"], title=y[i]), 1:30:180)...,
-	layout = (2, 3),
-	size = (1500,400)
-)
-=#
+if 12 in EXPERIMENTS_IDS
+    # we want to generate an "useful" alphabet of propositions;
+    # given a set of metaconditions, we want to find the thresholds to plug in.
 
-# Right hand ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Involved in: every class.
-#=
-plot(
-	map(i->plot(collect(X_df[i,4:6]), labels=["x" "y" "z"], title=y[i]), 1:30:180)...,
-	layout = (2, 3),
-	size = (1500,400)
-)
-=#
+    _12_items = Item[]
 
-# Left elbow ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Involved in: "All clear", "Spread wings", "Fold wings", "Lock wings".
-#=
-plot(
-	map(i->plot(collect(X_df[i,7:9]), labels=["x" "y" "z"], title=y[i]), 1:30:180)...,
-	layout = (2, 3),
-	size = (1500,400)
-)
-=#
+    # there is no need to consider left-sided body variables
+    # (left arm is not moving in class 1)
+    for variable_index in RIGHT_BODY_VARIABLES
+        # each proposition follows this schema;
+        # it can be shown that those pairings are more informative than (max, >=), (min, <=)
+        metaconditions = [
+            ScalarMetaCondition(VariableMax(variable_index), <=),
+            ScalarMetaCondition(VariableMin(variable_index), >=)
+        ]
 
-# Right elbow ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Involved in: every class.
-#=
-plot(
-	map(i->plot(collect(X_df[i,10:12]), labels=["x" "y" "z"], title=y[i]), 1:30:180)...,
-	layout = (2, 3),
-	size = (1500,400)
-)
-=#
+        # as binning strategy, we choose to cut the distribution in 5 pieces with same area
+        nbins = 3
+        quantilediscretizer = Discretizers.DiscretizeQuantile(nbins)
 
-# Left wrist ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Involved in: "Spread wings", "Fold wings", "Lock wings".
-#=
-plot(
-	map(i->plot(collect(X_df[i,13:15]), labels=["x" "y" "z"], title=y[i]), 1:30:180)...,
-	layout = (2, 3),
-	size = (1500,400)
-)
-=#
+        for metacondition in metaconditions
+            alphabet = __arm_select_alphabet(
+                X_df_1_have_command[:,variable_index], # TODO Use FilteredFrame
+                metacondition,
+                quantilediscretizer;
+                consider_all_subintervals=true
+            ) .|> Atom .|> Item
 
-# Right wrist ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Involved in: every class
-#=
-plot(
-	map(i->plot(collect(X_df[i,16:18]), labels=["x" "y" "z"], title=y[i]), 1:30:180)...,
-	layout = (2, 3),
-	size = (1500,400)
-)
-=#
+            push!(_12_items, alphabet...)
+        end
+    end
 
-# Left thumb ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Involved in: "Spread wings", "Fold wings", "Lock wings".
-#=
-plot(
-	map(i->plot(collect(X_df[i,19:21]), labels=["x" "y" "z"], title=y[i]), 1:30:180)...,
-	layout = (2, 3),
-	size = (1500,400)
-)
-=#
+    _12_itemsetmeasures = [(gsupport, 0.4, 0.4)]
+    _12_rulemeasures = [(gconfidence, 0.4, 0.4)]
 
-# Right thumb ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Involved in: "Spread wings", "Fold wings", "Lock wings".
-#=
-plot(
-	map(i->plot(collect(X_df[i,22:24]), labels=["x" "y" "z"], title=y[i]), 1:30:180)...,
-	layout = (2, 3),
-	size = (1500,400)
-)
-=#
+    # 1thread w. 30 literals:  ~381s
+    # 8threads w. 30 literals: ~66s
+    _12_miner = Miner(
+        deepcopy(X_1_have_command),
+        fpgrowth,
+        _12_items[1:20],
+        _12_itemsetmeasures,
+        _12_rulemeasures,
+
+        worldfilter=SoleLogics.FunctionalWorldFilter(
+            x -> length(x) <= 10, Interval{Int}),
+
+        itemset_mining_policies=[islimited_length_itemset(; maxlength=5)],
+
+        arule_mining_policies=[
+            islimited_length_arule(; antecedent_maxlength=5),
+            isanchored_arule(; npropositions=1),
+            isheterogeneous_arule(; antecedent_nrepetitions=1, consequent_nrepetitions=0),
+        ],
+    )
+
+    runexperiment(
+        _12_miner;
+        reportname = "e12-tc-1-i-have-command-auto-alphabet-full-propositional.exp",
+        variablenames = VARIABLE_NAMES,
+    )
+
+    # runcomparison(
+    #     _12_miner,
+    #     LOGISETS,
+    #     (conf) -> conf >= 0.4;
+    #     sigdigits=3 |> Int8,
+    #     targetclass=1 |> Int8,
+    #     suppthreshold=0.4,
+    #     reportname="e12-tc-1-i-have-command-auto-alphabet-full-propositional-comparison.exp"
+    # )
+end

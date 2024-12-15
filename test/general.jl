@@ -51,8 +51,6 @@ r = Itemset{Item}(manual_r)
 @test qr in pqr
 @test (pqr in [pq,qr]) == false
 
-
-
 @test Itemset{Item} <: Itemset{<:Item}
 @test Itemset{Item}(Item[manual_p]) == Item[manual_p]
 @test all(item -> item in [manual_p, manual_q], pq)
@@ -69,16 +67,16 @@ r = Itemset{Item}(manual_r)
 @test pq in [pq, pqr, qr]
 
 @test formula(pq) isa LeftmostConjunctiveForm
-@test SoleLogics.grandchildren(formula(pq)) |> first |> Item in [manual_p, manual_q]
+@test formula(pq) |> SoleLogics.grandchildren |> first |> Item in [manual_p, manual_q]
 
 @test Threshold <: Float64
-@test WorldMask <: Vector{Int64}
+@test WorldMask <: BitVector
 
-@test EnhancedItemset <: Tuple{Itemset,Int64}
+@test EnhancedItemset <: Tuple{Itemset,Integer}
 enhanceditemset = convert(EnhancedItemset, pq, 42)
 @test length(enhanceditemset) == 2
 @test first(enhanceditemset) isa Itemset
-@test last(enhanceditemset) isa Int64
+@test last(enhanceditemset) isa Integer
 @test convert(Itemset, enhanceditemset) isa Itemset
 
 @test ConditionalPatternBase <: Vector{EnhancedItemset}
@@ -93,18 +91,18 @@ arule3 = ARule(Itemset([manual_q, manual_p]), Itemset([manual_r]))
 @test arule != arule2
 @test arule == arule3
 
-@test_throws AssertionError ARule(qr, Itemset([manual_q]))
+@test_throws ArgumentError ARule(qr, Itemset([manual_q]))
 
 @test MeaningfulnessMeasure <: Tuple{Function,Threshold,Threshold}
 
 @test ARMSubject <: Union{ARule,Itemset}
-@test LmeasMemoKey <: Tuple{Symbol,ARMSubject,Int64}
+@test LmeasMemoKey <: Tuple{Symbol,ARMSubject,Integer}
 @test LmeasMemo <: Dict{LmeasMemoKey,Threshold}
 @test GmeasMemoKey <: Tuple{Symbol,ARMSubject}
 @test GmeasMemo <: Dict{GmeasMemoKey,Threshold}
 
 # "core.jl - Miner"
-mine!(fpgrowth_miner; parallel=false)
+mine!(fpgrowth_miner)
 
 @test_nowarn Miner(X1, apriori, manual_items)
 @test_nowarn algorithm(Miner(X1, apriori, manual_items)) isa Function
@@ -210,11 +208,23 @@ _temp_apriori_miner = Miner(X1, apriori, manual_items, _itemsetmeasures, _ruleme
 @test localof(gsupport) == lsupport
 @test localof(lconfidence) |> isnothing
 @test localof(gconfidence) == lconfidence
+@test localof(llift) |> isnothing
+@test localof(glift) == llift
+@test localof(lconviction) |> isnothing
+@test localof(gconviction) == lconviction
+@test localof(lleverage) |> isnothing
+@test localof(gleverage) == lleverage
 
 @test globalof(lsupport) == gsupport
 @test globalof(gsupport) |> isnothing
 @test globalof(lconfidence) == gconfidence
 @test globalof(gconfidence) |> isnothing
+@test globalof(llift) == glift
+@test globalof(glift) |> isnothing
+@test globalof(lconviction) == gconviction
+@test globalof(gconviction) |> isnothing
+@test globalof(lleverage) == gleverage
+@test globalof(gleverage) |> isnothing
 
 @test lsupport(pq, SoleLogics.getinstance(X2, 1), fpgrowth_miner) == 0.0
 
@@ -308,7 +318,7 @@ manual_fptree = FPTree()
 @test count(x -> x == manual_r, content.(manual_fptree |> ModalAssociationRules.children)) == 1
 
 # 2nd property - the sum of counts for each item equals the total count we know manually
-item_to_count = Dict{Item, Int64}(
+item_to_count = Dict{Item, Integer}(
     manual_p => 0,
     manual_q => 0,
     manual_r => 0
@@ -426,6 +436,9 @@ _genericMiner = genericMiner()
 @test_throws ErrorException rulemeasures(_genericMiner)
 @test_throws ErrorException localmemo(_genericMiner)
 @test_throws ErrorException globalmemo(_genericMiner)
+@test_throws ErrorException worldfilter(_genericMiner)
+@test_throws ErrorException itemset_mining_policies(_genericMiner)
+@test_throws ErrorException arule_mining_policies(_genericMiner)
 @test_throws ErrorException miningstate(_genericMiner)
 @test_throws ErrorException info(_genericMiner)
 @test_throws ErrorException itemtype(_genericMiner)

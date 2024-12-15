@@ -23,6 +23,7 @@ using Reexport
 
 using SoleLogics: AbstractInterpretation, getinstance, LogicalInstance
 using SoleLogics: nworlds, frame, allworlds, nworlds
+using SoleLogics: filterworlds, WorldFilter
 
 using SoleData: SupportedLogiset
 using SoleData: VariableMin, VariableMax
@@ -33,9 +34,6 @@ include("core.jl")
 
 export Item, formula
 export Itemset
-
-export EnhancedItemset, count
-export ConditionalPatternBase
 
 export ARule
 export content, antecedent, consequent
@@ -61,51 +59,60 @@ export MineableData
 include("types/miner.jl")
 
 export AbstractMiner
-
-include("utils/miner.jl")
-
-export Miner
-export itemtype, datatype
 export data, algorithm
+export items, freqitems, arules
 export itemsetmeasures, rulemeasures
-export freqitems, arules
+
 export measures, findmeasure
 export getlocalthreshold, getglobalthreshold
 export localmemo, localmemo!
 export globalmemo, globalmemo!
 
+export worldfilter
+export itemset_mining_policies, arule_mining_policies
+
 export miningstate, miningstate!, hasminingstate, initminingstate
 export info, info!, hasinfo
-export mine!, apply!, generaterules!
-export analyze
+export mine!, apply!
+export generaterules, generaterules!
 
+include("utils/miner.jl")
+
+export Miner
+export itemtype, datatype
 export frame, allworlds, nworlds
+export arule_analysis, all_arule_analysis
 
 include("utils/bulldozer.jl")
 
 export Bulldozer
-export instance, instancenumber, frame
 export datalock, memolock, miningstatelock
 export bulldozer_reduce
+export frame
 
 include("meaningfulness-measures.jl")
 
 export @localmeasure, @globalmeasure, @linkmeas
 export lsupport, gsupport
 export lconfidence, gconfidence
+export llift, glift
+export lconviction, gconviction
+export lleverage, gleverage
 
-include("utils/mining-utilities.jl")
+include("mining-policies.jl")
 
-export combine_items, prune, prune!
-export grow_prune, coalesce_contributors
-export anchor_rulecheck, non_selfabsorbed_rulecheck
-export generaterules
+export islimited_length_itemset
+export islimited_length_arule, isanchored_arule, isheterogeneous_arule
 
 include("algorithms/apriori.jl")
 
+export combine_items, grow_prune
 export apriori
 
 include("data-structures.jl")
+
+export EnhancedItemset, count
+export ConditionalPatternBase
 
 export FPTree
 export content, parent, children, count
@@ -124,12 +131,17 @@ include("algorithms/fpgrowth.jl")
 export patternbase, bounce!, projection
 export fpgrowth
 
-include("utils/natops-loader.jl")
+include("analysis.jl")
+export plot_arule_analyses
+export plot_binning
+# TODO - move this to SoleData, or just delete it
+export time_series_distribution_analysis
+
+include("alphabet-selection.jl")
+export __arm_select_alphabet
+
+include("natops-loader.jl")
 
 export load_NATOPS
-
-## include("utils/literals-selector.jl")   # TODO -  move this in SoleData
-# export equicut, quantilecut
-# export makeconditions
 
 end
