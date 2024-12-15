@@ -435,7 +435,7 @@ applied on a specific [`Itemset`](@ref)s is true on the i-th world of multiple i
 
 If a single instance is considered, then this acts as a bit mask.
 
-For example, if we consider 5 Kripke models of a modal dataset, each of which containing 3
+For example, if we consider 5 Kripke structures of a modal dataset, each of which containing 3
 worlds, then the [`WorldMask`](@ref) of an itemset could be [5,2,0], meaning that the
 itemset is always true on the first world of every instance. In the second world, the same
 itemset is true on it only for two instances. Considering the third world, then the itemset

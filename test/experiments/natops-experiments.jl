@@ -171,7 +171,7 @@ end
         suppthreshold::Float64,
         sortby::Symbol=:confmean,
         reportname::String = "comparison-report.exp",
-        classnames::Vector{String} =  [
+        classlabels::Vector{String} =  [
             "I have command", "All clear", "Not clear",
             "Spread wings", "Fold wings", "Lock wings",
         ]
@@ -192,7 +192,7 @@ end
     not `targetclass`, while in the latter they are sorted in ascending order
     w.r.t `1-entropy(confidences)`;
 - `reportname`: name of the file where output is stored;
-- `classnames`: labels to associated with each class.
+- `classlabels`: labels to associated with each class.
 
 Given a consumed [`Miner`](@ref), that is, a miner which already performed mining,
 print in a file (placed in `results/reportname`) a report regarding the mined
@@ -207,7 +207,7 @@ julia> runcomparison(
     (conf) -> conf >= 0.3,
     0.1;
     reportname="01-comparison.exp",
-    classnames=
+    classlabels=
 )
 
 # in results/01-comparison.exp
@@ -238,12 +238,12 @@ function runcomparison(
     sigdigits::Int8 = 2 |> Int8,
     reportname::String = "comparison-report.exp",
     tracktime::Bool = true,
-    classnames::Vector{String} = CLASS_NAMES,
+    classlabels::Vector{String} = CLASS_NAMES,
     variablenames::Union{Nothing, Vector{String}} = VARIABLE_NAMES
 ) where {L<:SoleData.AbstractLogiset}
-    @assert length(logisets) == length(classnames) "Given number of logisets and " *
+    @assert length(logisets) == length(classlabels) "Given number of logisets and " *
         "variable names mismatch: length(logisets) = $(length(logisets)), while " *
-        "length(classnames) = $(length(classnames))."
+        "length(classlabels) = $(length(classlabels))."
 
     miners = [
         Miner( # random Miner, its only purpose is to leverage memoization
@@ -253,7 +253,7 @@ function runcomparison(
             [(gsupport, 0.0, 0.0)],
             [(gconfidence, 0.0, 0.0)]
         )
-        for i in 1:length(classnames)
+        for i in 1:length(classlabels)
     ]
     miners[targetclass] = miner
 
@@ -271,7 +271,7 @@ function runcomparison(
     header = vcat("Rule",
         MEAN_GCONF_EXCLUDING_TARGETCLASS_STRING,
         ONE_MINUS_ENTROPY_STRING,
-        classnames
+        classlabels
     )
 
     # partial data (numeric) that has to be be manipulated,
@@ -423,7 +423,7 @@ function runcomparison(
         redirect_stdout(out) do
             println("Metadata")
             println("Selected target class id: $(targetclass)")
-            println("Selected target class name: $(classnames[targetclass])")
+            println("Selected target class name: $(classlabels[targetclass])")
             println("Elapsed time to perform comparisons: $(time() - elapsedtime)")
 
             println("\nLegend")
@@ -886,11 +886,11 @@ function runcomparison(
     suppthreshold::Float64,
     sigdigits::Int8=2 |> Int8,
     reportname::String = "comparison-report.exp",
-    classnames::Vector{String} = CLASS_NAMES
+    classlabels::Vector{String} = CLASS_NAMES
 ) where {L<:SoleData.AbstractLogiset}
-    @assert length(logisets) == length(classnames) "Given number of logisets and " *
+    @assert length(logisets) == length(classlabels) "Given number of logisets and " *
         "variable names mismatch: length(logisets) = $(length(logisets)), while " *
-        "length(classnames) = $(length(classnames))."
+        "length(classlabels) = $(length(classlabels))."
 
     @assert info(miner, :istrained) "Provided miner did not perform mine and is thus empty"
 
@@ -898,7 +898,7 @@ function runcomparison(
     reportname = RESULTS_PATH * reportname
     # pretty table configuration
     data = []
-    header = vcat("Rule", classnames)
+    header = vcat("Rule", classlabels)
 
     # for each rule accepted by `confidencebouncer`
     for rule in filter(x ->
@@ -956,11 +956,11 @@ function runcomparison(
     suppthreshold::Float64,
     sigdigits::Int8=2 |> Int8,
     reportname::String = "comparison-report.exp",
-    classnames::Vector{String} = CLASS_NAMES
+    classlabels::Vector{String} = CLASS_NAMES
 ) where {L<:SoleData.AbstractLogiset}
-    @assert length(logisets) == length(classnames) "Given number of logisets and " *
+    @assert length(logisets) == length(classlabels) "Given number of logisets and " *
         "variable names mismatch: length(logisets) = $(length(logisets)), while " *
-        "length(classnames) = $(length(classnames))."
+        "length(classlabels) = $(length(classlabels))."
 
     @assert info(miner, :istrained) "Provided miner did not perform mine and is thus empty"
 
@@ -968,7 +968,7 @@ function runcomparison(
     reportname = RESULTS_PATH * reportname
     # pretty table configuration
     data = []
-    header = vcat("Rule", classnames)
+    header = vcat("Rule", classlabels)
 
     # for each rule accepted by `confidencebouncer`
     for rule in filter(x ->
