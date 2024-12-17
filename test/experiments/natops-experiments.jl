@@ -1544,7 +1544,7 @@ _best_match_start = 1
 _best_match_end = 2
 
 # we want atleast a length of 5, to avoid the degenerate case of testing 1-lenght intervals
-for (_start, _end) in Iterators.product(5:50, 10:50)
+for (_start, _end) in Iterators.product(1:50, 1:50)
     # valid intervals condition
     if _start > _end
         continue
@@ -1576,6 +1576,29 @@ for (_start, _end) in Iterators.product(5:50, 10:50)
         # possible reasons: no bins remaining error from length >= 26 onwards
         continue
     end
+
+    # plot every possible combination of interval lengths
+    # rhand_y_repr_dis = plot(
+    #     _repr_dis, framestyle=:box, alpha=1, labels="")
+    # plot!(X_df_1_have_command[:,nvariable], framestyle=:box, alpha=0.1, labels="")
+    # hline!(
+    #     _repr_binedges,
+    #     linestyle=:dash, linewidth=2,
+    #     labels="Binning threshold (raw signal)", color=threshold_color
+    # )
+    # hline!(
+    #     _binedges,
+    #     linestyle=:dot, linewidth=2,
+    #     labels="Binning threshold (max on intervals i s.t. $(_start) <= |i| <= " *
+    #         "$(_end))", color=:red
+    # )
+    # title!("Representative right hand signal binned")
+    # savefig(rhand_y_repr_dis, joinpath(
+    #         results_folder,
+    #         "v$(nvariable)_rpr_binned_max_3bin_wleq$(_start)g$(_end)"
+    #     )
+    # )
+
 end
 
 # we plot the binning obtained for the optimal case (which minimizes MSE)
