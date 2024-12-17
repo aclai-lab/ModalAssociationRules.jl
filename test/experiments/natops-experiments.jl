@@ -1457,6 +1457,57 @@ plot!(X_df_1_have_command[:,nvariable], framestyle=:box, alpha=0.1, labels="")
 title!("Representative right hand signal")
 savefig(rhand_y_repr_dis, joinpath(results_folder, "v$(nvariable)_representative_plot.png"))
 
+
+# let's see which binedges we have on the representative distribution, raw (no features)
+_repr_binedges = binedges(discretizer, sort(_repr_dis))
+rhand_y_repr_dis = plot(
+    _repr_dis, framestyle=:box, alpha=1, labels="")
+plot!(X_df_1_have_command[:,nvariable], framestyle=:box, alpha=0.1, labels="")
+hline!(
+    _repr_binedges,
+    linestyle=:dash, linewidth=2,
+    labels="Binning threshold", color=threshold_color
+)
+title!("Representative right hand signal binned")
+savefig(rhand_y_repr_dis, joinpath(results_folder, "v$(nvariable)_rpr_binned.png"))
+
+# we distinguish 4 phases, which we can encode in natural language as follows:
+# 1. initial ascending phase,  2. mature ascending phase,
+# 3. initial descending phase, 4. mature descending phase
+
+# when transforming the representative signal in a kripke frame, we are building a
+# relational model with multiple intervals at different lengths.
+
+# we try with granular binedges
+
+_, _repr_granular_binedges = plot_binning(
+    [_repr_dis], _feature, DiscretizeQuantile(nbins, true);
+    worldfilter=SoleLogics.FunctionalWorldFilter(
+        # bounds are 0% and 50% of the original series length (GRANULAR RESULT)
+        x -> length(x) >= 1 && length(x) <= 25, Interval{Int}),
+    savefig_path=joinpath(results_folder, "v$(nvariable)_repr_min_3bin_wleq25g1")
+)
+
+_repr_binedges = binedges(discretizer, sort(_repr_dis))
+rhand_y_repr_dis = plot(
+    _repr_dis, framestyle=:box, alpha=1, labels="")
+plot!(X_df_1_have_command[:,nvariable], framestyle=:box, alpha=0.1, labels="")
+hline!(
+    _repr_binedges,
+    linestyle=:dash, linewidth=2,
+    labels="Binning threshold (raw signal)", color=threshold_color
+)
+hline!(
+    _repr_granular_binedges,
+    linestyle=:dash, linewidth=2,
+    labels="Binning threshold (max on each interval)", color=:red
+)
+title!("Representative right hand signal binned")
+savefig(rhand_y_repr_dis, joinpath(results_folder, "v$(nvariable)_rpr_binned_min_3bin_wlq25g1.png"))
+
+# now we try with a more coarse one
+# TODO
+
 # first of all, let's plot the right hand Y original signal
 rhand_y_signal_plot = plot(
     X_df_1_have_command[1,nvariable],
