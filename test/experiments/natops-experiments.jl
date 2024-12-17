@@ -1434,9 +1434,13 @@ function _get_representative_distribution(vs::Vector{<:Vector{<:Real}})
     return new_distribution
 end
 
+function _remove_extrema(v::Vector{<:Real})
+    return v[2:(length(v)-1)]
+end
+
 # we choose a discretization strategy
 nbins = 3
-discretizer = Discretizers.DiscretizeQuantile(nbins)
+discretizer = Discretizers.DiscretizeQuantile(nbins, false)
 
 # we only consider small intervals
 small_intervals_worldfilter = SoleLogics.FunctionalWorldFilter(
@@ -1481,11 +1485,11 @@ savefig(rhand_y_repr_dis, joinpath(results_folder, "v$(nvariable)_rpr_binned.png
 # we try with granular binedges
 
 _, _repr_granular_binedges = plot_binning(
-    [_repr_dis], _feature, DiscretizeQuantile(nbins, true);
+    [_repr_dis], _feature, discretizer;
     worldfilter=SoleLogics.FunctionalWorldFilter(
         # bounds are 0% and 50% of the original series length (GRANULAR RESULT)
         x -> length(x) >= 1 && length(x) <= 25, Interval{Int}),
-    savefig_path=joinpath(results_folder, "v$(nvariable)_repr_min_3bin_wleq25g1")
+    savefig_path=joinpath(results_folder, "v$(nvariable)_repr_max_3bin_wleq25g1")
 )
 
 _repr_binedges = binedges(discretizer, sort(_repr_dis))
@@ -1499,14 +1503,105 @@ hline!(
 )
 hline!(
     _repr_granular_binedges,
-    linestyle=:dash, linewidth=2,
-    labels="Binning threshold (max on each interval)", color=:red
+    linestyle=:dot, linewidth=2,
+    labels="Binning threshold (max on intervals i s.t. 1 <= |i| <= 25)", color=:red
 )
 title!("Representative right hand signal binned")
-savefig(rhand_y_repr_dis, joinpath(results_folder, "v$(nvariable)_rpr_binned_min_3bin_wlq25g1.png"))
+savefig(rhand_y_repr_dis, joinpath(results_folder, "v$(nvariable)_rpr_binned_max_3bin_wlq25g1.png"))
 
 # now we try with a more coarse one
-# TODO
+
+_, _repr_coarse_binedges = plot_binning(
+    [_repr_dis], _feature, DiscretizeQuantile(nbins,true);
+    worldfilter=SoleLogics.FunctionalWorldFilter(
+        # bounds are 0% and 50% of the original series length (GRANULAR RESULT)
+        x -> length(x) >= 0 && length(x) <= 50, Interval{Int}),
+    savefig_path=joinpath(results_folder, "v$(nvariable)_repr_max_3bin_wleq25g1")
+)
+
+_repr_binedges = binedges(discretizer, sort(_repr_dis))
+rhand_y_repr_dis = plot(
+    _repr_dis, framestyle=:box, alpha=1, labels="")
+plot!(X_df_1_have_command[:,nvariable], framestyle=:box, alpha=0.1, labels="")
+hline!(
+    _repr_binedges,
+    linestyle=:dash, linewidth=2,
+    labels="Binning threshold (raw signal)", color=threshold_color
+)
+hline!(
+    _repr_coarse_binedges,
+    linestyle=:dot, linewidth=2,
+    labels="Binning threshold (max on all intervals)", color=:red
+)
+title!("Representative right hand signal binned")
+savefig(rhand_y_repr_dis, joinpath(results_folder, "v$(nvariable)_rpr_binned_max_3bin_wlq50g25.png"))
+
+
+# we try to find the best range to approximate the original binning (on the raw signal)
+_best_match_mse = 999
+_best_match_binning = nothing
+_best_match_start = 1
+_best_match_end = 2
+
+# we want atleast a length of 5, to avoid the degenerate case of testing 1-lenght intervals
+for (_start, _end) in Iterators.product(5:50, 10:50)
+    # valid intervals condition
+    if _start > _end
+        continue
+    end
+
+    try
+        # we want to test which binning is the best
+        _, _binedges = plot_binning(
+            [_repr_dis], _feature, discretizer;
+            worldfilter=SoleLogics.FunctionalWorldFilter(
+                # bounds are 5 and 10, which are 10% and 20% of the original series length
+                x -> length(x) >= _start && length(x) <= _end, Interval{Int}),
+            _binedges_only=true
+        )
+
+        # we cut the extrema and compare only the inner values
+        # we want to isolate a pair from the original raw binning on the representative
+        # distribution;
+        _mse = _mse_between_pairs(
+            _remove_extrema(_repr_binedges), _remove_extrema(_binedges))
+
+        if _mse < _best_match_mse
+            _best_match_mse = _mse
+            _best_match_binning = _binedges
+            _best_match_start = _start
+            _best_match_end = _end
+        end
+    catch
+        # possible reasons: no bins remaining error from length >= 26 onwards
+        continue
+    end
+end
+
+# we plot the binning obtained for the optimal case (which minimizes MSE)
+
+rhand_y_repr_dis = plot(
+    _repr_dis, framestyle=:box, alpha=1, labels="")
+plot!(X_df_1_have_command[:,nvariable], framestyle=:box, alpha=0.1, labels="")
+hline!(
+    _repr_binedges,
+    linestyle=:dash, linewidth=2,
+    labels="Binning threshold (raw signal)", color=threshold_color
+)
+hline!(
+    _best_match_binning,
+    linestyle=:dot, linewidth=2,
+    labels="Binning threshold (max on intervals i s.t. $(_best_match_start) <= |i| <= " *
+        "$(_best_match_end))", color=:red
+)
+title!("Representative right hand signal binned")
+savefig(rhand_y_repr_dis, joinpath(
+        results_folder,
+        "v$(nvariable)_rpr_binned_max_3bin_wleq$(_best_match_start)g$(_best_match_end)"
+    )
+)
+
+
 
 # first of all, let's plot the right hand Y original signal
 rhand_y_signal_plot = plot(
@@ -1534,7 +1629,7 @@ _, _granular_binedges = plot_binning(
     worldfilter=SoleLogics.FunctionalWorldFilter(
         # bounds are 0% and 50% of the original series length (GRANULAR RESULT)
         x -> length(x) >= 1 && length(x) <= 25, Interval{Int}),
-    savefig_path=joinpath(results_folder, "v$(nvariable)_modal_min_3bin_wleq25g1")
+    savefig_path=joinpath(results_folder, "v$(nvariable)_modal_max_3bin_wleq25g1")
 )
 
 rhand_y_modal_plot = plot(
@@ -1558,7 +1653,7 @@ _, _coarse_binedges = plot_binning(
     worldfilter=SoleLogics.FunctionalWorldFilter(
         # bounds are 50% and 99% of the original series length (GRANULAR RESULT)
         x -> length(x) >= 25 && length(x) <= 50, Interval{Int}),
-    savefig_path=joinpath(results_folder, "v$(nvariable)_modal_min_3bin_wleq50g25")
+    savefig_path=joinpath(results_folder, "v$(nvariable)_modal_max_3bin_wleq50g25")
 )
 
 rhand_y_modal_plot = plot(
@@ -1599,7 +1694,7 @@ _, _good_binedges = plot_binning(
     worldfilter=SoleLogics.FunctionalWorldFilter(
         # bounds are 5 and 10, which are 10% and 20% of the original series length
         x -> length(x) >= 1 && length(x) <= 10, Interval{Int}),
-    savefig_path=joinpath(results_folder, "v$(nvariable)_modal_min_3bin_wleq10g5")
+    savefig_path=joinpath(results_folder, "v$(nvariable)_modal_max_3bin_wleq10g5")
 )
 # remove extrema from the binning edges
 _good_binedges = _good_binedges[2:length(_good_binedges)-1]
@@ -1629,7 +1724,7 @@ for nvariable in [4,6]
         worldfilter=SoleLogics.FunctionalWorldFilter(
             # bounds are 5 and 10, which are 10% and 20% of the original series length
             x -> length(x) >= 5 && length(x) <= 10, Interval{Int}),
-        savefig_path=joinpath(results_folder, "v$(nvariable)_modal_min_3bin_wleq10g5")
+        savefig_path=joinpath(results_folder, "v$(nvariable)_modal_max_3bin_wleq10g5")
     )
 
     _modal_plot = plot(
