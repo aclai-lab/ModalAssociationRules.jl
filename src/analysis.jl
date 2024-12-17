@@ -87,6 +87,7 @@ function plot_binning(
         _ -> true, Interval{Int}
     ),
     label="",
+    title="",
     savefig_path::String="",
     _display::Bool=false,
     _binedges_only::Bool=false
@@ -111,7 +112,8 @@ function plot_binning(
 
     _histogram = histogram(_X,
         label=label, xlabel=syntaxstring(_feature), color=:darkorange,
-        ylabel="# occurrences"
+        ylabel="# occurrences",
+        title=title
     )
 
     for edge in _binedges

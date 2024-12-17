@@ -89,6 +89,7 @@ function modalwise_alphabet_extraction(
             x -> length(x) >= _minimum_wlength && length(x) <= _maximum_wlength,
             Interval{Int}
         ),
+        title="$(feature) applied on w s.t. \n$(_minimum_wlength)<=|w|<=$(_maximum_wlength)",
         savefig_path=joinpath(results_folder,
             "v$(nvariable)_04_repr_bin_his_wleq$(_maximum_wlength)g$(_minimum_wlength).png"
         )
@@ -120,6 +121,7 @@ function modalwise_alphabet_extraction(
         )
     )
 
+
     # we perform binning on an interval-wise scenario, considering worlds between 0% and
     # 50% of the original signal's length; binning is plotted using an histogram
     _minimum_wlength = floor(length(𝑅) * 0.25) |> Int64
@@ -131,6 +133,7 @@ function modalwise_alphabet_extraction(
             x -> length(x) >= _minimum_wlength && length(x) <= _maximum_wlength,
             Interval{Int}
         ),
+        title="$(feature) applied on w s.t. \n$(_minimum_wlength)<=|w|<=$(_maximum_wlength)",
         savefig_path=joinpath(results_folder,
             "v$(nvariable)_06_repr_bin_his_wleq$(_maximum_wlength)g$(_minimum_wlength).png"
         )
@@ -161,8 +164,56 @@ function modalwise_alphabet_extraction(
             "v$(nvariable)_07_repr_bin_wleq$(_maximum_wlength)g$(_minimum_wlength).png"
         )
     )
+
+
+    # we investigate every possible interval range, and choose the interval-wise binning
+    # in order to minimize MSE with the original raw binning;
+    # the catch is we have a minimum length required, in order for an interval to be
+    # interesting to us (this strongly depends from how the dataset is built)
+    _minlength = floor(length(𝑅) * 0.1) |> Int64
+
+    # TODO HERE
+
+    for (_start, _end) in Iterators.product(1:50, 1:50)
+        # intervals integrity condition
+        if _start > _end || (_end-_start) < _minlength
+            continue
+        end
+
+        try
+            _, _binedges = plot_binning(
+                [𝑅], _feature, discretizer;
+                worldfilter=SoleLogics.FunctionalWorldFilter(
+                    # bounds are 5 and 10, which are 10% and 20% of the original series length
+                    x -> length(x) >= _start && length(x) <= _end, Interval{Int}),
+                _binedges_only=true
+            )
+
+            # we cut the extrema and compare only the inner values
+            # we want to isolate a pair from the original raw binning on the representative
+            # distribution;
+            _mse = _mse_between_pairs(
+                _remove_extrema(_repr_binedges), _remove_extrema(_binedges))
+
+            if _mse < _best_match_mse
+                _best_match_mse = _mse
+                _best_match_binning = _binedges
+                _best_match_start = _start
+                _best_match_end = _end
+            end
+        catch
+            # possible reasons: no bins remaining error (binning is not possible)
+            continue
+        end
+    end
+
 end
 
+
+# driver code
+
+X_df, y = load_NATOPS();
+X_df_1_have_command = X_df[1:30, :]
 
 nvariable = 5
 nbins = 3
