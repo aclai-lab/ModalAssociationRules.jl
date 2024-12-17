@@ -14,7 +14,7 @@ using SoleLogics
 using SoleLogics: IA_B, IA_Bi, IA_E, IA_Ei, IA_D, IA_Di, IA_O
 
 function modalwise_alphabet_extraction(
-    𝐶::Vector{<:Vector{Real}},
+    𝐶::Vector{<:Vector{<:Real}},
     feature::AbstractUnivariateFeature,
     discretizer::DiscretizationAlgorithm;
     results_folder::String="test/experiments/results/",
@@ -23,7 +23,7 @@ function modalwise_alphabet_extraction(
     threshold_color::Symbol=:darkgreen,
     bin_edge_color::Symbol=:red
 )
-    default(palette=palette(:viridis))
+    default(palette=palette)
     results_folder = "test/experiments/results/"
 
     # compute mse pairwise
@@ -107,11 +107,11 @@ function modalwise_alphabet_extraction(
     hline!(
         𝑅_granular_binedges,
         linestyle=:dot, linewidth=2,
-        labels="$(syntaxstring(feature)) on 𝑤 ∈ 𝑊 s.t. " *
-            "$(_minimum_wlength) <= |𝑤| <= $(_maximum_wlength))",
+        labels="$(syntaxstring(feature)) on w in W s.t. " *
+            "$(_minimum_wlength) <= |w| <= $(_maximum_wlength))",
         color=:red
     )
-    title!("Comparison with interval-wise binning")
+    title!("Comparison between raw and interval-wise binning")
     savefig(
         𝑅_granular_bin_plot,
         joinpath(
@@ -120,17 +120,57 @@ function modalwise_alphabet_extraction(
         )
     )
 
+    # we perform binning on an interval-wise scenario, considering worlds between 0% and
+    # 50% of the original signal's length; binning is plotted using an histogram
+    _minimum_wlength = floor(length(𝑅) * 0.25) |> Int64
+    _maximum_wlength = floor(length(𝑅) * 0.75) |> Int64
+    _, 𝑅_coarse_binedges = plot_binning(
+        [𝑅], feature, discretizer;
+        worldfilter=SoleLogics.FunctionalWorldFilter(
+            # bounds are 0% and 50% of the original series length
+            x -> length(x) >= _minimum_wlength && length(x) <= _maximum_wlength,
+            Interval{Int}
+        ),
+        savefig_path=joinpath(results_folder,
+            "v$(nvariable)_06_repr_bin_his_wleq$(_maximum_wlength)g$(_minimum_wlength).png"
+        )
+    )
 
+
+    # compare the binned obtained by applying the given feature in a coarse way,
+    # with the binning performed on the raw signal
+    𝑅_coarse_bin_plot = plot(𝑅, framestyle=:box, alpha=1, labels="")
+    plot!(𝐶, framestyle=:box, alpha=0.1, labels="")
+    hline!(
+        𝑅_binedges,
+        linestyle=:dash, linewidth=2,
+        labels="Binning w. $(discretizer)", color=threshold_color
+    )
+    hline!(
+        𝑅_coarse_binedges,
+        linestyle=:dot, linewidth=2,
+        labels="$(syntaxstring(feature)) on w in W s.t. " *
+            "$(_minimum_wlength) <= |w| <= $(_maximum_wlength))",
+        color=:red
+    )
+    title!("Comparison between raw and interval-wise binning")
+    savefig(
+        𝑅_coarse_bin_plot,
+        joinpath(
+            results_folder,
+            "v$(nvariable)_07_repr_bin_wleq$(_maximum_wlength)g$(_minimum_wlength).png"
+        )
+    )
 end
 
 
-nvariable = 6
+nvariable = 5
 nbins = 3
 
 _alphabet = modalwise_alphabet_extraction(
     X_df_1_have_command[:,nvariable],
     VariableMax(nvariable),
-    DiscretizeQuantile(3, false)
+    DiscretizeQuantile(3, true)
 )
 
 
