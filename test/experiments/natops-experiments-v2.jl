@@ -31,14 +31,67 @@ using SoleLogics: IA_B, IA_Bi, IA_E, IA_Ei, IA_D, IA_Di, IA_O
 Generic pipeline to extract an alphabet from dimensional data.
 Might require a bit of adaptation in the spatial (e.g., images) scenario.
 
+# Arguments
+- `C::Vector{<:Vector{<:Real}}`: dimensional data from which the alphabet is to be
+    extracted;
+- `feature::AbstractUnivariateFeature`: the feature to be used in the extraction process;
+- `discretizer::DiscretizationAlgorithm`: strategy used to discretize the data.
+
+# Keyword Arguments
+- `results_folder::String="test/experiments/results/"`: folder path where results will be
+    saved (this is useful for experiments related to ### INSERT PAPER HERE ###);
+- `palette::ColorPalette=palette(:viridis)`: base color palette used for visualization;
+- `signal_color::Symbol=:blue`: color used for the signal in visualizations;
+- `threshold_color::Symbol=:darkgreen`: color used for thresholds in visualizations;
+- `bin_edge_color::Symbol=:red`: color used for bin edges in visualizations.
+
+# Examples
+
+julia> X_df, y = load_NATOPS();
+julia> X_df_1_have_command = X_df[1:30, :]
+
+julia> nvariable = 5
+julia> nbins = 3
+
+julia> alphabet = modalwise_alphabet_extraction(
+    X_df_1_have_command[:,nvariable],
+    VariableMin(nvariable),
+    DiscretizeQuantile(3, true);
+    relations=[>=],
+    modalrelations=[box(IA_AorO), box(IA_DorBorE), box(IA_I)]
+)
+
+julia> syntaxstring.(alphabet)
+16-element Vector{String}:
+ "min[V5] ≥ -1.91"
+ "min[V5] ≥ -1.76"
+ "min[V5] ≥ -0.65"
+ "min[V5] ≥ 0.73"
+ "[AO]min[V5] ≥ -1.91"
+ "[DBE]min[V5] ≥ -1.91"
+ "[I]min[V5] ≥ -1.91"
+ "[AO]min[V5] ≥ -1.76"
+ "[DBE]min[V5] ≥ -1.76"
+ "[I]min[V5] ≥ -1.76"
+ "[AO]min[V5] ≥ -0.65"
+ "[DBE]min[V5] ≥ -0.65"
+ "[I]min[V5] ≥ -0.65"
+ "[AO]min[V5] ≥ 0.73"
+ "[DBE]min[V5] ≥ 0.73"
+ "[I]min[V5] ≥ 0.73"
+
 See also `Discretizers.DiscretizationAlgorithm`, `SoleData.AbstractUnivariateFeature`.
 """
 function modalwise_alphabet_extraction(
     C::Vector{<:Vector{<:Real}},
     feature::AbstractUnivariateFeature,
     discretizer::DiscretizationAlgorithm;
+
     relations::Vector{<:Function}=[<],
     modalrelations::Vector{<:AbstractRelationalConnective}=AbstractRelationalConnective[],
+
+    binpicker::Function=(bins -> bins[2:((bins |> length) - 1)]),
+
     results_folder::String="test/experiments/results/",
     palette::ColorPalette=palette(:viridis),
     signal_color::Symbol=:blue,
@@ -289,10 +342,11 @@ function modalwise_alphabet_extraction(
     )
 
 
+    # generate the final alphabet and return it
     PROPOSITIONS = [
         ScalarCondition(feature, r, round(threshold, digits=2)) |> Atom
         for r in relations
-        for threshold in R_L_binedges
+        for threshold in binpicker(R_L_binedges) # filter thresholds using a specific policy
     ]
 
     MODAL_LITERALS = [
@@ -317,5 +371,6 @@ _alphabet = modalwise_alphabet_extraction(
     X_df_1_have_command[:,nvariable],
     VariableMin(nvariable),
     DiscretizeQuantile(3, true);
+    relations=[>=],
     modalrelations=[box(IA_AorO), box(IA_DorBorE), box(IA_I)]
 )
