@@ -30,7 +30,6 @@ Might require a bit of adaptation in the spatial (e.g., images) scenario.
 
 See also `Discretizers.DiscretizationAlgorithm`, `SoleData.AbstractUnivariateFeature`.
 """
-
 function modalwise_alphabet_extraction(
     𝐶::Vector{<:Vector{<:Real}},
     feature::AbstractUnivariateFeature,
@@ -189,40 +188,48 @@ function modalwise_alphabet_extraction(
     # the catch is we have a minimum length required, in order for an interval to be
     # interesting to us (this strongly depends from how the dataset is built)
     _minlength = floor(length(𝑅) * 0.1) |> Int64
+    mse_matrix = fill(NaN, length(𝑅), length(𝑅))
 
     for (_start, _end) in Iterators.product(1:50, 1:50)
         # intervals integrity condition
-        if _start > _end || (_end-_start) < _minlength
+        if _start > _end
             continue
         end
 
+        # compute binning for (_start, _end) pair, then compute a similarity with the
+        # raw binning using MSE (to punish outliers) and update the MSE matrix
         try
-            _, _binedges = plot_binning(
-                [𝑅], _feature, discretizer;
+            _, _candidate_binedges = plot_binning(
+                [𝑅], feature, discretizer;
                 worldfilter=SoleLogics.FunctionalWorldFilter(
                     # bounds are 5 and 10, which are 10% and 20% of the original series length
                     x -> length(x) >= _start && length(x) <= _end, Interval{Int}),
                 _binedges_only=true
             )
 
-            # we cut the extrema and compare only the inner values
-            # we want to isolate a pair from the original raw binning on the representative
-            # distribution;
             _mse = _mse_between_pairs(
-                _remove_extrema(_repr_binedges), _remove_extrema(_binedges))
+                _remove_extrema(𝑅_binedges), _remove_extrema(_candidate_binedges))
 
-            if _mse < _best_match_mse
-                _best_match_mse = _mse
-                _best_match_binning = _binedges
-                _best_match_start = _start
-                _best_match_end = _end
-            end
+            mse_matrix[_end, _start] = _mse
         catch
-            # possible reasons: no bins remaining error (binning is not possible)
+            # possible reasons: no bins remaining error (binning is not feasible)
             continue
         end
     end
 
+    all_binnings_heatmap = heatmap(mse_matrix, color=:reds,
+        xlabel="Interval minimum length", ylabel="Interval maximum length",
+        title="MSE similarity between different binnings"
+    )
+    savefig(
+        all_binnings_heatmap,
+        joinpath(
+            results_folder,
+            "v$(nvariable)_08_allbins_heatmap.png"
+        )
+    )
+
+    return mse_matrix
 end
 
 
