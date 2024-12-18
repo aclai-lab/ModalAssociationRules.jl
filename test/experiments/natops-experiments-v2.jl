@@ -12,7 +12,6 @@ using SoleData: AbstractUnivariateFeature
 using SoleData: i_variable
 
 using SoleLogics
-# IA3Relationusing SoleLogics:
 using SoleLogics: GeometricalRelation, IntervalRelation, AbstractRelationalConnective
 using SoleLogics: IA_B, IA_Bi, IA_E, IA_Ei, IA_D, IA_Di, IA_O
 
@@ -366,3 +365,17 @@ _alphabet = modalwise_alphabet_extraction(
     relations=[>=],
     modalrelations=[box(IA_AorO), box(IA_DorBorE), box(IA_I)]
 )
+
+
+Λ = vcat([
+    modalwise_alphabet_extraction(
+        X_df_1_have_command[:,nvariable],
+        F(nvariable),
+        DiscretizeQuantile(3, true);
+        relations=[r],
+        modalrelations=[box(IA_AorO), box(IA_DorBorE), box(IA_I)]
+    )
+
+    for nvariable in [4,5,6]
+    for (F, r) in [(VariableMin, >=), (VariableMax, <=)]
+]...)
