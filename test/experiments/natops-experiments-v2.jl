@@ -15,7 +15,7 @@ using SoleLogics: IA_B, IA_Bi, IA_E, IA_Ei, IA_D, IA_Di, IA_O
 
 """
     function modalwise_alphabet_extraction(
-        𝐶::Vector{<:Vector{<:Real}},
+        C::Vector{<:Vector{<:Real}},
         feature::AbstractUnivariateFeature,
         discretizer::DiscretizationAlgorithm;
         results_folder::String="test/experiments/results/",
@@ -31,7 +31,8 @@ Might require a bit of adaptation in the spatial (e.g., images) scenario.
 See also `Discretizers.DiscretizationAlgorithm`, `SoleData.AbstractUnivariateFeature`.
 """
 function modalwise_alphabet_extraction(
-    𝐶::Vector{<:Vector{<:Real}},
+    C::Vector{<:Vector{<:Real}},
+    nvariable::Integer,
     feature::AbstractUnivariateFeature,
     discretizer::DiscretizationAlgorithm;
     results_folder::String="test/experiments/results/",
@@ -42,6 +43,7 @@ function modalwise_alphabet_extraction(
 )
     default(palette=palette)
     results_folder = "test/experiments/results/"
+    featurename = split(syntaxstring(feature), "[") |> first # e.g., "max[V5]" -> "max"
 
     # compute mse pairwise
     function _mse_between_pairs(v1::T, v2::T) where {T<:Vector{<:Real}}
@@ -68,62 +70,67 @@ function modalwise_alphabet_extraction(
 
 
     # all instances plot
-    all_plot = plot(𝐶, framestyle=:box, alpha=0.25, labels="")
+    all_plot = plot(C, framestyle=:box, alpha=0.25, labels="")
     title!("V$(nvariable) (all instances)")
-    savefig(all_plot, joinpath(results_folder, "v$(nvariable)_01_all.png"))
+    savefig(all_plot, joinpath(results_folder, "v$(nvariable)_$(featurename)_01_all.png"))
 
 
     # representative distribution plot
-    𝑅 = _get_representative_distribution(𝐶)
-    𝑅_plot = plot(𝑅, framestyle=:box, alpha=1, labels="")
-    plot!(𝐶, framestyle=:box, alpha=0.1, labels="")
+    R = _get_representative_distribution(C)
+    Rlen = length(R)
+    R_plot = plot(R, framestyle=:box, alpha=1, labels="")
+    plot!(C, framestyle=:box, alpha=0.1, labels="")
     title!("Representative distribution for V$(nvariable)")
-    savefig(𝑅_plot, joinpath(results_folder, "v$(nvariable)_02_repr.png"))
+    savefig(R_plot, joinpath(results_folder, "v$(nvariable)_$(featurename)_02_repr.png"))
 
 
     # perform and plot binning on representative distribution
-    𝑅_binedges = binedges(discretizer, sort(𝑅))
-    𝑅_bin_plot = plot(𝑅, framestyle=:box, alpha=1, labels="")
-    plot!(𝐶, framestyle=:box, alpha=0.1, labels="")
+    R_binedges = binedges(discretizer, sort(R))
+    R_bin_plot = plot(R, framestyle=:box, alpha=1, labels="")
+    plot!(C, framestyle=:box, alpha=0.1, labels="")
     hline!(
-        𝑅_binedges,
+        R_binedges,
         linestyle=:dash, linewidth=2,
         labels="Binning w. $(discretizer)", color=threshold_color
     )
     title!("Binned representative distribution for V$(nvariable)")
-    savefig(
-        𝑅_bin_plot, joinpath(results_folder, "v$(nvariable)_03_repr_bin.png"))
+    savefig(R_bin_plot, joinpath(
+        results_folder,
+        "v$(nvariable)_$(featurename)_03_repr_bin.png"
+    ))
 
 
     # we perform binning on an interval-wise scenario, considering worlds between 0% and
     # 50% of the original signal's length; binning is plotted using an histogram
     _minimum_wlength = 1
-    _maximum_wlength = floor(length(𝑅) * 0.5) |> Int64
-    _, 𝑅_granular_binedges = plot_binning(
-        [𝑅], feature, discretizer;
+    _maximum_wlength = floor(Rlen * 0.5) |> Int64
+    _, R_granular_binedges = plot_binning(
+        [R], feature, discretizer;
         worldfilter=SoleLogics.FunctionalWorldFilter(
             # bounds are 0% and 50% of the original series length
             x -> length(x) >= _minimum_wlength && length(x) <= _maximum_wlength,
             Interval{Int}
         ),
-        title="$(feature) applied on w s.t. \n$(_minimum_wlength)<=|w|<=$(_maximum_wlength)",
+        title="$(feature) applied on w s.t. \n" *
+            "$(_minimum_wlength)<=|w|<=$(_maximum_wlength)",
         savefig_path=joinpath(results_folder,
-            "v$(nvariable)_04_repr_bin_his_wleq$(_maximum_wlength)g$(_minimum_wlength).png"
+            "v$(nvariable)_$(featurename)_04_repr_bin_his_wleq" *
+            "$(_maximum_wlength)g$(_minimum_wlength).png"
         )
     )
 
 
     # compare the binned obtained by applying the given feature in a granular way,
     # with the binning performed on the raw signal
-    𝑅_granular_bin_plot = plot(𝑅, framestyle=:box, alpha=1, labels="")
-    plot!(𝐶, framestyle=:box, alpha=0.1, labels="")
+    R_granular_bin_plot = plot(R, framestyle=:box, alpha=1, labels="")
+    plot!(C, framestyle=:box, alpha=0.1, labels="")
     hline!(
-        𝑅_binedges,
+        R_binedges,
         linestyle=:dash, linewidth=2,
         labels="Binning w. $(discretizer)", color=threshold_color
     )
     hline!(
-        𝑅_granular_binedges,
+        R_granular_binedges,
         linestyle=:dot, linewidth=2,
         labels="$(syntaxstring(feature)) on w in W s.t. " *
             "$(_minimum_wlength) <= |w| <= $(_maximum_wlength))",
@@ -131,43 +138,46 @@ function modalwise_alphabet_extraction(
     )
     title!("Comparison between raw and interval-wise binning")
     savefig(
-        𝑅_granular_bin_plot,
+        R_granular_bin_plot,
         joinpath(
             results_folder,
-            "v$(nvariable)_05_repr_bin_wleq$(_maximum_wlength)g$(_minimum_wlength).png"
+            "v$(nvariable)_$(featurename)_05_repr_bin_wleq" *
+            "$(_maximum_wlength)g$(_minimum_wlength).png"
         )
     )
 
 
-    # we perform binning on an interval-wise scenario, considering worlds between 0% and
-    # 50% of the original signal's length; binning is plotted using an histogram
-    _minimum_wlength = floor(length(𝑅) * 0.25) |> Int64
-    _maximum_wlength = floor(length(𝑅) * 0.75) |> Int64
-    _, 𝑅_coarse_binedges = plot_binning(
-        [𝑅], feature, discretizer;
+    # we perform binning on an interval-wise scenario, considering worlds between 25% and
+    # 75% of the original signal's length; binning is plotted using an histogram
+    _minimum_wlength = floor(Rlen * 0.25) |> Int64
+    _maximum_wlength = floor(Rlen * 0.75) |> Int64
+    _, R_coarse_binedges = plot_binning(
+        [R], feature, discretizer;
         worldfilter=SoleLogics.FunctionalWorldFilter(
             # bounds are 0% and 50% of the original series length
             x -> length(x) >= _minimum_wlength && length(x) <= _maximum_wlength,
             Interval{Int}
         ),
-        title="$(feature) applied on w s.t. \n$(_minimum_wlength)<=|w|<=$(_maximum_wlength)",
+        title="$(feature) applied on w s.t. \n" *
+            "$(_minimum_wlength)<=|w|<=$(_maximum_wlength)",
         savefig_path=joinpath(results_folder,
-            "v$(nvariable)_06_repr_bin_his_wleq$(_maximum_wlength)g$(_minimum_wlength).png"
+            "v$(nvariable)_$(featurename)_06_repr_bin_his_wleq" *
+            "$(_maximum_wlength)g$(_minimum_wlength).png"
         )
     )
 
 
     # compare the binned obtained by applying the given feature in a coarse way,
     # with the binning performed on the raw signal
-    𝑅_coarse_bin_plot = plot(𝑅, framestyle=:box, alpha=1, labels="")
-    plot!(𝐶, framestyle=:box, alpha=0.1, labels="")
+    R_coarse_bin_plot = plot(R, framestyle=:box, alpha=1, labels="")
+    plot!(C, framestyle=:box, alpha=0.1, labels="")
     hline!(
-        𝑅_binedges,
+        R_binedges,
         linestyle=:dash, linewidth=2,
         labels="Binning w. $(discretizer)", color=threshold_color
     )
     hline!(
-        𝑅_coarse_binedges,
+        R_coarse_binedges,
         linestyle=:dot, linewidth=2,
         labels="$(syntaxstring(feature)) on w in W s.t. " *
             "$(_minimum_wlength) <= |w| <= $(_maximum_wlength))",
@@ -175,10 +185,11 @@ function modalwise_alphabet_extraction(
     )
     title!("Comparison between raw and interval-wise binning")
     savefig(
-        𝑅_coarse_bin_plot,
+        R_coarse_bin_plot,
         joinpath(
             results_folder,
-            "v$(nvariable)_07_repr_bin_wleq$(_maximum_wlength)g$(_minimum_wlength).png"
+            "v$(nvariable)_$(featurename)_07_repr_bin_wleq" *
+            "$(_maximum_wlength)g$(_minimum_wlength).png"
         )
     )
 
@@ -187,28 +198,27 @@ function modalwise_alphabet_extraction(
     # in order to minimize MSE with the original raw binning;
     # the catch is we have a minimum length required, in order for an interval to be
     # interesting to us (this strongly depends from how the dataset is built)
-    _minlength = floor(length(𝑅) * 0.1) |> Int64
-    mse_matrix = fill(NaN, length(𝑅), length(𝑅))
+    mse_matrix = fill(NaN, Rlen, Rlen)
 
-    for (_start, _end) in Iterators.product(1:50, 1:50)
-        # intervals integrity condition
-        if _start > _end
-            continue
-        end
+    for (_start, _end) in Iterators.filter(
+            # integrality condition on each interval
+            x -> first(x) <= last(x),
+            Iterators.product(1:Rlen, 1:Rlen)
+        )
 
         # compute binning for (_start, _end) pair, then compute a similarity with the
         # raw binning using MSE (to punish outliers) and update the MSE matrix
         try
             _, _candidate_binedges = plot_binning(
-                [𝑅], feature, discretizer;
+                [R], feature, discretizer;
                 worldfilter=SoleLogics.FunctionalWorldFilter(
-                    # bounds are 5 and 10, which are 10% and 20% of the original series length
+                    # bounds are 5 and 10, which are 10% and 20% of the series length
                     x -> length(x) >= _start && length(x) <= _end, Interval{Int}),
                 _binedges_only=true
             )
 
             _mse = _mse_between_pairs(
-                _remove_extrema(𝑅_binedges), _remove_extrema(_candidate_binedges))
+                _remove_extrema(R_binedges), _remove_extrema(_candidate_binedges))
 
             mse_matrix[_end, _start] = _mse
         catch
@@ -225,11 +235,53 @@ function modalwise_alphabet_extraction(
         all_binnings_heatmap,
         joinpath(
             results_folder,
-            "v$(nvariable)_08_allbins_heatmap.png"
+            "v$(nvariable)_$(featurename)_08_allbins_heatmap.png"
         )
     )
 
-    return mse_matrix
+
+    # we want to analyze the data depending on how it is collected;
+    # for example, in NATOPS, each sample's duration is nearly about 2.14 seconds.
+    # WARNING: this must be adjusted depending on what kind of data you are studying!
+
+    # we want to encode atleast 0.4 seconds in each interval, so we resolve:
+    # x * (total_time / npoints) ≅ 0.4, that is, x ≅ 0.4 * npoints / total_time
+    L = floor(0.4 * Rlen / 2.14) |> Integer # exact length of our intervals
+
+    _, R_L_binedges = plot_binning(
+        [R], feature, discretizer;
+        worldfilter=SoleLogics.FunctionalWorldFilter(
+            x -> length(x) == L,
+            Interval{Int}
+        ),
+        title="$(feature) applied on w s.t. |w|=$(L)",
+        savefig_path=joinpath(results_folder,
+            "v$(nvariable)_$(featurename)_09_repr_bin_his_weq$(L).png"
+        )
+    )
+
+    # compare the binned obtained by applying the given feature in an exact way
+    R_L_bin_plot = plot(R, framestyle=:box, alpha=1, labels="")
+    plot!(C, framestyle=:box, alpha=0.1, labels="")
+    hline!(
+        R_binedges,
+        linestyle=:dash, linewidth=2,
+        labels="Binning w. $(discretizer)", color=threshold_color
+    )
+    hline!(
+        R_L_binedges,
+        linestyle=:dot, linewidth=2,
+        labels="$(syntaxstring(feature)) on w in W s.t. |w|=$(L)",
+        color=:red
+    )
+    title!("Comparison between raw and interval-wise binning")
+    savefig(
+        R_L_bin_plot,
+        joinpath(
+            results_folder,
+            "v$(nvariable)_$(featurename)_10_repr_bin_weq$(L).png"
+        )
+    )
 end
 
 
@@ -243,72 +295,7 @@ nbins = 3
 
 _alphabet = modalwise_alphabet_extraction(
     X_df_1_have_command[:,nvariable],
-    VariableMax(nvariable),
+    nvariable,
+    VariableMin(nvariable),
     DiscretizeQuantile(3, true)
 )
-
-
-
-# we try to find the best range to approximate the original binning (on the raw signal)
-_best_match_mse = 999
-_best_match_binning = nothing
-_best_match_start = 1
-_best_match_end = 2
-
-# we want atleast a length of 5, to avoid the degenerate case of testing 1-lenght intervals
-for (_start, _end) in Iterators.product(1:50, 1:50)
-    # valid intervals condition
-    if _start > _end
-        continue
-    end
-
-    try
-        # we want to test which binning is the best
-        _, _binedges = plot_binning(
-            [_repr_dis], _feature, discretizer;
-            worldfilter=SoleLogics.FunctionalWorldFilter(
-                # bounds are 5 and 10, which are 10% and 20% of the original series length
-                x -> length(x) >= _start && length(x) <= _end, Interval{Int}),
-            _binedges_only=true
-        )
-
-        # we cut the extrema and compare only the inner values
-        # we want to isolate a pair from the original raw binning on the representative
-        # distribution;
-        _mse = _mse_between_pairs(
-            _remove_extrema(_repr_binedges), _remove_extrema(_binedges))
-
-        if _mse < _best_match_mse
-            _best_match_mse = _mse
-            _best_match_binning = _binedges
-            _best_match_start = _start
-            _best_match_end = _end
-        end
-    catch
-        # possible reasons: no bins remaining error from length >= 26 onwards
-        continue
-    end
-
-    # plot every possible combination of interval lengths
-    # rhand_y_repr_dis = plot(
-    #     _repr_dis, framestyle=:box, alpha=1, labels="")
-    # plot!(X_df_1_have_command[:,nvariable], framestyle=:box, alpha=0.1, labels="")
-    # hline!(
-    #     _repr_binedges,
-    #     linestyle=:dash, linewidth=2,
-    #     labels="Binning threshold (raw signal)", color=threshold_color
-    # )
-    # hline!(
-    #     _binedges,
-    #     linestyle=:dot, linewidth=2,
-    #     labels="Binning threshold (max on intervals i s.t. $(_start) <= |i| <= " *
-    #         "$(_end))", color=:red
-    # )
-    # title!("Representative right hand signal binned")
-    # savefig(rhand_y_repr_dis, joinpath(
-    #         results_folder,
-    #         "v$(nvariable)_rpr_binned_max_3bin_wleq$(_start)g$(_end)"
-    #     )
-    # )
-
-end

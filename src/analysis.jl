@@ -113,7 +113,8 @@ function plot_binning(
     _histogram = histogram(_X,
         label=label, xlabel=syntaxstring(_feature), color=:darkorange,
         ylabel="# occurrences",
-        title=title
+        title=title,
+        bins=100
     )
 
     for edge in _binedges
