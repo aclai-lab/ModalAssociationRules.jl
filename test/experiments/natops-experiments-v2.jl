@@ -9,8 +9,11 @@ using StatsBase
 
 using SoleData
 using SoleData: AbstractUnivariateFeature
+using SoleData: i_variable
 
 using SoleLogics
+# IA3Relationusing SoleLogics:
+using SoleLogics: GeometricalRelation, IntervalRelation, AbstractRelationalConnective
 using SoleLogics: IA_B, IA_Bi, IA_E, IA_Ei, IA_D, IA_Di, IA_O
 
 """
@@ -32,9 +35,10 @@ See also `Discretizers.DiscretizationAlgorithm`, `SoleData.AbstractUnivariateFea
 """
 function modalwise_alphabet_extraction(
     C::Vector{<:Vector{<:Real}},
-    nvariable::Integer,
     feature::AbstractUnivariateFeature,
     discretizer::DiscretizationAlgorithm;
+    relations::Vector{<:Function}=[<],
+    modalrelations::Vector{<:AbstractRelationalConnective}=AbstractRelationalConnective[],
     results_folder::String="test/experiments/results/",
     palette::ColorPalette=palette(:viridis),
     signal_color::Symbol=:blue,
@@ -43,7 +47,8 @@ function modalwise_alphabet_extraction(
 )
     default(palette=palette)
     results_folder = "test/experiments/results/"
-    featurename = split(syntaxstring(feature), "[") |> first # e.g., "max[V5]" -> "max"
+    featurename = split(syntaxstring(feature), "[") |> first # "max[V5]" -> "max"
+    nvariable = i_variable(feature)                          # "max[V5]" -> 5
 
     # compute mse pairwise
     function _mse_between_pairs(v1::T, v2::T) where {T<:Vector{<:Real}}
@@ -282,6 +287,21 @@ function modalwise_alphabet_extraction(
             "v$(nvariable)_$(featurename)_10_repr_bin_weq$(L).png"
         )
     )
+
+
+    PROPOSITIONS = [
+        ScalarCondition(feature, r, round(threshold, digits=2)) |> Atom
+        for r in relations
+        for threshold in R_L_binedges
+    ]
+
+    MODAL_LITERALS = [
+        mr(p)
+        for p in PROPOSITIONS
+        for mr in modalrelations
+    ]
+
+    return reduce(vcat, [PROPOSITIONS, MODAL_LITERALS])
 end
 
 
@@ -295,7 +315,7 @@ nbins = 3
 
 _alphabet = modalwise_alphabet_extraction(
     X_df_1_have_command[:,nvariable],
-    nvariable,
     VariableMin(nvariable),
-    DiscretizeQuantile(3, true)
+    DiscretizeQuantile(3, true);
+    modalrelations=[box(IA_AorO), box(IA_DorBorE), box(IA_I)]
 )
