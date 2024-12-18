@@ -83,8 +83,7 @@ function apriori(
     candidates = Itemset{_itemtype}.(items(miner))
 
     while !isempty(candidates)
-        # get the frequent itemsets from the first candidates set;
-        # note that meaningfulness measure should leverage memoization when miner is given.
+        # get the frequent itemsets from the first candidates set
         frequents = [candidate
             for candidate in candidates
             for (gmeas_algo, lthreshold, gthreshold) in itemsetmeasures(miner)
@@ -92,7 +91,7 @@ function apriori(
             # other than the meaningfulness measures,
             # all the itemset mining policies must be honored too.
             if gmeas_algo(candidate, X, lthreshold, miner) >= gthreshold &&
-                all(__policy -> __policy(itemset), itemset_mining_policies(miner))
+                all(__policy -> __policy(candidate), itemset_mining_policies(miner))
         ] |> Vector{Itemset{_itemtype}}
 
         push!(freqitems(miner), frequents...)

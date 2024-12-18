@@ -47,8 +47,8 @@ fpgrowth_miner = Miner(X2, fpgrowth, _1_items, _1_itemsetmeasures, _1_rulemeasur
 compare(apriori_miner, fpgrowth_miner)
 
 # checking for re-mining block
-@test apply!(apriori_miner, data(apriori_miner)) == Nothing
-@test apply!(fpgrowth_miner, data(fpgrowth_miner)) == Nothing
+@test apply!(apriori_miner, data(apriori_miner)) |> collect |> length == 0
+@test apply!(fpgrowth_miner, data(fpgrowth_miner)) |> collect |> length == 0
 
 # 2nd comparisons: Apriori vs its multithreaded variation
 _2_items = Vector{Item}([manual_p, manual_q, manual_r])
@@ -107,7 +107,7 @@ fpgrowth_miner = Miner(X_1_have_command,
 compare(apriori_miner, fpgrowth_miner)
 
 arule = fpgrowth_miner |> arules |> first
-@test_nowarn analyze(arule, fpgrowth_miner; io=devnull, verbose=true)
+@test_nowarn arule_analysis(arule, fpgrowth_miner; io=devnull, verbose=true)
 @test_nowarn convert(Itemset, arule)
 
 @test frame(fpgrowth_miner) isa SoleLogics.FullDimensionalFrame
@@ -148,3 +148,16 @@ fpgrowth_miner = Miner(X_1_have_command,
     fpgrowth, _6_items, _6_itemsetmeasures, _6_rulemeasures)
 
 @test_nowarn mine!(fpgrowth_miner)
+
+# TODO - it seems that mining is broken when support thresholds are set to 0.
+# This may be due to a tricky > / >= which is well hidden...
+#
+# _7_items = _1_items
+# _7_itemsetmeasures = [(gsupport, 0.0, 0.0)]
+# _7_rulemeasures = [(gconfidence, 0.0, 0.0)]
+#
+# apriori_miner = Miner(deepcopy(X1), apriori, _7_items, _7_itemsetmeasures, _7_rulemeasures)
+# fpgrowth_miner = Miner(
+#     deepcopy(X1), fpgrowth, _7_items, _7_itemsetmeasures, _7_rulemeasures)
+#
+# @test_broken compare(apriori_miner, fpgrowth_miner)

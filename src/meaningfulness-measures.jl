@@ -264,6 +264,9 @@ _gconfidence_logic = (rule, X, threshold, miner) -> begin
 
     num = gsupport(_union, X, threshold, miner)
     den = gsupport(_antecedent, X, threshold, miner)
+
+    @assert den >= num "ERROR: conf between $(_union) [$(num)] and $(_antecedent) [$(den)]"
+
     return Dict(:measure => num/den)
 end
 

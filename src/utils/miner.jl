@@ -148,7 +148,7 @@ struct Miner{
             isheterogeneous_arule(),
         ]),
 
-        info::Info=Info(:istrained => false)
+        info::Info=Info(:istrained => false, :size => nothing)
     ) where {
         D<:MineableData,
         I<:Item,
@@ -304,31 +304,6 @@ info(miner::Miner)::Info = miner.info
 
 # Miner's utilities
 
-"""
-    getlocalthreshold(miner::Miner, meas::Function)::Threshold
-
-Getter for the [`Threshold`](@ref) associated with the function wrapped by some
-[`MeaningfulnessMeasure`](@ref) tailored to work locally (that is, analyzing "the inside"
-of a dataset's instances) in `miner`.
-
-See [`Miner`](@ref), [`MeaningfulnessMeasure`](@ref), [`Threshold`](@ref).
-"""
-function getlocalthreshold(miner::Miner, meas::Function)::Threshold
-    return findmeasure(miner, meas)[2]
-end
-
-"""
-    getglobalthreshold(miner::Miner, meas::Function)::Threshold
-
-Getter for the [`Threshold`](@ref) associated with the function wrapped by some
-[`MeaningfulnessMeasure`](@ref) tailored to work globally (that is, measuring the behavior
-of a specific local-measure across all dataset's instances) in `miner`.
-
-See [`Miner`](@ref), [`MeaningfulnessMeasure`](@ref), [`Threshold`](@ref).
-"""
-function getglobalthreshold(miner::Miner, meas::Function)::Threshold
-    return findmeasure(miner, meas) |> last
-end
 
 function Base.show(io::IO, miner::Miner)
     println(io, "$(data(miner))")
@@ -350,79 +325,66 @@ function Base.show(io::IO, miner::Miner)
 end
 
 """
-    analyze(arule::ARule, miner::Miner; io::IO=stdout, localities=false)
+    arule_analysis(arule::ARule, miner::Miner; io::IO=stdout, localities=false)
 
-Detailed print of an [`ARule`](@ref) to the console, including related meaningfulness
-measures values.
-
-!!! warning
-    Printing may be missing some information, as this needs to be refactored.
-    We reccomend to realy on a custom dispatch at the moment.
-
-See also [`ARule`](@ref), [`Miner`](@ref).
+See also [`arule_analysis(::Arule, ::AbstractMiner)`](@ref), [`ARule`](@ref),
+[`Miner`](@ref).
 """
-function analyze(
+function arule_analysis(
     arule::ARule,
     miner::Miner;
     io::IO=stdout,
-    itemsets_local_info::Bool=false,
-    itemsets_global_info::Bool=false,
-    rule_local_info::Bool=false,
+    itemset_local_info::Bool=false,
+    itemset_global_info::Bool=false,
+    arule_measures=[gconfidence, glift, gconviction, gleverage],
     verbose::Bool=false,
     variablenames::Union{Nothing,Vector{String}}=nothing
 )
     # print constraints
     if verbose
-        itemsets_global_info = true
-        itemsets_local_info = true
-        rule_local_info = true
+        itemset_global_info = true
+        itemset_local_info = true
     end
 
-    if itemsets_local_info
-        itemsets_global_info = true
+    if itemset_local_info
+        itemset_global_info = true
     end
 
     Base.show(io, arule; variablenames=variablenames)
     println(io, "")
 
     # report global emasures for the rule
-    for measure in rulemeasures(miner)
-        globalmeasure = first(measure)
-        gmeassym = globalmeasure |> Symbol
+    for measure in arule_measures
+        gmeassym = measure |> Symbol
+
+        if !haskey(globalmemo(miner), (gmeassym, arule))
+            continue
+        end
 
         println(io, "\t$(gmeassym): $(globalmemo(miner, (gmeassym, arule)))")
-
-        # report local measures for the rule
-        if rule_local_info
-            # find local measure (its name, as Symbol) associated with the global measure
-            lmeassym = ModalAssociationRules.localof(globalmeasure) |> Symbol
-            for i in 1:ninstances(miner |> data)
-                println(io, "\t$(lmeassym): $(localmemo(miner, (lmeassym, arule, i))) ")
-            end
-            println(io, "")
-        end
     end
+    # TODO - report local measures for the rule, if there are any
 
     # report global measures for both antecedent and consequent
-    if itemsets_global_info
+    if itemset_global_info
         for measure in itemsetmeasures(miner)
             globalmeasure = first(measure)
             gmeassym = globalmeasure |> Symbol
 
-            println(io, "\t$(gmeassym) - (antecedent): " *
+            println(io, "\t$(gmeassym)(X): " *
                 "$(globalmemo(miner, (gmeassym, antecedent(arule))))")
-            # if itemsets_local_info
+            # if itemset_local_info
             # TODO -  report local measures for the antecedent (use `itemsets_localities`)
 
-            println(io, "\t$(gmeassym) - (consequent): " *
+            println(io, "\t$(gmeassym)(Y): " *
                 "$(globalmemo(miner, (gmeassym, consequent(arule))))")
-            # if itemsets_local_info
+            # if itemset_local_info
             # TODO -  report local measures for the consequent (use `itemsets_localities`)
 
             _entire_content = union(antecedent(arule), consequent(arule))
-            println(io, "\t$(gmeassym) - (entire): " *
+            println(io, "\t$(gmeassym)(X⋃Y): " *
                 "$(globalmemo(miner, (gmeassym, _entire_content)))")
-            # if itemsets_local_info
+            # if itemset_local_info
             # TODO -  report local measures for the consequent (use `itemsets_localities`)
 
         end
@@ -551,8 +513,3 @@ See also [`data`](@ref), [`Miner`](@ref).
 function SoleLogics.frame(miner::Miner; ith_instance::Integer=1)
     return SoleLogics.frame(data(miner), ith_instance)
 end
-
-# TODO remove this if test works
-# function SoleLogics.nworlds(miner::Miner)
-#     return frame(miner) |> SoleLogics.nworlds
-# end

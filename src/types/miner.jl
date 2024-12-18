@@ -253,7 +253,10 @@ Getter `miner`'s metadata, such as the elapsed time of the mining algorithm.
 See also [`Miner`](@ref), [`MiningState`](@ref).
 """
 info(::AbstractMiner)::Info = error("Not implemented")
-info(miner::AbstractMiner, key::Symbol) = info(miner)[key]
+info(miner::AbstractMiner, key::Symbol) = begin
+    _info = info(miner)
+    return haskey(_info, key) ? _info[key] : false
+end
 
 """
     info!(miner::Miner, key::Symbol, val)
@@ -330,6 +333,32 @@ function findmeasure(
     end
 end
 
+"""
+    getlocalthreshold(miner::AbstractMiner, meas::Function)::Threshold
+
+Getter for the [`Threshold`](@ref) associated with the function wrapped by some
+[`MeaningfulnessMeasure`](@ref) tailored to work locally (that is, analyzing "the inside"
+of a dataset's instances) in `miner`.
+
+See [`AbstractMiner`](@ref), [`MeaningfulnessMeasure`](@ref), [`Threshold`](@ref).
+"""
+function getlocalthreshold(miner::AbstractMiner, meas::Function)::Threshold
+    return findmeasure(miner, meas)[2]
+end
+
+"""
+    getglobalthreshold(miner::AbstractMiner, meas::Function)::Threshold
+
+Getter for the [`Threshold`](@ref) associated with the function wrapped by some
+[`MeaningfulnessMeasure`](@ref) tailored to work globally (that is, measuring the behavior
+of a specific local-measure across all dataset's instances) in `miner`.
+
+See [`AbstractMiner`](@ref), [`MeaningfulnessMeasure`](@ref), [`Threshold`](@ref).
+"""
+function getglobalthreshold(miner::AbstractMiner, meas::Function)::Threshold
+    return findmeasure(miner, meas) |> last
+end
+
 
 
 """
@@ -358,14 +387,30 @@ Return a generator of interesting [`ARule`](@ref)s.
 See also [`ARule`](@ref), [`data`](@ref), [`freqitems`](@ref), [`Itemset`](@ref).
 """
 function apply!(miner::AbstractMiner, X::MineableData; forcemining::Bool=false, kwargs...)
-    if info(miner, :istrained) && !forcemining
-        @warn "The miner has already been trained. To force mining, set `forcemining=true`."
-        return Nothing
+    _info = info(miner)
+
+    # if miner is already trained, do not perform mining and return the arules generator
+    if haskey(_info, :istrained) && !forcemining
+        if _info[:istrained] == true
+            @warn "The miner has already been trained. " *
+                "To force mining, please set `forcemining=true`."
+            return generaterules(freqitems(miner), miner)
+        end
     end
 
+    # apply mining algorithm
     algorithm(miner)(miner, X; kwargs...)
-    info!(miner, :istrained, true)
 
+    # fill the info field
+    if haskey(_info, :istrained)
+        info!(miner, :istrained, true)
+    end
+
+    if haskey(_info, :size)
+        info!(miner, :size, Base.summarysize(miner))
+    end
+
+    # return an association rule generator
     return generaterules(freqitems(miner), miner)
 end
 
@@ -387,10 +432,7 @@ constraints specified in `rulemeasures(miner)`, and yields the rule if so.
 See also [`AbstractMiner`](@ref), [`ARule`](@ref), [`Itemset`](@ref),
 [`rulemeasures`](@ref).
 """
-@resumable function generaterules(
-    ::AbstractVector{Itemset},
-    ::AbstractMiner;
-)
+@resumable function generaterules(::AbstractVector{Itemset}, ::AbstractMiner)
     error("Not implemented")
 end
 
@@ -401,9 +443,43 @@ Return a generator of [`ARule`](@ref)s, given an already trained `miner`.
 
 See also [`AbstractMiner`](@ref), [`ARule`](@ref).
 """
-function generaterules!(::AbstractMiner)
+function generaterules!(::AbstractMiner, args...; kwargs...)
     error("Not implemented.")
 end
+
+
+"""
+    function arule_analysis(::ARule, ::AbstractMiner, args...; kwargs...)
+
+Detailed print of an [`ARule`](@ref) to standard output.
+
+See also [`AbstractMiner`](@ref), [`ARule`](@ref).
+"""
+function arule_analysis(::ARule, ::AbstractMiner, args...; kwargs...)
+    error("Not implemented.")
+end
+
+"""
+    all_arule_analysis(miner::AbstractMiner, args...; kwargs...)
+
+Map [`arule_analysis`](@ref) on [`arules`](@ref)(`miner`).
+The collection of [`ARule`](@ref)s is sorted decreasingly by [`gconfidence`](@ref).
+
+See also [`AbstractMiner`](@ref), [`ARule`](@ref), [`arule_analysis`](@ref),
+[`gconfidence`](@ref).
+"""
+function all_arule_analysis(miner::AbstractMiner, args...; kwargs...)
+    # for each rule, sorted by global confidence, print them
+    for r in sort(arules(miner), by = x -> miner.globalmemo[(:gconfidence, x)], rev=true)
+        ModalAssociationRules.arule_analysis(
+            r, miner, args...;
+            variablenames=variablenames,
+            itemset_global_info=true,
+            kwargs...
+        )
+    end
+end
+
 
 # interface extending dispatches coming from external packages
 
