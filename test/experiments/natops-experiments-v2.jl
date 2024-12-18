@@ -62,23 +62,15 @@ julia> alphabet = modalwise_alphabet_extraction(
 )
 
 julia> syntaxstring.(alphabet)
-16-element Vector{String}:
- "min[V5] ≥ -1.91"
+8-element Vector{String}:
  "min[V5] ≥ -1.76"
  "min[V5] ≥ -0.65"
- "min[V5] ≥ 0.73"
- "[AO]min[V5] ≥ -1.91"
- "[DBE]min[V5] ≥ -1.91"
- "[I]min[V5] ≥ -1.91"
  "[AO]min[V5] ≥ -1.76"
  "[DBE]min[V5] ≥ -1.76"
  "[I]min[V5] ≥ -1.76"
  "[AO]min[V5] ≥ -0.65"
  "[DBE]min[V5] ≥ -0.65"
  "[I]min[V5] ≥ -0.65"
- "[AO]min[V5] ≥ 0.73"
- "[DBE]min[V5] ≥ 0.73"
- "[I]min[V5] ≥ 0.73"
 
 See also `Discretizers.DiscretizationAlgorithm`, `SoleData.AbstractUnivariateFeature`.
 """
