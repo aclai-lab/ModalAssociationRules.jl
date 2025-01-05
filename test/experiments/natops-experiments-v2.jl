@@ -377,5 +377,5 @@ _alphabet = modalwise_alphabet_extraction(
     )
 
     for nvariable in [4,5,6]
-    for (F, r) in [(VariableMin, >=), (VariableMax, <=)]
+    for (F, r) in [(VariableMin, >=), (VariableMax, <=), (SoleData.VariableAvg, >=)]
 ]...)
