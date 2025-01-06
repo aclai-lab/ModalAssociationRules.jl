@@ -23,7 +23,7 @@ using SoleLogics: IA_B, IA_Bi, IA_E, IA_Ei, IA_D, IA_Di, IA_O
         results_folder::String="test/experiments/results/",
         palette::ColorPalette=palette(:viridis),
         signal_color::Symbol=:blue,
-        threshold_color::Symbol=:darkgreen,
+        threshold_color::Symbol=:green,
         bin_edge_color::Symbol=:red
     )
 
@@ -41,7 +41,7 @@ Might require a bit of adaptation in the spatial (e.g., images) scenario.
     saved (this is useful for experiments related to ### INSERT PAPER HERE ###);
 - `palette::ColorPalette=palette(:viridis)`: base color palette used for visualization;
 - `signal_color::Symbol=:blue`: color used for the signal in visualizations;
-- `threshold_color::Symbol=:darkgreen`: color used for thresholds in visualizations;
+- `threshold_color::Symbol=:green`: color used for thresholds in visualizations;
 - `bin_edge_color::Symbol=:red`: color used for bin edges in visualizations.
 
 # Examples
@@ -86,7 +86,7 @@ function modalwise_alphabet_extraction(
     results_folder::String="test/experiments/results/",
     palette::ColorPalette=palette(:viridis),
     signal_color::Symbol=:blue,
-    threshold_color::Symbol=:darkgreen,
+    threshold_color::Symbol=:green,
     bin_edge_color::Symbol=:red
 )
     default(palette=palette)
@@ -132,8 +132,6 @@ function modalwise_alphabet_extraction(
     title!("Representative distribution for V$(nvariable)")
     savefig(R_plot, joinpath(results_folder, "v$(nvariable)_$(featurename)_02_repr.png"))
 
-
-    # perform and plot binning on representative distribution
     R_binedges = binedges(discretizer, sort(R))
     R_bin_plot = plot(R, framestyle=:box, alpha=1, labels="")
     plot!(C, framestyle=:box, alpha=0.1, labels="")
@@ -148,6 +146,15 @@ function modalwise_alphabet_extraction(
         "v$(nvariable)_$(featurename)_03_repr_bin.png"
     ))
 
+    R_histogram = histogram(R, bins=100)
+    for edge in R_binedges
+        vline!([edge], color=threshold_color, linestyle=:dash, linewidth=3, label=false)
+    end
+
+    savefig(R_histogram,
+        joinpath(results_folder,"v$(nvariable)_$(featurename)_03A_repr_bin_his_raw.png")
+    )
+
 
     # we perform binning on an interval-wise scenario, considering worlds between 0% and
     # 50% of the original signal's length; binning is plotted using an histogram
@@ -160,6 +167,7 @@ function modalwise_alphabet_extraction(
             x -> length(x) >= _minimum_wlength && length(x) <= _maximum_wlength,
             Interval{Int}
         ),
+        additional_vedges=R_binedges,
         title="$(feature) applied on w s.t. \n" *
             "$(_minimum_wlength)<=|w|<=$(_maximum_wlength)",
         savefig_path=joinpath(results_folder,
@@ -207,6 +215,7 @@ function modalwise_alphabet_extraction(
             x -> length(x) >= _minimum_wlength && length(x) <= _maximum_wlength,
             Interval{Int}
         ),
+        additional_vedges=R_binedges,
         title="$(feature) applied on w s.t. \n" *
             "$(_minimum_wlength)<=|w|<=$(_maximum_wlength)",
         savefig_path=joinpath(results_folder,
@@ -303,6 +312,7 @@ function modalwise_alphabet_extraction(
             x -> length(x) == L,
             Interval{Int}
         ),
+        additional_vedges=R_binedges,
         title="$(feature) applied on w s.t. |w|=$(L)",
         savefig_path=joinpath(results_folder,
             "v$(nvariable)_$(featurename)_09_repr_bin_his_weq$(L).png"
@@ -329,6 +339,41 @@ function modalwise_alphabet_extraction(
         joinpath(
             results_folder,
             "v$(nvariable)_$(featurename)_10_repr_bin_weq$(L).png"
+        )
+    )
+
+
+    # we also try to consider each possible world length
+
+    _, R_total_binedges = plot_binning(
+        [R], feature, discretizer;
+        additional_vedges=R_binedges,
+        title="$(feature) applied on all worlds",
+        savefig_path=joinpath(results_folder,
+            "v$(nvariable)_$(featurename)_11_repr_bin_his_wleq.png"
+        )
+    )
+
+    R_total_bin_plot = plot(R, framestyle=:box, alpha=1, labels="")
+    plot!(C, framestyle=:box, alpha=0.1, labels="")
+    hline!(
+        R_binedges,
+        linestyle=:dash, linewidth=2,
+        labels="Binning w. $(discretizer)", color=threshold_color
+    )
+    hline!(
+        R_total_binedges,
+        linestyle=:dot, linewidth=2,
+        labels="$(syntaxstring(feature)) on w in W s.t. " *
+            "$(_minimum_wlength) <= |w| <= $(_maximum_wlength))",
+        color=:red
+    )
+    title!("Comparison between raw and interval-wise binning")
+    savefig(
+        R_total_bin_plot,
+        joinpath(
+            results_folder,
+            "v$(nvariable)_$(featurename)_12_repr_bin_wleq.png"
         )
     )
 
