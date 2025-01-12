@@ -402,8 +402,10 @@ Given an array of time series `C`, generate `nsample` intervals with random leng
 ranging from one to time series maximum length.
 
 Now, apply a specific feature on that interval in every time series.
+Associate each different value with the number of feature(interval) which generated it.
+This is necessary to apply an inversely proportional weight to the measures.
 Repeat the process, and collect all the values.
-Then perform binning.
+Then plot an histogram.
 """
 function stochastic_alphabet_extraction(
     C::Vector{<:Vector{<:Real}},
@@ -423,6 +425,7 @@ function stochastic_alphabet_extraction(
     rng = seed isa Integer ? Xoshiro(seed) : seed
 
     Clen = length(C |> first)
+    _value_to_frequency = Dict()
     collected = []
 
     minlen = Int16(round(Clen * minpercentage))
@@ -434,13 +437,26 @@ function stochastic_alphabet_extraction(
         endindex = startindex + intervallen
 
         for signal in C
-            push!(
-                collected,
-                SoleData.computeunivariatefeature(
-                    feature,
-                    signal[startindex:endindex]
-                )
-            )
+            value = round(SoleData.computeunivariatefeature(
+                feature,
+                signal[startindex:endindex]
+            ), digits=1)
+
+            if !haskey(_value_to_frequency, value)
+                _value_to_frequency[value] = 1
+            else
+                collected[value] += 1
+            end
+        end
+
+        for (key, frequency) in _value_to_frequency
+            # NOTE: if you want to insert a new value `key` in collected, by following a
+            # certain weighting policy, change the code here.
+
+            # Only unique values are taken
+            for _ in 1:frequency
+                push!(collected, key)
+            end
         end
     end
 
