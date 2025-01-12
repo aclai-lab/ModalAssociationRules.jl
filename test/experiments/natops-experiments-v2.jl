@@ -410,13 +410,16 @@ function stochastic_alphabet_extraction(
     feature::AbstractUnivariateFeature,
     discretizer::DiscretizationAlgorithm;
 
-    nsample::Integer=20,   # number of intervals sampled
+    nsample::Integer=20,   # total number of intervals sampled
     minpercentage=0.30,
     maxpercentage=0.70,
     seed::Union{Integer,Random.AbstractRNG} = Xoshiro(678),
 
     _display=true
 )
+    # this method could be slightly changed to work with 3 kinds of intervals:
+    # short, medium and long length. Just tweak the percentages.
+
     rng = seed isa Integer ? Xoshiro(seed) : seed
 
     Clen = length(C |> first)
