@@ -1,5 +1,7 @@
 using Dates
 using Discretizers
+using Random
+
 using ModalAssociationRules
 import ModalAssociationRules.children
 using Plots
@@ -90,7 +92,6 @@ function modalwise_alphabet_extraction(
     bin_edge_color::Symbol=:red
 )
     default(palette=palette)
-    results_folder = "test/experiments/results/"
     featurename = split(syntaxstring(feature), "[") |> first # "max[V5]" -> "max"
     nvariable = i_variable(feature)                          # "max[V5]" -> 5
 
@@ -396,6 +397,57 @@ function modalwise_alphabet_extraction(
 end
 
 
+"""
+Given an array of time series `C`, generate `nsample` intervals with random length
+ranging from one to time series maximum length.
+
+Now, apply a specific feature on that interval in every time series.
+Repeat the process, and collect all the values.
+Then perform binning.
+"""
+function stochastic_alphabet_extraction(
+    C::Vector{<:Vector{<:Real}},
+    feature::AbstractUnivariateFeature,
+    discretizer::DiscretizationAlgorithm;
+
+    nsample::Integer=20,   # number of intervals sampled
+    minpercentage=0.30,
+    maxpercentage=0.70,
+    seed::Union{Integer,Random.AbstractRNG} = Xoshiro(678),
+
+    _display=true
+)
+    rng = seed isa Integer ? Xoshiro(seed) : seed
+
+    Clen = length(C |> first)
+    collected = []
+
+    minlen = Int16(round(Clen * minpercentage))
+    maxlen = Int16(round(Clen * maxpercentage))
+
+    for _ in 1:nsample
+        intervallen = rand(rng, minlen:maxlen-1)
+        startindex = rand(rng, 1:(Clen - intervallen))
+        endindex = startindex + intervallen
+
+        for signal in C
+            push!(
+                collected,
+                SoleData.computeunivariatefeature(
+                    feature,
+                    signal[startindex:endindex]
+                )
+            )
+        end
+    end
+
+    if _display
+        display(histogram(collected))
+    end
+
+    return collected
+end
+
 # driver code
 
 X_df, y = load_NATOPS();
@@ -412,7 +464,6 @@ _alphabet = modalwise_alphabet_extraction(
     modalrelations=[box(IA_AorO), box(IA_DorBorE), box(IA_I)]
 )
 
-
 Λ = vcat([
     modalwise_alphabet_extraction(
         X_df_1_have_command[:,nvariable],
@@ -425,3 +476,11 @@ _alphabet = modalwise_alphabet_extraction(
     for nvariable in [4,5,6]
     for (F, r) in [(VariableMin, >=), (VariableMax, <=), (SoleData.VariableAvg, >=)]
 ]...)
+
+_stochastic_alphabet = stochastic_alphabet_extraction(
+    X_df_1_have_command[:,nvariable],
+    VariableAvg(nvariable),
+    # VariableMin(nvariable),
+    DiscretizeQuantile(3, true);
+    nsample=70
+)
