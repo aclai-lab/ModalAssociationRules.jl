@@ -146,7 +146,8 @@ function modalwise_alphabet_extraction(
         "v$(nvariable)_$(featurename)_03_repr_bin.png"
     ))
 
-    R_histogram = histogram(R, bins=100)
+    R_histogram = histogram(
+        R, bins=100, label="", title="$(discretizer) applied on raw time series")
     for edge in R_binedges
         vline!([edge], color=threshold_color, linestyle=:dash, linewidth=3, label=false)
     end
@@ -168,7 +169,7 @@ function modalwise_alphabet_extraction(
             Interval{Int}
         ),
         additional_vedges=R_binedges,
-        title="$(feature) applied on w s.t. \n" *
+        title="$(syntaxstring(feature)) applied on w s.t. \n" *
             "$(_minimum_wlength)<=|w|<=$(_maximum_wlength)",
         savefig_path=joinpath(results_folder,
             "v$(nvariable)_$(featurename)_04_repr_bin_his_wleq" *
@@ -216,7 +217,7 @@ function modalwise_alphabet_extraction(
             Interval{Int}
         ),
         additional_vedges=R_binedges,
-        title="$(feature) applied on w s.t. \n" *
+        title="$(syntaxstring(feature)) applied on w s.t. \n" *
             "$(_minimum_wlength)<=|w|<=$(_maximum_wlength)",
         savefig_path=joinpath(results_folder,
             "v$(nvariable)_$(featurename)_06_repr_bin_his_wleq" *
@@ -313,7 +314,7 @@ function modalwise_alphabet_extraction(
             Interval{Int}
         ),
         additional_vedges=R_binedges,
-        title="$(feature) applied on w s.t. |w|=$(L)",
+        title="$(syntaxstring(feature)) applied on w s.t. |w|=$(L)",
         savefig_path=joinpath(results_folder,
             "v$(nvariable)_$(featurename)_09_repr_bin_his_weq$(L).png"
         )
@@ -348,7 +349,7 @@ function modalwise_alphabet_extraction(
     _, R_total_binedges = plot_binning(
         [R], feature, discretizer;
         additional_vedges=R_binedges,
-        title="$(feature) applied on all worlds",
+        title="$(syntaxstring(feature)) applied on all worlds",
         savefig_path=joinpath(results_folder,
             "v$(nvariable)_$(featurename)_11_repr_bin_his_wleq.png"
         )
