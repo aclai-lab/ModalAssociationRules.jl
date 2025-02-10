@@ -7,32 +7,38 @@ X, _ = load_NATOPS();
 
 # right hand y axis
 variable = 5 
+
 # right hand in "I have command class"
 IHCC = X[1:30, variable] 
 
-# window length
-window_length_multiplier = 0.1
-window_length = window_length_multiplier * length(IHCC[1]) |> floor |> Integer
+# parameters for matrix profile generation 
+window_length = 10 
+n_motifs = 5 
+r = 2   # how similar two windows must be to belong to the same motif
+th = 5  # how nearby in time two motifs are allowed to be
 
-# compute the matrix profile 
-profile = matrix_profile(IHCC[1], window_length)
+# consider three different samples for IHCC:
+# compute each corresponding matrix profile
+# and retrieve every profile's motifs list.
+s1, s2, s3 = IHCC[1:3]
 
-# number of motifs to extract
-n_motifs = 2
-# retrieve the profile's motifs
-# r controls how similar two windows must be to belong to the same motif
-# th is a threshold of how nearby in time two motifs are allowed to be
-_motifs = motifs(profile, n_motifs; r=2, th=5)
+profile1 = matrix_profile(s1, window_length)
+motifs1 = motifs(profile1, n_motifs; r=r, th=th)
 
-# plot the matrix profile, underlining its motifs
-plot(profile, _motifs)
+profile2 = matrix_profile(s2, window_length)
+motifs2 = motifs(profile2, n_motifs; r=r, th=th)
 
-# concatenate all the instances together and summarize the new serie
-# as a concatenation of small snippets
-IHCC_allidx = reduce(vcat, IHCC)
-snippets_allidx = snippets(IHCC_allidx, 3, 100)
-plot(profile_allidx, _motifs_allidx)
+profile3 = matrix_profile(s3, window_length)
+motifs3 = motifs(profile3, n_motifs; r=r, th=th)
 
-profile_allidx = matrix_profile(IHCC_allidx, window_length)
-_motifs_allidx = motifs(profile_allidx, n_motifs; r=2, th=50)
-plot(profile_allidx, _motifs_allidx)
+p1 = plot(profile1, motifs1)
+p2 = plot(profile2, motifs2)
+p3 = plot(profile3, motifs3)
+plot(p1, p2, p3, layout=(1,3), size=(900,300))
+
+# we focus on the motifs extracted from the first instance
+# and compare them onto the other two
+profile_m1s2 = matrix_profile(m1.seqs[1].seq, s2, 5)
+profile_m1s3 = matrix_profile(m1.seqs[1].seq, s3, 5)
+# plot(profile_m1s2)
+# plot(profile_m1s3)
