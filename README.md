@@ -7,11 +7,11 @@
 
 Association rules in Julia!
 
-## Compilation
+## Compilation (development dependencies)
 
-This package is currently dependent on unregistered Julia packages. To compile the project, it is necessary to use the `dev` command of Pkg.jl, Julia's official package manager, targetting specific branch of [Sole](https://github.com/aclai-lab/Sole.jl) ecosystem.
+This package heavily depends on the [Sole](https://github.com/aclai-lab/Sole.jl) ecosystem.
 
-The following instructions assume `~/.julia/dev/` as the only working directory.
+To compile this package while referencing the `dev` branches of the other necessary Sole package, clone and instantiate them in a common folder, following the steps below.
 
     git clone https://github.com/aclai-lab/SoleBase.jl.git
     git clone https://github.com/aclai-lab/MultiData.jl.git
