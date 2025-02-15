@@ -60,7 +60,7 @@ mined_arules = arules(miner)
 We can create more complex `Miner` objects by specifying three kind of policies, which defines the properties that must be satisfied by `X`'s worlds, the `Itemset`s collected during the mining, and the final `ARule`s.
 
 ```julia
-_12_miner = Miner(
+miner = Miner(
     X
     fpgrowth,
     items,
