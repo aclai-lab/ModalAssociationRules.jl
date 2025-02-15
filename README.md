@@ -57,6 +57,33 @@ mined_itemsets = freqitems(miner)
 mined_arules = arules(miner)
 ```
 
+We can create more complex `Miner` objects by specifying three kind of policies, which defines the properties that must be satisfied by `X`'s worlds, the `Itemset`s collected during the mining, and the final `ARule`s.
+
+```julia
+_12_miner = Miner(
+    X
+    fpgrowth,
+    items,
+    itemsetmeasures,
+    rulemeasures,
+
+    # we specify a condition that the worlds of the logiset X must honor
+    worldfilter=SoleLogics.FunctionalWorldFilter(
+        x -> length(x) <= 10, Interval{Int}
+    ),
+
+    # an itemset is considered meaningful if it also honors specific condiitons
+    itemset_mining_policies=[islimited_length_itemset(; maxlength=5)],
+
+    # similarly, for the association rules extracted
+    arule_mining_policies=[
+        islimited_length_arule(; antecedent_maxlength=5),
+        isanchored_arule(; npropositions=1),
+        isheterogeneous_arule(; antecedent_nrepetitions=1, consequent_nrepetitions=0),
+    ],
+)
+```
+
 ## Compilation (development dependencies)
 
 This package heavily depends on the [Sole](https://github.com/aclai-lab/Sole.jl) ecosystem.
