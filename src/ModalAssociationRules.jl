@@ -9,6 +9,7 @@ using Combinatorics
 using DataStructures
 using Distributed
 using IterTools
+using MatrixProfile
 using Lazy: @forward
 using Parameters
 using Random
@@ -131,14 +132,17 @@ include("algorithms/fpgrowth.jl")
 export patternbase, bounce!, projection
 export fpgrowth
 
-include("analysis.jl")
-export plot_arule_analyses
-export plot_binning
-# TODO - move this to SoleData, or just delete it
-export time_series_distribution_analysis
+include("alphabet-proposal.jl")
 
-include("alphabet-selection.jl")
-export __arm_select_alphabet
+
+# include("analysis.jl")
+# export plot_arule_analyses
+# export plot_binning
+# TODO - move this to SoleData, or just delete it
+# export time_series_distribution_analysis
+
+# include("alphabet-selection.jl")
+# export __arm_select_alphabet
 
 include("natops-loader.jl")
 
