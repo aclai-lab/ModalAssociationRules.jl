@@ -7,11 +7,61 @@
 
 Association rules in Julia!
 
-## Compilation
+## Usage
 
-This package is currently dependent on unregistered Julia packages. To compile the project, it is necessary to use the `dev` command of Pkg.jl, Julia's official package manager, targetting specific branch of [Sole](https://github.com/aclai-lab/Sole.jl) ecosystem.
+Creation of a `Miner` object.
 
-The following instructions assume `~/.julia/dev/` as the only working directory.
+```julia
+using ModalAssociationRules
+using SoleData
+
+# load a sample dataset (NATOPS)
+# and transform it in a scalar logiset.
+X_df, y = load_NATOPS()
+X = scalarlogiset(X_df[1:30, :])
+
+# focus on just the first three variables;
+# define a collection of Items, that is, 
+# an alphabet of propositional letters (propositions)
+# and modal literals. 
+p = Atom(ScalarCondition(VariableMin(1), >, -0.5))
+q = Atom(ScalarCondition(VariableMin(2), <=, -2.2))
+r = Atom(ScalarCondition(VariableMin(3), >, -3.6))
+
+lp = box(IA_L)(p)
+lq = diamond(IA_L)(q)
+lr = box(IA_L)(r)
+
+items = Vector{Item}([p, q, r, lp, lq, lr])
+
+# define which measures to use to establish the interestingness
+# of both itemsets (groups of items) and association rules;
+# also define a minimum threshold that must be overpassed both 
+# locally, inside an instance, and globally across all instances.
+
+# 0.1 is the local minsup, while 0.2 is the global minsup.
+itemsetmeasures = [(gsupport, 0.1, 0.2)]
+# 0.3 is the local minconfidence, while 0.5 is the global one.
+rulemeasures = [(gconfidence, 0.3, 0.5)]
+
+# choose an association rule mining algorithm, like fpgrowth;
+# we can finally define a Miner machine.
+miner = Miner(X, fpgrowth, items, itemsetmeasures, rulemeasures)
+```
+
+Miner execution and results retrieval.
+
+```julia
+mine!(miner)
+mined_itemsets = freqitems(miner)
+mined_arules = arules(miner)
+```
+
+## Compilation (development dependencies)
+
+This package heavily depends on the [Sole](https://github.com/aclai-lab/Sole.jl) ecosystem.
+
+To compile this package while referencing the `dev` branches of the other necessary Sole package, clone and instantiate them in a common folder, following the steps below.
 
     git clone https://github.com/aclai-lab/SoleBase.jl.git
     git clone https://github.com/aclai-lab/MultiData.jl.git
@@ -30,3 +80,4 @@ For each folder, checkout on `dev` branch and open the Julia REPL to install the
     ModalAssociationRules -> ]dev SoleBase MultiData SoleLogics SoleData SoleModels
 
 When not specified (every time but in SoleBase), also execute ```]instantiate```.
+

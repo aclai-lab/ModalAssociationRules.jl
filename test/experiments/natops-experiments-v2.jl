@@ -1,5 +1,7 @@
 using Dates
 using Discretizers
+using Random
+
 using ModalAssociationRules
 import ModalAssociationRules.children
 using Plots
@@ -12,7 +14,6 @@ using SoleData: AbstractUnivariateFeature
 using SoleData: i_variable
 
 using SoleLogics
-# IA3Relationusing SoleLogics:
 using SoleLogics: GeometricalRelation, IntervalRelation, AbstractRelationalConnective
 using SoleLogics: IA_B, IA_Bi, IA_E, IA_Ei, IA_D, IA_Di, IA_O
 
@@ -24,7 +25,7 @@ using SoleLogics: IA_B, IA_Bi, IA_E, IA_Ei, IA_D, IA_Di, IA_O
         results_folder::String="test/experiments/results/",
         palette::ColorPalette=palette(:viridis),
         signal_color::Symbol=:blue,
-        threshold_color::Symbol=:darkgreen,
+        threshold_color::Symbol=:green,
         bin_edge_color::Symbol=:red
     )
 
@@ -42,7 +43,7 @@ Might require a bit of adaptation in the spatial (e.g., images) scenario.
     saved (this is useful for experiments related to ### INSERT PAPER HERE ###);
 - `palette::ColorPalette=palette(:viridis)`: base color palette used for visualization;
 - `signal_color::Symbol=:blue`: color used for the signal in visualizations;
-- `threshold_color::Symbol=:darkgreen`: color used for thresholds in visualizations;
+- `threshold_color::Symbol=:green`: color used for thresholds in visualizations;
 - `bin_edge_color::Symbol=:red`: color used for bin edges in visualizations.
 
 # Examples
@@ -87,11 +88,10 @@ function modalwise_alphabet_extraction(
     results_folder::String="test/experiments/results/",
     palette::ColorPalette=palette(:viridis),
     signal_color::Symbol=:blue,
-    threshold_color::Symbol=:darkgreen,
+    threshold_color::Symbol=:green,
     bin_edge_color::Symbol=:red
 )
     default(palette=palette)
-    results_folder = "test/experiments/results/"
     featurename = split(syntaxstring(feature), "[") |> first # "max[V5]" -> "max"
     nvariable = i_variable(feature)                          # "max[V5]" -> 5
 
@@ -133,8 +133,6 @@ function modalwise_alphabet_extraction(
     title!("Representative distribution for V$(nvariable)")
     savefig(R_plot, joinpath(results_folder, "v$(nvariable)_$(featurename)_02_repr.png"))
 
-
-    # perform and plot binning on representative distribution
     R_binedges = binedges(discretizer, sort(R))
     R_bin_plot = plot(R, framestyle=:box, alpha=1, labels="")
     plot!(C, framestyle=:box, alpha=0.1, labels="")
@@ -149,6 +147,16 @@ function modalwise_alphabet_extraction(
         "v$(nvariable)_$(featurename)_03_repr_bin.png"
     ))
 
+    R_histogram = histogram(
+        R, bins=100, label="", title="$(discretizer) applied on raw time series")
+    for edge in R_binedges
+        vline!([edge], color=threshold_color, linestyle=:dash, linewidth=3, label=false)
+    end
+
+    savefig(R_histogram,
+        joinpath(results_folder,"v$(nvariable)_$(featurename)_03A_repr_bin_his_raw.png")
+    )
+
 
     # we perform binning on an interval-wise scenario, considering worlds between 0% and
     # 50% of the original signal's length; binning is plotted using an histogram
@@ -161,7 +169,8 @@ function modalwise_alphabet_extraction(
             x -> length(x) >= _minimum_wlength && length(x) <= _maximum_wlength,
             Interval{Int}
         ),
-        title="$(feature) applied on w s.t. \n" *
+        additional_vedges=R_binedges,
+        title="$(syntaxstring(feature)) applied on w s.t. \n" *
             "$(_minimum_wlength)<=|w|<=$(_maximum_wlength)",
         savefig_path=joinpath(results_folder,
             "v$(nvariable)_$(featurename)_04_repr_bin_his_wleq" *
@@ -208,7 +217,8 @@ function modalwise_alphabet_extraction(
             x -> length(x) >= _minimum_wlength && length(x) <= _maximum_wlength,
             Interval{Int}
         ),
-        title="$(feature) applied on w s.t. \n" *
+        additional_vedges=R_binedges,
+        title="$(syntaxstring(feature)) applied on w s.t. \n" *
             "$(_minimum_wlength)<=|w|<=$(_maximum_wlength)",
         savefig_path=joinpath(results_folder,
             "v$(nvariable)_$(featurename)_06_repr_bin_his_wleq" *
@@ -304,7 +314,8 @@ function modalwise_alphabet_extraction(
             x -> length(x) == L,
             Interval{Int}
         ),
-        title="$(feature) applied on w s.t. |w|=$(L)",
+        additional_vedges=R_binedges,
+        title="$(syntaxstring(feature)) applied on w s.t. |w|=$(L)",
         savefig_path=joinpath(results_folder,
             "v$(nvariable)_$(featurename)_09_repr_bin_his_weq$(L).png"
         )
@@ -334,6 +345,41 @@ function modalwise_alphabet_extraction(
     )
 
 
+    # we also try to consider each possible world length
+
+    _, R_total_binedges = plot_binning(
+        [R], feature, discretizer;
+        additional_vedges=R_binedges,
+        title="$(syntaxstring(feature)) applied on all worlds",
+        savefig_path=joinpath(results_folder,
+            "v$(nvariable)_$(featurename)_11_repr_bin_his_wleq.png"
+        )
+    )
+
+    R_total_bin_plot = plot(R, framestyle=:box, alpha=1, labels="")
+    plot!(C, framestyle=:box, alpha=0.1, labels="")
+    hline!(
+        R_binedges,
+        linestyle=:dash, linewidth=2,
+        labels="Binning w. $(discretizer)", color=threshold_color
+    )
+    hline!(
+        R_total_binedges,
+        linestyle=:dot, linewidth=2,
+        labels="$(syntaxstring(feature)) on w in W s.t. " *
+            "$(_minimum_wlength) <= |w| <= $(_maximum_wlength))",
+        color=:red
+    )
+    title!("Comparison between raw and interval-wise binning")
+    savefig(
+        R_total_bin_plot,
+        joinpath(
+            results_folder,
+            "v$(nvariable)_$(featurename)_12_repr_bin_wleq.png"
+        )
+    )
+
+
     # generate the final alphabet and return it
     PROPOSITIONS = [
         ScalarCondition(feature, r, round(threshold, digits=2)) |> Atom
@@ -351,6 +397,76 @@ function modalwise_alphabet_extraction(
 end
 
 
+"""
+Given an array of time series `C`, generate `nsample` intervals with random length
+ranging from one to time series maximum length.
+
+Now, apply a specific feature on that interval in every time series.
+Associate each different value with the number of feature(interval) which generated it.
+This is necessary to apply an inversely proportional weight to the measures.
+Repeat the process, and collect all the values.
+Then plot an histogram.
+"""
+function stochastic_alphabet_extraction(
+    C::Vector{<:Vector{<:Real}},
+    feature::AbstractUnivariateFeature,
+    discretizer::DiscretizationAlgorithm;
+
+    nsample::Integer=20,   # total number of intervals sampled
+    minpercentage=0.30,
+    maxpercentage=0.70,
+    seed::Union{Integer,Random.AbstractRNG} = Xoshiro(678),
+
+    _display=true
+)
+    # this method could be slightly changed to work with 3 kinds of intervals:
+    # short, medium and long length. Just tweak the percentages.
+
+    rng = seed isa Integer ? Xoshiro(seed) : seed
+
+    Clen = length(C |> first)
+    _value_to_frequency = Dict()
+    collected = []
+
+    minlen = Int16(round(Clen * minpercentage))
+    maxlen = Int16(round(Clen * maxpercentage))
+
+    for _ in 1:nsample
+        intervallen = rand(rng, minlen:maxlen-1)
+        startindex = rand(rng, 1:(Clen - intervallen))
+        endindex = startindex + intervallen
+
+        for signal in C
+            value = round(SoleData.computeunivariatefeature(
+                feature,
+                signal[startindex:endindex]
+            ), digits=1)
+
+            if !haskey(_value_to_frequency, value)
+                _value_to_frequency[value] = 1
+            else
+                collected[value] += 1
+            end
+        end
+
+        for (key, frequency) in _value_to_frequency
+            # NOTE: if you want to insert a new value `key` in collected, by following a
+            # certain weighting policy, change the code here.
+
+            # Only unique values are taken
+            for _ in 1:frequency
+                push!(collected, key)
+            end
+        end
+    end
+
+    if _display
+        display(histogram(collected))
+    end
+
+    return collected
+end
+
 # driver code
 
 X_df, y = load_NATOPS();
@@ -365,4 +481,25 @@ _alphabet = modalwise_alphabet_extraction(
     DiscretizeQuantile(3, true);
     relations=[>=],
     modalrelations=[box(IA_AorO), box(IA_DorBorE), box(IA_I)]
+)
+
+Λ = vcat([
+    modalwise_alphabet_extraction(
+        X_df_1_have_command[:,nvariable],
+        F(nvariable),
+        DiscretizeQuantile(3, true);
+        relations=[r],
+        modalrelations=[box(IA_AorO), box(IA_DorBorE), box(IA_I)]
+    )
+
+    for nvariable in [4,5,6]
+    for (F, r) in [(VariableMin, >=), (VariableMax, <=), (SoleData.VariableAvg, >=)]
+]...)
+
+_stochastic_alphabet = stochastic_alphabet_extraction(
+    X_df_1_have_command[:,nvariable],
+    VariableAvg(nvariable),
+    # VariableMin(nvariable),
+    DiscretizeQuantile(3, true);
+    nsample=70
 )

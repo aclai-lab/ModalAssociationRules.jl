@@ -86,11 +86,12 @@ function plot_binning(
     worldfilter::SoleLogics.FunctionalWorldFilter=SoleLogics.FunctionalWorldFilter(
         _ -> true, Interval{Int}
     ),
+    additional_vedges=[],
     label="",
     title="",
     savefig_path::String="",
     _display::Bool=false,
-    _binedges_only::Bool=false
+    _binedges_only::Bool=false,
 )
     _X = [
         SoleData.computeunivariatefeature(_feature, v[i:j])
@@ -111,14 +112,18 @@ function plot_binning(
     end
 
     _histogram = histogram(_X,
-        label=label, xlabel=syntaxstring(_feature), color=:darkorange,
+        label=label, xlabel=syntaxstring(_feature),
         ylabel="# occurrences",
         title=title,
         bins=100
     )
 
     for edge in _binedges
-        vline!([edge], color=:blue, linewidth=2, label=false)
+        vline!([edge], color=:red, linestyle=:dot, linewidth=3, label=false)
+    end
+
+    for edge in additional_vedges
+        vline!([edge], color=:green, linestyle=:dash, linewidth=3, label=false)
     end
 
     p = plot!(_histogram, margin=5mm, framestyle=:box)
