@@ -18,14 +18,4 @@ nmotifs = 10
 r = 5   # how similar two windows must be to belong to the same motif
 th = 0  # how nearby in time two motifs are allowed to be
 
-# consider all the samples in IHCC:
-# concatenate them and compute the matrix profile;
-# then, extract the top k motifs.
-T = reduce(vcat, IHCC[1:5])
-
-Tmprofile = matrix_profile(T, windowlength)
-Tmotifs = motifs(Tmprofile, nmotifs; r=r, th=th)
-
-# filter the identified motifs which are single
-Tmotifs = filter(motif -> length(motif.seqs) >= 2, Tmotifs)
-plot(Tmotifs)
+_motifs = proposealphabet(IHCC[1:5], windowlength, nmotifs; r=r, th=th)
