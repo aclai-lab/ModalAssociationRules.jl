@@ -1,12 +1,12 @@
 """ 
-    function proposal(
+    function proposealphabet(
         X::Vector{<:Vector{<:Real}},
         windowlength::Integer,
         nmotifs::Integer;
         kwargs...
    )
 
-    function proposal(
+    function proposealphabet(
         X::Vector{<:Real},
         windowlength::Integer,
         nmotifs::Integer;
@@ -25,7 +25,7 @@ Propose an alphabet of propositional letters, by leveraging MatrixProfile motifs
 - `th::Integer=5`: how nearby in time two motifs are allowed to be;
 - `distillatemotifs::Bool`: filter out the motifs which are rarely found (less than 2 times).
 """
-function proposal(
+function proposealphabet(
     X::Vector{<:Vector{<:Real}},
     windowlength::Integer,
     nmotifs::Integer;
@@ -34,10 +34,10 @@ function proposal(
     # concatenate all the samples one after the other;
     # then proceed to compute the matrix profile and extract 
     # the top k motifs.
-    proposal(reduce(vcat, X), windowlength, nmotifs; kwargs...)
+    proposealphabet(reduce(vcat, X), windowlength, nmotifs; kwargs...)
 end
 
-function proposal(
+function proposealphabet(
     X::Vector{<:Real},
     windowlength::Integer,
     nmotifs::Integer;
