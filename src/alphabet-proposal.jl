@@ -1,13 +1,13 @@
 """ 
     function proposealphabet(
-        X::Vector{<:Vector{<:Real}},
+        x::Vector{<:Vector{<:Real}},
         windowlength::Integer,
         nmotifs::Integer;
         kwargs...
    )
 
     function proposealphabet(
-        X::Vector{<:Real},
+        x::Vector{<:Real},
         windowlength::Integer,
         nmotifs::Integer;
         r=5,
@@ -17,7 +17,7 @@
 Propose an alphabet of propositional letters, by leveraging `MatrixProfile` motifs identification capabilities.
 
 # Arguments
-- `X::Union{Vector{Vector{<:Real}},Vector{<:Real}}}`: a representative time series, from which extract motifs; 
+- `x::Union{Vector{Vector{<:Real}},Vector{<:Real}}}`: a representative time series, from which extract motifs; 
     if multiple time series are provided, they are concatenated together;
 - `windowlength::Integer=10`: the length of each extracted motif;
 - `nmotifs::Integer=3`: the number of motifs to extract;
@@ -30,7 +30,7 @@ Propose an alphabet of propositional letters, by leveraging `MatrixProfile` moti
     their (normalized) euclidean distance is under this threshold.
 """
 function proposealphabet(
-    X::Vector{<:Vector{<:Real}},
+    x::Vector{<:Vector{<:Real}},
     windowlength::Integer,
     nmotifs::Integer;
     kwargs...
@@ -38,41 +38,48 @@ function proposealphabet(
     # concatenate all the samples one after the other;
     # then proceed to compute the matrix profile and extract 
     # the top k motifs.
-    proposealphabet(reduce(vcat, X), windowlength, nmotifs; kwargs...)
+    proposealphabet(reduce(vcat, x), windowlength, nmotifs; kwargs...)
 end
 
 function proposealphabet(
-    X::Vector{<:Real},
+    x::Vector{<:Real},
     windowlength::Integer,
     nmotifs::Integer;
     r::Integer=5,
     th::Integer=0,
-    applypostprocessing::Bool=true,
     kwargs...
 )
-    Xmprofile = matrix_profile(X, windowlength)
-    Xmotifs = motifs(Xmprofile, nmotifs; r=r, th=th)
+    xmprofile = matrix_profile(x, windowlength)
+    xmotifs = motifs(xmprofile, nmotifs; r=r, th=th)
 
-    applypostprocessing && _processalphabet!(Xmotifs; kwargs...)
+    _processalphabet!(xmotifs; kwargs...)
 
-    return Xmotifs
+    return xmotifs
 end
 
 # utility to apply a collection of filter! to an alphabet of motifs;
 # see `proposealphabet` docstring. 
 function _processalphabet!(
-    Xmotifs::Vector{MatrixProfile.Motif};
+    xmotifs::Vector{MatrixProfile.Motif};
     filterbylength::Integer=2,
     clusterbysim::Real=1.0f0
 )
+    processed_motifs = Vector{Float32}[] 
+
     if filterbylength > 1
-        filter!(motif -> length(motif.seqs) >= filterbylength, Xmotifs)
+        filter!(motif -> length(motif.seqs) >= filterbylength, xmotifs)
     end
- 
+     
+    for motif_group in xmotifs
+        push!(processed_motifs, mean([m for m in seqs(motif_group)]))
+    end
+    
+    # TODO: see how to perform Motif clustering
+            
     if clusterbysim > 0.0
         
     end
 
-    return Xmotifs
+    return processed_motifs 
 end
 
