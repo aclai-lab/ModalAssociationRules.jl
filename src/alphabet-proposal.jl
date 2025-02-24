@@ -12,7 +12,6 @@
         nmotifs::Integer;
         r=5,
         th=0,
-        applypostprocessing=true
     )
 
 Propose an alphabet of propositional letters, by leveraging `MatrixProfile` motifs identification capabilities.
@@ -26,7 +25,6 @@ Propose an alphabet of propositional letters, by leveraging `MatrixProfile` moti
 # Keyword Arguments
 - `r::Integer=2`: how similar two windows must be to belong to the same motif;
 - `th::Integer=5`: how nearby in time two motifs are allowed to be;
-- `applypostprocessing::Bool=true`: decide whether to apply the filters (see the following kwargs) or not;
 - `filterbylength::Integer=2`: filter out the motifs which are rarely found (less than 2 times);
 - `clusterbysim::Real=1.0`: aggregate multiple motifs if they are equally informative, that is,
     their (normalized) euclidean distance is under this threshold.
@@ -55,13 +53,14 @@ function proposealphabet(
     Xmprofile = matrix_profile(X, windowlength)
     Xmotifs = motifs(Xmprofile, nmotifs; r=r, th=th)
 
-    applypostprocessing && _filteralphabet!(Xmotifs; kwargs...)
+    applypostprocessing && _processalphabet!(Xmotifs; kwargs...)
 
     return Xmotifs
 end
 
 # utility to apply a collection of filter! to an alphabet of motifs;
-function _filteralphabet!(
+# see `proposealphabet` docstring. 
+function _processalphabet!(
     Xmotifs::Vector{MatrixProfile.Motif};
     filterbylength::Integer=2,
     clusterbysim::Real=1.0f0
@@ -70,8 +69,8 @@ function _filteralphabet!(
         filter!(motif -> length(motif.seqs) >= filterbylength, Xmotifs)
     end
  
-    if clusterbysim
-        # TODO 
+    if clusterbysim > 0.0
+        
     end
 
     return Xmotifs
