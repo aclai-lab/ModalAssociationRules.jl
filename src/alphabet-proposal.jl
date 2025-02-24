@@ -60,7 +60,7 @@ function proposealphabet(
     return Xmotifs
 end
 
-# utility to apply a collection of filter! to an alphabet of motifs
+# utility to apply a collection of filter! to an alphabet of motifs;
 function _filteralphabet!(
     Xmotifs::Vector{MatrixProfile.Motif};
     filterbylength::Integer=2,
