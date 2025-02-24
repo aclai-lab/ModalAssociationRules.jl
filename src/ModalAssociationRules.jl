@@ -5,6 +5,7 @@ import Base.size, Base.getindex, Base.IndexStyle, Base.setindex!, Base.iterate
 import Base.length, Base.similar, Base.show, Base.union, Base.hash
 import Base.firstindex, Base.lastindex
 
+using Clustering
 using Combinatorics
 using DataStructures
 using Distributed
