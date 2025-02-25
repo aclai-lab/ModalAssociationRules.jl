@@ -18,4 +18,4 @@ nmotifs = 10
 r = 5   # how similar two windows must be to belong to the same motif
 th = 0  # how nearby in time two motifs are allowed to be
 
-_motifs = proposealphabet(IHCC[1:5], windowlength, nmotifs; r=r, th=th)
+_motifs = motifsalphabet(IHCC[1:5], windowlength, nmotifs; r=r, th=th)

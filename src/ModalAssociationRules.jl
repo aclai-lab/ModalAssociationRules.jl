@@ -134,7 +134,7 @@ export patternbase, bounce!, projection
 export fpgrowth
 
 include("alphabet-proposal.jl")
-export proposealphabet
+export motifsalphabet 
 
 # include("analysis.jl")
 # export plot_arule_analyses
