@@ -1,3 +1,5 @@
+using Test
+
 using MatrixProfile
 using ModalAssociationRules
 using Plots
@@ -19,3 +21,5 @@ r = 5   # how similar two windows must be to belong to the same motif
 th = 0  # how nearby in time two motifs are allowed to be
 
 _motifs = motifsalphabet(IHCC[1:5], windowlength, nmotifs; r=r, th=th)
+@test length(_motifs) == 3
+

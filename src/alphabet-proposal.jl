@@ -88,9 +88,6 @@ function _processalphabet(
     # separate by cluster id 
     for (idx, _motif) in enumerate(processed_motifs |> eachrow)
         clusterid = cluster_ids[idx] 
-
-        print("I am the row $(idx) and my cluster id $(clusterid)\n")
-
         if !haskey(clusterid_to_motifs, clusterid)
             clusterid_to_motifs[clusterid] = [_motif]
         else
