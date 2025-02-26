@@ -6,6 +6,8 @@ using Plots
 using Plots.Measures
 using Statistics
 
+using SoleData
+
 X, _ = load_NATOPS();
 
 # right hand y axis
@@ -44,4 +46,4 @@ _1_rulemeasures = [(gconfidence, 0.2, 0.2)]
 fpgrowth_miner = Miner(logiset, fpgrowth, _1_items, _1_itemsetmeasures, _1_rulemeasures)
 
 
-julia> check(prop1, SoleLogics.getinstance(logiset, 1), Interval((1.0, 2.0)) )
+# julia> check(prop1, SoleLogics.getinstance(logiset, 1), Interval((1.0, 2.0)) )
