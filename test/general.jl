@@ -67,7 +67,7 @@ r = Itemset{Item}(manual_r)
 @test pq in [pq, pqr, qr]
 
 @test formula(pq) isa LeftmostConjunctiveForm
-@test formula(pq) |> SoleLogics.children |> first |> Item in [manual_p, manual_q]
+@test formula(pq) |> SoleLogics.grandchildren |> first |> Item in [manual_p, manual_q]
 
 @test Threshold <: Float64
 @test WorldMask <: BitVector

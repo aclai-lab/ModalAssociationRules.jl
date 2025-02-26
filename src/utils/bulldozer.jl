@@ -34,7 +34,7 @@
 Concrete [`AbstractMiner`](@ref) specialized to mine a single modal instance.
 
 [`Bulldozer`](@ref)'s interface is similar to [`Miner`](@ref)'s one, but contains only
-the essential fields necessary to work locally within a Kripke model, and is designed to be
+the essential fields necessary to work locally within a Kripke structure, and is designed to be
 thread-safe.
 
 !!! note
