@@ -30,7 +30,14 @@ _motifs = motifsalphabet(IHCC, windowlength, nmotifs; r=r, th=th)
 # thus we now have only one column/var_id;
 # for simplicity, let's consider also just one motif.
 _motif = _motifs[1]
-vd1 = VariableDistance(var_id, _motif) # 1 because we only have 1 column/variable
+vd1 = VariableDistance(
+    var_id, 
+    _motif, 
+    distance=x -> 
+        size(x) == size(_motif) ? 
+        sqrt(sum([(x - _motif)^2 for (x, _motif) in zip(x,_motif)])) : 
+        maxintfloat()
+)
 
 # make a proposition (we consider this as we entire alphabet, at the moment)
 proposition = Atom(ScalarCondition(vd1, <, 0.2))
