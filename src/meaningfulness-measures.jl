@@ -222,6 +222,12 @@ _lsupport_logic = (itemset, X, ith_instance, miner) -> begin
         # for each world, compute on which worlds the model checking algorithm returns true
         check(formula(itemset), X, ith_instance, w)
 
+        # TODO
+        # when dealing with VariableDistance, we only want to check the itemset on those
+        # worlds that match the same shape with the specific variable.
+        # For example, if VariableDistance is wrapping a motif [1,2,3,4], I cannot check
+        # the variable on smaller nor bigger intervals.
+
         # NOTE: the `worldfilter` wrapped within `miner` is levereaged, if given
         for w in allworlds(miner; ith_instance=ith_instance)
     ])
