@@ -24,7 +24,7 @@ th = 0  # how nearby in time two motifs are allowed to be
 
 _motifs = motifsalphabet(IHCC, windowlength, nmotifs; r=r, th=th)
 @test length(_motifs) == 3
-# plot(_motifs)
+# plot(_motifs) # uncomment to explore _motifs content
 
 # we isolated the only var_id 5 from the class "I have command",
 # thus we now have only one column/var_id;
