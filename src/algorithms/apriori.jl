@@ -83,6 +83,10 @@ function apriori(
     candidates = Itemset{_itemtype}.(items(miner))
 
     while !isempty(candidates)
+        # certain candidates might automatically be removed because of filtering policies
+        filter!(candidate -> all(
+            _policy -> _policy(candidate), itemset_mining_policies(miner)), candidates)
+
         # get the frequent itemsets from the first candidates set
         frequents = [candidate
             for candidate in candidates
@@ -90,8 +94,7 @@ function apriori(
 
             # other than the meaningfulness measures,
             # all the itemset mining policies must be honored too.
-            if gmeas_algo(candidate, X, lthreshold, miner) >= gthreshold &&
-                all(__policy -> __policy(candidate), itemset_mining_policies(miner))
+            if gmeas_algo(candidate, X, lthreshold, miner) >= gthreshold
         ] |> Vector{Itemset{_itemtype}}
 
         push!(freqitems(miner), frequents...)

@@ -35,7 +35,49 @@ function islimited_length_itemset(; maxlength::Union{Nothing,Integer}=nothing)::
     end
 end
 
+"""
+    function isdimensionally_coherent_itemset(;)::Function
+
+Closure returning a boolean function `F` with one argument `itemset::Itemset`.
+
+This is needed to ensure the Itemset is coherent with the dimensional definition of local
+support. All the propositions (or anchors) in an itemset must be `VariableDistance`s
+wrapping references of the same size.
+
+See also [`Itemset`](@ref), [`itemset_mining_policies`](@ref), `SoleData.VariableDistance`.
+"""
+function isdimensionally_coherent_itemset(;)::Function
+    # since we have no arguments, this closure seems useless;
+    # however, we stick to the same pattern.
+
+    return function _isdimensionally_coherent_itemset(itemset::Itemset)
+        # a generic Itemset contains Atoms and SyntaxTrees:
+        # the former are always propositions, while the latter are modal literals;
+        # we want to keep only the propositions, since they are the anchor of our itemset.
+        anchors = filter(item -> formula(item) isa Atom, itemset)
+
+        # in particular, every Variable must not be a VariableDistance (e.g., VariableMin)
+        _anchortypes = Set([feature(anchor) |> typeof for anchor in anchors])
+        if !any(_anchortype -> _anchortype <: VariableDistance, _anchortypes)
+            return true
+        end
+
+        # or all the anchors must be VariableDistances (the two cannot be mixed)
+        if !all(type -> type <: VariableDistance, _anchortypes)
+            return false
+        end
+
+        # also, all their references must be of the same size (e.g., 5-length intervals)
+        _referencesize = vardistance -> feature(vardistance) |> reference |> size
+        _anchorsize = _referencesize(anchors[1])
+
+        return all(anchor -> _referencesize(anchor) == _anchorsize, anchors)
+    end
+end
+
+
 # policies related to association rule generation
+
 
 """
     function islimited_length_arule(;
