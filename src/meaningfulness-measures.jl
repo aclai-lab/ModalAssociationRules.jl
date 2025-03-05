@@ -672,7 +672,7 @@ See also [`lchisquared`](@ref).
 # meaning that a global measure is associated to its corresponding local one.
 
 @linkmeas gsupport lsupport
-@linkmeas dimensional_gsupport, dimensional_lsupport
+@linkmeas dimensional_gsupport dimensional_lsupport
 
 @linkmeas gconfidence lconfidence
 
