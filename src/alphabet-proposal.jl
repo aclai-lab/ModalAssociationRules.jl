@@ -46,6 +46,12 @@ function motifsalphabet(
     # concatenate all the samples one after the other;
     # then proceed to compute the matrix profile and extract
     # the top k motifs.
+
+    # when concatenating, apply a little correction to avoid clippings
+    for i in 2:length(x)
+        x[i] = x[i] .- (x[i][1] - x[i-1][1])
+    end
+
     motifsalphabet(reduce(vcat, x), windowlength, nmotifs; kwargs...)
 end
 
