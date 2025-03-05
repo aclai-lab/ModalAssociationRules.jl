@@ -266,7 +266,7 @@ _dimensionalwise_lsupport_logic = (itemset, X, ith_instance, miner) -> begin
 
     # if no feature introduces a dimensional constraint, then just fallback to lsupport
     if isnothing(_anchor_feature_idx)
-        return lsupport(itemset, X, ith_instance, miner)
+        return _lsupport_logic(itemset, X, ith_instance, miner)
     end
 
     _repr = _features[_anchor_feature_idx]
