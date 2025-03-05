@@ -261,19 +261,34 @@ _dimensionallywise_lsupport_logic = (itemset, X, ith_instance, miner) -> begin
 
     # because of isdimensionally_coherent_itemset, we know the itemset is well-formed;
     # we just need to find the size of the structure wrapped within any VariableDistance.
-    _dimensionally_coherent_worldsize = 1
+    _features = feature.(itemset)
+    _anchor_feature_idx = findfirst(feat -> feat |> typeof <: VariableDistance, _features)
 
+    # if no feature introduces a dimensional constraint, then just fallback to lsupport
+    if isnothing(_anchor_feature_idx)
+        return lsupport(itemset, X, ith_instance, miner)
+    end
+
+    _repr = _features[_anchor_feature_idx]
+    _repr_size = _repr |> reference |> size
+
+    # TODO: implement this for various GeometricalWorld types in SoleLogics
+    # see https://github.com/aclai-lab/SoleLogics.jl/issues/68
+    function _worldsize(w::Interval{T}) where T
+        return (w.y - w.x,)
+    end
+
+    _fairworlds = Ref(0) # keeps track of the number of worlds in which itemset can be true
     wmask = WorldMask([
-        # for each world, compute on which worlds the model checking algorithm returns true
-        check(formula(itemset), X, ith_instance, w)
+        _worldsize(w) == _repr_size ?
+            (_fairworlds[] += 1; check(formula(itemset), X, ith_instance, w)) : 0
 
-        # NOTE: the `worldfilter` wrapped within `miner` is levereaged, if given
         for w in allworlds(miner; ith_instance=ith_instance)
     ])
 
     # return the result, and eventually the information needed to support miningstate
     return Dict(
-        :measure => count(wmask) / length(wmask),
+        :measure => count(wmask) / _fairworlds,
         :instance_item_toworlds => wmask,
     )
 end
