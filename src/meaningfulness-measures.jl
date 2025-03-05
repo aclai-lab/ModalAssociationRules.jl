@@ -288,7 +288,7 @@ _dimensionalwise_lsupport_logic = (itemset, X, ith_instance, miner) -> begin
 
     # return the result, and eventually the information needed to support miningstate
     return Dict(
-        :measure => count(wmask) / _fairworlds,
+        :measure => count(wmask) / _fairworlds[],
         :instance_item_toworlds => wmask,
     )
 end
@@ -297,7 +297,7 @@ end
 _dimensionalwise_gsupport_logic = (itemset, X, threshold, miner) -> begin
     _measure = sum([
         # for each instance, compute how many times the local support overpass the threshold
-        lsupport(itemset, getinstance(X, ith_instance), miner) >= threshold
+        dimensional_lsupport(itemset, getinstance(X, ith_instance), miner) >= threshold
 
         # NOTE: an instance filter could be provided by the user to avoid iterating
         # every instance, depending on the needings.
