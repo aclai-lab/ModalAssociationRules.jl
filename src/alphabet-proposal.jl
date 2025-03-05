@@ -35,12 +35,6 @@ identification capabilities.
     (less than 2 times);
 - `alphabetsize::Integer=3`: cardinality of the output alphabet.
 
-!!! warning
-    This method relies on subroutines which are affected by rng, but cannot accept it as
-    an argument.
-
-    When setting `rng` argument, global rng is set using Random.seed!.
-
 See also `MatrixProfile.jl`.
 """
 function motifsalphabet(
