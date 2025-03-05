@@ -4,7 +4,6 @@ using MatrixProfile
 using ModalAssociationRules
 using Plots
 using Plots.Measures
-using Statistics
 
 using SoleData
 
