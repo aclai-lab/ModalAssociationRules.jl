@@ -1,3 +1,6 @@
+using Random # see `motifsalphabet warning docstring`
+using SoleBase: initrng
+
 """
     function motifsalphabet(
         x::Vector{<:Vector{<:Real}},
@@ -25,6 +28,7 @@ identification capabilities.
 - `nmotifs::Integer=3`: the number of motifs to extract;
 
 # Keyword Arguments
+- `rng::Union{Integer,AbstractRNG}`: global rng seed;
 - `r::Integer=2`: how similar two windows must be to belong to the same motif;
 - `th::Integer=5`: how nearby in time two motifs are allowed to be;
 - `filterbylength::Integer=2`: filter out the motifs which are rarely found
@@ -32,11 +36,10 @@ identification capabilities.
 - `alphabetsize::Integer=3`: cardinality of the output alphabet.
 
 !!! warning
-    This method relies on subroutines which are affected by rng, but it is not possible
-    to specify a seed from arguments.
+    This method relies on subroutines which are affected by rng, but cannot accept it as
+    an argument.
 
-    If you are using this method in a rng-sensible environment (e.g., tests), please
-    remember to set the global seed everytime just before this function is called.
+    When setting `rng` argument, global rng is set using Random.seed!.
 
 See also `MatrixProfile.jl`.
 """
@@ -56,10 +59,15 @@ function motifsalphabet(
     x::Vector{<:Real},
     windowlength::Integer,
     nmotifs::Integer;
+    rng::Union{Integer,AbstractRNG,Nothing}=nothing,
     r::Integer=5,
     th::Integer=0,
     kwargs...
 )
+    if !isnothing(rng)
+        Random.seed!(rng |> SoleBase.initrng)
+    end
+
     xmprofile = matrix_profile(x, windowlength)
     xmotifs = motifs(xmprofile, nmotifs; r=r, th=th)
 
