@@ -68,14 +68,14 @@ _rulemeasures = [(gconfidence, 0.2, 0.2)]
 logiset = scalarlogiset(X[1:30,:], [vd1, vd2, vm1, vm2])
 
 # build the miner, and mine!
-fpgrowth_miner = Miner(
+apriori_miner = Miner(
     logiset,
-    fpgrowth,
+    apriori,
     _items,
     _itemsetmeasures,
     _rulemeasures;
     itemset_mining_policies=[isdimensionally_coherent_itemset()]
 )
 
-@test_nowarn mine!(fpgrowth_miner)
-# @test freqitems(fpgrowth_miner) |> length == 0
+@test_nowarn mine!(apriori_miner)
+# @test freqitems(apriori_miner) |> length == 0
