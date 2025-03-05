@@ -42,6 +42,16 @@ function Base.show(io::IO, item::Item)
 end
 
 """
+    feature(item::Item)::VarFeature
+
+Utility to extract the feature wrapped within an [`Item`](@ref).
+
+See also [`Item`](@ref), `SoleData.VarFeature`, `SoleData.AbstractUnivariateFeature`.
+"""
+feature(item::Item) = return item |> formula |> SoleData.value |> SoleData.metacond |>
+    SoleData.feature
+
+"""
     const Itemset{I<:Item} = Vector{I}
 
 Vector collecting multiple [`Item`](@ref)s.

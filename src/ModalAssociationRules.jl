@@ -34,7 +34,7 @@ using StatsBase
 
 include("core.jl")
 
-export Item, formula
+export Item, formula, feature
 export Itemset
 
 export ARule
