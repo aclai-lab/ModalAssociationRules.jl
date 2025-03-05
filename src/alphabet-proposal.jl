@@ -28,7 +28,7 @@ identification capabilities.
 - `nmotifs::Integer=3`: the number of motifs to extract;
 
 # Keyword Arguments
-- `rng::Union{Integer,AbstractRNG}`: global rng seed;
+- `rng::Union{Integer,AbstractRNG}=Random.GLOBAL_RNG`: custom RNG, used internally by KNN;
 - `r::Integer=2`: how similar two windows must be to belong to the same motif;
 - `th::Integer=5`: how nearby in time two motifs are allowed to be;
 - `filterbylength::Integer=2`: filter out the motifs which are rarely found
@@ -59,19 +59,15 @@ function motifsalphabet(
     x::Vector{<:Real},
     windowlength::Integer,
     nmotifs::Integer;
-    rng::Union{Integer,AbstractRNG,Nothing}=nothing,
+    rng::Union{Integer,AbstractRNG}=Random.GLOBAL_RNG,
     r::Integer=5,
     th::Integer=0,
     kwargs...
 )
-    if !isnothing(rng)
-        Random.seed!(rng |> SoleBase.initrng)
-    end
-
     xmprofile = matrix_profile(x, windowlength)
     xmotifs = motifs(xmprofile, nmotifs; r=r, th=th)
 
-    alphabet = _processalphabet(xmotifs; kwargs...)
+    alphabet = _processalphabet(xmotifs; rng=initrng(rng), kwargs...)
 
     return alphabet
 end
@@ -81,7 +77,8 @@ end
 function _processalphabet(
     xmotifs::Vector{MatrixProfile.Motif};
     filterbylength::Integer=2,
-    alphabetsize::Integer=3
+    alphabetsize::Integer=3,
+    rng::AbstractRNG
 )::Vector{<:Vector{<:Real}}
     # remove unique-motifs (which are not truly meaningful)
     if filterbylength > 1
@@ -100,7 +97,7 @@ function _processalphabet(
 
     # apply clustering, depending on how "granular"
     # you want your alphabet to be.
-    motifs_cluster = Clustering.kmeans(processed_motifs', alphabetsize)
+    motifs_cluster = Clustering.kmeans(processed_motifs', alphabetsize; rng=rng)
 
     # for each cluster, compute another representative motif (pointwise mean);
     # collect all such representatives.
