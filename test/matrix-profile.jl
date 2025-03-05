@@ -77,4 +77,4 @@ apriori_miner = Miner(
 )
 
 @test_nowarn mine!(apriori_miner)
-# @test freqitems(apriori_miner) |> length == 0
+@test freqitems(apriori_miner) |> length == 6
