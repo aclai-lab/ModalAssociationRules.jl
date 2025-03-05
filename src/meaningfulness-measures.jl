@@ -249,7 +249,7 @@ end
 
 
 # core logic of `dimensional_lsupport`
-_dimensionallywise_lsupport_logic = (itemset, X, ith_instance, miner) -> begin
+_dimensionalwise_lsupport_logic = (itemset, X, ith_instance, miner) -> begin
     # this method assumes that the mining is taking place on geometric type worlds,
     # such as Intervals or Interval2Ds, but not OneWorld!
     # also, it is assumed that `isdimensionally_coherent_itemset` policy is being applied.
@@ -294,7 +294,7 @@ _dimensionallywise_lsupport_logic = (itemset, X, ith_instance, miner) -> begin
 end
 
 # core logic of `dimensional_gsupport`
-_dimensionallywise_gsupport_logic = (itemset, X, threshold, miner) -> begin
+_dimensionalwise_gsupport_logic = (itemset, X, threshold, miner) -> begin
     _measure = sum([
         # for each instance, compute how many times the local support overpass the threshold
         lsupport(itemset, getinstance(X, ith_instance), miner) >= threshold
@@ -483,7 +483,7 @@ TODO: explain
 See also [`Miner`](@ref), [`dimensional_gsupport`](@ref), [`LogicalInstance`](@ref),
 [`Itemset`](@ref), [`Threshold`](@ref).
 """
-@localmeasure dimensional_lsupport _dimensionallywise_lsupport_logic
+@localmeasure dimensional_lsupport _dimensionalwise_lsupport_logic
 
 """
     function dimensional_gsupport(
@@ -498,7 +498,7 @@ Global support that calls [`dimensional_lsupport`](@ref) internally.
 See also [`Miner`](@ref), [`dimensional_lsupport`](@ref), [`LogicalInstance`](@ref),
 [`Itemset`](@ref), [`SupportedLogiset`](@ref), [`Threshold`](@ref).
 """
-@globalmeasure dimensional_gsupport _dimensionallywise_gsupport_logic
+@globalmeasure dimensional_gsupport _dimensionalwise_gsupport_logic
 
 
 """
