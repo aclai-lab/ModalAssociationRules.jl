@@ -92,8 +92,8 @@ IHCC = X[1:30, :]
 # right hand X variable generations
 
 # remember: motifsalphabet(data, windowlength, #extractions)
-_motifs_v5_l10 = motifsalphabet(IHCC[:,4], 10, 10; rng=_seed, r=30, th=0)
-__motif__v5_l10_rhand_x_leaning_forward = _motifs_v4_l10[1]
+_motifs_v4_l10 = motifsalphabet(IHCC[:,4], 10, 10; rng=_seed, r=30, th=0)
+__motif__v4_l10_rhand_x_leaning_forward = _motifs_v4_l10[1]
 __motif__v4_l10_rhand_x_inverting_direction = _motifs_v4_l10[2]
 __motif__v4_l10_rhand_x_protracting = _motifs_v4_l10[3]
 
@@ -123,6 +123,7 @@ __var__v4_l40_rhand_x_protracting_inverting_leaning = VariableDistance(4,
 )
 
 # right hand Y variable generations
+
 _motifs_v5_l10 = motifsalphabet(IHCC[:,5], 10, 10; rng=_seed, r=5, th=2)
 __motif__v5_l10_rhand_y_ascending = _motifs_v5_l10[1]
 __motif__v5_l10_rhand_y_descending = _motifs_v5_l10[2]
@@ -143,3 +144,39 @@ __var__v5_l10_rhand_y_inverting_direction = VariableDistance(5,
     distance=x -> _mydistance(x, __motif__v5_l10_rhand_y_inverting_direction),
     featurename="InvertingDirection"
 )
+
+# variables assembly;
+# insert your variables in variabledistances array,
+# then adjust the _distance_threshold (which is equal for each ScalarCondition)
+# and the meaningfulness measures thresholds.
+
+variabledistances = [
+    __var__v4_l10_rhand_x_leaning_forward,
+    __var__v4_l10_rhand_x_inverting_direction,
+    __var__v4_l10_rhand_x_protracting,
+    __var__v4_l40_rhand_x_protracting_inverting_leaning,
+
+    __var__v5_l10_rhand_y_ascending,
+    __var__v5_l10_rhand_y_descending,
+    __var__v5_l10_rhand_y_inverting_direction,
+]
+
+_distance_threshold = 2.0
+atoms = [Atom(ScalarCondition(v, <, _distance_threshold)) for v in variabledistances]
+_items = Vector{Item}(atoms)
+
+_itemsetmeasures = [(dimensional_gsupport, 0.3, 0.2)]
+_rulemeasures = [(gconfidence, 0.2, 0.2)]
+
+logiset = scalarlogiset(IHCC, variabledistances)
+
+apriori_miner = Miner(
+    logiset,
+    apriori,
+    _items,
+    _itemsetmeasures,
+    _rulemeasures;
+    itemset_mining_policies=[isdimensionally_coherent_itemset()]
+)
+
+mine!(apriori_miner)
