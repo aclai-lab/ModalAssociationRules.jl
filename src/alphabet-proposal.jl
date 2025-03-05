@@ -30,6 +30,15 @@ identification capabilities.
 - `filterbylength::Integer=2`: filter out the motifs which are rarely found
     (less than 2 times);
 - `alphabetsize::Integer=3`: cardinality of the output alphabet.
+
+!!! warning
+    This method relies on subroutines which are affected by rng, but it is not possible
+    to specify a seed from arguments.
+
+    If you are using this method in a rng-sensible environment (e.g., tests), please
+    remember to set the global seed everytime just before this function is called.
+
+See also `MatrixProfile.jl`.
 """
 function motifsalphabet(
     x::Vector{<:Vector{<:Real}},
