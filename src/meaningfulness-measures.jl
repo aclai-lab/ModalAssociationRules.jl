@@ -222,12 +222,6 @@ _lsupport_logic = (itemset, X, ith_instance, miner) -> begin
         # for each world, compute on which worlds the model checking algorithm returns true
         check(formula(itemset), X, ith_instance, w)
 
-        # TODO
-        # when dealing with VariableDistance, we only want to check the itemset on those
-        # worlds that match the same shape with the specific variable.
-        # For example, if VariableDistance is wrapping a motif [1,2,3,4], I cannot check
-        # the variable on smaller nor bigger intervals.
-
         # NOTE: the `worldfilter` wrapped within `miner` is levereaged, if given
         for w in allworlds(miner; ith_instance=ith_instance)
     ])
@@ -241,6 +235,51 @@ end
 
 # core logic of `gsupport`, as a lambda function
 _gsupport_logic = (itemset, X, threshold, miner) -> begin
+    _measure = sum([
+        # for each instance, compute how many times the local support overpass the threshold
+        lsupport(itemset, getinstance(X, ith_instance), miner) >= threshold
+
+        # NOTE: an instance filter could be provided by the user to avoid iterating
+        # every instance, depending on the needings.
+        for ith_instance in 1:ninstances(X)
+    ]) / ninstances(X)
+
+    return Dict(:measure => _measure)
+end
+
+
+# core logic of `dimensional_lsupport`
+_dimensionallywise_lsupport_logic = (itemset, X, ith_instance, miner) -> begin
+    # this method assumes that the mining is taking place on geometric type worlds,
+    # such as Intervals or Interval2Ds, but not OneWorld!
+    # also, it is assumed that `isdimensionally_coherent_itemset` policy is being applied.
+
+    # we need to establish on which worlds the itemset can be evaluated;
+    # e.g.1, [min(V1)>0.5, max(V2)<0.2] can be evaluated on any world.
+    # e.g.2, [dist(V1,motif1)<4.3, <D>dist(V2,motif2)<3.0] can be evaluated only in
+    # worlds w such that size(w) == size(motif1), (first item is a propositional anchor).
+
+    # because of isdimensionally_coherent_itemset, we know the itemset is well-formed;
+    # we just need to find the size of the structure wrapped within any VariableDistance.
+    _dimensionally_coherent_worldsize = 1
+
+    wmask = WorldMask([
+        # for each world, compute on which worlds the model checking algorithm returns true
+        check(formula(itemset), X, ith_instance, w)
+
+        # NOTE: the `worldfilter` wrapped within `miner` is levereaged, if given
+        for w in allworlds(miner; ith_instance=ith_instance)
+    ])
+
+    # return the result, and eventually the information needed to support miningstate
+    return Dict(
+        :measure => count(wmask) / length(wmask),
+        :instance_item_toworlds => wmask,
+    )
+end
+
+# core logic of `dimensional_gsupport`
+_dimensionallywise_gsupport_logic = (itemset, X, threshold, miner) -> begin
     _measure = sum([
         # for each instance, compute how many times the local support overpass the threshold
         lsupport(itemset, getinstance(X, ith_instance), miner) >= threshold
@@ -413,6 +452,38 @@ See also [`Miner`](@ref), [`LogicalInstance`](@ref), [`Itemset`](@ref),
 """
 @globalmeasure gsupport _gsupport_logic
 
+
+"""
+    function dimensional_lsupport(
+        itemset::Itemset,
+        instance::LogicalInstance;
+        miner::Union{Nothing,AbstractMiner}=nothing
+    )::Float64
+
+Compute the a "dimensionally-aware" local support for the given `itemset` in the given
+`instance`.
+
+TODO: explain
+
+See also [`Miner`](@ref), [`dimensional_gsupport`](@ref), [`LogicalInstance`](@ref),
+[`Itemset`](@ref), [`Threshold`](@ref).
+"""
+@localmeasure dimensional_lsupport _dimensionallywise_lsupport_logic
+
+"""
+    function dimensional_gsupport(
+        itemset::Itemset,
+        X::SupportedLogiset,
+        threshold::Threshold;
+        miner::Union{Nothing,AbstractMiner}=nothing
+    )::Float64
+
+Global support that calls [`dimensional_lsupport`](@ref) internally.
+
+See also [`Miner`](@ref), [`dimensional_lsupport`](@ref), [`LogicalInstance`](@ref),
+[`Itemset`](@ref), [`SupportedLogiset`](@ref), [`Threshold`](@ref).
+"""
+@globalmeasure dimensional_gsupport _dimensionallywise_gsupport_logic
 
 
 """
@@ -601,6 +672,7 @@ See also [`lchisquared`](@ref).
 # meaning that a global measure is associated to its corresponding local one.
 
 @linkmeas gsupport lsupport
+@linkmeas dimensional_gsupport, dimensional_lsupport
 
 @linkmeas gconfidence lconfidence
 
