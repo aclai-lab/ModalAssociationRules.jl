@@ -96,6 +96,7 @@ include("meaningfulness-measures.jl")
 
 export @localmeasure, @globalmeasure, @linkmeas
 export lsupport, gsupport
+export dimensional_lsupport, dimensional_gsupport
 export lconfidence, gconfidence
 export llift, glift
 export lconviction, gconviction
