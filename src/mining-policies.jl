@@ -56,13 +56,8 @@ function isdimensionally_coherent_itemset(;)::Function
         # we want to keep only the propositions, since they are the anchor of our itemset.
         anchors = filter(item -> formula(item) isa Atom, itemset)
 
-        # in particular:
-        _feature = anchor -> anchor |>
-            formula |> SoleData.value |> SoleData.metacond |> SoleData.feature
-
-        # every Variable must not be a VariableDistance (e.g., VariableMin)
-        _anchortypes = Set([_feature(anchor) |> typeof for anchor in anchors])
-
+        # in particular, every Variable must not be a VariableDistance (e.g., VariableMin)
+        _anchortypes = Set([feature(anchor) |> typeof for anchor in anchors])
         if !any(_anchortype -> _anchortype <: VariableDistance, _anchortypes)
             return true
         end
@@ -73,7 +68,7 @@ function isdimensionally_coherent_itemset(;)::Function
         end
 
         # also, all their references must be of the same size (e.g., 5-length intervals)
-        _referencesize = vardistance -> _feature(vardistance) |> reference |> size
+        _referencesize = vardistance -> feature(vardistance) |> reference |> size
         _anchorsize = _referencesize(anchors[1])
 
         return all(anchor -> _referencesize(anchor) == _anchorsize, anchors)
