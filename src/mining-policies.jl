@@ -37,7 +37,10 @@ end
 
 
 """
-    function isanchored_itemset(; npropositions::Integer=1)::Function
+    function isanchored_itemset(;
+        npropositions::Integer=1,
+        ignorelength::Integer=1
+    )::Function
 
 Closure returning a boolean function `F` with one argument `rule::Itemset`.
 
