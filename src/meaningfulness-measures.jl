@@ -330,6 +330,12 @@ _gconfidence_logic = (rule, X, threshold, miner) -> begin
     return Dict(:measure => num/den)
 end
 
+_dimensionalwise_lconfidence_logic = (rule, X, ith_instance, miner) -> begin
+    # this is just a placeholder definition to guarantee no problems with @linkmeas
+    # later; TODO: remove this (also, local confidence does not seem to be "useful")
+    return _lconfidence_logic(rule, X, ith_instance, miner)
+end
+
 _dimensionalwise_gconfidence_logic = (rule, X, threshold, miner) -> begin
     _antecedent = antecedent(rule)
     _consequent = consequent(rule)
@@ -558,6 +564,18 @@ See also [`antecedent`](@ref), [`ARule`](@ref), [`AbstractMiner`](@ref), [`gsupp
 
 
 """
+    function dimensional_lconfidence(
+        rule::ARule,
+        ith_instance::LogicalInstance;
+        miner::Union{Nothing,AbstractMiner}=nothing
+    )::Float64
+
+See [`dimensional_lsupport`](@ref).
+"""
+@localmeasure dimensional_lconfidence _dimensionalwise_lconfidence_logic
+
+
+"""
     function dimensional_gconfidence(
         rule::ARule,
         X::SupportedLogiset,
@@ -715,6 +733,7 @@ See also [`lchisquared`](@ref).
 @linkmeas dimensional_gsupport dimensional_lsupport
 
 @linkmeas gconfidence lconfidence
+@linkmeas dimensional_gconfidence dimensional_lconfidence
 
 @linkmeas glift llift
 
