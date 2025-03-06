@@ -5,6 +5,7 @@ using ModalAssociationRules
 using Plots
 using Plots.Measures
 using Random
+using Statistics
 
 using SoleData
 
@@ -18,19 +19,23 @@ IHCC_rhand_y_only = Vector{Float32}.(X[1:30, var_id])
 
 # parameters for matrix profile generation
 windowlength = 20
-nmotifs = 10
+nmotifs = 3
 _seed = 3498
 r = 5   # how similar two windows must be to belong to the same motif
-th = 0  # how nearby in time two motifs are allowed to be
+th = 10  # how nearby in time two motifs are allowed to be
 
-_motifs = motifsalphabet(IHCC_rhand_y_only, windowlength, nmotifs; rng=_seed, r=r, th=th)
+mp, _raw_motifs, _motifs = motifsalphabet(
+    IHCC_rhand_y_only, windowlength, nmotifs; rng=_seed, r=r, th=th);
 @test length(_motifs) == 3
-# plot(_motifs) # uncomment to explore _motifs content
 
 # we isolated the only var_id 5 from the class "I have command",
 # thus we now have only one column/var_id;
 # for simplicity, let's consider also just one motif.
+normalize(x) = (x .- mean(x)) ./ std(x)
 _mydistance = (x, y) -> size(x) == size(y) ?
+    # normalization on (naive, just for test)
+    # sqrt(sum([(x - y)^2 for (x, y) in zip(x |> normalize, y)])) :
+    # normalization off
     sqrt(sum([(x - y)^2 for (x, y) in zip(x,y)])) :
     maxintfloat()
 
@@ -44,7 +49,7 @@ vd1 = VariableDistance(
 vd2 = VariableDistance(
     var_id,
     _motifs[3],
-    distance=x -> _mydistance(x, _motifs[3]),
+    distance=x -> _mydistance(x, _motifs[2]),
     featurename="AscendingYArm"
 )
 
@@ -92,42 +97,38 @@ IHCC = X[1:30, :]
 # right hand X variable generations
 
 # remember: motifsalphabet(data, windowlength, #extractions)
-_motifs_v4_l10 = motifsalphabet(IHCC[:,4], 10, 10; rng=_seed, r=30, th=0)
-__motif__v4_l10_rhand_x_leaning_forward = _motifs_v4_l10[1]
-__motif__v4_l10_rhand_x_inverting_direction = _motifs_v4_l10[2]
+_mp, _raw_motifs, _motifs_v4_l10 = motifsalphabet(IHCC[:,4], 10, 5; rng=_seed, r=5, th=2);
 __motif__v4_l10_rhand_x_protracting = _motifs_v4_l10[3]
+__motif__v4_l10_rhand_x_retracting = _motifs_v4_l10[5]
 
-__var__v4_l10_rhand_x_leaning_forward = VariableDistance(4,
-    __motif__v4_l10_rhand_x_leaning_forward,
-    distance=x -> _mydistance(x, __motif__v4_l10_rhand_x_leaning_forward),
-    featurename="LeaningForward"
-)
-__var__v4_l10_rhand_x_inverting_direction = VariableDistance(4,
-    __motif__v4_l10_rhand_x_inverting_direction,
-    distance=x -> _mydistance(x, __motif__v4_l10_rhand_x_inverting_direction),
-    featurename="InvertingDirection"
-)
 __var__v4_l10_rhand_x_protracting = VariableDistance(4,
     __motif__v4_l10_rhand_x_protracting,
     distance=x -> _mydistance(x, __motif__v4_l10_rhand_x_protracting),
     featurename="Protracting"
 )
+__var__v4_l10_rhand_x_retracting = VariableDistance(4,
+    __motif__v4_l10_rhand_x_retracting,
+    distance=x -> _mydistance(x, __motif__v4_l10_rhand_x_retracting),
+    featurename="Retracting"
+)
 
-_motifs_v4_l40 = motifsalphabet(IHCC[:,4], 30, 10; rng=_seed, r=5, th=0, alphabetsize=1)
-__motif__v4_l40_rhand_x_protracting_inverting_leaning = _motifs_v4_l40[1]
+
+_mp, _raw_motifs, _motifs_v4_l40 = motifsalphabet(
+    IHCC[:,4], 30, 10; rng=_seed, r=5, th=0, alphabetsize=1);
+__motif__v4_l40_rhand_x_protracting_inverting_leaning = _motifs_v4_l40[8]
 
 __var__v4_l40_rhand_x_protracting_inverting_leaning = VariableDistance(4,
     __motif__v4_l40_rhand_x_protracting_inverting_leaning,
     distance=x -> _mydistance(x, __motif__v4_l40_rhand_x_protracting_inverting_leaning),
-    featurename="Protracting⋅InvertingDirection⋅Leaning"
+    featurename="Retracting⋅InvertingDirection⋅Protracting"
 )
+
 
 # right hand Y variable generations
 
-_motifs_v5_l10 = motifsalphabet(IHCC[:,5], 10, 10; rng=_seed, r=5, th=2)
-__motif__v5_l10_rhand_y_ascending = _motifs_v5_l10[1]
+_mp, _raw_motifs, _motifs_v5_l10 = motifsalphabet(IHCC[:,5], 10, 10; rng=_seed, r=5, th=2)
+__motif__v5_l10_rhand_y_ascending = _motifs_v5_l10[5]
 __motif__v5_l10_rhand_y_descending = _motifs_v5_l10[2]
-__motif__v5_l10_rhand_y_inverting_direction = _motifs_v5_l10[3]
 
 __var__v5_l10_rhand_y_ascending = VariableDistance(5,
     __motif__v5_l10_rhand_y_ascending,
@@ -139,10 +140,15 @@ __var__v5_l10_rhand_y_descending = VariableDistance(5,
     distance=x -> _mydistance(x, __motif__v5_l10_rhand_y_descending),
     featurename="Descending"
 )
-__var__v5_l10_rhand_y_inverting_direction = VariableDistance(5,
-    __motif__v5_l10_rhand_y_inverting_direction,
-    distance=x -> _mydistance(x, __motif__v5_l10_rhand_y_inverting_direction),
-    featurename="InvertingDirection"
+
+
+_mp, _raw_motifs, _motifs_v5_l40 = motifsalphabet(IHCC[:,5], 40, 10; rng=_seed, r=5, th=5)
+__motif__v5_l40_rhand_y_ascdesc = _motifs_v5_l40[7]
+
+__var__v5_l40_rhand_y_ascdesc = VariableDistance(5,
+    __motif__v5_l40_rhand_y_ascdesc,
+    distance=x -> _mydistance(x, __motif__v5_l40_rhand_y_ascdesc),
+    featurename="Descending"
 )
 
 # variables assembly;
@@ -151,22 +157,35 @@ __var__v5_l10_rhand_y_inverting_direction = VariableDistance(5,
 # and the meaningfulness measures thresholds.
 
 variabledistances = [
-    __var__v4_l10_rhand_x_leaning_forward,
-    __var__v4_l10_rhand_x_inverting_direction,
     __var__v4_l10_rhand_x_protracting,
+    __var__v4_l10_rhand_x_retracting,
     __var__v4_l40_rhand_x_protracting_inverting_leaning,
-
     __var__v5_l10_rhand_y_ascending,
     __var__v5_l10_rhand_y_descending,
-    __var__v5_l10_rhand_y_inverting_direction,
+    __var__v5_l40_rhand_y_ascdesc
 ]
 
-_distance_threshold = 2.0
-atoms = [Atom(ScalarCondition(v, <, _distance_threshold)) for v in variabledistances]
+propositional_atoms = [
+    # bigger intervals' threshold can be relaxed
+    Atom(ScalarCondition(__var__v4_l10_rhand_x_protracting, <, 3.0)),
+    Atom(ScalarCondition(__var__v4_l10_rhand_x_retracting, <, 3.0)),
+    Atom(ScalarCondition(__var__v4_l40_rhand_x_protracting_inverting_leaning, <, 5.0)),
+
+    Atom(ScalarCondition(__var__v5_l10_rhand_y_ascending, <, 3.0)),
+    Atom(ScalarCondition(__var__v5_l10_rhand_y_descending, <, 3.0)),
+    Atom(ScalarCondition(__var__v5_l40_rhand_y_ascdesc, <, 5.0)),
+]
+
+atoms = reduce(vcat, [
+        propositional_atoms,
+        diamond(IA_D).(propositional_atoms),
+        diamond(IA_A).(propositional_atoms)
+    ]
+)
 _items = Vector{Item}(atoms)
 
-_itemsetmeasures = [(dimensional_gsupport, 0.3, 0.2)]
-_rulemeasures = [(gconfidence, 0.2, 0.2)]
+_itemsetmeasures = [(dimensional_gsupport, 0.3, 0.3)]
+_rulemeasures = [(gconfidence, 0.7, 0.7)]
 
 logiset = scalarlogiset(IHCC, variabledistances)
 
@@ -176,7 +195,14 @@ apriori_miner = Miner(
     _items,
     _itemsetmeasures,
     _rulemeasures;
-    itemset_mining_policies=[isdimensionally_coherent_itemset()]
+    itemset_mining_policies=[isanchored_itemset(), isdimensionally_coherent_itemset()]
 )
 
 mine!(apriori_miner)
+
+for frq in freqitems(apriori_miner)
+    println("$(frq) => gsupport $(apriori_miner.globalmemo[(:dimensional_gsupport, frq)])")
+end
+
+# to help debugging
+# plot([__motif__v5_l10_rhand_y_descending, IHCC[1,5][18:27] |> normalize  ])
