@@ -56,22 +56,31 @@ function motifsalphabet(
 end
 
 function motifsalphabet(
-    x::Vector{<:Real},
+    x::Vector{T},
     windowlength::Integer,
     nmotifs::Integer;
     rng::Union{Integer,AbstractRNG}=Random.GLOBAL_RNG,
     r::Integer=5,
     th::Integer=0,
     kwargs...
-)
+) where {T<:Real}
     xmprofile = matrix_profile(x, windowlength)
     xmotifs = motifs(xmprofile, nmotifs; r=r, th=th)
 
-    # DEPRECATED - (TODO: CLEAN)
+    # DEPRECATED - (TODO: CLEAN, remove unnecessary kwargs used in _processalphabet)
     # alphabet = _processalphabet(xmotifs; rng=initrng(rng), kwargs...)
     # return alphabet
 
-    return xmprofile, xmotifs
+    # we store the mean signal for each group of motifs (each mean is normalized)
+    normalize(x) = (x .- mean(x)) ./ std(x)
+
+    _clean_xmotifs = Vector{T}[]
+    for _group in xmotifs
+        _all_motifs = _group |> seqs
+        push!(_clean_xmotifs, sum(_all_motifs) ./ length(_all_motifs))
+    end
+
+    return xmprofile, xmotifs, _clean_xmotifs
 end
 
 # utility to apply a collection of filter! to an alphabet of motifs;
