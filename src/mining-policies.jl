@@ -35,6 +35,35 @@ function islimited_length_itemset(; maxlength::Union{Nothing,Integer}=nothing)::
     end
 end
 
+
+"""
+    function isanchored_itemset(; npropositions::Integer=1)::Function
+
+Closure returning a boolean function `F` with one argument `rule::Itemset`.
+
+`F` is true if the given `itemset` contains atleast `npropositions` *propositional anchors*
+(that is, propositions without modal operators).
+
+# Arguments
+- `npropositions::Integer=1`: minimum number of propositional anchors (propositions with
+    no modal operators) in the antecedent of the given rule.
+
+See [`Itemset`](@ref), [`itemset_mining_policies`](@ref), [`isanchored_arule`](@ref).
+"""
+function isanchored_itemset(; npropositions::Integer=1)::Function
+    # atleast `npropositions` items in the antecedent are not modal
+
+    if npropositions < 0
+        throw(
+            ArgumentError("npropositions must be >= 0 (given value is $(npropositions))"))
+    end
+
+    return function _isanchored_itemset(itemset::Itemset)
+        count(it -> formula(it) isa Atom, antecedent(itemset)) >= npropositions
+    end
+end
+
+
 """
     function isdimensionally_coherent_itemset(;)::Function
 
