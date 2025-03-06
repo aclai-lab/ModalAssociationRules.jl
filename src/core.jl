@@ -48,8 +48,15 @@ Utility to extract the feature wrapped within an [`Item`](@ref).
 
 See also [`Item`](@ref), `SoleData.VarFeature`, `SoleData.AbstractUnivariateFeature`.
 """
-feature(item::Item) = return item |> formula |> SoleData.value |> SoleData.metacond |>
-    SoleData.feature
+function feature(item::Item)
+    _intermediate = item |> formula
+
+    if _intermediate isa SoleLogics.SyntaxBranch
+        _intermediate = _intermediate |> SoleLogics.children |> first
+    end
+
+    return _intermediate |> SoleData.value |> SoleData.metacond |> SoleData.feature
+end
 
 """
     const Itemset{I<:Item} = Vector{I}
