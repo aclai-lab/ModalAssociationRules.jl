@@ -67,19 +67,22 @@ function motifsalphabet(
     xmprofile = matrix_profile(x, windowlength)
     xmotifs = motifs(xmprofile, nmotifs; r=r, th=th)
 
-    alphabet = _processalphabet(xmotifs; rng=initrng(rng), kwargs...)
+    # DEPRECATED - (TODO: CLEAN)
+    # alphabet = _processalphabet(xmotifs; rng=initrng(rng), kwargs...)
+    # return alphabet
 
-    return alphabet
+    return xmprofile, xmotifs
 end
 
 # utility to apply a collection of filter! to an alphabet of motifs;
 # see `motifsalphabet` docstring.
+# DEPRECATED - (TODO: CLEAN)
 function _processalphabet(
     xmotifs::Vector{MatrixProfile.Motif};
     filterbylength::Integer=2,
     alphabetsize::Integer=3,
     rng::AbstractRNG
-)::Vector{<:Vector{<:Real}}
+)# ::Vector{<:Vector{<:Real}}
     # remove unique-motifs (which are not truly meaningful)
     if filterbylength > 1
         filter!(motif -> length(motif.seqs) >= filterbylength, xmotifs)
@@ -117,5 +120,5 @@ function _processalphabet(
     # aggregate by means (we no longer care about cluster ids)
     proposal = [mean(_motifs) for _motifs in values(clusterid_to_motifs)]
 
-    return proposal
+    return (proposal, clusterid_to_motifs)
 end
