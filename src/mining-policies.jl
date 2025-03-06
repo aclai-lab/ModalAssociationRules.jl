@@ -39,7 +39,7 @@ end
 """
     function isanchored_itemset(;
         npropositions::Integer=1,
-        ignorelength::Integer=1
+        ignoreuntillength::Integer=1
     )::Function
 
 Closure returning a boolean function `F` with one argument `rule::Itemset`.
@@ -50,21 +50,22 @@ Closure returning a boolean function `F` with one argument `rule::Itemset`.
 # Arguments
 - `npropositions::Integer=1`: minimum number of propositional anchors (propositions with
     no modal operators) in the antecedent of the given rule.
-- `ignorelength::Integer=1`: avoid applying the policy to isolated [`Item`](@ref)s.
+- `ignoreuntillength::Integer=1`: avoid applying the policy to isolated [`Item`](@ref)s, or
+    [`Itemset`](@ref) short enough.
 
 See [`Item`](@ref), [`Itemset`](@ref), [`itemset_mining_policies`](@ref),
 [`isanchored_arule`](@ref).
 """
-function isanchored_itemset(; npropositions::Integer=1, ignorelength::Integer=1)::Function
+function isanchored_itemset(; npropositions::Integer=1, ignoreuntillength::Integer=1)::Function
     # atleast `npropositions` items in the antecedent are not modal
 
-    if npropositions < 0 || ignorelength < 0
+    if npropositions < 0 || ignoreuntillength < 0
         throw(ArgumentError("All parameters must be >= 0; (given values: " *
-                "npropositions=$(npropositions), ignorelength=$(ignorelength))"))
+                "npropositions=$(npropositions), ignoreuntillength=$(ignoreuntillength))"))
     end
 
     return function _isanchored_itemset(itemset::Itemset)
-        length(itemset) <= ignorelength ||
+        length(itemset) <= ignoreuntillength ||
         count(it -> formula(it) isa Atom, itemset) >= npropositions
     end
 end
@@ -182,7 +183,7 @@ function isanchored_arule(; npropositions::Integer=1)::Function
 
     return function _isanchored_arule(rule::ARule)
         return isanchored_itemset(;
-            npropositions=npropositions, ignorelength=0)(antecedent(rule))
+            npropositions=npropositions, ignoreuntillength=1)(antecedent(rule))
     end
 end
 

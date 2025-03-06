@@ -167,8 +167,8 @@ variabledistances = [
 
 propositional_atoms = [
     # bigger intervals' threshold can be relaxed
-    Atom(ScalarCondition(__var__v4_l10_rhand_x_protracting, <, 3.0)),
-    Atom(ScalarCondition(__var__v4_l10_rhand_x_retracting, <, 3.0)),
+    Atom(ScalarCondition(__var__v4_l10_rhand_x_protracting, <, 2.0)),
+    Atom(ScalarCondition(__var__v4_l10_rhand_x_retracting, <, 2.0)),
     Atom(ScalarCondition(__var__v4_l40_rhand_x_protracting_inverting_leaning, <, 5.0)),
 
     Atom(ScalarCondition(__var__v5_l10_rhand_y_ascending, <, 3.0)),
@@ -184,8 +184,8 @@ atoms = reduce(vcat, [
 )
 _items = Vector{Item}(atoms)
 
-_itemsetmeasures = [(dimensional_gsupport, 0.3, 0.3)]
-_rulemeasures = [(gconfidence, 0.7, 0.7)]
+_itemsetmeasures = [(dimensional_gsupport, 0.1, 0.1)]
+_rulemeasures = [(gconfidence, 0.01, 0.01)]
 
 logiset = scalarlogiset(IHCC, variabledistances)
 
@@ -195,7 +195,11 @@ apriori_miner = Miner(
     _items,
     _itemsetmeasures,
     _rulemeasures;
-    itemset_mining_policies=[isanchored_itemset(), isdimensionally_coherent_itemset()]
+    itemset_mining_policies=[
+        isanchored_itemset(),
+        isdimensionally_coherent_itemset()
+    ],
+    arule_mining_policies = Function[]
 )
 
 mine!(apriori_miner)
@@ -203,6 +207,8 @@ mine!(apriori_miner)
 for frq in freqitems(apriori_miner)
     println("$(frq) => gsupport $(apriori_miner.globalmemo[(:dimensional_gsupport, frq)])")
 end
+
+generaterules!(apriori_miner)
 
 # to help debugging
 # plot([__motif__v5_l10_rhand_y_descending, IHCC[1,5][18:27] |> normalize  ])
