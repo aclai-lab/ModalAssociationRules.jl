@@ -181,8 +181,8 @@ function isanchored_arule(; npropositions::Integer=1)::Function
     end
 
     return function _isanchored_arule(rule::ARule)
-        return isanchored_itemset(
-            ; npropositions=npropositions, ignorelength=0)(antecedent(rule))
+        return isanchored_itemset(;
+            npropositions=npropositions, ignorelength=0)(antecedent(rule))
     end
 end
 
