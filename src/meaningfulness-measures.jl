@@ -330,6 +330,19 @@ _gconfidence_logic = (rule, X, threshold, miner) -> begin
     return Dict(:measure => num/den)
 end
 
+_dimensionalwise_gconfidence_logic = (rule, X, threshold, miner) -> begin
+    _antecedent = antecedent(rule)
+    _consequent = consequent(rule)
+    _union = union(_antecedent, _consequent)
+
+    num = dimensional_gsupport(_union, X, threshold, miner)
+    den = dimensional_gsupport(_antecedent, X, threshold, miner)
+
+    @assert den >= num "ERROR: conf between $(_union) [$(num)] and $(_antecedent) [$(den)]"
+
+    return Dict(:measure => num/den)
+end
+
 
 
 _llift_logic = (rule, X, ith_instance, miner) -> begin
@@ -543,6 +556,18 @@ See also [`antecedent`](@ref), [`ARule`](@ref), [`AbstractMiner`](@ref), [`gsupp
 """
 @globalmeasure gconfidence _gconfidence_logic
 
+
+"""
+    function dimensional_gconfidence(
+        rule::ARule,
+        X::SupportedLogiset,
+        threshold::Threshold;
+        miner::Union{Nothing,AbstractMiner}=nothing
+    )::Float64
+
+See [`dimensional_gsupport`](@ref).
+"""
+@globalmeasure dimensional_gconfidence _dimensionalwise_gconfidence_logic
 
 
 """
