@@ -47,18 +47,21 @@ Closure returning a boolean function `F` with one argument `rule::Itemset`.
 # Arguments
 - `npropositions::Integer=1`: minimum number of propositional anchors (propositions with
     no modal operators) in the antecedent of the given rule.
+- `ignorelength::Integer=1`: avoid applying the policy to isolated [`Item`](@ref)s.
 
-See [`Itemset`](@ref), [`itemset_mining_policies`](@ref), [`isanchored_arule`](@ref).
+See [`Item`](@ref), [`Itemset`](@ref), [`itemset_mining_policies`](@ref),
+[`isanchored_arule`](@ref).
 """
-function isanchored_itemset(; npropositions::Integer=1)::Function
+function isanchored_itemset(; npropositions::Integer=1, ignorelength::Integer=1)::Function
     # atleast `npropositions` items in the antecedent are not modal
 
-    if npropositions < 0
-        throw(
-            ArgumentError("npropositions must be >= 0 (given value is $(npropositions))"))
+    if npropositions < 0 || ignorelength < 0
+        throw(ArgumentError("All parameters must be >= 0; (given values: " *
+                "npropositions=$(npropositions), ignorelength=$(ignorelength))"))
     end
 
     return function _isanchored_itemset(itemset::Itemset)
+        length(itemset) <= ignorelength ||
         count(it -> formula(it) isa Atom, antecedent(itemset)) >= npropositions
     end
 end
