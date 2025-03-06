@@ -65,7 +65,7 @@ function isanchored_itemset(; npropositions::Integer=1, ignorelength::Integer=1)
 
     return function _isanchored_itemset(itemset::Itemset)
         length(itemset) <= ignorelength ||
-        count(it -> formula(it) isa Atom, antecedent(itemset)) >= npropositions
+        count(it -> formula(it) isa Atom, itemset) >= npropositions
     end
 end
 
