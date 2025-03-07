@@ -11,5 +11,6 @@
 /statprof/*
 /test/analyses/*
 /test/notes
+results.txt
 
 TODO
