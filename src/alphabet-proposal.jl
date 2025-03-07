@@ -72,7 +72,7 @@ function motifsalphabet(
     # return alphabet
 
     # we store the mean signal for each group of motifs (each mean is normalized)
-    normalize(x) = (x .- mean(x)) ./ std(x)
+    # normalize(x) = (x .- mean(x)) ./ std(x) # unused
 
     _clean_xmotifs = Vector{T}[]
     for _group in xmotifs
