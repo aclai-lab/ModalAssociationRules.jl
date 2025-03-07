@@ -31,9 +31,6 @@ identification capabilities.
 - `rng::Union{Integer,AbstractRNG}=Random.GLOBAL_RNG`: custom RNG, used internally by KNN;
 - `r::Integer=2`: how similar two windows must be to belong to the same motif;
 - `th::Integer=5`: how nearby in time two motifs are allowed to be;
-- `filterbylength::Integer=2`: filter out the motifs which are rarely found
-    (less than 2 times);
-- `alphabetsize::Integer=3`: cardinality of the output alphabet.
 
 See also `MatrixProfile.jl`.
 """
@@ -59,20 +56,11 @@ function motifsalphabet(
     x::Vector{T},
     windowlength::Integer,
     nmotifs::Integer;
-    rng::Union{Integer,AbstractRNG}=Random.GLOBAL_RNG,
     r::Integer=5,
-    th::Integer=0,
-    kwargs...
+    th::Integer=0
 ) where {T<:Real}
     xmprofile = matrix_profile(x, windowlength)
     xmotifs = motifs(xmprofile, nmotifs; r=r, th=th)
-
-    # DEPRECATED - (TODO: CLEAN, remove unnecessary kwargs used in _processalphabet)
-    # alphabet = _processalphabet(xmotifs; rng=initrng(rng), kwargs...)
-    # return alphabet
-
-    # we store the mean signal for each group of motifs (each mean is normalized)
-    # normalize(x) = (x .- mean(x)) ./ std(x) # unused
 
     _clean_xmotifs = Vector{T}[]
     for _group in xmotifs
@@ -81,53 +69,4 @@ function motifsalphabet(
     end
 
     return xmprofile, xmotifs, _clean_xmotifs
-end
-
-# utility to apply a collection of filter! to an alphabet of motifs;
-# see `motifsalphabet` docstring.
-# DEPRECATED - (TODO: CLEAN)
-function _processalphabet(
-    xmotifs::Vector{MatrixProfile.Motif};
-    filterbylength::Integer=2,
-    alphabetsize::Integer=3,
-    rng::AbstractRNG
-)# ::Vector{<:Vector{<:Real}}
-    # remove unique-motifs (which are not truly meaningful)
-    if filterbylength > 1
-        filter!(motif -> length(motif.seqs) >= filterbylength, xmotifs)
-    end
-
-    # for each motif group after the filtering,
-    # keep a number of columns equal to a window length
-    processed_motifs = Matrix{Float32}(
-        undef, length(xmotifs), length(xmotifs |> first |> seqs |> first))
-
-    # for each motif group, create a representative motif (pointwise mean)
-    for (row, motif_group) in enumerate(xmotifs)
-        processed_motifs[row,:] = mean([m for m in seqs(motif_group)])
-    end
-
-    # apply clustering, depending on how "granular"
-    # you want your alphabet to be.
-    motifs_cluster = Clustering.kmeans(processed_motifs', alphabetsize; rng=rng)
-
-    # for each cluster, compute another representative motif (pointwise mean);
-    # collect all such representatives.
-    clusterid_to_motifs = Dict{Int, Vector{Vector{Float32}}}()
-    cluster_ids = Clustering.assignments(motifs_cluster)
-
-    # separate by cluster id
-    for (idx, _motif) in enumerate(processed_motifs |> eachrow)
-        clusterid = cluster_ids[idx]
-        if !haskey(clusterid_to_motifs, clusterid)
-            clusterid_to_motifs[clusterid] = [_motif]
-        else
-            push!(clusterid_to_motifs[clusterid], _motif)
-        end
-    end
-
-    # aggregate by means (we no longer care about cluster ids)
-    proposal = [mean(_motifs) for _motifs in values(clusterid_to_motifs)]
-
-    return (proposal, clusterid_to_motifs)
 end
