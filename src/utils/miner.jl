@@ -1,3 +1,5 @@
+import Base.filter!
+
 """
     struct Miner{
         D<:MineableData,
@@ -284,6 +286,47 @@ itemset_mining_policies(miner::Miner) = miner.itemset_mining_policies
 See [`itemset_mining_policies(::AbstractMiner)`](@ref).
 """
 arule_mining_policies(miner::Miner) = miner.arule_mining_policies
+
+"""
+    Base.filter!(
+        targets::Vector{Union{ARule,Itemset}},
+        policies_pool::Vector{Function}
+    )
+
+Apply `Base.filter!` on an [`ARule`](@ref)s or [`Itemset`](@ref)s collection,
+w.r.t. the family of policies `policies_pool`.
+
+See also [`ARule`](@ref), [`Base.filter!(::Vector{Itemset}, ::Miner)`](@ref),
+[`Itemset`](@ref), [`Base.filter!(::Vector{ARule}, ::Miner)`](@ref), [`Miner`](@ref).
+"""
+function Base.filter!(
+    targets::Vector{Union{ARule,Itemset}},
+    policies_pool::Vector{Function}
+)
+    filter!(target -> all(policy -> policy(candidate), policies_pool), targets)
+end
+
+"""
+    Base.filter!(itemsets::Vector{Itemset}, miner::Miner) = filter!(
+
+`filter!` the [`Itemset`](@ref)s wrapped in `miner`.
+
+See also [`Base.filter!(::Vector{ARule}, ::Miner)`](@ref), [`Itemset`](@ref),
+[`itemset_mining_policies`](@ref), [`Miner`](@ref).
+"""
+Base.filter!(itemsets::Vector{Itemset}, miner::Miner) = filter!(
+    itemsets, itemset_mining_policies(miner)
+)
+
+"""
+    Base.filter!(arules::Vector{ARule}, miner::Miner)
+
+See also [`ARule`](@ref), [`arule_mining_policies`](@ref),
+[`Base.filter!(::Vector{Itemset}, ::Miner)`](@ref), [`Itemset`](@ref), [`Miner`](@ref).
+"""
+Base.filter!(arules::Vector{ARule}, miner::Miner) = filter!(
+    arules, arule_mining_policies(miner)
+)
 
 """
 miningstate(miner::Miner)
