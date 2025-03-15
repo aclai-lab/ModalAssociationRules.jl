@@ -265,7 +265,7 @@ _dimensionalwise_lsupport_logic = (itemset, X, ith_instance, miner) -> begin
     _anchor_feature_idx = findfirst(feat -> feat |> typeof <: VariableDistance, _features)
 
     # if no feature introduces a dimensional constraint, then just fallback to lsupport
-    if isnothing(_anchor_feature_idx)
+    if isnothing(_anchor_feature_idx) || length(itemset) == 1
         return _lsupport_logic(itemset, X, ith_instance, miner)
     end
 
