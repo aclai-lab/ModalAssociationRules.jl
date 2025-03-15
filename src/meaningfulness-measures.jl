@@ -262,14 +262,15 @@ _dimensionalwise_lsupport_logic = (itemset, X, ith_instance, miner) -> begin
     # because of isdimensionally_coherent_itemset, we know the itemset is well-formed;
     # we just need to find the size of the structure wrapped within any VariableDistance.
     _features = feature.(itemset)
-    _anchor_feature_idx = findfirst(feat -> feat |> typeof <: VariableDistance, _features)
+    # index of the representative feature (i.e., any dimensional feature within the itemset)
+    _repr_feature_idx = findfirst(feat -> feat |> typeof <: VariableDistance, _features)
 
     # if no feature introduces a dimensional constraint, then just fallback to lsupport
-    if isnothing(_anchor_feature_idx) || length(itemset) == 1
+    if isnothing(_repr_feature_idx) || length(itemset) == 1
         return _lsupport_logic(itemset, X, ith_instance, miner)
     end
 
-    _repr = _features[_anchor_feature_idx]
+    _repr = _features[_repr_feature_idx]
     _repr_size = _repr |> reference |> size
 
     # TODO: implement this for various GeometricalWorld types in SoleLogics
