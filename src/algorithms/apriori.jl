@@ -82,10 +82,13 @@ function apriori(
     # candidates of length 1 are all the letters in our items
     candidates = Itemset{_itemtype}.(items(miner))
 
+    # certain candidates might automatically be removed because of filtering policies
+
+    # filter!(candidate -> all(
+    #     _policy -> _policy(candidate), itemset_mining_policies(miner)), candidates)
+
+    filter!(candidates, miner)
     while !isempty(candidates)
-        # certain candidates might automatically be removed because of filtering policies
-        filter!(candidate -> all(
-            _policy -> _policy(candidate), itemset_mining_policies(miner)), candidates)
 
         # get the frequent itemsets from the first candidates set
         frequents = [candidate
@@ -106,5 +109,7 @@ function apriori(
 
         verbose && printstyled("Starting new computational loop with " *
             "$(length(candidates)) candidates...\n", color=:green)
+
+        filter!(candidates, miner)
     end
 end
