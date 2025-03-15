@@ -300,10 +300,10 @@ See also [`ARule`](@ref), [`Base.filter!(::Vector{Itemset}, ::Miner)`](@ref),
 [`Itemset`](@ref), [`Base.filter!(::Vector{ARule}, ::Miner)`](@ref), [`Miner`](@ref).
 """
 function Base.filter!(
-    targets::Vector{Union{ARule,Itemset}},
+    targets::Vector{<:Union{ARule,Itemset}},
     policies_pool::Vector{Function}
 )
-    filter!(target -> all(policy -> policy(candidate), policies_pool), targets)
+    filter!(target -> all(policy -> policy(target), policies_pool), targets)
 end
 
 """
@@ -314,7 +314,7 @@ end
 See also [`Base.filter!(::Vector{ARule}, ::Miner)`](@ref), [`Itemset`](@ref),
 [`itemset_mining_policies`](@ref), [`Miner`](@ref).
 """
-Base.filter!(itemsets::Vector{Itemset}, miner::Miner) = filter!(
+Base.filter!(itemsets::Vector{<:Itemset}, miner::Miner) = filter!(
     itemsets, itemset_mining_policies(miner)
 )
 
