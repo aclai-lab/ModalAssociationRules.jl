@@ -19,13 +19,16 @@ For example, [`Miner`](@ref) does completely implement the interface while
 - rulemeasures(miner::AbstractMiner)
 
 - localmemo(miner::AbstractMiner)
+- localmemo!(miner::AbstractMiner)
 - globalmemo(miner::AbstractMiner)
+- globalmemo!(miner::AbstractMiner)
 
 - worldfilter(miner::AbstractMiner)
 - itemset_mining_policies(miner::AbstractMiner)
 - arule_mining_policies(miner::AbstractMiner)
 
 - miningstate(miner::AbstractMiner)
+- miningstate!(miner::AbstractMiner)
 - info(miner::AbstractMiner)
 
 See also [`Miner`](@ref), [`Bulldozer`](@ref).

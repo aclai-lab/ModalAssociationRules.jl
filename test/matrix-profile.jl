@@ -1,80 +1,120 @@
 using Test
 
+using DynamicAxisWarping
 using MatrixProfile
 using ModalAssociationRules
 using Plots
 using Plots.Measures
+using Random
+using Statistics
 
 using SoleData
 
-X, _ = load_NATOPS();
+# little utility to avoid writing an experiment
+function experiment!(miner::Miner, reportname::String)
+    mine!(miner)
+
+    generaterules!(miner) |> collect
+
+    rulecollection = [
+        (
+            rule,
+            round(
+                globalmemo(miner, (:dimensional_gconfidence, rule)), digits=2
+            ),
+            round(
+                globalmemo(miner, (:dimensional_gsupport, antecedent(rule))), digits=2
+            ),
+            round(
+                globalmemo(miner, (:dimensional_gsupport, Itemset(rule))), digits=2
+            )
+        )
+        for rule in arules(miner)
+    ]
+    sort!(rulecollection, by=x->x[2], rev=true);
+
+    reportname = joinpath(["test", "experiments", reportname])
+    open(reportname, "w") do io
+        println(io, "Columns are: rule, confidence, ant support, ant+cons support")
+
+        for (rule,conf,antgsupp,consgsupp) in rulecollection
+            println(io,
+                rpad(rule, 130) * " " * rpad(string(conf), 10) * " " *
+                rpad(string(antgsupp), 10) * " " * string(consgsupp)
+            )
+        end
+    end
+end
+
+X, y = load_NATOPS();
+insertcols!(X, 25, "ΔY[Thumb r and Hand tip r]" => X[:,5]-X[:,23])
 
 # right hand y axis
 var_id = 5
 
 # right hand in "I have command class"
-IHCC = Vector{Float32}.(X[1:30, var_id])
+IHCC_rhand_y_only = Vector{Float64}.(X[1:30, var_id])
 
 # parameters for matrix profile generation
 windowlength = 20
-nmotifs = 10
-r = 5   # how similar two windows must be to belong to the same motif
-th = 0  # how nearby in time two motifs are allowed to be
-
-_motifs = motifsalphabet(IHCC, windowlength, nmotifs; r=r, th=th)
-@test length(_motifs) == 3
-# plot(_motifs) # uncomment to explore _motifs content
+nmotifs = 3
+_seed = 3498
+r = 5    # how similar two windows must be to belong to the same motif
+th = 10  # how nearby in time two motifs are allowed to be
 
 # we isolated the only var_id 5 from the class "I have command",
 # thus we now have only one column/var_id;
 # for simplicity, let's consider also just one motif.
+
+# we define a distance function between two time series x, y, where |x| = |y|
 _mydistance = (x, y) -> size(x) == size(y) ?
-    sqrt(sum([(x - y)^2 for (x, y) in zip(x,y)])) :
+    # Euclidean with normalization
+    # sqrt(sum([(x - y)^2 for (x, y) in zip(x |> normalize, y)])) :
+
+    # Euclidean without normalization
+    # sqrt(sum([(x - y)^2 for (x, y) in zip(x, y)])) :
+
+    # Dynamic Time Warping
+    dtw(x,y) |> first :
+
+    # distance function isz not well-defined
     maxintfloat()
 
-vd1 = VariableDistance(
-    var_id,
-    _motifs[1],
-    distance=x -> _mydistance(x, _motifs[1]),
-    featurename="DescendingYArm"
-)
+############################################################################################
+# Experiment #1: just a small example
+############################################################################################
+include("experiments/natops0.jl")
 
-vd2 = VariableDistance(
-    var_id,
-    _motifs[3],
-    distance=x -> _mydistance(x, _motifs[3]),
-    featurename="AscendingYArm"
-)
+############################################################################################
+# Experiment #1: describe the right hand in "I have command class"
+############################################################################################
 
-# make proposition (we consider this as we entire alphabet, at the moment)
-proposition1 = Atom(ScalarCondition(vd1, <, 5.0))
-proposition2 = Atom(ScalarCondition(vd2, <, 5.0))
+include("experiments/natops1.jl")
 
-# those atoms will label possibly every world; they are agnostic of their size;
-# we introduce those to test whether `isdimensionally_coherent_itemset` filter policy
-# is working later.
-vm1, vm2 = VariableMin(1), VariableMin(2)
-p = Atom(ScalarCondition(vm1, <, 999.0))
-q = Atom(ScalarCondition(vm2, <, 999.0))
+############################################################################################
+# Experiment #2: describe the right hand in "All clear class"
+############################################################################################
 
-_items = Vector{Item}([proposition1, proposition2, p, q])
+include("experiments/natops2.jl")
 
-# define meaningfulness measures
-_itemsetmeasures = [(dimensional_gsupport, 0.001, 0.001)]
-_rulemeasures = [(gconfidence, 0.2, 0.2)]
+############################################################################################
+# Experiment #3: describe the right hand in "Not clear"
+############################################################################################
 
-# build the logiset we will mine
-logiset = scalarlogiset(X[1:30,:], [vd1, vd2, vm1, vm2])
+include("experiments/natops3.jl")
 
-# build the miner, and mine!
-apriori_miner = Miner(
-    logiset,
-    apriori,
-    _items,
-    _itemsetmeasures,
-    _rulemeasures;
-    itemset_mining_policies=[isdimensionally_coherent_itemset()]
-)
+############################################################################################
+# Experiment #4: describe wrists and elbows in "Spread wings"
+############################################################################################
 
-@test_nowarn mine!(apriori_miner)
-# @test freqitems(apriori_miner) |> length == 0
+include("experiments/natops4.jl")
+
+############################################################################################
+
+# to help debugging
+# plot([__motif__v5_l10_rhand_y_descending, IHCC[1,5][18:27] |> normalize  ])
+
+# plot frequent items in descending order by dimensiona global support
+# for frq in freqitems(miner)
+#   println("$(frq) => gsupport $(apriori_miner.globalmemo[(:dimensional_gsupport, frq)])")
+# end

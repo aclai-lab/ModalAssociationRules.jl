@@ -1,3 +1,5 @@
+import Base.filter!
+
 """
     struct Miner{
         D<:MineableData,
@@ -26,6 +28,11 @@
         miningstate::MiningState        # mining algorithm miningstate (see documentation)
 
         info::Info                      # general informations
+
+        # locks on memoization and miningstate structures
+        lmemolock::ReentrantLock
+        gmemolock::ReentrantLock
+        minigstatelock::ReentrantLock
     end
 
 Concrete [`AbstractMiner`](@ref) containing both the data, the logic and the
@@ -126,6 +133,11 @@ struct Miner{
 
     info::Info                      # general informations
 
+    # locks on memoization and miningstate structures
+    lmemolock::ReentrantLock
+    gmemolock::ReentrantLock
+    minigstatelock::ReentrantLock
+
     function Miner(
         X::D,
         algorithm::Function,
@@ -181,7 +193,8 @@ struct Miner{
             Vector{Itemset}([]), Vector{ARule}([]),
             LmeasMemo(), GmeasMemo(),
             worldfilter, itemset_mining_policies, arule_mining_policies,
-            miningstate, info
+            miningstate, info,
+            ReentrantLock(), ReentrantLock(), ReentrantLock()
         )
     end
 end
@@ -251,6 +264,33 @@ rulemeasures(miner::Miner)::Vector{<:MeaningfulnessMeasure} =
 miner.arule_constrained_measures
 
 """
+    lmemolock(miner::Miner) = miner.lmemolock
+
+Getter for `miner`'s lock dedicated to protect [`localmemo`](@ref).
+
+See also [`gmemolock`](@ref), [`localmemo`](@ref), [`Miner`](@ref).
+"""
+lmemolock(miner::Miner) = miner.lmemolock
+
+"""
+    gmemolock(miner::Miner) = miner.gmemolock
+
+Getter for `miner`'s lock dedicated to protect [`globalmemo`](@ref).
+
+See also [`globalmemo`](@ref), [`lmemolock`](@ref), [`Miner`](@ref).
+"""
+gmemolock(miner::Miner) = miner.gmemolock
+
+"""
+    miningstatelock(miner::Miner) = miner.miningstatelock
+
+Getter for `miner`'s lock dedicated to protect [`miningstate`](@ref) structure.
+
+See also [`Miner`](@ref), [`miningstate`](@ref).
+"""
+miningstatelock(miner::Miner) = miner.miningstatelock
+
+"""
 localmemo(miner::Miner)::LmeasMemo
 
 See [`localmemo(::AbstractMiner)`](@ref).
@@ -258,11 +298,39 @@ See [`localmemo(::AbstractMiner)`](@ref).
 localmemo(miner::Miner) = miner.localmemo
 
 """
+    localmemo!(miner::Miner, key::LmeasMemoKey, val::Threshold)
+
+Setter for a specific entry `key` inside the local memoization structure wrapped by
+`miner`.
+
+See also [`Miner`](@ref), [`LmeasMemo`](@ref), [`LmeasMemoKey`](@ref).
+"""
+localmemo!(miner::Miner, key::LmeasMemoKey, val::Threshold) = begin
+    lock(lmemolock(miner)) do
+        miner.localmemo[key] = val
+    end
+end
+
+"""
 globalmemo(miner::Miner)::GmeasMemo
 
 See [`globalmemo(::AbstractMiner)`](@ref).
 """
 globalmemo(miner::Miner) = miner.globalmemo
+
+"""
+    globalmemo!(miner::Miner, key::GmeasMemoKey, val::Threshold)
+
+Setter for a specific entry `key` inside the global memoization structure wrapped by
+`miner`.
+
+See also [`Miner`](@ref), [`GmeasMemo`](@ref), [`GmeasMemoKey`](@ref).
+"""
+globalmemo!(miner::Miner, key::GmeasMemoKey, val::Threshold) = begin
+    lock(gmemolock(miner)) do
+        miner.globalmemo[key] = val
+    end
+end
 
 """
     worldfilter(miner::Miner)
@@ -284,6 +352,47 @@ itemset_mining_policies(miner::Miner) = miner.itemset_mining_policies
 See [`itemset_mining_policies(::AbstractMiner)`](@ref).
 """
 arule_mining_policies(miner::Miner) = miner.arule_mining_policies
+
+"""
+    Base.filter!(
+        targets::Vector{Union{ARule,Itemset}},
+        policies_pool::Vector{Function}
+    )
+
+Apply `Base.filter!` on an [`ARule`](@ref)s or [`Itemset`](@ref)s collection,
+w.r.t. the family of policies `policies_pool`.
+
+See also [`ARule`](@ref), [`Base.filter!(::Vector{Itemset}, ::Miner)`](@ref),
+[`Itemset`](@ref), [`Base.filter!(::Vector{ARule}, ::Miner)`](@ref), [`Miner`](@ref).
+"""
+function Base.filter!(
+    targets::Union{<:Vector{<:ARule},Vector{<:Itemset}},
+    policies_pool::Vector{<:Function}
+)
+    filter!(target -> all(policy -> policy(target), policies_pool), targets)
+end
+
+"""
+    Base.filter!(itemsets::Vector{Itemset}, miner::Miner) = filter!(
+
+`filter!` the [`Itemset`](@ref)s wrapped in `miner`.
+
+See also [`Base.filter!(::Vector{ARule}, ::Miner)`](@ref), [`Itemset`](@ref),
+[`itemset_mining_policies`](@ref), [`Miner`](@ref).
+"""
+Base.filter!(itemsets::Vector{<:Itemset}, miner::Miner) = filter!(
+    itemsets, itemset_mining_policies(miner)
+)
+
+"""
+    Base.filter!(arules::Vector{ARule}, miner::Miner)
+
+See also [`ARule`](@ref), [`arule_mining_policies`](@ref),
+[`Base.filter!(::Vector{Itemset}, ::Miner)`](@ref), [`Itemset`](@ref), [`Miner`](@ref).
+"""
+Base.filter!(arules::Vector{ARule}, miner::Miner) = filter!(
+    arules, arule_mining_policies(miner)
+)
 
 """
 miningstate(miner::Miner)
