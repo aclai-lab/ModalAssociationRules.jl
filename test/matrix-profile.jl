@@ -33,6 +33,7 @@ function experiment!(miner::Miner, reportname::String)
     ]
     sort!(rulecollection, by=x->x[2], rev=true);
 
+    reportname = joinpath(["test", "experiments", reportname])
     open(reportname, "w") do io
         println(io, "Columns are: rule, confidence, ant support, ant+cons support")
 
@@ -46,6 +47,7 @@ function experiment!(miner::Miner, reportname::String)
 end
 
 X, y = load_NATOPS();
+insertcols!(X, 25, "ΔY[Thumb r and Hand tip r]" => X[:,5]-X[:,23])
 
 # right hand y axis
 var_id = 5
@@ -292,7 +294,8 @@ apriori_miner = Miner(
     ]
 )
 
-experiment!(apriori_miner, "test/experiments/rhand_ihavecommand.txt")
+println("Running experiment #1:")
+experiment!(apriori_miner, "rhand_ihavecommand.txt")
 
 ############################################################################################
 # Experiment #2: describe the right hand in "All clear class"
@@ -304,35 +307,35 @@ ACC = X[31:60, :]
 
 # remember: motifsalphabet(data, windowlength, #extractions)
 _mp, _raw_motifs, _motifs_v4_l10 = motifsalphabet(ACC[:,4], 10, 5; r=5, th=2);
-__motif__v4_l10_rhand_x_right = _motifs_v4_l10[3]
-__motif__v4_l10_rhand_x_align = _motifs_v4_l10[5]
+__motif__v4_l10_rhand_x_right = _motifs_v4_l10[5]
+__motif__v4_l10_rhand_x_align = _motifs_v4_l10[3]
 
-__var__v4_l10_rhand_x_protracting = VariableDistance(4,
-    __motif__v4_l10_rhand_x_protracting,
-    distance=x -> _mydistance(x, __motif__v4_l10_rhand_x_protracting),
-    featurename="Protracting"
+__var__v4_l10_rhand_x_right = VariableDistance(4,
+    __motif__v4_l10_rhand_x_right,
+    distance=x -> _mydistance(x, __motif__v4_l10_rhand_x_right),
+    featurename="Right"
 )
-__var__v4_l10_rhand_x_retracting = VariableDistance(4,
-    __motif__v4_l10_rhand_x_retracting,
-    distance=x -> _mydistance(x, __motif__v4_l10_rhand_x_retracting),
-    featurename="Retracting"
+__var__v4_l10_rhand_x_align = VariableDistance(4,
+    __motif__v4_l10_rhand_x_align,
+    distance=x -> _mydistance(x, __motif__v4_l10_rhand_x_align),
+    featurename="Align"
 )
 
 
-_mp, _raw_motifs, _motifs_v4_l40 = motifsalphabet(ACC[:,4], 30, 10; r=5, th=0);
-__motif__v4_l40_rhand_x_retracting_inverting_protracting = _motifs_v4_l40[8]
+_mp, _raw_motifs, _motifs_v4_l40 = motifsalphabet(ACC[:,4], 30, 1; r=5, th=0);
+__motif__v4_l40_rhand_x_right_align_still = _motifs_v4_l40[]
 
-__var__v4_l40_rhand_x_retracting_inverting_protracting = VariableDistance(4,
-    __motif__v4_l40_rhand_x_retracting_inverting_protracting,
-    distance=x -> _mydistance(x, __motif__v4_l40_rhand_x_retracting_inverting_protracting),
-    featurename="Retracting⋅InvertingDirection⋅Protracting"
+__var__v4_l40_rhand_x_right_align_still = VariableDistance(4,
+    __motif__v4_l40_rhand_x_right_align_still,
+    distance=x -> _mydistance(x, __motif__v4_l40_rhand_x_right_align_still),
+    featurename="Right⋅Align⋅Still"
 )
 
 
 # right hand Y variable generations
 
 _mp, _raw_motifs, _motifs_v5_l10 = motifsalphabet(ACC[:,5], 10, 10; r=5, th=2);
-__motif__v5_l10_rhand_y_ascending = _motifs_v5_l10[5]
+__motif__v5_l10_rhand_y_ascending = _motifs_v5_l10[1]
 __motif__v5_l10_rhand_y_descending = _motifs_v5_l10[2]
 
 __var__v5_l10_rhand_y_ascending = VariableDistance(5,
@@ -347,77 +350,93 @@ __var__v5_l10_rhand_y_descending = VariableDistance(5,
 )
 
 
-_mp, _raw_motifs, _motifs_v5_l40 = motifsalphabet(ACC[:,5], 40, 10; r=5, th=5);
-__motif__v5_l40_rhand_y_ascdesc = _motifs_v5_l40[7]
+_mp, _raw_motifs, _motifs_v5_l30 = motifsalphabet(ACC[:,5], 30, 10; r=5, th=2);
+__motif__v5_l30_rhand_y_ascending_inverting = _motifs_v5_l30[7]
+__motif__v5_l30_rhand_y_inverting_descending = _motifs_v5_l30[6]
 
-__var__v5_l40_rhand_y_ascdesc = VariableDistance(5,
-    __motif__v5_l40_rhand_y_ascdesc,
+__var__v5_l30_rhand_y_ascinvert = VariableDistance(5,
+    __motif__v5_l30_rhand_y_ascending_inverting,
     distance=x -> _mydistance(x, __motif__v5_l40_rhand_y_ascdesc),
-    featurename="Ascending⋅Descending"
+    featurename="Ascending⋅Inverting"
 )
 
-# right hand Z variable generation
-
-_mp, _raw_motifs, _motifs_v6_l10 = motifsalphabet(ACC[:,6], 10, 10; r=5, th=2);
-__motif__v6_l10_rhand_z_away_front = _motifs_v6_l10[2]
-__motif__v6_l10_rhand_z_closer_hip = _motifs_v5_l10[6]
-
-
-__var__v6_l10_rhand_z_away_hip = VariableDistance(6,
-    __motif__v6_l10_rhand_z_away_hip,
-    distance=x -> _mydistance(x, __motif__v6_l10_rhand_z_away_hip),
-    featurename="MovingAwayHip"
+__var__v5_l30_rhand_y_invertdesc = VariableDistance(5,
+    __motif__v5_l30_rhand_y_inverting_descending,
+    distance=x -> _mydistance(x, __motif__v5_l40_rhand_y_ascdesc),
+    featurename="Inverting⋅Descending"
 )
 
-__var__v6_l10_rhand_z_closer_hip = VariableDistance(6,
-    __motif__v6_l10_rhand_z_closer_hip,
-    distance=x -> _mydistance(x, __motif__v6_l10_rhand_z_closer_hip),
-    featurename="ApproachingHip"
+
+# right thumb Y (actually, r-finger-tips-Y minus r-thumb-Y to consider thumb orientation)
+
+_mp, _raw_motifs, _motifs_v25_l10 = motifsalphabet(ACC[:,25], 10, 10; r=5, th=2);
+__motif__v25_l10_rhand_thumb_up = _motifs_v25_l10[1]
+__motif__v25_l10_rhand_thumb_down = _motifs_v25_l10[3]
+
+__var__v25_l10_rhand_thumb_up = VariableDistance(25,
+    __motif__v25_l10_rhand_thumb_up,
+    distance=x -> _mydistance(x, __motif__v25_l10_rhand_thumb_up),
+    featurename="Up"
+)
+__var__v25_l10_rhand_thumb_down = VariableDistance(25,
+    __motif__v25_l10_rhand_thumb_down,
+    distance=x -> _mydistance(x, __motif__v25_l10_rhand_thumb_down),
+    featurename="Down"
 )
 
-# variables assembly;
-# insert your variables in variabledistances array,
-# then adjust the _distance_threshold (which is equal for each ScalarCondition)
-# and the meaningfulness measures thresholds.
+_mp, _raw_motifs, _motifs_v25_l20 = motifsalphabet(ACC[:,25], 20, 10; r=5, th=2);
+__motif__v25_l20_rhand_thumb_inversion = _motifs_v25_l20[5]
+
+__var__v25_l20_rhand_thumb_inversion = VariableDistance(25,
+    __motif__v25_l20_rhand_thumb_inversion,
+    distance=x -> _mydistance(x, __motif__v25_l20_rhand_thumb_inversion),
+    featurename="Inversion"
+)
 
 allmotifs = [
-    __motif__v4_l10_rhand_x_protracting,
-    __motif__v4_l10_rhand_x_retracting,
-    __motif__v4_l40_rhand_x_retracting_inverting_protracting,
+    __motif__v4_l10_rhand_x_right,
+    __motif__v4_l10_rhand_x_align,
+    __motif__v4_l40_rhand_x_right_align_still,
 
     __motif__v5_l10_rhand_y_ascending,
     __motif__v5_l10_rhand_y_descending,
-    __motif__v5_l40_rhand_y_ascdesc,
+    __motif__v5_l30_rhand_y_ascending_inverting,
+    __motif__v5_l30_rhand_y_inverting_descending,
 
-    __motif__v6_l10_rhand_z_away_hip,
-    __motif__v6_l10_rhand_z_closer_hip,
+    __motif__v25_l10_rhand_thumb_up,
+    __motif__v25_l10_rhand_thumb_down,
+    __motif__v25_l20_rhand_thumb_inversion
 ]
 
 variabledistances = [
-    __var__v4_l10_rhand_x_protracting,
-    __var__v4_l10_rhand_x_retracting,
-    __var__v4_l40_rhand_x_retracting_inverting_protracting,
+    __var__v4_l10_rhand_x_right,
+    __var__v4_l10_rhand_x_align,
+    __var__v4_l40_rhand_x_right_align_still,
 
     __var__v5_l10_rhand_y_ascending,
     __var__v5_l10_rhand_y_descending,
-    __var__v5_l40_rhand_y_ascdesc,
+    __var__v5_l30_rhand_y_ascinvert,
+    __var__v5_l30_rhand_y_invertdesc,
 
-    __var__v6_l10_rhand_z_away_hip,
-    __var__v6_l10_rhand_z_closer_hip,
+    __var__v25_l10_rhand_thumb_up,
+    __var__v25_l10_rhand_thumb_down,
+    __var__v25_l20_rhand_thumb_inversion
 ];
 
 propositional_atoms = [
     # bigger intervals' threshold can be relaxed
-    Atom(ScalarCondition(__var__v4_l10_rhand_x_protracting, <, 2.0)),
-    Atom(ScalarCondition(__var__v4_l10_rhand_x_retracting, <, 2.0)),
-    Atom(ScalarCondition(__var__v4_l40_rhand_x_retracting_inverting_protracting, <, 4.0)),
+    Atom(ScalarCondition(__var__v4_l10_rhand_x_right, <, 2.0)),
+    Atom(ScalarCondition(__var__v4_l10_rhand_x_align, <, 2.0)),
+    Atom(ScalarCondition(__var__v4_l40_rhand_x_right_align_still, <, 4.0)),
 
     Atom(ScalarCondition(__var__v5_l10_rhand_y_ascending, <, 2.0)),
     Atom(ScalarCondition(__var__v5_l10_rhand_y_descending, <, 2.0)),
-    Atom(ScalarCondition(__var__v5_l40_rhand_y_ascdesc, <, 4.0)),
+    Atom(ScalarCondition(__var__v5_l30_rhand_y_ascinvert, <, 4.0)),
+    Atom(ScalarCondition(__var__v5_l30_rhand_y_invertdesc, <, 4.0)),
 
-    Atom(ScalarCondition(__var__v6_l10_rhand_z_away_hip, <, 2.0)),
-    Atom(ScalarCondition(__var__v6_l10_rhand_z_closer_hip, <, 2.0)),
+    Atom(ScalarCondition(__var__v25_l10_rhand_thumb_up, <, 2.0)),
+    Atom(ScalarCondition(__var__v25_l10_rhand_thumb_down, <, 2.0)),
+    Atom(ScalarCondition(__var__v25_l20_rhand_thumb_inversion, <, 4.0))
 ];
 
 _atoms = reduce(vcat, [
@@ -434,7 +453,7 @@ _items = Vector{Item}(_atoms)
 _itemsetmeasures = [(dimensional_gsupport, 0.1, 0.1)]
 _rulemeasures = [(dimensional_gconfidence, 0.1, 0.1)]
 
-logiset = scalarlogiset(IHCC, variabledistances)
+logiset = scalarlogiset(ACC, variabledistances)
 
 apriori_miner = Miner(
     logiset,
@@ -453,6 +472,7 @@ apriori_miner = Miner(
     ]
 )
 
+println("Running experiment #2: ")
 experiment!(apriori_miner, "rhand_allclear.txt")
 
 
