@@ -366,8 +366,8 @@ See also [`ARule`](@ref), [`Base.filter!(::Vector{Itemset}, ::Miner)`](@ref),
 [`Itemset`](@ref), [`Base.filter!(::Vector{ARule}, ::Miner)`](@ref), [`Miner`](@ref).
 """
 function Base.filter!(
-    targets::Vector{<:Union{ARule,Itemset}},
-    policies_pool::Vector{Function}
+    targets::Union{<:Vector{<:ARule},Vector{<:Itemset}},
+    policies_pool::Vector{<:Function}
 )
     filter!(target -> all(policy -> policy(target), policies_pool), targets)
 end
