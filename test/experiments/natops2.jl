@@ -21,7 +21,7 @@ __var__v4_l10_rhand_x_align = VariableDistance(4,
 
 
 _mp, _raw_motifs, _motifs_v4_l40 = motifsalphabet(ACC[:,4], 30, 1; r=5, th=0);
-__motif__v4_l40_rhand_x_right_align_still = _motifs_v4_l40[]
+__motif__v4_l40_rhand_x_right_align_still = _motifs_v4_l40[1]
 
 __var__v4_l40_rhand_x_right_align_still = VariableDistance(4,
     __motif__v4_l40_rhand_x_right_align_still,
