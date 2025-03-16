@@ -34,7 +34,7 @@ using StatsBase
 
 include("core.jl")
 
-export Item, formula
+export Item, formula, feature
 export Itemset
 
 export ARule
@@ -96,6 +96,7 @@ include("meaningfulness-measures.jl")
 
 export @localmeasure, @globalmeasure, @linkmeas
 export lsupport, gsupport
+export dimensional_lsupport, dimensional_gsupport
 export lconfidence, gconfidence
 export llift, glift
 export lconviction, gconviction
@@ -103,7 +104,7 @@ export lleverage, gleverage
 
 include("mining-policies.jl")
 
-export islimited_length_itemset
+export islimited_length_itemset, isanchored_itemset, isdimensionally_coherent_itemset
 export islimited_length_arule, isanchored_arule, isheterogeneous_arule
 
 include("algorithms/apriori.jl")
@@ -134,7 +135,7 @@ export patternbase, bounce!, projection
 export fpgrowth
 
 include("alphabet-proposal.jl")
-export motifsalphabet 
+export motifsalphabet
 
 # include("analysis.jl")
 # export plot_arule_analyses

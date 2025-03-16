@@ -248,6 +248,72 @@ _gsupport_logic = (itemset, X, threshold, miner) -> begin
 end
 
 
+# core logic of `dimensional_lsupport`
+_dimensionalwise_lsupport_logic = (itemset, X, ith_instance, miner) -> begin
+    # this method assumes that the mining is taking place on geometric type worlds,
+    # such as Intervals or Interval2Ds, but not OneWorld!
+    # also, it is assumed that `isdimensionally_coherent_itemset` policy is being applied.
+
+    # we need to establish on which worlds the itemset can be evaluated;
+    # e.g.1, [min(V1)>0.5, max(V2)<0.2] can be evaluated on any world.
+    # e.g.2, [dist(V1,motif1)<4.3, <D>dist(V2,motif2)<3.0] can be evaluated only in
+    # worlds w such that size(w) == size(motif1), (first item is a propositional anchor).
+
+    # because of isdimensionally_coherent_itemset, we know the itemset is well-formed;
+    # we just need to find the size of the structure wrapped within any anchor item.
+    _features = feature.(itemset)
+    _anchor_feature_idx = findfirst(
+        # it must be dimensionally constraind
+        _item -> _item |> feature |> typeof <: VariableDistance &&
+        # it must be an anchor (propositional, without modalities like in SyntaxTree case)
+        _item |> formula |> typeof <: Atom,
+        itemset
+    )
+
+    # if no feature introduces a dimensional constraint, then just fallback to lsupport
+    if isnothing(_anchor_feature_idx)
+        return _lsupport_logic(itemset, X, ith_instance, miner)
+    end
+
+    _repr = _features[_anchor_feature_idx]
+    _repr_size = _repr |> reference |> size
+
+    # TODO: implement this for various GeometricalWorld types in SoleLogics
+    # see https://github.com/aclai-lab/SoleLogics.jl/issues/68
+    function _worldsize(w::Interval{T}) where T
+        return (w.y - w.x,)
+    end
+
+    _fairworlds = Ref(0) # keeps track of the number of worlds in which itemset can be true
+    wmask = WorldMask([
+        _worldsize(w) == _repr_size ?
+            (_fairworlds[] += 1; check(formula(itemset), X, ith_instance, w)) : 0
+
+        for w in allworlds(miner; ith_instance=ith_instance)
+    ])
+
+    # return the result, and eventually the information needed to support miningstate
+    return Dict(
+        :measure => count(wmask) / _fairworlds[],
+        :instance_item_toworlds => wmask,
+    )
+end
+
+# core logic of `dimensional_gsupport`
+_dimensionalwise_gsupport_logic = (itemset, X, threshold, miner) -> begin
+    _measure = sum([
+        # for each instance, compute how many times the local support overpass the threshold
+        dimensional_lsupport(itemset, getinstance(X, ith_instance), miner) >= threshold
+
+        # NOTE: an instance filter could be provided by the user to avoid iterating
+        # every instance, depending on the needings.
+        for ith_instance in 1:ninstances(X)
+    ]) / ninstances(X)
+
+    return Dict(:measure => _measure)
+end
+
+
 
 _lconfidence_logic = (rule, X, ith_instance, miner) -> begin
     _instance = getinstance(X, ith_instance)
@@ -264,6 +330,25 @@ _gconfidence_logic = (rule, X, threshold, miner) -> begin
 
     num = gsupport(_union, X, threshold, miner)
     den = gsupport(_antecedent, X, threshold, miner)
+
+    @assert den >= num "ERROR: conf between $(_union) [$(num)] and $(_antecedent) [$(den)]"
+
+    return Dict(:measure => num/den)
+end
+
+_dimensionalwise_lconfidence_logic = (rule, X, ith_instance, miner) -> begin
+    # this is just a placeholder definition to guarantee no problems with @linkmeas
+    # later; TODO: remove this (also, local confidence does not seem to be "useful")
+    return _lconfidence_logic(rule, X, ith_instance, miner)
+end
+
+_dimensionalwise_gconfidence_logic = (rule, X, threshold, miner) -> begin
+    _antecedent = antecedent(rule)
+    _consequent = consequent(rule)
+    _union = union(_antecedent, _consequent)
+
+    num = dimensional_gsupport(_union, X, threshold, miner)
+    den = dimensional_gsupport(_antecedent, X, threshold, miner)
 
     @assert den >= num "ERROR: conf between $(_union) [$(num)] and $(_antecedent) [$(den)]"
 
@@ -408,6 +493,38 @@ See also [`Miner`](@ref), [`LogicalInstance`](@ref), [`Itemset`](@ref),
 @globalmeasure gsupport _gsupport_logic
 
 
+"""
+    function dimensional_lsupport(
+        itemset::Itemset,
+        instance::LogicalInstance;
+        miner::Union{Nothing,AbstractMiner}=nothing
+    )::Float64
+
+Compute the a "dimensionally-aware" local support for the given `itemset` in the given
+`instance`.
+
+TODO: explain
+
+See also [`Miner`](@ref), [`dimensional_gsupport`](@ref), [`LogicalInstance`](@ref),
+[`Itemset`](@ref), [`Threshold`](@ref).
+"""
+@localmeasure dimensional_lsupport _dimensionalwise_lsupport_logic
+
+"""
+    function dimensional_gsupport(
+        itemset::Itemset,
+        X::SupportedLogiset,
+        threshold::Threshold;
+        miner::Union{Nothing,AbstractMiner}=nothing
+    )::Float64
+
+Global support that calls [`dimensional_lsupport`](@ref) internally.
+
+See also [`Miner`](@ref), [`dimensional_lsupport`](@ref), [`LogicalInstance`](@ref),
+[`Itemset`](@ref), [`SupportedLogiset`](@ref), [`Threshold`](@ref).
+"""
+@globalmeasure dimensional_gsupport _dimensionalwise_gsupport_logic
+
 
 """
     function lconfidence(
@@ -451,6 +568,30 @@ See also [`antecedent`](@ref), [`ARule`](@ref), [`AbstractMiner`](@ref), [`gsupp
 """
 @globalmeasure gconfidence _gconfidence_logic
 
+
+"""
+    function dimensional_lconfidence(
+        rule::ARule,
+        ith_instance::LogicalInstance;
+        miner::Union{Nothing,AbstractMiner}=nothing
+    )::Float64
+
+See [`dimensional_lsupport`](@ref).
+"""
+@localmeasure dimensional_lconfidence _dimensionalwise_lconfidence_logic
+
+
+"""
+    function dimensional_gconfidence(
+        rule::ARule,
+        X::SupportedLogiset,
+        threshold::Threshold;
+        miner::Union{Nothing,AbstractMiner}=nothing
+    )::Float64
+
+See [`dimensional_gsupport`](@ref).
+"""
+@globalmeasure dimensional_gconfidence _dimensionalwise_gconfidence_logic
 
 
 """
@@ -595,8 +736,10 @@ See also [`lchisquared`](@ref).
 # meaning that a global measure is associated to its corresponding local one.
 
 @linkmeas gsupport lsupport
+@linkmeas dimensional_gsupport dimensional_lsupport
 
 @linkmeas gconfidence lconfidence
+@linkmeas dimensional_gconfidence dimensional_lconfidence
 
 @linkmeas glift llift
 

@@ -11,5 +11,7 @@
 /statprof/*
 /test/analyses/*
 /test/notes
+/test/deprecated
+*.txt
 
 TODO

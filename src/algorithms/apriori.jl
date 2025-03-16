@@ -82,17 +82,20 @@ function apriori(
     # candidates of length 1 are all the letters in our items
     candidates = Itemset{_itemtype}.(items(miner))
 
+    filter!(candidates, miner)  # apply filtering policies
     while !isempty(candidates)
-        # get the frequent itemsets from the first candidates set
-        frequents = [candidate
-            for candidate in candidates
-            for (gmeas_algo, lthreshold, gthreshold) in itemsetmeasures(miner)
+        frequents = Itemset{_itemtype}[]
+        frequents_lock = ReentrantLock()
 
-            # other than the meaningfulness measures,
-            # all the itemset mining policies must be honored too.
-            if gmeas_algo(candidate, X, lthreshold, miner) >= gthreshold &&
-                all(__policy -> __policy(candidate), itemset_mining_policies(miner))
-        ] |> Vector{Itemset{_itemtype}}
+        # get the frequent itemsets from the first candidates set
+        Threads.@threads for candidate in candidates
+            any(
+                gmeas_algo(candidate, X, lthreshold, miner) >= gthreshold
+                for (gmeas_algo, lthreshold, gthreshold) in itemsetmeasures(miner)
+            ) && lock(frequents_lock) do
+                push!(frequents, candidate)
+            end
+        end
 
         push!(freqitems(miner), frequents...)
 
@@ -103,5 +106,7 @@ function apriori(
 
         verbose && printstyled("Starting new computational loop with " *
             "$(length(candidates)) candidates...\n", color=:green)
+
+        filter!(candidates, miner)  # apply filtering policies
     end
 end
