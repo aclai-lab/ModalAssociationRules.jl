@@ -169,6 +169,3 @@ apriori_miner = Miner(
         # isheterogeneous_arule(),
     ]
 )
-
-println("Running experiment #2: ")
-experiment!(apriori_miner, "rhand_allclear.txt")

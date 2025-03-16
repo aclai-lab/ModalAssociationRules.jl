@@ -83,31 +83,41 @@ _mydistance = (x, y) -> size(x) == size(y) ?
 ############################################################################################
 # Experiment #1: just a small example
 ############################################################################################
-include("experiments/natops0.jl")
+include("test/experiments/natops0.jl")
+@test_nowarn mine!(apriori_miner)
+@test freqitems(apriori_miner) |> length == 5
 
 ############################################################################################
 # Experiment #1: describe the right hand in "I have command class"
 ############################################################################################
+include("test/experiments/natops1.jl")
 
-include("experiments/natops1.jl")
+println("Running experiment #1:")
+experiment!(apriori_miner, "rhand_ihavecommand.txt")
 
 ############################################################################################
 # Experiment #2: describe the right hand in "All clear class"
 ############################################################################################
+include("test/experiments/natops2.jl")
 
-include("experiments/natops2.jl")
+println("Running experiment #2: ")
+experiment!(apriori_miner, "rhand_allclear.txt")
 
 ############################################################################################
 # Experiment #3: describe the right hand in "Not clear"
 ############################################################################################
+include("test/experiments/natops3.jl")
 
-include("experiments/natops3.jl")
+println("Running experiment #3: ")
+experiment!(apriori_miner, "rhand_notclear.txt")
 
 ############################################################################################
 # Experiment #4: describe wrists and elbows in "Spread wings"
 ############################################################################################
+include("test/experiments/natops4.jl")
 
-include("experiments/natops4.jl")
+println("Running experiment #4: ")
+experiment!(apriori_miner, "wristelbow_spreadwings.txt")
 
 ############################################################################################
 

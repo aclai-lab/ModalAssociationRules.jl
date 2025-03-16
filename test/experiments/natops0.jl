@@ -46,6 +46,3 @@ apriori_miner = Miner(
     _rulemeasures;
     itemset_mining_policies=[isdimensionally_coherent_itemset()]
 )
-
-@test_nowarn mine!(apriori_miner)
-@test freqitems(apriori_miner) |> length == 5

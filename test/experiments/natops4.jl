@@ -140,6 +140,3 @@ apriori_miner = Miner(
         # isheterogeneous_arule(),
     ]
 )
-
-println("Running experiment #4: ")
-experiment!(apriori_miner, "wristelbow_spreadwings.txt")
