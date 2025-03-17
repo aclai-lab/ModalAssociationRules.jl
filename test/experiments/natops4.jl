@@ -1,8 +1,9 @@
 
 SWC = X[91:120, :]
 
-
-# Left (7) and right (10) elbow X
+############################################################################################
+# elbow x: left (7) and right (9)
+############################################################################################
 
 ## Left
 _mp, _raw_motifs, _motifs_v7_l10 = motifsalphabet(SWC[:,7], 10, 5; r=20, th=5);
@@ -69,6 +70,50 @@ __motif__v10_l30_relbow_reen_right_reen,
     featurename="Reentring⋅Right⋅Reentring"
 )
 
+############################################################################################
+# elbow y: left (8) and right (11)
+############################################################################################
+
+## Left
+_mp, _raw_motifs, _motifs_v8_l10 = motifsalphabet(SWC[:,8], 10, 5; r=20, th=5);
+__motif__v8_l10_lelbow_ascend = _motifs_v8_l10[5]
+__motif__v8_l10_lelbow_descending = _motifs_v8_l10[3]
+
+__var__v8_l10_lelbow_ascend = VariableDistance(8,
+    __motif__v8_l10_lelbow_ascend,
+    distance=x -> _mydistance(x, __motif__v8_l10_lelbow_ascend),
+    featurename="Ascending"
+)
+__var__v8_l10_lelbow_descending = VariableDistance(8,
+    __motif__v8_l10_lelbow_descending,
+    distance=x -> _mydistance(x, __motif__v8_l10_lelbow_descending),
+    featurename="Descending"
+)
+
+
+_mp, _raw_motifs, _motifs_v8_l30 = motifsalphabet(SWC[:,8], 30, 2; r=20, th=5);
+__motif__v8_l30_lelbow_ascending = _motifs_v8_l30[1]
+__motif__v8_l30_lelbow_descending = _motifs_v8_l30[2]
+
+__var__v8_l30_lelbow_ascending = VariableDistance(8,
+    __motif__v8_l30_lelbow_ascending,
+    distance=x -> _mydistance(x, __motif__v8_l30_lelbow_ascending),
+    featurename="Ascending"
+)
+
+__var__v8_l30_lelbow_descending = VariableDistance(8,
+    __motif__v8_l30_lelbow_descending,
+    distance=x -> _mydistance(x, __motif__v8_l30_lelbow_descending),
+    featurename="Descending"
+)
+
+## Right
+
+
+
+############################################################################################
+# assembly
+############################################################################################
 
 allmotifs = [
     __motif__v7_l10_lelbow_reentrant,
