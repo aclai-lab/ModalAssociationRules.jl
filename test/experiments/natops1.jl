@@ -127,13 +127,14 @@ _atoms = reduce(vcat, [
         diamond(IA_L).(propositional_atoms),
         diamond(IA_B).(propositional_atoms),
         diamond(IA_E).(propositional_atoms),
+        diamond(IA_D).(propositional_atoms),
         diamond(IA_O).(propositional_atoms),
     ]
 )
 _items = Vector{Item}(_atoms)
 
-_itemsetmeasures = [(dimensional_gsupport, 0.3, 0.3)]
-_rulemeasures = [(dimensional_gconfidence, 0.3, 0.3)]
+_itemsetmeasures = [(dimensional_gsupport, 0.1, 0.2)]
+_rulemeasures = [(dimensional_gconfidence, 0.2, 0.2)]
 
 logiset = scalarlogiset(IHCC, variabledistances)
 
