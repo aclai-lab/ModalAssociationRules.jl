@@ -31,7 +31,7 @@ __var__v7_l30_lelbow_left_reen_left = VariableDistance(7,
     featurename="Left⋅Reentering⋅Left"
 )
 
-__var__v7_l30_lelbow_left_reen_left = VariableDistance(7,
+__var__v7_l30_lelbow_reen_left_reen = VariableDistance(7,
     __motif__v7_l30_lelbow_reen_left_reen,
     distance=x -> _mydistance(x, __motif__v7_l30_lelbow_reen_left_reen),
     featurename="Reentering⋅Left⋅Reentering"
@@ -64,7 +64,7 @@ __var__v10_l30_relbow_right_reen_right = VariableDistance(10,
     featurename="Right⋅Reentering⋅Right"
 )
 
-__var__v10_l30_relbow_right_reen_right = VariableDistance(10,
+__var__v10_l30_relbow_reen_right_reen = VariableDistance(10,
 __motif__v10_l30_relbow_reen_right_reen,
     distance=x -> _mydistance(x, __motif__v10_l30_relbow_reen_right_reen),
     featurename="Reentering⋅Right⋅Reentering"
@@ -117,7 +117,7 @@ __var__v11_l10_relbow_descend = VariableDistance(11,
     distance=x -> _mydistance(x, __motif__v11_l10_relbow_descend),
     featurename="Descending"
 )
-__var__v11_l10_relbow_left = VariableDistance(11,
+__var__v11_l10_relbow_ascend = VariableDistance(11,
     __motif__v11_l10_relbow_ascend,
     distance=x -> _mydistance(x, __motif__v11_l10_relbow_ascend),
     featurename="Ascending"
@@ -134,7 +134,7 @@ __var__v11_l30_relbow_longdescend = VariableDistance(11,
     featurename="Long⋅Descending"
 )
 
-__var__v11_l30_relbow_longdescend = VariableDistance(11,
+__var__v11_l30_relbow_longascend = VariableDistance(11,
 __motif__v11_l30_relbow_longascend,
     distance=x -> _mydistance(x, __motif__v11_l30_relbow_longascend),
     featurename="Long⋅Ascending"
@@ -146,13 +146,13 @@ __motif__v11_l30_relbow_longascend,
 
 ## Left
 _mp, _raw_motifs, _motifs_v9_l10 = motifsalphabet(SWC[:,9], 10, 5; r=20, th=5);
-__motif__v9_l10_lelbow_neutral = _motifs_v9_l10[4]
+__motif__v9_l10_lelbow_left = _motifs_v9_l10[4]
 __motif__v9_l10_lelbow_neutral = _motifs_v9_l10[2]
 
-__var__v9_l10_lelbow_neutral = VariableDistance(9,
-    __motif__v9_l10_lelbow_neutral,
-    distance=x -> _mydistance(x, __motif__v9_l10_lelbow_neutral),
-    featurename="Neutral"
+__var__v9_l10_lelbow_left = VariableDistance(9,
+    __motif__v9_l10_lelbow_left,
+    distance=x -> _mydistance(x, __motif__v9_l10_lelbow_left),
+    featurename="Left"
 )
 __var__v9_l10_lelbow_neutral = VariableDistance(9,
     __motif__v9_l10_lelbow_neutral,
@@ -161,8 +161,8 @@ __var__v9_l10_lelbow_neutral = VariableDistance(9,
 )
 
 
-_mp, _raw_motifs, _motifs_v9_l30 = motifsalphabet(SWC[:,9], 30, 1; r=20, th=5);
-__motif__v9_l30_lelbow_left_neutral = _raw_motifs[1].seqs[1]
+_mp, _raw_motifs, _motifs_v9_l30 = motifsalphabet(SWC[:,9], 30, 1; r=10, th=10);
+__motif__v9_l30_lelbow_left_neutral = _motifs_v9_l30[1]
 
 __var__v9_l30_lelbow_left_neutral = VariableDistance(9,
     __motif__v9_l30_lelbow_left_neutral,
@@ -188,7 +188,7 @@ __var__v12_l10_relbow_neutral = VariableDistance(12,
 
 
 _mp, _raw_motifs, _motifs_v12_l30 = motifsalphabet(SWC[:,12], 30, 1; r=10, th=10);
-__motif__v12_l30_relbow_right_reentering = _motifs_v12_l30
+__motif__v12_l30_relbow_right_reentering = _motifs_v12_l30[1]
 
 __var__v12_l30_relbow_right_reentering = VariableDistance(12,
     __motif__v12_l30_relbow_right_reentering,
@@ -222,7 +222,7 @@ allmotifs = [
     __motif__v11_l30_relbow_longascend,
 
     __motif__v9_l10_lelbow_neutral,
-    __motif__v9_l10_lelbow_neutral,
+    __motif__v9_l10_lelbow_left,
     __motif__v9_l30_lelbow_left_neutral,
 
     __motif__v12_l10_relbow_right,
@@ -234,12 +234,12 @@ variabledistances = [
     __var__v7_l10_lelbow_reentrant,
     __var__v7_l10_lelbow_left,
     __var__v7_l30_lelbow_left_reen_left,
-    __var__v7_l30_lelbow_left_reen_left,
+    __var__v7_l30_lelbow_reen_left_reen,
 
     __var__v10_l10_relbow_reentrant,
     __var__v10_l10_relbow_left,
     __var__v10_l30_relbow_right_reen_right,
-    __var__v10_l30_relbow_right_reen_right,
+    __var__v10_l30_relbow_reen_right_reen,
 
     __var__v8_l10_lelbow_ascend,
     __var__v8_l10_lelbow_descending,
@@ -252,7 +252,7 @@ variabledistances = [
     __var__v11_l30_relbow_longascend,
 
     __var__v9_l10_lelbow_neutral,
-    __var__v9_l10_lelbow_neutral,
+    __var__v9_l10_lelbow_left,
     __var__v9_l30_lelbow_left_neutral,
 
     __var__v12_l10_relbow_right,
@@ -265,12 +265,12 @@ propositional_atoms = [
     Atom(ScalarCondition(__var__v7_l10_lelbow_reentrant, <, 2.0)),
     Atom(ScalarCondition(__var__v7_l10_lelbow_left, <, 2.0)),
     Atom(ScalarCondition(__var__v7_l30_lelbow_left_reen_left, <, 4.0)),
-    Atom(ScalarCondition(__var__v7_l30_lelbow_left_reen_left, <, 4.0)),
+    Atom(ScalarCondition(__var__v7_l30_lelbow_reen_left_reen, <, 4.0)),
 
     Atom(ScalarCondition(__var__v10_l10_relbow_reentrant, <, 2.0)),
     Atom(ScalarCondition(__var__v10_l10_relbow_left, <, 4.0)),
     Atom(ScalarCondition(__var__v10_l30_relbow_right_reen_right, <, 4.0)),
-    Atom(ScalarCondition(__var__v10_l30_relbow_right_reen_right, <, 4.0)),
+    Atom(ScalarCondition(__var__v10_l30_relbow_reen_right_reen, <, 4.0)),
 
     Atom(ScalarCondition(__var__v8_l10_lelbow_ascend, <, 2.0)),
     Atom(ScalarCondition(__var__v8_l10_lelbow_descending, <, 2.0)),
@@ -283,7 +283,7 @@ propositional_atoms = [
     Atom(ScalarCondition(__var__v11_l30_relbow_longascend, <, 4.0)),
 
     Atom(ScalarCondition(__var__v9_l10_lelbow_neutral, <, 2.0)),
-    Atom(ScalarCondition(__var__v9_l10_lelbow_neutral, <, 2.0)),
+    Atom(ScalarCondition(__var__v9_l10_lelbow_left, <, 2.0)),
     Atom(ScalarCondition(__var__v9_l30_lelbow_left_neutral, <, 4.0)),
 
     Atom(ScalarCondition(__var__v12_l10_relbow_right, <, 2.0)),
