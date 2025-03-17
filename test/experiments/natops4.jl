@@ -92,19 +92,19 @@ __var__v8_l10_lelbow_descending = VariableDistance(8,
 
 
 _mp, _raw_motifs, _motifs_v8_l30 = motifsalphabet(SWC[:,8], 30, 2; r=20, th=5);
-__motif__v8_l30_lelbow_ascending = _motifs_v8_l30[1]
-__motif__v8_l30_lelbow_descending = _motifs_v8_l30[2]
+__motif__v8_l30_lelbow_ascending = _motifs_v8_l30[2]
+__motif__v8_l30_lelbow_descending = _motifs_v8_l30[1]
 
 __var__v8_l30_lelbow_ascending = VariableDistance(8,
     __motif__v8_l30_lelbow_ascending,
     distance=x -> _mydistance(x, __motif__v8_l30_lelbow_ascending),
-    featurename="Ascending"
+    featurename="Long⋅Ascending"
 )
 
 __var__v8_l30_lelbow_descending = VariableDistance(8,
     __motif__v8_l30_lelbow_descending,
     distance=x -> _mydistance(x, __motif__v8_l30_lelbow_descending),
-    featurename="Descending"
+    featurename="Long⋅Descending"
 )
 
 ## Right
