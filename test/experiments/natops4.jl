@@ -108,8 +108,36 @@ __var__v8_l30_lelbow_descending = VariableDistance(8,
 )
 
 ## Right
+_mp, _raw_motifs, _motifs_v11_l10 = motifsalphabet(SWC[:,11], 10, 5; r=10, th=5);
+__motif__v11_l10_relbow_descend = _motifs_v11_l10[1]
+__motif__v11_l10_relbow_ascend = _motifs_v11_l10[4]
 
+__var__v11_l10_relbow_descend = VariableDistance(11,
+    __motif__v11_l10_relbow_descend,
+    distance=x -> _mydistance(x, __motif__v11_l10_relbow_descend),
+    featurename="Descending"
+)
+__var__v11_l10_relbow_left = VariableDistance(11,
+    __motif__v11_l10_relbow_ascend,
+    distance=x -> _mydistance(x, __motif__v11_l10_relbow_ascend),
+    featurename="Ascending"
+)
 
+_mp, _raw_motifs, _motifs_v11_l30 = motifsalphabet(SWC[:,11], 30, 2; r=20, th=5);
+__motif__v11_l30_relbow_longdescend = _motifs_v11_l30[1]
+__motif__v11_l30_relbow_longascend = _motifs_v11_l30[2]
+
+__var__v11_l30_relbow_longdescend = VariableDistance(11,
+    __motif__v11_l30_relbow_longdescend,
+    distance=x -> _mydistance(x, __motif__v11_l30_relbow_longdescend),
+    featurename="Long⋅Descending"
+)
+
+__var__v11_l30_relbow_longdescend = VariableDistance(11,
+__motif__v11_l30_relbow_longascend,
+    distance=x -> _mydistance(x, __motif__v11_l30_relbow_longascend),
+    featurename="Long⋅Ascending"
+)
 
 ############################################################################################
 # assembly
