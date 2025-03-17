@@ -12,9 +12,18 @@ using SoleData
 
 # little utility to avoid writing an experiment
 function experiment!(miner::Miner, reportname::String)
+    println("Mining...")
+    mining_start = time()
     mine!(miner)
+    mining_end = time()
+    println("Mining duration: $(round(mining_end - mining_start, digits=2))")
 
+    println("Generating rules...")
+    generating_start = time()
     generaterules!(miner) |> collect
+    generating_end = time()
+    println("Generation duration: $(round(generating_end - generating_start, digits=2))")
+
 
     rulecollection = [
         (
@@ -34,6 +43,7 @@ function experiment!(miner::Miner, reportname::String)
     sort!(rulecollection, by=x->x[2], rev=true);
 
     reportname = joinpath(["test", "experiments", reportname])
+    println("Writing to: $(reportname)")
     open(reportname, "w") do io
         println(io, "Columns are: rule, confidence, ant support, ant+cons support")
 
