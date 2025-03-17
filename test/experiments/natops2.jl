@@ -132,9 +132,9 @@ propositional_atoms = [
     Atom(ScalarCondition(__var__v5_l30_rhand_y_ascinvert, <, 4.0)),
     Atom(ScalarCondition(__var__v5_l30_rhand_y_invertdesc, <, 4.0)),
 
-    Atom(ScalarCondition(__var__v25_l10_rhand_thumb_up, <, 2.0)),
-    Atom(ScalarCondition(__var__v25_l10_rhand_thumb_down, <, 2.0)),
-    Atom(ScalarCondition(__var__v25_l20_rhand_thumb_inversion, <, 4.0))
+    Atom(ScalarCondition(__var__v25_l10_rhand_thumb_up, <, 1.0)),
+    Atom(ScalarCondition(__var__v25_l10_rhand_thumb_down, <, 1.0)),
+    Atom(ScalarCondition(__var__v25_l20_rhand_thumb_inversion, <, 2.0))
 ];
 
 _atoms = reduce(vcat, [
