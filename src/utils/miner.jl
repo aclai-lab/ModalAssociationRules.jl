@@ -1,4 +1,5 @@
 import Base.filter!
+using Base.Threads
 
 """
     struct Miner{
@@ -513,7 +514,7 @@ function generaterules!(miner::Miner)
         ))
     end
 
-    return generaterules(freqitems(miner), miner)
+    return _parallel_generaterules(freqitems(miner), miner)
 end
 
 """
@@ -609,7 +610,85 @@ See [`generaterules(::AbstractVector{Itemset}, ::AbstractMiner)`](@ref).
     end
 end
 
+# TODO: deprecate `generaterules` (which is a generator, working with 1 thread)
+# and keep this multi-threaded version.
+# This is called in `generaterules!`.
+function _parallel_generaterules(
+    itemsets::AbstractVector{Itemset},
+    miner::Miner;
+    # TODO: this parameter is momentary and enables the computation of additional metrics
+    # other than the `rulemeasures` specified within `miner`.
+    compute_additional_metrics::Bool=true
+)
+    @threads for itemset in filter(x -> length(x) >= 2, itemsets)
+        subsets = powerset(itemset)
 
+        for subset in subsets
+            # subsets are built already sorted incrementally;
+            # hence, since we want the antecedent to be longer initially,
+            # the first subset values corresponds to (see comment below)
+            # (l-a)
+            _consequent = subset == Any[] ? Itemset{Item}() : subset
+            # a
+            _antecedent = symdiff(itemset, _consequent) |> Itemset
+
+            # degenerate case
+            if length(_antecedent) < 1 || length(_consequent) != 1
+                continue
+            end
+
+            currentrule = ARule((_antecedent, _consequent))
+
+            # apply generation policies to remove unwanted rules
+            unwanted = false
+            for policy in arule_mining_policies(miner)
+                if !policy(currentrule)
+                    unwanted = true
+                    break
+                end
+            end
+
+            if unwanted
+                continue
+            end
+
+            interesting = true
+            for meas in rulemeasures(miner)
+                (gmeas_algo, lthreshold, gthreshold) = meas
+                gmeas_result = gmeas_algo(
+                    currentrule, data(miner), lthreshold, miner)
+
+                # some meaningfulness measure test is failed
+                if gmeas_result < gthreshold
+                    interesting = false
+                    break
+                end
+            end
+
+            # all meaningfulness measure tests passed
+            if interesting
+
+                if compute_additional_metrics
+                    # TODO: deprecate `compute_additional_metrics` kwarg and move this code
+                    # in the cycle where a generic global measure is computed.
+                    (_, __lthreshold, _) = rulemeasures(miner) |> first
+
+                    for gmeas_algo in [glift, gconviction, gleverage]
+                        gmeas_algo(currentrule, data(miner), __lthreshold, miner)
+                    end
+                end
+
+                push!(arules(miner), currentrule)
+            # since a meaningfulness measure test failed,
+            # we don't want to keep generating rules.
+            else
+                break
+            end
+        end
+    end
+
+    return arules(miner)
+end
 
 # some utilities and new dispatches coming from external packages
 
