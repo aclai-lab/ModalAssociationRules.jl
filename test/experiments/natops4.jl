@@ -28,13 +28,13 @@ __motif__v7_l30_lelbow_reen_left_reen = _motifs_v7_l30[2]
 __var__v7_l30_lelbow_left_reen_left = VariableDistance(7,
     __motif__v7_l30_lelbow_left_reen_left,
     distance=x -> _mydistance(x, __motif__v7_l30_lelbow_left_reen_left),
-    featurename="Left⋅Reentring⋅Left"
+    featurename="Left⋅Reentering⋅Left"
 )
 
 __var__v7_l30_lelbow_left_reen_left = VariableDistance(7,
     __motif__v7_l30_lelbow_reen_left_reen,
     distance=x -> _mydistance(x, __motif__v7_l30_lelbow_reen_left_reen),
-    featurename="Reentring⋅Left⋅Reentring"
+    featurename="Reentering⋅Left⋅Reentering"
 )
 
 
@@ -61,13 +61,13 @@ __motif__v10_l30_relbow_reen_right_reen = _motifs_v10_l30[2]
 __var__v10_l30_relbow_right_reen_right = VariableDistance(10,
     __motif__v10_l30_relbow_right_reen_right,
     distance=x -> _mydistance(x, __motif__v10_l30_relbow_right_reen_right),
-    featurename="Right⋅Reentring⋅Right"
+    featurename="Right⋅Reentering⋅Right"
 )
 
 __var__v10_l30_relbow_right_reen_right = VariableDistance(10,
 __motif__v10_l30_relbow_reen_right_reen,
     distance=x -> _mydistance(x, __motif__v10_l30_relbow_reen_right_reen),
-    featurename="Reentring⋅Right⋅Reentring"
+    featurename="Reentering⋅Right⋅Reentering"
 )
 
 ############################################################################################
@@ -123,6 +123,7 @@ __var__v11_l10_relbow_left = VariableDistance(11,
     featurename="Ascending"
 )
 
+
 _mp, _raw_motifs, _motifs_v11_l30 = motifsalphabet(SWC[:,11], 30, 2; r=20, th=5);
 __motif__v11_l30_relbow_longdescend = _motifs_v11_l30[1]
 __motif__v11_l30_relbow_longascend = _motifs_v11_l30[2]
@@ -137,6 +138,62 @@ __var__v11_l30_relbow_longdescend = VariableDistance(11,
 __motif__v11_l30_relbow_longascend,
     distance=x -> _mydistance(x, __motif__v11_l30_relbow_longascend),
     featurename="Long⋅Ascending"
+)
+
+############################################################################################
+# elbow z: left (9) and right (12)
+############################################################################################
+
+## Left
+_mp, _raw_motifs, _motifs_v9_l10 = motifsalphabet(SWC[:,9], 10, 5; r=20, th=5);
+__motif__v9_l10_lelbow_neutral = _motifs_v9_l10[4]
+__motif__v9_l10_lelbow_neutral = _motifs_v9_l10[2]
+
+__var__v9_l10_lelbow_neutral = VariableDistance(9,
+    __motif__v9_l10_lelbow_neutral,
+    distance=x -> _mydistance(x, __motif__v9_l10_lelbow_neutral),
+    featurename="Neutral"
+)
+__var__v9_l10_lelbow_neutral = VariableDistance(9,
+    __motif__v9_l10_lelbow_neutral,
+    distance=x -> _mydistance(x, __motif__v9_l10_lelbow_neutral),
+    featurename="Neutral"
+)
+
+
+_mp, _raw_motifs, _motifs_v9_l30 = motifsalphabet(SWC[:,9], 30, 1; r=20, th=5);
+__motif__v9_l30_lelbow_left_neutral = _raw_motifs[1].seqs[1]
+
+__var__v9_l30_lelbow_left_neutral = VariableDistance(9,
+    __motif__v9_l30_lelbow_left_neutral,
+    distance=x -> _mydistance(x, __motif__v9_l30_lelbow_left_neutral),
+    featurename="Left⋅Neutral"
+)
+
+## Right
+_mp, _raw_motifs, _motifs_v12_l10 = motifsalphabet(SWC[:,12], 10, 5; r=20, th=5);
+__motif__v12_l10_relbow_right = _motifs_v12_l10[5]
+__motif__v12_l10_relbow_neutral = _motifs_v12_l10[4]
+
+__var__v12_l10_relbow_right = VariableDistance(12,
+    __motif__v12_l10_relbow_right,
+    distance=x -> _mydistance(x, __motif__v12_l10_relbow_right),
+    featurename="Right"
+)
+__var__v12_l10_relbow_neutral = VariableDistance(12,
+    __motif__v12_l10_relbow_neutral,
+    distance=x -> _mydistance(x, __motif__v12_l10_relbow_neutral),
+    featurename="Neutral"
+)
+
+
+_mp, _raw_motifs, _motifs_v12_l30 = motifsalphabet(SWC[:,12], 30, 1; r=10, th=10);
+__motif__v12_l30_relbow_right_reentering = _motifs_v12_l30
+
+__var__v12_l30_relbow_right_reentering = VariableDistance(12,
+    __motif__v12_l30_relbow_right_reentering,
+    distance=x -> _mydistance(x, __motif__v12_l30_relbow_right_reentering),
+    featurename="Right⋅Neutral"
 )
 
 ############################################################################################
