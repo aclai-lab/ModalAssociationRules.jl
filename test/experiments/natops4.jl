@@ -322,6 +322,7 @@ apriori_miner = Miner(
     arule_mining_policies=Function[
         islimited_length_arule(),
         isanchored_arule(),
+        # TODO: put maximum antecedent length to 5 and make rules heterogeneous
         # isheterogeneous_arule(),
     ]
 )
