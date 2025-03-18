@@ -47,9 +47,10 @@ function experiment!(miner::Miner, reportname::String)
     open(reportname, "w") do io
         println(io, "Columns are: rule, confidence, ant support, ant+cons support")
 
+        padding = maximum(length.(miner |> freqitems))
         for (rule,conf,antgsupp,consgsupp) in rulecollection
             println(io,
-                rpad(rule, 130) * " " * rpad(string(conf), 10) * " " *
+                rpad(rule, 50 * padding) * " " * rpad(string(conf), 10) * " " *
                 rpad(string(antgsupp), 10) * " " * string(consgsupp)
             )
         end
@@ -103,7 +104,7 @@ include("test/experiments/natops0.jl")
 include("test/experiments/natops1.jl")
 
 println("Running experiment #1:")
-experiment!(apriori_miner, "rhand_ihavecommand.txt")
+experiment!(apriori_miner, "v1_rhand_ihavecommand.txt")
 
 ############################################################################################
 # Experiment #2: describe the right hand in "All clear class"
@@ -111,7 +112,7 @@ experiment!(apriori_miner, "rhand_ihavecommand.txt")
 include("test/experiments/natops2.jl")
 
 println("Running experiment #2: ")
-experiment!(apriori_miner, "rhand_allclear.txt")
+experiment!(apriori_miner, "v2_rhand_allclear.txt")
 
 ############################################################################################
 # Experiment #3: describe the right hand in "Not clear"
@@ -119,7 +120,7 @@ experiment!(apriori_miner, "rhand_allclear.txt")
 include("test/experiments/natops3.jl")
 
 println("Running experiment #3: ")
-experiment!(apriori_miner, "rhand_notclear.txt")
+experiment!(apriori_miner, "v3_rhand_notclear.txt")
 
 ############################################################################################
 # Experiment #4: describe wrists and elbows in "Spread wings"
@@ -127,7 +128,15 @@ experiment!(apriori_miner, "rhand_notclear.txt")
 include("test/experiments/natops4.jl")
 
 println("Running experiment #4: ")
-experiment!(apriori_miner, "wristelbow_spreadwings.txt")
+experiment!(apriori_miner, "v4_wristelbow_spreadwings.txt")
+
+############################################################################################
+# Experiment #5: describe wrists and elbows in "Folw wings"
+############################################################################################
+include("test/experiments/natops5.jl")
+
+println("Running experiment #5: ")
+experiment!(apriori_miner, "v5_wristelbow_foldwings.txt")
 
 ############################################################################################
 

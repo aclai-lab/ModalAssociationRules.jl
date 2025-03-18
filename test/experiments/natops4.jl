@@ -303,8 +303,8 @@ _atoms = reduce(vcat, [
 )
 _items = Vector{Item}(_atoms)
 
-_itemsetmeasures = [(dimensional_gsupport, 0.3, 0.3)]
-_rulemeasures = [(dimensional_gconfidence, 0.3, 0.3)]
+_itemsetmeasures = [(dimensional_gsupport, 0.5, 0.5)]
+_rulemeasures = [(dimensional_gconfidence, 0.7, 0.5)]
 
 
 logiset = scalarlogiset(SWC, variabledistances)
@@ -317,12 +317,20 @@ apriori_miner = Miner(
     _rulemeasures;
     itemset_mining_policies=Function[
         isanchored_itemset(),
-        isdimensionally_coherent_itemset()
+        isdimensionally_coherent_itemset(),
+        islimited_length_itemset(
+            maxlength=5
+        ),
     ],
     arule_mining_policies=Function[
-        islimited_length_arule(),
+        islimited_length_arule(
+            antecedent_maxlength=4,
+            consequent_maxlength=1
+        ),
         isanchored_arule(),
-        # TODO: put maximum antecedent length to 5 and make rules heterogeneous
-        # isheterogeneous_arule(),
+        isheterogeneous_arule(
+            antecedent_nrepetitions=1,
+            consequent_nrepetitions=0
+        ),
     ]
 )
