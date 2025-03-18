@@ -124,6 +124,7 @@ experiment!(apriori_miner, "v3_rhand_notclear.txt")
 
 ############################################################################################
 # Experiment #4: describe wrists and elbows in "Spread wings"
+# TODO: add elbows
 ############################################################################################
 include("test/experiments/natops4.jl")
 
@@ -131,12 +132,22 @@ println("Running experiment #4: ")
 experiment!(apriori_miner, "v4_wristelbow_spreadwings.txt")
 
 ############################################################################################
-# Experiment #5: describe wrists and elbows in "Folw wings"
+# Experiment #5: describe wrists and elbows in "Fold wings"
+# TODO: add elbows
 ############################################################################################
 include("test/experiments/natops5.jl")
 
 println("Running experiment #5: ")
 experiment!(apriori_miner, "v5_wristelbow_foldwings.txt")
+
+############################################################################################
+# Experiment #6: describe wrists and elbows in "Lock wings"
+############################################################################################
+include("test/experiments/natops6.jl")
+
+println("Running experiment #6: ")
+experiment!(apriori_miner, "v6_elbowhand_lockwings.txt")
+
 
 ############################################################################################
 
