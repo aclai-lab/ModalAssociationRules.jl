@@ -31,7 +31,7 @@ q = Atom(ScalarCondition(vm2, <, 999.0))
 _items = Vector{Item}([proposition1, proposition2, p, q])
 
 # define meaningfulness measures
-_itemsetmeasures = [(dimensional_gsupport, 0.001, 0.001)]
+_itemsetmeasures = [(gsupport, 0.001, 0.001)]
 _rulemeasures = [(gconfidence, 0.2, 0.2)]
 
 # build the logiset we will mine
@@ -46,3 +46,17 @@ apriori_miner = Miner(
     _rulemeasures;
     itemset_mining_policies=[isdimensionally_coherent_itemset()]
 )
+
+@test_nowarn mine!(apriori_miner)
+@test freqitems(apriori_miner) |> length == 5
+
+fpgrowth_miner = Miner(
+    logiset,
+    apriori,
+    _items,
+    _itemsetmeasures,
+    _rulemeasures;
+    itemset_mining_policies=[isdimensionally_coherent_itemset()]
+)
+
+@test_nowarn mine!(fpgrowth_miner)
