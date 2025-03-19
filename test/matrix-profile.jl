@@ -20,13 +20,13 @@ function experiment!(miner::Miner, reportname::String)
         (
             rule,
             round(
-                globalmemo(miner, (:dimensional_gconfidence, rule)), digits=2
+                globalmemo(miner, (:gconfidence, rule)), digits=2
             ),
             round(
-                globalmemo(miner, (:dimensional_gsupport, antecedent(rule))), digits=2
+                globalmemo(miner, (:gsupport, antecedent(rule))), digits=2
             ),
             round(
-                globalmemo(miner, (:dimensional_gsupport, Itemset(rule))), digits=2
+                globalmemo(miner, (:gsupport, Itemset(rule))), digits=2
             )
         )
         for rule in arules(miner)
@@ -116,5 +116,5 @@ include("experiments/natops4.jl")
 
 # plot frequent items in descending order by dimensiona global support
 # for frq in freqitems(miner)
-#   println("$(frq) => gsupport $(apriori_miner.globalmemo[(:dimensional_gsupport, frq)])")
+#   println("$(frq) => gsupport $(apriori_miner.globalmemo[(:gsupport, frq)])")
 # end

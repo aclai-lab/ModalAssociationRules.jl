@@ -544,7 +544,7 @@ If a miner is provided, then its internal state is updated and used to leverage 
 See also [`AbstractMiner`](@ref), [`antecedent`](@ref), [`ARule`](@ref),
 [`LogicalInstance`](@ref), [`lsupport`](@ref), [`Threshold`](@ref).
 """
-@localmeasure lconfidence _lconfidence_logic
+@localmeasure lconfidence _dimensionalwise_lconfidence_logic
 
 """
     function gconfidence(
@@ -566,32 +566,7 @@ If a miner is provided, then its internal state is updated and used to leverage 
 See also [`antecedent`](@ref), [`ARule`](@ref), [`AbstractMiner`](@ref), [`gsupport`](@ref),
 [`SupportedLogiset`](@ref).
 """
-@globalmeasure gconfidence _gconfidence_logic
-
-
-"""
-    function dimensional_lconfidence(
-        rule::ARule,
-        ith_instance::LogicalInstance;
-        miner::Union{Nothing,AbstractMiner}=nothing
-    )::Float64
-
-See [`lsupport`](@ref).
-"""
-@localmeasure dimensional_lconfidence _dimensionalwise_lconfidence_logic
-
-
-"""
-    function dimensional_gconfidence(
-        rule::ARule,
-        X::SupportedLogiset,
-        threshold::Threshold;
-        miner::Union{Nothing,AbstractMiner}=nothing
-    )::Float64
-
-See [`gsupport`](@ref).
-"""
-@globalmeasure dimensional_gconfidence _dimensionalwise_gconfidence_logic
+@globalmeasure gconfidence _dimensionalwise_gconfidence_logic
 
 
 """
@@ -738,7 +713,6 @@ See also [`lchisquared`](@ref).
 @linkmeas gsupport lsupport
 
 @linkmeas gconfidence lconfidence
-@linkmeas dimensional_gconfidence dimensional_lconfidence
 
 @linkmeas glift llift
 

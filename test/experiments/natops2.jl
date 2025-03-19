@@ -148,8 +148,8 @@ _atoms = reduce(vcat, [
 )
 _items = Vector{Item}(_atoms)
 
-_itemsetmeasures = [(dimensional_gsupport, 0.3, 0.3)]
-_rulemeasures = [(dimensional_gconfidence, 0.3, 0.3)]
+_itemsetmeasures = [(gsupport, 0.3, 0.3)]
+_rulemeasures = [(gconfidence, 0.3, 0.3)]
 
 logiset = scalarlogiset(ACC, variabledistances)
 
