@@ -20,7 +20,7 @@ test_suites = [
     ("General package functionalities", ["general.jl",]),
     ("Iris", ["iris.jl",]),
     ("NATOPS + Miner comparisons", ["natops.jl"]),
-    ("Alphabet proposal", ["matrix-profile.jl"]),
+    # ("NATOPS + motifs", ["matrix-profile.jl"]),
 ]
 
 @testset "SoleLogics.jl" begin

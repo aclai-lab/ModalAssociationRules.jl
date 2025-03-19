@@ -1,3 +1,22 @@
+# This experiments suite is organized as follows:
+# 1. each experiment is organized in a file, ranging from natops0.jl to natops6.jl
+#   1.1 natops0.jl is just a little sketch with a few simple tests to ensure correctness
+#   1.2 natops1.jl to natops6.jl contains one experiment for each NATOPS dataset class
+# 2. for each experiment, a few variables are chosen
+# 3. multiple motifs are extracted for each variable, using `motifsalphabet` and
+#   checking the results manually
+# 4. each motif is wrapped within a `VariableDistance` variable
+#   4.1 each VariableDistance also wraps a distance function (dtw by default);
+#       note that the distance's decision should be justified depending by your data domain
+# 5. an alphabet of `Atom`s is created by incorporating an operator and a threshold
+#   together with each `VariableDistance`
+#   5.1 the operator is always "<"
+#   5.2 the threshold is computed by a rule of thumb... actually, this has to be more robust
+# 6. the mining starts, keeping track of the time needed to generate freq items and rules
+#   6.1 each experiment has its own policies to limit the number of results
+#   6.2 this part is managed by the `experiment!` function
+#   6.3 also, association rules are printed, sorted decreasingly by global confidence
+
 using Test
 
 using DynamicAxisWarping
@@ -12,9 +31,18 @@ using SoleData
 
 # little utility to avoid writing an experiment
 function experiment!(miner::Miner, reportname::String)
+    println("Mining...")
+    mining_start = time()
     mine!(miner)
+    mining_end = time()
+    println("Mining duration: $(round(mining_end - mining_start, digits=2))")
 
+    println("Generating rules...")
+    generating_start = time()
     generaterules!(miner) |> collect
+    generating_end = time()
+    println("Generation duration: $(round(generating_end - generating_start, digits=2))")
+
 
     rulecollection = [
         (
@@ -34,12 +62,14 @@ function experiment!(miner::Miner, reportname::String)
     sort!(rulecollection, by=x->x[2], rev=true);
 
     reportname = joinpath(["test", "experiments", reportname])
+    println("Writing to: $(reportname)")
     open(reportname, "w") do io
         println(io, "Columns are: rule, confidence, ant support, ant+cons support")
 
+        padding = maximum(length.(miner |> freqitems))
         for (rule,conf,antgsupp,consgsupp) in rulecollection
             println(io,
-                rpad(rule, 130) * " " * rpad(string(conf), 10) * " " *
+                rpad(rule, 50 * padding) * " " * rpad(string(conf), 10) * " " *
                 rpad(string(antgsupp), 10) * " " * string(consgsupp)
             )
         end
@@ -83,31 +113,60 @@ _mydistance = (x, y) -> size(x) == size(y) ?
 ############################################################################################
 # Experiment #1: just a small example
 ############################################################################################
-include("experiments/natops0.jl")
+include("test/experiments/natops0.jl")
+@test_nowarn mine!(apriori_miner)
+@test freqitems(apriori_miner) |> length == 5
 
 ############################################################################################
 # Experiment #1: describe the right hand in "I have command class"
 ############################################################################################
+include("test/experiments/natops1.jl")
 
-include("experiments/natops1.jl")
+println("Running experiment #1:")
+experiment!(apriori_miner, "v1_rhand_ihavecommand.txt")
 
 ############################################################################################
 # Experiment #2: describe the right hand in "All clear class"
 ############################################################################################
+include("test/experiments/natops2.jl")
 
-include("experiments/natops2.jl")
+println("Running experiment #2: ")
+experiment!(apriori_miner, "v2_rhand_allclear.txt")
 
 ############################################################################################
 # Experiment #3: describe the right hand in "Not clear"
 ############################################################################################
+include("test/experiments/natops3.jl")
 
-include("experiments/natops3.jl")
+println("Running experiment #3: ")
+experiment!(apriori_miner, "v3_rhand_notclear.txt")
 
 ############################################################################################
 # Experiment #4: describe wrists and elbows in "Spread wings"
+# TODO: add elbows
 ############################################################################################
+include("test/experiments/natops4.jl")
 
-include("experiments/natops4.jl")
+println("Running experiment #4: ")
+experiment!(apriori_miner, "v4_wristelbow_spreadwings.txt")
+
+############################################################################################
+# Experiment #5: describe wrists and elbows in "Fold wings"
+# TODO: add elbows
+############################################################################################
+include("test/experiments/natops5.jl")
+
+println("Running experiment #5: ")
+experiment!(apriori_miner, "v5_wristelbow_foldwings.txt")
+
+############################################################################################
+# Experiment #6: describe wrists and elbows in "Lock wings"
+############################################################################################
+include("test/experiments/natops6.jl")
+
+println("Running experiment #6: ")
+experiment!(apriori_miner, "v6_elbowhand_lockwings.txt")
+
 
 ############################################################################################
 

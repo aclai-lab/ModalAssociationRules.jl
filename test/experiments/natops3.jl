@@ -1,5 +1,5 @@
 
-# this is identical to Experiment #2, but instances are different
+# this is identical to Experiment #2, but the instances are different
 NCC = X[61:90, :]
 
 logiset = scalarlogiset(NCC, variabledistances)
@@ -20,6 +20,3 @@ apriori_miner = Miner(
         # isheterogeneous_arule(),
     ]
 )
-
-println("Running experiment #3: ")
-experiment!(apriori_miner, "rhand_notclear.txt")

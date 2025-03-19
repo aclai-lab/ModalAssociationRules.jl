@@ -94,10 +94,12 @@ function apriori(
                 for (gmeas_algo, lthreshold, gthreshold) in itemsetmeasures(miner)
             ) && lock(frequents_lock) do
                 push!(frequents, candidate)
+
+                push!(freqitems(miner), candidate)
+                # TODO: remove this if push! above works; if not, place this out of the loop
+                # push!(freqitems(miner), frequents...)
             end
         end
-
-        push!(freqitems(miner), frequents...)
 
         # retrieve the new generation of candidates by doing some combinatorics trick;
         # we do not want duplicates ([p,q,r] and [q,r,p] are considered duplicates).
@@ -105,7 +107,7 @@ function apriori(
         candidates = sort.(grow_prune(candidates, frequents, k) |> collect) |> unique
 
         verbose && printstyled("Starting new computational loop with " *
-            "$(length(candidates)) candidates...\n", color=:green)
+            "$(length(candidates)) candidates (of length $(k))...\n", color=:green)
 
         filter!(candidates, miner)  # apply filtering policies
     end
