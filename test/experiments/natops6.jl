@@ -33,8 +33,8 @@ __var__v1_l30_lhand_inside_neutral = VariableDistance(1,
 
 ## Right
 _mp, _raw_motifs, _motifs_v4_l10 = motifsalphabet(LWC[:,4], 10, 5; r=10, th=1);
-__motif__v1_l10_rhand_out = _motifs_v1_l10[3]
-__motif__v1_l10_rhand_inside = _motifs_v1_l10[2]
+__motif__v1_l10_rhand_out = _motifs_v4_l10[3]
+__motif__v1_l10_rhand_inside = _motifs_v4_l10[2]
 
 __var__v1_l10_rhand_out = VariableDistance(4,
     __motif__v1_l10_rhand_out,
@@ -56,7 +56,65 @@ __var__v1_l30_rhand_prepare_relax = VariableDistance(4,
     featurename="Entering⋅Out"
 )
 
-# TODO: hands y, hands z, elbows xyz;
+
+############################################################################################
+# hand y: left (2) and right (5)
+############################################################################################
+
+## Left
+_mp, _raw_motifs, _motifs_v2_l10 = motifsalphabet(LWC[:,2], 10, 5; r=10, th=1);
+__motif__v2_l10_lhand_ascending = _motifs_v2_l10[4]
+__motif__v2_l10_lhand_descending = _motifs_v2_l10[2]
+
+__var__v2_l10_lhand_ascending = VariableDistance(2,
+    __motif__v2_l10_lhand_ascending,
+    distance=x -> _mydistance(x, __motif__v2_l10_lhand_ascending),
+    featurename="Ascending"
+)
+__var__v2_l10_lhand_descending = VariableDistance(2,
+    __motif__v2_l10_lhand_descending,
+    distance=x -> _mydistance(x, __motif__v2_l10_lhand_descending),
+    featurename="Neutral"
+)
+
+# handpicked motif
+__motif__v2_l30_lhand_ascending_descending = LWC[1,2][13:33]
+
+__var__v2_l30_lhand_ascending_descending = VariableDistance(2,
+    __motif__v2_l30_lhand_ascending_descending,
+    distance=x -> _mydistance(x, __motif__v2_l30_lhand_ascending_descending),
+    featurename="Ascending⋅Descending"
+)
+
+
+## Right
+_mp, _raw_motifs, _motifs_v5_l10 = motifsalphabet(LWC[:,5], 10, 5; r=10, th=1);
+__motif__v5_l10_rhand_ascending = _motifs_v4_l10[1]
+__motif__v5_l10_rhand_descending = _motifs_v4_l10[5]
+
+__var__v5_l10_rhand_ascending = VariableDistance(5,
+    __motif__v5_l10_rhand_ascending,
+    distance=x -> _mydistance(x, __motif__v5_l10_rhand_ascending),
+    featurename="Ascending"
+)
+__var__v5_l10_rhand_descending = VariableDistance(5,
+    __motif__v5_l10_rhand_descending,
+    distance=x -> _mydistance(x, __motif__v5_l10_rhand_descending),
+    featurename="Descending"
+)
+
+# handpicked motif
+__motif__v5_l30_rhand_ascdesc = LWC[1,5][10:30]
+
+__var__v5_l30_rhand_ascdesc = VariableDistance(4,
+    __motif__v5_l30_rhand_ascdesc,
+    distance=x -> _mydistance(x, __motif__v1_l30_rhand_ascdesc),
+    featurename="Ascending⋅Descending"
+)
+
+############################################################################################
+
+# TODO: hands z, elbows xyz;
 # maybe wrists are interesting too because of their rotation
 
 
