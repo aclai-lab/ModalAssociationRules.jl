@@ -248,7 +248,7 @@ _gsupport_logic = (itemset, X, threshold, miner) -> begin
 end
 
 
-# core logic of `dimensional_lsupport`
+# core logic of `lsupport`
 _dimensionalwise_lsupport_logic = (itemset, X, ith_instance, miner) -> begin
     # this method assumes that the mining is taking place on geometric type worlds,
     # such as Intervals or Interval2Ds, but not OneWorld!
@@ -299,11 +299,11 @@ _dimensionalwise_lsupport_logic = (itemset, X, ith_instance, miner) -> begin
     )
 end
 
-# core logic of `dimensional_gsupport`
+# core logic of `gsupport`
 _dimensionalwise_gsupport_logic = (itemset, X, threshold, miner) -> begin
     _measure = sum([
         # for each instance, compute how many times the local support overpass the threshold
-        dimensional_lsupport(itemset, getinstance(X, ith_instance), miner) >= threshold
+        lsupport(itemset, getinstance(X, ith_instance), miner) >= threshold
 
         # NOTE: an instance filter could be provided by the user to avoid iterating
         # every instance, depending on the needings.
@@ -347,8 +347,8 @@ _dimensionalwise_gconfidence_logic = (rule, X, threshold, miner) -> begin
     _consequent = consequent(rule)
     _union = union(_antecedent, _consequent)
 
-    num = dimensional_gsupport(_union, X, threshold, miner)
-    den = dimensional_gsupport(_antecedent, X, threshold, miner)
+    num = gsupport(_union, X, threshold, miner)
+    den = gsupport(_antecedent, X, threshold, miner)
 
     @assert den >= num "ERROR: conf between $(_union) [$(num)] and $(_antecedent) [$(den)]"
 
@@ -468,7 +468,7 @@ If a miner is provided, then its internal state is updated and used to leverage 
 
 See also [`Miner`](@ref), [`LogicalInstance`](@ref), [`Itemset`](@ref), [`Threshold`](@ref).
 """
-@localmeasure lsupport _lsupport_logic
+@localmeasure __lsupport _lsupport_logic
 
 """
     function gsupport(
@@ -490,11 +490,11 @@ If a miner is provided, then its internal state is updated and used to leverage 
 See also [`Miner`](@ref), [`LogicalInstance`](@ref), [`Itemset`](@ref),
 [`SupportedLogiset`](@ref), [`Threshold`](@ref).
 """
-@globalmeasure gsupport _gsupport_logic
+@globalmeasure __gsupport _gsupport_logic
 
 
 """
-    function dimensional_lsupport(
+    function lsupport(
         itemset::Itemset,
         instance::LogicalInstance;
         miner::Union{Nothing,AbstractMiner}=nothing
@@ -505,25 +505,25 @@ Compute the a "dimensionally-aware" local support for the given `itemset` in the
 
 TODO: explain
 
-See also [`Miner`](@ref), [`dimensional_gsupport`](@ref), [`LogicalInstance`](@ref),
+See also [`Miner`](@ref), [`gsupport`](@ref), [`LogicalInstance`](@ref),
 [`Itemset`](@ref), [`Threshold`](@ref).
 """
-@localmeasure dimensional_lsupport _dimensionalwise_lsupport_logic
+@localmeasure lsupport _dimensionalwise_lsupport_logic
 
 """
-    function dimensional_gsupport(
+    function gsupport(
         itemset::Itemset,
         X::SupportedLogiset,
         threshold::Threshold;
         miner::Union{Nothing,AbstractMiner}=nothing
     )::Float64
 
-Global support that calls [`dimensional_lsupport`](@ref) internally.
+Global support that calls [`lsupport`](@ref) internally.
 
-See also [`Miner`](@ref), [`dimensional_lsupport`](@ref), [`LogicalInstance`](@ref),
+See also [`Miner`](@ref), [`lsupport`](@ref), [`LogicalInstance`](@ref),
 [`Itemset`](@ref), [`SupportedLogiset`](@ref), [`Threshold`](@ref).
 """
-@globalmeasure dimensional_gsupport _dimensionalwise_gsupport_logic
+@globalmeasure gsupport _dimensionalwise_gsupport_logic
 
 
 """
@@ -576,7 +576,7 @@ See also [`antecedent`](@ref), [`ARule`](@ref), [`AbstractMiner`](@ref), [`gsupp
         miner::Union{Nothing,AbstractMiner}=nothing
     )::Float64
 
-See [`dimensional_lsupport`](@ref).
+See [`lsupport`](@ref).
 """
 @localmeasure dimensional_lconfidence _dimensionalwise_lconfidence_logic
 
@@ -589,7 +589,7 @@ See [`dimensional_lsupport`](@ref).
         miner::Union{Nothing,AbstractMiner}=nothing
     )::Float64
 
-See [`dimensional_gsupport`](@ref).
+See [`gsupport`](@ref).
 """
 @globalmeasure dimensional_gconfidence _dimensionalwise_gconfidence_logic
 
@@ -736,7 +736,6 @@ See also [`lchisquared`](@ref).
 # meaning that a global measure is associated to its corresponding local one.
 
 @linkmeas gsupport lsupport
-@linkmeas dimensional_gsupport dimensional_lsupport
 
 @linkmeas gconfidence lconfidence
 @linkmeas dimensional_gconfidence dimensional_lconfidence
