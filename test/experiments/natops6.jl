@@ -26,7 +26,7 @@ __motif__v1_l20_lhand_inside_neutral = LWC[1,1][13:32]
 
 __var__v1_l20_lhand_inside_neutral = VariableDistance(1,
     __motif__v1_l20_lhand_inside_neutral,
-    distance=x -> _mydistance(x, __motif__v1_l30_lhand_inside_neutral),
+    distance=x -> _mydistance(x, __motif__v1_l20_lhand_inside_neutral),
     featurename="Inside⋅Neutral"
 )
 
@@ -82,7 +82,7 @@ __motif__v2_l20_lhand_ascending_descending = LWC[1,2][13:32]
 
 __var__v2_l20_lhand_ascending_descending = VariableDistance(2,
     __motif__v2_l20_lhand_ascending_descending,
-    distance=x -> _mydistance(x, __motif__v2_l30_lhand_ascending_descending),
+    distance=x -> _mydistance(x, __motif__v2_l20_lhand_ascending_descending),
     featurename="Ascending⋅Descending"
 )
 
@@ -163,8 +163,8 @@ __var__v5_l10_rhand_descending = VariableDistance(5,
 __motif__v5_l20_rhand_frontal_arc = LWC[1,5][10:29]
 
 __var__v5_l20_rhand_frontal_arc = VariableDistance(5,
-    __motif__v5_l20_frontal_arc,
-    distance=x -> _mydistance(x, __motif__v5_l40_frontal_arc),
+    __motif__v5_l20_rhand_frontal_arc,
+    distance=x -> _mydistance(x, __motif__v5_l20_rhand_frontal_arc),
     featurename="Front⋅Arc"
 )
 
@@ -194,7 +194,7 @@ __motif__v7_l20_lelbow_entering_neutral = LWC[1,7][13:32]
 
 __var__v7_l20_lelbow_entering_neutral = VariableDistance(3,
     __motif__v7_l20_lelbow_entering_neutral,
-    distance=x -> _mydistance(x, __motif__v3_l20_lelbow_entering_neutral),
+    distance=x -> _mydistance(x, __motif__v7_l20_lelbow_entering_neutral),
     featurename="Entering⋅Neutral"
 )
 
@@ -211,7 +211,7 @@ __var__v9_l10_relbow_enter = VariableDistance(9,
 )
 __var__v9_l10_relbow_exit = VariableDistance(9,
     __motif__v9_l10_relbow_exit,
-    distance=x -> _mydistance(x, __motif__v9_l10_rhand_exit),
+    distance=x -> _mydistance(x, __motif__v9_l10_relbow_exit),
     featurename="Exit"
 )
 
