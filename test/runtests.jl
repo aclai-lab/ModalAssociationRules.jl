@@ -36,5 +36,4 @@ test_suites = [
             end
         end
     end
-    println()
 end
