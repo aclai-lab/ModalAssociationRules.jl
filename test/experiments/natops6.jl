@@ -22,10 +22,10 @@ __var__v1_l10_lhand_neutral = VariableDistance(1,
 )
 
 # handpicked motif
-__motif__v1_l30_lhand_inside_neutral = LWC[1,1][13:33]
+__motif__v1_l20_lhand_inside_neutral = LWC[1,1][13:32]
 
-__var__v1_l30_lhand_inside_neutral = VariableDistance(1,
-    __motif__v1_l30_lhand_inside_neutral,
+__var__v1_l20_lhand_inside_neutral = VariableDistance(1,
+    __motif__v1_l20_lhand_inside_neutral,
     distance=x -> _mydistance(x, __motif__v1_l30_lhand_inside_neutral),
     featurename="Inside⋅Neutral"
 )
@@ -48,7 +48,7 @@ __var__v1_l10_rhand_inside = VariableDistance(4,
 )
 
 # handpicked motif
-__motif__v1_l30_rhand_prepare_relax = LWC[1,4][10:40]
+__motif__v1_l30_rhand_prepare_relax = LWC[1,4][10:39]
 
 __var__v1_l30_rhand_prepare_relax = VariableDistance(4,
     __motif__v1_l30_rhand_prepare_relax,
@@ -78,10 +78,10 @@ __var__v2_l10_lhand_descending = VariableDistance(2,
 )
 
 # handpicked motif
-__motif__v2_l30_lhand_ascending_descending = LWC[1,2][13:33]
+__motif__v2_l20_lhand_ascending_descending = LWC[1,2][13:32]
 
-__var__v2_l30_lhand_ascending_descending = VariableDistance(2,
-    __motif__v2_l30_lhand_ascending_descending,
+__var__v2_l20_lhand_ascending_descending = VariableDistance(2,
+    __motif__v2_l20_lhand_ascending_descending,
     distance=x -> _mydistance(x, __motif__v2_l30_lhand_ascending_descending),
     featurename="Ascending⋅Descending"
 )
@@ -104,11 +104,11 @@ __var__v5_l10_rhand_descending = VariableDistance(5,
 )
 
 # handpicked motif
-__motif__v5_l30_rhand_ascdesc = LWC[1,5][10:30]
+__motif__v5_l20_rhand_ascdesc = LWC[1,5][10:29]
 
-__var__v5_l30_rhand_ascdesc = VariableDistance(4,
-    __motif__v5_l30_rhand_ascdesc,
-    distance=x -> _mydistance(x, __motif__v5_l30_rhand_ascdesc),
+__var__v5_l20_rhand_ascdesc = VariableDistance(4,
+    __motif__v5_l20_rhand_ascdesc,
+    distance=x -> _mydistance(x, __motif__v5_l20_rhand_ascdesc),
     featurename="Ascending⋅Descending"
 )
 
@@ -160,19 +160,74 @@ __var__v5_l10_rhand_descending = VariableDistance(5,
 )
 
 # handpicked motif
-__motif__v5_l40_frontal_arc = LWC[1,5][10:30]
+__motif__v5_l20_rhand_frontal_arc = LWC[1,5][10:29]
 
-__var__v5_l40_frontal_arc = VariableDistance(5,
-    __motif__v5_l40_frontal_arc,
+__var__v5_l20_rhand_frontal_arc = VariableDistance(5,
+    __motif__v5_l20_frontal_arc,
     distance=x -> _mydistance(x, __motif__v5_l40_frontal_arc),
     featurename="Front⋅Arc"
 )
 
+
 ############################################################################################
+# elbow x: left (7) and right (9)
+############################################################################################
+
+## Left
+_mp, _raw_motifs, _motifs_v7_l10 = motifsalphabet(LWC[:,7], 10, 5; r=10, th=1);
+__motif__v7_l10_lelbow_entering = _motifs_v7_l10[2]
+__motif__v7_l10_lelbow_neutral = _motifs_v7_l10[4]
+
+__var__v7_l10_lelbow_entering = VariableDistance(7,
+    __motif__v7_l10_lelbow_entering,
+    distance=x -> _mydistance(x, __motif__v7_l10_lelbow_entering),
+    featurename="Entering"
+)
+__var__v7_l10_lelbow_neutral = VariableDistance(7,
+    __motif__v7_l10_lelbow_neutral,
+    distance=x -> _mydistance(x, __motif__v7_l10_lelbow_neutral),
+    featurename="Neutral"
+)
+
+# handpicked motif
+__motif__v7_l20_lelbow_entering_neutral = LWC[1,7][13:32]
+
+__var__v7_l20_lelbow_entering_neutral = VariableDistance(3,
+    __motif__v7_l20_lelbow_entering_neutral,
+    distance=x -> _mydistance(x, __motif__v3_l20_lelbow_entering_neutral),
+    featurename="Entering⋅Neutral"
+)
+
+
+## Right
+_mp, _raw_motifs, _motifs_v9_l10 = motifsalphabet(LWC[:,9], 10, 5; r=10, th=5);
+__motif__v9_l10_relbow_enter = _motifs_v9_l10[2]
+__motif__v9_l10_relbow_exit = _motifs_v9_l10[5]
+
+__var__v9_l10_relbow_enter = VariableDistance(9,
+    __motif__v9_l10_relbow_enter,
+    distance=x -> _mydistance(x, __motif__v9_l10_relbow_enter),
+    featurename="Enter"
+)
+__var__v9_l10_relbow_exit = VariableDistance(9,
+    __motif__v9_l10_relbow_exit,
+    distance=x -> _mydistance(x, __motif__v9_l10_rhand_exit),
+    featurename="Exit"
+)
+
+# handpicked motif
+__motif__v9_l20_relbow_enterexit = LWC[1,9][13:32]
+
+__var__v9_l20_relbow_enterexit = VariableDistance(5,
+    __motif__v9_l20_relbow_enterexit,
+    distance=x -> _mydistance(x, __motif__v9_l20_relbow_enterexit),
+    featurename="Enter⋅Exit"
+)
 
 ############################################################################################
 
-# TODO: hands z, elbows xyz;
+
+# TODO: elbows yz;
 # maybe wrists are interesting too because of their rotation
 
 
