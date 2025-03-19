@@ -89,8 +89,8 @@ __var__v2_l30_lhand_ascending_descending = VariableDistance(2,
 
 ## Right
 _mp, _raw_motifs, _motifs_v5_l10 = motifsalphabet(LWC[:,5], 10, 5; r=10, th=1);
-__motif__v5_l10_rhand_ascending = _motifs_v4_l10[1]
-__motif__v5_l10_rhand_descending = _motifs_v4_l10[5]
+__motif__v5_l10_rhand_ascending = _motifs_v5_l10[1]
+__motif__v5_l10_rhand_descending = _motifs_v5_l10[5]
 
 __var__v5_l10_rhand_ascending = VariableDistance(5,
     __motif__v5_l10_rhand_ascending,
@@ -108,9 +108,67 @@ __motif__v5_l30_rhand_ascdesc = LWC[1,5][10:30]
 
 __var__v5_l30_rhand_ascdesc = VariableDistance(4,
     __motif__v5_l30_rhand_ascdesc,
-    distance=x -> _mydistance(x, __motif__v1_l30_rhand_ascdesc),
+    distance=x -> _mydistance(x, __motif__v5_l30_rhand_ascdesc),
     featurename="Ascending⋅Descending"
 )
+
+
+############################################################################################
+# hand z: left (3) and right (6)
+############################################################################################
+
+## Left
+_mp, _raw_motifs, _motifs_v3_l10 = motifsalphabet(LWC[:,3], 10, 5; r=10, th=1);
+__motif__v3_l10_lhand_front = _motifs_v3_l10[5]
+__motif__v3_l10_lhand_entering = _motifs_v3_l10[2]
+
+__var__v3_l10_lhand_front = VariableDistance(3,
+    __motif__v3_l10_lhand_front,
+    distance=x -> _mydistance(x, __motif__v3_l10_lhand_front),
+    featurename="Front"
+)
+__var__v3_l10_lhand_entering = VariableDistance(3,
+    __motif__v3_l10_lhand_entering,
+    distance=x -> _mydistance(x, __motif__v3_l10_lhand_entering),
+    featurename="Entering"
+)
+
+# handpicked motif
+__motif__v3_l40_lhand_ascending_descending = LWC[1,3][10:40]
+
+__var__v3_l40_lhand_ascending_descending = VariableDistance(3,
+    __motif__v3_l40_lhand_ascending_descending,
+    distance=x -> _mydistance(x, __motif__v3_l40_lhand_ascending_descending),
+    featurename="Ascending⋅Descending"
+)
+
+
+## Right
+_mp, _raw_motifs, _motifs_v5_l10 = motifsalphabet(LWC[:,5], 10, 5; r=10, th=1);
+__motif__v5_l10_rhand_ascending = _motifs_v4_l10[1]
+__motif__v5_l10_rhand_descending = _motifs_v4_l10[5]
+
+__var__v5_l10_rhand_ascending = VariableDistance(5,
+    __motif__v5_l10_rhand_ascending,
+    distance=x -> _mydistance(x, __motif__v5_l10_rhand_ascending),
+    featurename="Ascending"
+)
+__var__v5_l10_rhand_descending = VariableDistance(5,
+    __motif__v5_l10_rhand_descending,
+    distance=x -> _mydistance(x, __motif__v5_l10_rhand_descending),
+    featurename="Descending"
+)
+
+# handpicked motif
+__motif__v5_l40_frontal_arc = LWC[1,5][10:30]
+
+__var__v5_l40_frontal_arc = VariableDistance(5,
+    __motif__v5_l40_frontal_arc,
+    distance=x -> _mydistance(x, __motif__v5_l40_frontal_arc),
+    featurename="Front⋅Arc"
+)
+
+############################################################################################
 
 ############################################################################################
 
