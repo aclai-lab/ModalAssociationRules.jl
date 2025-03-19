@@ -127,13 +127,14 @@ _atoms = reduce(vcat, [
         diamond(IA_L).(propositional_atoms),
         diamond(IA_B).(propositional_atoms),
         diamond(IA_E).(propositional_atoms),
+        diamond(IA_D).(propositional_atoms),
         diamond(IA_O).(propositional_atoms),
     ]
 )
 _items = Vector{Item}(_atoms)
 
-_itemsetmeasures = [(gsupport, 0.3, 0.3)]
-_rulemeasures = [(gconfidence, 0.3, 0.3)]
+_itemsetmeasures = [(gsupport, 0.5, 0.7)]
+_rulemeasures = [(gconfidence, 0.7, 0.7)]
 
 logiset = scalarlogiset(IHCC, variabledistances)
 
@@ -153,6 +154,3 @@ apriori_miner = Miner(
         # isheterogeneous_arule(),
     ]
 )
-
-println("Running experiment #1:")
-experiment!(apriori_miner, "rhand_ihavecommand.txt")
