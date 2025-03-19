@@ -35,7 +35,85 @@ function islimited_length_itemset(; maxlength::Union{Nothing,Integer}=nothing)::
     end
 end
 
+
+"""
+    function isanchored_itemset(;
+        npropositions::Integer=1,
+        ignoreuntillength::Integer=1
+    )::Function
+
+Closure returning a boolean function `F` with one argument `rule::Itemset`.
+
+`F` is true if the given `itemset` contains atleast `npropositions` *propositional anchors*
+(that is, propositions without modal operators).
+
+# Arguments
+- `npropositions::Integer=1`: minimum number of propositional anchors (propositions with
+    no modal operators) in the antecedent of the given rule.
+- `ignoreuntillength::Integer=1`: avoid applying the policy to isolated [`Item`](@ref)s, or
+    [`Itemset`](@ref) short enough.
+
+See [`Item`](@ref), [`Itemset`](@ref), [`itemset_mining_policies`](@ref),
+[`isanchored_arule`](@ref).
+"""
+function isanchored_itemset(; npropositions::Integer=1, ignoreuntillength::Integer=1)::Function
+    # atleast `npropositions` items in the antecedent are not modal
+
+    if npropositions < 0 || ignoreuntillength < 0
+        throw(ArgumentError("All parameters must be >= 0; (given values: " *
+                "npropositions=$(npropositions), ignoreuntillength=$(ignoreuntillength))"))
+    end
+
+    return function _isanchored_itemset(itemset::Itemset)
+        length(itemset) <= ignoreuntillength ||
+        count(it -> formula(it) isa Atom, itemset) >= npropositions
+    end
+end
+
+
+"""
+    function isdimensionally_coherent_itemset(;)::Function
+
+Closure returning a boolean function `F` with one argument `itemset::Itemset`.
+
+This is needed to ensure the Itemset is coherent with the dimensional definition of local
+support. All the propositions (or anchors) in an itemset must be `VariableDistance`s
+wrapping references of the same size.
+
+See also [`Itemset`](@ref), [`itemset_mining_policies`](@ref), `SoleData.VariableDistance`.
+"""
+function isdimensionally_coherent_itemset(;)::Function
+    # since we have no arguments, this closure seems useless;
+    # however, we stick to the same pattern.
+
+    return function _isdimensionally_coherent_itemset(itemset::Itemset)
+        # a generic Itemset contains Atoms and SyntaxTrees:
+        # the former are always propositions, while the latter are modal literals;
+        # we want to keep only the propositions, since they are the anchor of our itemset.
+        anchors = filter(item -> formula(item) isa Atom, itemset)
+
+        # in particular, every Variable must not be a VariableDistance (e.g., VariableMin)
+        _anchortypes = Set([feature(anchor) |> typeof for anchor in anchors])
+        if !any(_anchortype -> _anchortype <: VariableDistance, _anchortypes)
+            return true
+        end
+
+        # or all the anchors must be VariableDistances (the two cannot be mixed)
+        if !all(type -> type <: VariableDistance, _anchortypes)
+            return false
+        end
+
+        # also, all their references must be of the same size (e.g., 5-length intervals)
+        _referencesize = vardistance -> feature(vardistance) |> reference |> size
+        _anchorsize = _referencesize(anchors[1])
+
+        return all(anchor -> _referencesize(anchor) == _anchorsize, anchors)
+    end
+end
+
+
 # policies related to association rule generation
+
 
 """
     function islimited_length_arule(;
@@ -104,7 +182,8 @@ function isanchored_arule(; npropositions::Integer=1)::Function
     end
 
     return function _isanchored_arule(rule::ARule)
-        count(it -> formula(it) isa Atom, antecedent(rule)) >= npropositions
+        return isanchored_itemset(;
+            npropositions=npropositions, ignoreuntillength=0)(antecedent(rule))
     end
 end
 

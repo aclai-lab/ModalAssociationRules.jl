@@ -82,19 +82,24 @@ function apriori(
     # candidates of length 1 are all the letters in our items
     candidates = Itemset{_itemtype}.(items(miner))
 
+    filter!(candidates, miner)  # apply filtering policies
     while !isempty(candidates)
+        frequents = Itemset{_itemtype}[]
+        frequents_lock = ReentrantLock()
+
         # get the frequent itemsets from the first candidates set
-        frequents = [candidate
-            for candidate in candidates
-            for (gmeas_algo, lthreshold, gthreshold) in itemsetmeasures(miner)
+        Threads.@threads for candidate in candidates
+            any(
+                gmeas_algo(candidate, X, lthreshold, miner) >= gthreshold
+                for (gmeas_algo, lthreshold, gthreshold) in itemsetmeasures(miner)
+            ) && lock(frequents_lock) do
+                push!(frequents, candidate)
 
-            # other than the meaningfulness measures,
-            # all the itemset mining policies must be honored too.
-            if gmeas_algo(candidate, X, lthreshold, miner) >= gthreshold &&
-                all(__policy -> __policy(candidate), itemset_mining_policies(miner))
-        ] |> Vector{Itemset{_itemtype}}
-
-        push!(freqitems(miner), frequents...)
+                push!(freqitems(miner), candidate)
+                # TODO: remove this if push! above works; if not, place this out of the loop
+                # push!(freqitems(miner), frequents...)
+            end
+        end
 
         # retrieve the new generation of candidates by doing some combinatorics trick;
         # we do not want duplicates ([p,q,r] and [q,r,p] are considered duplicates).
@@ -102,6 +107,8 @@ function apriori(
         candidates = sort.(grow_prune(candidates, frequents, k) |> collect) |> unique
 
         verbose && printstyled("Starting new computational loop with " *
-            "$(length(candidates)) candidates...\n", color=:green)
+            "$(length(candidates)) candidates (of length $(k))...\n", color=:green)
+
+        filter!(candidates, miner)  # apply filtering policies
     end
 end

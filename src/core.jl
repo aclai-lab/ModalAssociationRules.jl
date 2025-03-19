@@ -42,6 +42,23 @@ function Base.show(io::IO, item::Item)
 end
 
 """
+    feature(item::Item)::VarFeature
+
+Utility to extract the feature wrapped within an [`Item`](@ref).
+
+See also [`Item`](@ref), `SoleData.VarFeature`, `SoleData.AbstractUnivariateFeature`.
+"""
+function feature(item::Item)
+    _intermediate = item |> formula
+
+    if _intermediate isa SoleLogics.SyntaxBranch
+        _intermediate = _intermediate |> SoleLogics.children |> first
+    end
+
+    return _intermediate |> SoleData.value |> SoleData.metacond |> SoleData.feature
+end
+
+"""
     const Itemset{I<:Item} = Vector{I}
 
 Vector collecting multiple [`Item`](@ref)s.

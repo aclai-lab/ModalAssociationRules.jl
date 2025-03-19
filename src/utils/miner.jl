@@ -1,3 +1,6 @@
+import Base.filter!
+using Base.Threads
+
 """
     struct Miner{
         D<:MineableData,
@@ -26,6 +29,11 @@
         miningstate::MiningState        # mining algorithm miningstate (see documentation)
 
         info::Info                      # general informations
+
+        # locks on memoization and miningstate structures
+        lmemolock::ReentrantLock
+        gmemolock::ReentrantLock
+        minigstatelock::ReentrantLock
     end
 
 Concrete [`AbstractMiner`](@ref) containing both the data, the logic and the
@@ -126,6 +134,11 @@ struct Miner{
 
     info::Info                      # general informations
 
+    # locks on memoization and miningstate structures
+    lmemolock::ReentrantLock
+    gmemolock::ReentrantLock
+    minigstatelock::ReentrantLock
+
     function Miner(
         X::D,
         algorithm::Function,
@@ -163,7 +176,8 @@ struct Miner{
         end
 
         # gsupport is crucial to mine association rule
-        if !(ModalAssociationRules.gsupport in first.(itemset_constrained_measures))
+        if !(gsupport in first.(itemset_constrained_measures) ||
+            gsupport in first.(itemset_constrained_measures))
             throw(ArgumentError(
                 "Miner requires global support " *
                 "(gsupport) as meaningfulness measure in order to work properly. " *
@@ -180,7 +194,8 @@ struct Miner{
             Vector{Itemset}([]), Vector{ARule}([]),
             LmeasMemo(), GmeasMemo(),
             worldfilter, itemset_mining_policies, arule_mining_policies,
-            miningstate, info
+            miningstate, info,
+            ReentrantLock(), ReentrantLock(), ReentrantLock()
         )
     end
 end
@@ -250,6 +265,33 @@ rulemeasures(miner::Miner)::Vector{<:MeaningfulnessMeasure} =
 miner.arule_constrained_measures
 
 """
+    lmemolock(miner::Miner) = miner.lmemolock
+
+Getter for `miner`'s lock dedicated to protect [`localmemo`](@ref).
+
+See also [`gmemolock`](@ref), [`localmemo`](@ref), [`Miner`](@ref).
+"""
+lmemolock(miner::Miner) = miner.lmemolock
+
+"""
+    gmemolock(miner::Miner) = miner.gmemolock
+
+Getter for `miner`'s lock dedicated to protect [`globalmemo`](@ref).
+
+See also [`globalmemo`](@ref), [`lmemolock`](@ref), [`Miner`](@ref).
+"""
+gmemolock(miner::Miner) = miner.gmemolock
+
+"""
+    miningstatelock(miner::Miner) = miner.miningstatelock
+
+Getter for `miner`'s lock dedicated to protect [`miningstate`](@ref) structure.
+
+See also [`Miner`](@ref), [`miningstate`](@ref).
+"""
+miningstatelock(miner::Miner) = miner.miningstatelock
+
+"""
 localmemo(miner::Miner)::LmeasMemo
 
 See [`localmemo(::AbstractMiner)`](@ref).
@@ -257,11 +299,39 @@ See [`localmemo(::AbstractMiner)`](@ref).
 localmemo(miner::Miner) = miner.localmemo
 
 """
+    localmemo!(miner::Miner, key::LmeasMemoKey, val::Threshold)
+
+Setter for a specific entry `key` inside the local memoization structure wrapped by
+`miner`.
+
+See also [`Miner`](@ref), [`LmeasMemo`](@ref), [`LmeasMemoKey`](@ref).
+"""
+localmemo!(miner::Miner, key::LmeasMemoKey, val::Threshold) = begin
+    lock(lmemolock(miner)) do
+        miner.localmemo[key] = val
+    end
+end
+
+"""
 globalmemo(miner::Miner)::GmeasMemo
 
 See [`globalmemo(::AbstractMiner)`](@ref).
 """
 globalmemo(miner::Miner) = miner.globalmemo
+
+"""
+    globalmemo!(miner::Miner, key::GmeasMemoKey, val::Threshold)
+
+Setter for a specific entry `key` inside the global memoization structure wrapped by
+`miner`.
+
+See also [`Miner`](@ref), [`GmeasMemo`](@ref), [`GmeasMemoKey`](@ref).
+"""
+globalmemo!(miner::Miner, key::GmeasMemoKey, val::Threshold) = begin
+    lock(gmemolock(miner)) do
+        miner.globalmemo[key] = val
+    end
+end
 
 """
     worldfilter(miner::Miner)
@@ -283,6 +353,47 @@ itemset_mining_policies(miner::Miner) = miner.itemset_mining_policies
 See [`itemset_mining_policies(::AbstractMiner)`](@ref).
 """
 arule_mining_policies(miner::Miner) = miner.arule_mining_policies
+
+"""
+    Base.filter!(
+        targets::Vector{Union{ARule,Itemset}},
+        policies_pool::Vector{Function}
+    )
+
+Apply `Base.filter!` on an [`ARule`](@ref)s or [`Itemset`](@ref)s collection,
+w.r.t. the family of policies `policies_pool`.
+
+See also [`ARule`](@ref), [`Base.filter!(::Vector{Itemset}, ::Miner)`](@ref),
+[`Itemset`](@ref), [`Base.filter!(::Vector{ARule}, ::Miner)`](@ref), [`Miner`](@ref).
+"""
+function Base.filter!(
+    targets::Union{<:Vector{<:ARule},Vector{<:Itemset}},
+    policies_pool::Vector{<:Function}
+)
+    filter!(target -> all(policy -> policy(target), policies_pool), targets)
+end
+
+"""
+    Base.filter!(itemsets::Vector{Itemset}, miner::Miner) = filter!(
+
+`filter!` the [`Itemset`](@ref)s wrapped in `miner`.
+
+See also [`Base.filter!(::Vector{ARule}, ::Miner)`](@ref), [`Itemset`](@ref),
+[`itemset_mining_policies`](@ref), [`Miner`](@ref).
+"""
+Base.filter!(itemsets::Vector{<:Itemset}, miner::Miner) = filter!(
+    itemsets, itemset_mining_policies(miner)
+)
+
+"""
+    Base.filter!(arules::Vector{ARule}, miner::Miner)
+
+See also [`ARule`](@ref), [`arule_mining_policies`](@ref),
+[`Base.filter!(::Vector{Itemset}, ::Miner)`](@ref), [`Itemset`](@ref), [`Miner`](@ref).
+"""
+Base.filter!(arules::Vector{ARule}, miner::Miner) = filter!(
+    arules, arule_mining_policies(miner)
+)
 
 """
 miningstate(miner::Miner)
@@ -403,7 +514,7 @@ function generaterules!(miner::Miner)
         ))
     end
 
-    return generaterules(freqitems(miner), miner)
+    return _parallel_generaterules(freqitems(miner), miner)
 end
 
 """
@@ -499,7 +610,85 @@ See [`generaterules(::AbstractVector{Itemset}, ::AbstractMiner)`](@ref).
     end
 end
 
+# TODO: deprecate `generaterules` (which is a generator, working with 1 thread)
+# and keep this multi-threaded version.
+# This is called in `generaterules!`.
+function _parallel_generaterules(
+    itemsets::AbstractVector{Itemset},
+    miner::Miner;
+    # TODO: this parameter is momentary and enables the computation of additional metrics
+    # other than the `rulemeasures` specified within `miner`.
+    compute_additional_metrics::Bool=true
+)
+    @threads for itemset in filter(x -> length(x) >= 2, itemsets)
+        subsets = powerset(itemset)
 
+        for subset in subsets
+            # subsets are built already sorted incrementally;
+            # hence, since we want the antecedent to be longer initially,
+            # the first subset values corresponds to (see comment below)
+            # (l-a)
+            _consequent = subset == Any[] ? Itemset{Item}() : subset
+            # a
+            _antecedent = symdiff(itemset, _consequent) |> Itemset
+
+            # degenerate case
+            if length(_antecedent) < 1 || length(_consequent) != 1
+                continue
+            end
+
+            currentrule = ARule((_antecedent, _consequent))
+
+            # apply generation policies to remove unwanted rules
+            unwanted = false
+            for policy in arule_mining_policies(miner)
+                if !policy(currentrule)
+                    unwanted = true
+                    break
+                end
+            end
+
+            if unwanted
+                continue
+            end
+
+            interesting = true
+            for meas in rulemeasures(miner)
+                (gmeas_algo, lthreshold, gthreshold) = meas
+                gmeas_result = gmeas_algo(
+                    currentrule, data(miner), lthreshold, miner)
+
+                # some meaningfulness measure test is failed
+                if gmeas_result < gthreshold
+                    interesting = false
+                    break
+                end
+            end
+
+            # all meaningfulness measure tests passed
+            if interesting
+
+                if compute_additional_metrics
+                    # TODO: deprecate `compute_additional_metrics` kwarg and move this code
+                    # in the cycle where a generic global measure is computed.
+                    (_, __lthreshold, _) = rulemeasures(miner) |> first
+
+                    for gmeas_algo in [glift, gconviction, gleverage]
+                        gmeas_algo(currentrule, data(miner), __lthreshold, miner)
+                    end
+                end
+
+                push!(arules(miner), currentrule)
+            # since a meaningfulness measure test failed,
+            # we don't want to keep generating rules.
+            else
+                break
+            end
+        end
+    end
+
+    return arules(miner)
+end
 
 # some utilities and new dispatches coming from external packages
 

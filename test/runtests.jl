@@ -20,10 +20,10 @@ test_suites = [
     ("General package functionalities", ["general.jl",]),
     ("Iris", ["iris.jl",]),
     ("NATOPS + Miner comparisons", ["natops.jl"]),
-    ("Alphabet proposal", ["matrix-profile.jl"]),
+    # ("NATOPS + motifs", ["matrix-profile.jl"]),
 ]
 
-@testset "SoleLogics.jl" begin
+@testset "ModalAssociationRules.jl" begin
     include("commons.jl")
     using .Commons
 
@@ -36,5 +36,4 @@ test_suites = [
             end
         end
     end
-    println()
 end
