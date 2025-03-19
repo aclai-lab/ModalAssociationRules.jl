@@ -23,7 +23,7 @@ test_suites = [
     # ("NATOPS + motifs", ["matrix-profile.jl"]),
 ]
 
-@testset "SoleLogics.jl" begin
+@testset "ModalAssociationRules.jl" begin
     include("commons.jl")
     using .Commons
 
