@@ -176,7 +176,7 @@ struct Miner{
 
         # gsupport is crucial to mine association rule
         if !(gsupport in first.(itemset_constrained_measures) ||
-            dimensional_gsupport in first.(itemset_constrained_measures))
+            gsupport in first.(itemset_constrained_measures))
             throw(ArgumentError(
                 "Miner requires global support " *
                 "(gsupport) as meaningfulness measure in order to work properly. " *
