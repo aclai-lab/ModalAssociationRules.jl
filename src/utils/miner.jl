@@ -33,7 +33,7 @@ using Base.Threads
         # locks on memoization and miningstate structures
         lmemolock::ReentrantLock
         gmemolock::ReentrantLock
-        minigstatelock::ReentrantLock
+        miningstatelock::ReentrantLock
     end
 
 Concrete [`AbstractMiner`](@ref) containing both the data, the logic and the
@@ -137,7 +137,7 @@ struct Miner{
     # locks on memoization and miningstate structures
     lmemolock::ReentrantLock
     gmemolock::ReentrantLock
-    minigstatelock::ReentrantLock
+    miningstatelock::ReentrantLock
 
     function Miner(
         X::D,
