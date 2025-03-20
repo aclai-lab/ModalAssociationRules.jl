@@ -138,7 +138,7 @@ export motifsalphabet
 
 include("natops-loader.jl")
 
-include("deprecated.jl")
+# include("deprecated.jl")
 
 export load_NATOPS
 
