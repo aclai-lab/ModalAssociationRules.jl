@@ -362,10 +362,10 @@ Setter for the content of a specific field of `miner`'s [`miningstate`](@ref).
 See also [`Miner`](@ref), [`hasminingstate`](@ref), [`initminingstate`](@ref),
 [`MiningState`](@ref).
 """
-miningstate!(miner::AbstractMiner, key::Symbol, val) = lock(miningstatelock(miner)) do
+miningstate!(miner::Miner, key::Symbol, val) = lock(miningstatelock(miner)) do
      miner.miningstate[key] = val
 end
-miningstate!(miner::AbstractMiner, key::Symbol, inner_key, val) = begin
+miningstate!(miner::Miner, key::Symbol, inner_key, val) = begin
     lock(miningstatelock(miner)) do
         miner.miningstate[key][inner_key] = val
     end
