@@ -89,14 +89,15 @@ macro localmeasure(measname, measlogic)
             # also, do more stuff depending on `miningstate` dispatch (see the documentation).
             localmemo!(miner, memokey, measure)
 
-            for state in LOCAL_MINING_STATES
-                # the numerical value necessary to save more informations about the relation
-                # between an instance and a subject must be obtained by the internal logic
-                # of the meaningfulness measure callback.
-                if hasminingstate(miner, state) && haskey(response, state)
-                    miningstate!(miner, state, (ith_instance,subject), response[state])
-                end
-            end
+            # for state in LOCAL_MINING_STATES
+            #     # the numerical value to save more informations about the relation
+            #     # between an instance and a subject must be obtained by the internal logic
+            #     # of the meaningfulness measure callback.
+            #     if hasminingstate(miner, state) && haskey(response, state)
+            #         miningstate!(miner, state, (ith_instance,subject), response[state])
+            #     end
+            # end
+
             # Note that the miningstate system could potentially irrorate the entire package
             # and could be expandend/specialized;
             # e.g., a category of miningstate is necessary to fill (ith_instance,subject)
