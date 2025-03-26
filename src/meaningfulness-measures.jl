@@ -501,12 +501,13 @@ See also [`Miner`](@ref), [`LogicalInstance`](@ref), [`Itemset`](@ref),
         miner::Union{Nothing,AbstractMiner}=nothing
     )::Float64
 
-Compute the a "dimensionally-aware" local support for the given `itemset` in the given
-`instance`.
+Compute the local support for the given `itemset` in the given `instance`.
 
-TODO: explain
+Local support is the ratio between the number of worlds in a [`LogicalInstance`](@ref) where
+and [`Itemset`](@ref) is true and the total number of worlds where the [`Itemset`](@ref)
+can be [`check`](@ref)ed.
 
-See also [`Miner`](@ref), [`gsupport`](@ref), [`LogicalInstance`](@ref),
+See also `SoleLogics.check`, [`Miner`](@ref), [`gsupport`](@ref), [`LogicalInstance`](@ref),
 [`Itemset`](@ref), [`Threshold`](@ref).
 """
 @localmeasure lsupport _dimensionalwise_lsupport_logic
@@ -519,7 +520,14 @@ See also [`Miner`](@ref), [`gsupport`](@ref), [`LogicalInstance`](@ref),
         miner::Union{Nothing,AbstractMiner}=nothing
     )::Float64
 
-Global support that calls [`lsupport`](@ref) internally.
+Compute the global support for the given `itemset` on a logiset `X`, considering `threshold`
+as the threshold for the local support called internally.
+
+Global support is the ratio between the number of [`LogicalInstance`](@ref)s in a
+[`SupportedLogiset`](@ref) for which the local support, [`lsupport`](@ref), is greater than
+a [`Threshold`](@ref), and the total number of instances in the same logiset.
+
+If a miner is provided, then its internal state is updated and used to leverage memoization.
 
 See also [`Miner`](@ref), [`lsupport`](@ref), [`LogicalInstance`](@ref),
 [`Itemset`](@ref), [`SupportedLogiset`](@ref), [`Threshold`](@ref).

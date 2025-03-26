@@ -33,7 +33,7 @@ using Base.Threads
         # locks on memoization and miningstate structures
         lmemolock::ReentrantLock
         gmemolock::ReentrantLock
-        minigstatelock::ReentrantLock
+        miningstatelock::ReentrantLock
     end
 
 Concrete [`AbstractMiner`](@ref) containing both the data, the logic and the
@@ -137,7 +137,7 @@ struct Miner{
     # locks on memoization and miningstate structures
     lmemolock::ReentrantLock
     gmemolock::ReentrantLock
-    minigstatelock::ReentrantLock
+    miningstatelock::ReentrantLock
 
     function Miner(
         X::D,
@@ -353,6 +353,23 @@ itemset_mining_policies(miner::Miner) = miner.itemset_mining_policies
 See [`itemset_mining_policies(::AbstractMiner)`](@ref).
 """
 arule_mining_policies(miner::Miner) = miner.arule_mining_policies
+
+"""
+    miningstate!(miner::Miner, key::Symbol, val)
+
+Setter for the content of a specific field of `miner`'s [`miningstate`](@ref).
+
+See also [`Miner`](@ref), [`hasminingstate`](@ref), [`initminingstate`](@ref),
+[`MiningState`](@ref).
+"""
+miningstate!(miner::Miner, key::Symbol, val) = lock(miningstatelock(miner)) do
+     miner.miningstate[key] = val
+end
+miningstate!(miner::Miner, key::Symbol, inner_key, val) = begin
+    lock(miningstatelock(miner)) do
+        miner.miningstate[key][inner_key] = val
+    end
+end
 
 """
     Base.filter!(

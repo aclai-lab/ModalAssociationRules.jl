@@ -207,14 +207,14 @@ arule_mining_policies(::AbstractMiner) = error("Not implemented").
 
 
 """
-    miningstate(miner::Miner)::MiningState
-    miningstate(miner::Miner, key::Symbol)
-    miningstate(miner::Miner, key::Symbol, inner_key)
+    miningstate(miner::AbstractMiner)::MiningState
+    miningstate(miner::AbstractMiner, key::Symbol)
+    miningstate(miner::AbstractMiner, key::Symbol, inner_key)
 
 Getter for the entire [`MiningState`](@ref) structure currently loaded in `miner`,
 a field within it or the value of a specific field.
 
-See also [`Miner`](@ref), [`hasminingstate`](@ref), [`initminingstate`](@ref),
+See also [`AbstractMiner`](@ref), [`hasminingstate`](@ref), [`initminingstate`](@ref),
 [`MiningState`](@ref).
 """
 miningstate(::AbstractMiner)::MiningState = error("Not implemented.")
@@ -224,11 +224,11 @@ miningstate(miner::AbstractMiner, key::Symbol, inner_key) = begin
 end
 
 """
-    miningstate!(miner::Miner, key::Symbol, val)
+    miningstate!(miner::AbstractMiner, key::Symbol, val)
 
 Setter for the content of a specific field of `miner`'s [`miningstate`](@ref).
 
-See also [`Miner`](@ref), [`hasminingstate`](@ref), [`initminingstate`](@ref),
+See also [`AbstractMiner`](@ref), [`hasminingstate`](@ref), [`initminingstate`](@ref),
 [`MiningState`](@ref).
 """
 miningstate!(miner::AbstractMiner, key::Symbol, val) = miner.miningstate[key] = val
