@@ -60,3 +60,4 @@ fpgrowth_miner = Miner(
 )
 
 @test_nowarn mine!(fpgrowth_miner)
+@test freqitems(fpgrowth_miner) |> length == 5

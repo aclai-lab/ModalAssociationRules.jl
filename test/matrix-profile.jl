@@ -114,8 +114,6 @@ _mydistance = (x, y) -> size(x) == size(y) ?
 # Experiment #1: just a small example
 ############################################################################################
 include("test/experiments/natops0.jl")
-@test_nowarn mine!(apriori_miner)
-@test freqitems(apriori_miner) |> length == 5
 
 ############################################################################################
 # Experiment #1: describe the right hand in "I have command class"
