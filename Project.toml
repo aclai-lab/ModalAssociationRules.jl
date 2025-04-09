@@ -39,14 +39,22 @@ ZipFile = "a5390f91-8eb1-5f08-bee0-b1d1ffed6cea"
 
 [compat]
 Clustering = "0.15.8"
+DataFrames = "1"
+Combinatorics = "1"
 Discretizers = "3.2.3"
 Distributions = "0.25.113"
 DynamicAxisWarping = "0.4.18"
+Lazy = "0.15"
 MatrixProfile = "1.1.1"
+Plots = "1"
 Random = "1"
 SoleLogics = "0.13"
+ResumableFunctions = "1"
+SoleData = "0.16"
+SoleBase = "0.13"
 StatProfilerHTML = "1.6.0"
 StatsBase = "0.30 - 0.34"
+ZipFile = "0.10"
 julia = "1"
 
 [extras]
