@@ -39,6 +39,7 @@ ZipFile = "a5390f91-8eb1-5f08-bee0-b1d1ffed6cea"
 
 [compat]
 Clustering = "0.15.8"
+DataFrames = "1"
 Combinatorics = "1"
 Discretizers = "3.2.3"
 Distributions = "0.25.113"
