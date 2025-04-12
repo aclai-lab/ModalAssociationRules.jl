@@ -29,48 +29,61 @@ using Statistics
 
 using SoleData
 
-# little utility to avoid writing an experiment
+# general experiment logic
 function experiment!(miner::Miner, reportname::String)
+    # check that miner provides both confidence and lift measures
+    _allmeasures = first.(rulemeasures(miner))
+    gconfidence in _allmeasures || throw(DomainError, "Miner does not provide gconfidence.")
+    glift in _allmeasures || throw(DomainError, "Miner does not provide glift.")
+
+    # mine
     println("Mining...")
     mining_start = time()
     mine!(miner)
     mining_end = time()
     println("Mining duration: $(round(mining_end - mining_start, digits=2))")
 
+    # generate association rules
     println("Generating rules...")
     generating_start = time()
     generaterules!(miner) |> collect
     generating_end = time()
     println("Generation duration: $(round(generating_end - generating_start, digits=2))")
 
-
+    # collect all the results
     rulecollection = [
         (
             rule,
             round(
+                globalmemo(miner, (:gsupport, antecedent(rule))), digits=2
+                ),
+            round(
+                globalmemo(miner, (:gsupport, Itemset(rule))), digits=2
+            ),
+            round(
                 globalmemo(miner, (:gconfidence, rule)), digits=2
             ),
             round(
-                globalmemo(miner, (:gsupport, antecedent(rule))), digits=2
-            ),
-            round(
-                globalmemo(miner, (:gsupport, Itemset(rule))), digits=2
+                globalmemo(miner, (:glift, rule)), digits=2
             )
         )
         for rule in arules(miner)
     ]
-    sort!(rulecollection, by=x->x[2], rev=true);
+
+    # sort by lift (the 5th position in rulecollection)
+    sort!(rulecollection, by=x->x[5], rev=true);
 
     reportname = joinpath(["test", "experiments", reportname])
     println("Writing to: $(reportname)")
     open(reportname, "w") do io
-        println(io, "Columns are: rule, confidence, ant support, ant+cons support")
+        println(io, "Columns are: rule, confidence, ant support, ant+cons support, lift")
 
         padding = maximum(length.(miner |> freqitems))
-        for (rule,conf,antgsupp,consgsupp) in rulecollection
+        for (rule, antgsupp, consgsupp, conf, lift) in rulecollection
             println(io,
-                rpad(rule, 50 * padding) * " " * rpad(string(conf), 10) * " " *
-                rpad(string(antgsupp), 10) * " " * string(consgsupp)
+                rpad(rule, 50 * padding) * " " * rpad(string(antgsupp), 10) * " " *
+                rpad(string(consgsupp), 10) * " " * rpad(string(conf), 10) * " " *
+                string(lift)
             )
         end
     end
