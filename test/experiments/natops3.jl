@@ -4,9 +4,9 @@ NCC = X[61:90, :]
 
 logiset = scalarlogiset(NCC, variabledistances)
 
-apriori_miner = Miner(
+fpgrowth_miner = Miner(
     logiset,
-    apriori,
+    fpgrowth,
     _items,
     _itemsetmeasures,
     _rulemeasures;

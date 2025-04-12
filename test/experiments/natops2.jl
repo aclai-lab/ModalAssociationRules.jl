@@ -150,13 +150,16 @@ _atoms = reduce(vcat, [
 _items = Vector{Item}(_atoms)
 
 _itemsetmeasures = [(gsupport, 0.3, 0.3)]
-_rulemeasures = [(gconfidence, 0.3, 0.3)]
+_rulemeasures = [
+    (gconfidence, 0.3, 0.3),
+    (glift, 0.0, 0.0)
+]
 
 logiset = scalarlogiset(ACC, variabledistances)
 
-apriori_miner = Miner(
+fpgrowth_miner = Miner(
     logiset,
-    apriori,
+    fpgrowth,
     _items,
     _itemsetmeasures,
     _rulemeasures;

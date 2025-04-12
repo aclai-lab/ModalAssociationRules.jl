@@ -133,7 +133,7 @@ _atoms = reduce(vcat, [
 )
 _items = Vector{Item}(_atoms)
 
-_itemsetmeasures = [(gsupport, 0.1, 0.1)]
+_itemsetmeasures = [(gsupport, 0.0, 0.0)]
 _rulemeasures = [
     (gconfidence, 0.3, 0.3),
     (glift, 0.0, 0.0)
@@ -141,15 +141,15 @@ _rulemeasures = [
 
 logiset = scalarlogiset(IHCC, variabledistances)
 
-apriori_miner = Miner(
+fpgrowth_miner = Miner(
     logiset,
-    apriori,
+    fpgrowth,
     _items,
     _itemsetmeasures,
     _rulemeasures;
     itemset_mining_policies=Function[
-        isanchored_itemset(),
-        isdimensionally_coherent_itemset()
+    #    isanchored_itemset(),
+    #    isdimensionally_coherent_itemset()
     ],
     arule_mining_policies=Function[
         islimited_length_arule(),
