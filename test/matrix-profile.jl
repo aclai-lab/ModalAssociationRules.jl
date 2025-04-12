@@ -134,7 +134,7 @@ include("test/experiments/natops0.jl")
 include("test/experiments/natops1.jl")
 
 println("Running experiment #1:")
-experiment!(apriori_miner, "v1_rhand_ihavecommand.txt")
+experiment!(fpgrowth_miner, "v1_rhand_ihavecommand.txt")
 
 ############################################################################################
 # Experiment #2: describe the right hand in "All clear class"
@@ -142,7 +142,7 @@ experiment!(apriori_miner, "v1_rhand_ihavecommand.txt")
 include("test/experiments/natops2.jl")
 
 println("Running experiment #2: ")
-experiment!(apriori_miner, "v2_rhand_allclear.txt")
+experiment!(fpgrowth_miner, "v2_rhand_allclear.txt")
 
 ############################################################################################
 # Experiment #3: describe the right hand in "Not clear"
@@ -150,7 +150,7 @@ experiment!(apriori_miner, "v2_rhand_allclear.txt")
 include("test/experiments/natops3.jl")
 
 println("Running experiment #3: ")
-experiment!(apriori_miner, "v3_rhand_notclear.txt")
+experiment!(fpgrowth_miner, "v3_rhand_notclear.txt")
 
 ############################################################################################
 # Experiment #4: describe wrists and elbows in "Spread wings"
@@ -159,7 +159,7 @@ experiment!(apriori_miner, "v3_rhand_notclear.txt")
 include("test/experiments/natops4.jl")
 
 println("Running experiment #4: ")
-experiment!(apriori_miner, "v4_wristelbow_spreadwings.txt")
+experiment!(fpgrowth_miner, "v4_wristelbow_spreadwings.txt")
 
 ############################################################################################
 # Experiment #5: describe wrists and elbows in "Fold wings"
@@ -168,7 +168,7 @@ experiment!(apriori_miner, "v4_wristelbow_spreadwings.txt")
 include("test/experiments/natops5.jl")
 
 println("Running experiment #5: ")
-experiment!(apriori_miner, "v5_wristelbow_foldwings.txt")
+experiment!(fpgrowth_miner, "v5_wristelbow_foldwings.txt")
 
 ############################################################################################
 # Experiment #6: describe wrists and elbows in "Lock wings"
@@ -176,7 +176,7 @@ experiment!(apriori_miner, "v5_wristelbow_foldwings.txt")
 include("test/experiments/natops6.jl")
 
 println("Running experiment #6: ")
-experiment!(apriori_miner, "v6_elbowhand_lockwings.txt")
+experiment!(fpgrowth_miner, "v6_elbowhand_lockwings.txt")
 
 
 ############################################################################################
@@ -186,5 +186,5 @@ experiment!(apriori_miner, "v6_elbowhand_lockwings.txt")
 
 # plot frequent items in descending order by dimensiona global support
 # for frq in freqitems(miner)
-#   println("$(frq) => gsupport $(apriori_miner.globalmemo[(:gsupport, frq)])")
+#   println("$(frq) => gsupport $(fpgrowth_miner.globalmemo[(:gsupport, frq)])")
 # end
