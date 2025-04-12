@@ -1,12 +1,13 @@
+# README: see matrix-profile.jl
 
 # this is identical to Experiment #2, but the instances are different
 NCC = X[61:90, :]
 
 logiset = scalarlogiset(NCC, variabledistances)
 
-fpgrowth_miner = Miner(
+miner = Miner(
     logiset,
-    fpgrowth,
+    miningalgo,
     _items,
     _itemsetmeasures,
     _rulemeasures;

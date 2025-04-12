@@ -1,3 +1,4 @@
+# README: see matrix-profile.jl
 
 ACC = X[31:60, :]
 
@@ -157,9 +158,9 @@ _rulemeasures = [
 
 logiset = scalarlogiset(ACC, variabledistances)
 
-fpgrowth_miner = Miner(
+miner = Miner(
     logiset,
-    fpgrowth,
+    miningalgo,
     _items,
     _itemsetmeasures,
     _rulemeasures;

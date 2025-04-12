@@ -105,6 +105,10 @@ _seed = 3498
 r = 5    # how similar two windows must be to belong to the same motif
 th = 10  # how nearby in time two motifs are allowed to be
 
+# algorithm use for mining;
+# currently, it is set to apriori instead of fpgrowth because of issue #97
+miningalgo = apriori
+
 # we isolated the only var_id 5 from the class "I have command",
 # thus we now have only one column/var_id;
 # for simplicity, let's consider also just one motif.

@@ -1,3 +1,5 @@
+# README: see matrix-profile.jl
+
 # isolate "I have command class"
 IHCC = X[1:30, :]
 
@@ -133,7 +135,7 @@ _atoms = reduce(vcat, [
 )
 _items = Vector{Item}(_atoms)
 
-_itemsetmeasures = [(gsupport, 0.5, 0.5)]
+_itemsetmeasures = [(gsupport, 0.1, 0.1)]
 _rulemeasures = [
     (gconfidence, 0.3, 0.3),
     (glift, 0.0, 0.0)
@@ -141,19 +143,19 @@ _rulemeasures = [
 
 logiset = scalarlogiset(IHCC, variabledistances)
 
-fpgrowth_miner = Miner(
+miner = Miner(
     logiset,
-    fpgrowth,
+    miningalgo,
     _items,
     _itemsetmeasures,
     _rulemeasures;
     itemset_mining_policies=Function[
-        isanchored_itemset(),
-        isdimensionally_coherent_itemset()
+        #isanchored_itemset(),
+        #isdimensionally_coherent_itemset()
     ],
     arule_mining_policies=Function[
-        islimited_length_arule(),
-        isanchored_arule(),
+        # islimited_length_arule(),
+        # isanchored_arule(),
         # isheterogeneous_arule(),
     ]
 )

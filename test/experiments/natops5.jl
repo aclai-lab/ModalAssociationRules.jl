@@ -1,3 +1,4 @@
+# README: see matrix-profile.jl
 
 # this is identical to Experiment #2, but the instances are different
 FWC = X[121:150, :]
@@ -117,9 +118,9 @@ _rulemeasures = [
 
 logiset = scalarlogiset(FWC, variabledistances)
 
-fpgrowth_miner = Miner(
+miner = Miner(
     logiset,
-    fpgrowth,
+    miningalgo,
     _items,
     _itemsetmeasures,
     _rulemeasures;
