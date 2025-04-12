@@ -16,6 +16,10 @@
 #   6.1 each experiment has its policies to limit the number of results
 #   6.2 this part is managed by the `experiment!` function
 #   6.3 also, association rules are printed, sorted decreasingly by global confidence
+#
+# Note: you can use the following regex to look for rows in a report having both the
+# variable numbers specified:
+# ^(?=.*4)(?=.*5)(?=.*6).*
 
 using Test
 
@@ -26,8 +30,49 @@ using Plots
 using Plots.Measures
 using Random
 using Statistics
-
+using StatsBase
 using SoleData
+
+# euclidean distance between normalized(x) and normalized(y)
+function zeuclidean(x::Vector{<:Real}, y::Vector{<:Real})
+    if length(x) != length(y)
+        # TODO - instead of returning a big number, throw an error
+        # and catch it during mining.
+        return maxintfloat()
+    end
+
+    # normalize x and y
+    meanx = mean(x)
+    meany = mean(y)
+
+    # avoid division by zero
+    eps = 1e-10
+
+    x_z = (x .- mean(x)) ./ (std(x) + eps)
+    y_z = (y .- mean(y)) ./ (std(y) + eps)
+
+    # z-normalized euclidean distance formula
+    return sqrt(sum((x_z .- y_z).^2))
+end
+
+
+# suggest a threshold to associate with a given motif, to create a literal;
+# compute all the distances (for a given distance) and return the ith percentile
+# (also, as 2nd value, return the distances itself).
+function suggest_threshold(
+    motif::Vector{<:Real},
+    data;
+    distance::Function=zeuclidean,
+    _percentile::Integer=25
+)
+    distances = [
+        distance(motif, data[instance][start:(start + length(motif) - 1)])
+        for instance in 1:first(size(data))
+        for start in 1:(length(data[instance]) - length(motif))
+    ]
+
+    return percentile(distances, _percentile), distances
+end
 
 # general experiment logic
 function experiment!(miner::Miner, reportname::String)
@@ -76,12 +121,12 @@ function experiment!(miner::Miner, reportname::String)
     reportname = joinpath(["test", "experiments", reportname])
     println("Writing to: $(reportname)")
     open(reportname, "w") do io
-        println(io, "Columns are: rule, confidence, ant support, ant+cons support, lift")
+        println(io, "Columns are: rule, ant support, ant+cons support,  confidence, lift")
 
         padding = maximum(length.(miner |> freqitems))
         for (rule, antgsupp, consgsupp, conf, lift) in rulecollection
             println(io,
-                rpad(rule, 50 * padding) * " " * rpad(string(antgsupp), 10) * " " *
+                rpad(rule, 30 * padding) * " " * rpad(string(antgsupp), 10) * " " *
                 rpad(string(consgsupp), 10) * " " * rpad(string(conf), 10) * " " *
                 string(lift)
             )
@@ -114,18 +159,7 @@ miningalgo = apriori
 # for simplicity, let's consider also just one motif.
 
 # we define a distance function between two time series x, y, where |x| = |y|
-_mydistance = (x, y) -> size(x) == size(y) ?
-    # Euclidean with normalization
-    # sqrt(sum([(x - y)^2 for (x, y) in zip(x |> normalize, y)])) :
-
-    # Euclidean without normalization
-    # sqrt(sum([(x - y)^2 for (x, y) in zip(x, y)])) :
-
-    # Dynamic Time Warping
-    dtw(x,y) |> first :
-
-    # distance function isz not well-defined
-    maxintfloat()
+_mydistance = (x, y) -> zeuclidean(x, y) # alternatively, use: dtw(x, y)
 
 ############################################################################################
 # Experiment #1: just a small example
@@ -138,7 +172,7 @@ include("test/experiments/natops0.jl")
 include("test/experiments/natops1.jl")
 
 println("Running experiment #1:")
-experiment!(fpgrowth_miner, "v1_rhand_ihavecommand.txt")
+experiment!(miner, "v1_rhand_ihavecommand.txt")
 
 ############################################################################################
 # Experiment #2: describe the right hand in "All clear class"
@@ -146,7 +180,7 @@ experiment!(fpgrowth_miner, "v1_rhand_ihavecommand.txt")
 include("test/experiments/natops2.jl")
 
 println("Running experiment #2: ")
-experiment!(fpgrowth_miner, "v2_rhand_allclear.txt")
+experiment!(miner, "v2_rhand_allclear.txt")
 
 ############################################################################################
 # Experiment #3: describe the right hand in "Not clear"
@@ -154,7 +188,7 @@ experiment!(fpgrowth_miner, "v2_rhand_allclear.txt")
 include("test/experiments/natops3.jl")
 
 println("Running experiment #3: ")
-experiment!(fpgrowth_miner, "v3_rhand_notclear.txt")
+experiment!(miner, "v3_rhand_notclear.txt")
 
 ############################################################################################
 # Experiment #4: describe wrists and elbows in "Spread wings"
@@ -163,7 +197,7 @@ experiment!(fpgrowth_miner, "v3_rhand_notclear.txt")
 include("test/experiments/natops4.jl")
 
 println("Running experiment #4: ")
-experiment!(fpgrowth_miner, "v4_wristelbow_spreadwings.txt")
+experiment!(miner, "v4_wristelbow_spreadwings.txt")
 
 ############################################################################################
 # Experiment #5: describe wrists and elbows in "Fold wings"
@@ -172,7 +206,7 @@ experiment!(fpgrowth_miner, "v4_wristelbow_spreadwings.txt")
 include("test/experiments/natops5.jl")
 
 println("Running experiment #5: ")
-experiment!(fpgrowth_miner, "v5_wristelbow_foldwings.txt")
+experiment!(miner, "v5_wristelbow_foldwings.txt")
 
 ############################################################################################
 # Experiment #6: describe wrists and elbows in "Lock wings"
@@ -180,7 +214,7 @@ experiment!(fpgrowth_miner, "v5_wristelbow_foldwings.txt")
 include("test/experiments/natops6.jl")
 
 println("Running experiment #6: ")
-experiment!(fpgrowth_miner, "v6_elbowhand_lockwings.txt")
+experiment!(miner, "v6_elbowhand_lockwings.txt")
 
 
 ############################################################################################
@@ -190,5 +224,5 @@ experiment!(fpgrowth_miner, "v6_elbowhand_lockwings.txt")
 
 # plot frequent items in descending order by dimensiona global support
 # for frq in freqitems(miner)
-#   println("$(frq) => gsupport $(fpgrowth_miner.globalmemo[(:gsupport, frq)])")
+#   println("$(frq) => gsupport $(miner.globalmemo[(:gsupport, frq)])")
 # end
