@@ -591,6 +591,8 @@ See [`generaterules(::AbstractVector{Itemset}, ::AbstractMiner)`](@ref).
             end
 
             interesting = true
+
+            # compute meaningfulness measures
             for meas in rulemeasures(miner)
                 (gmeas_algo, lthreshold, gthreshold) = meas
                 gmeas_result = gmeas_algo(
