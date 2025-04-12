@@ -111,11 +111,11 @@ propositional_atoms = [
     # bigger intervals' threshold can be relaxed
     Atom(ScalarCondition(__var__v4_l10_rhand_x_right, <, 2.0)),
     Atom(ScalarCondition(__var__v4_l10_rhand_x_align, <, 2.0)),
-    Atom(ScalarCondition(__var__v4_l40_rhand_x_align_inverting_right, <, 4.0)),
+    # Atom(ScalarCondition(__var__v4_l40_rhand_x_align_inverting_right, <, 4.0)),
 
     Atom(ScalarCondition(__var__v5_l10_rhand_y_ascending, <, 2.0)),
     Atom(ScalarCondition(__var__v5_l10_rhand_y_descending, <, 2.0)),
-    Atom(ScalarCondition(__var__v5_l40_rhand_y_ascdesc, <, 4.0)),
+    # Atom(ScalarCondition(__var__v5_l40_rhand_y_ascdesc, <, 4.0)),
 
     Atom(ScalarCondition(__var__v6_l10_rhand_z_away_front, <, 2.0)),
     Atom(ScalarCondition(__var__v6_l10_rhand_z_closer_front, <, 2.0)),
@@ -123,17 +123,17 @@ propositional_atoms = [
 
 _atoms = reduce(vcat, [
         propositional_atoms,
-        diamond(IA_A).(propositional_atoms),
-        diamond(IA_L).(propositional_atoms),
-        diamond(IA_B).(propositional_atoms),
-        diamond(IA_E).(propositional_atoms),
-        diamond(IA_D).(propositional_atoms),
-        diamond(IA_O).(propositional_atoms),
+        # diamond(IA_A).(propositional_atoms),
+        # diamond(IA_L).(propositional_atoms),
+        # diamond(IA_B).(propositional_atoms),
+        # diamond(IA_E).(propositional_atoms),
+        # diamond(IA_D).(propositional_atoms),
+        # diamond(IA_O).(propositional_atoms),
     ]
 )
 _items = Vector{Item}(_atoms)
 
-_itemsetmeasures = [(gsupport, 0.0, 0.0)]
+_itemsetmeasures = [(gsupport, 0.5, 0.5)]
 _rulemeasures = [
     (gconfidence, 0.3, 0.3),
     (glift, 0.0, 0.0)
@@ -148,8 +148,8 @@ fpgrowth_miner = Miner(
     _itemsetmeasures,
     _rulemeasures;
     itemset_mining_policies=Function[
-    #    isanchored_itemset(),
-    #    isdimensionally_coherent_itemset()
+        isanchored_itemset(),
+        isdimensionally_coherent_itemset()
     ],
     arule_mining_policies=Function[
         islimited_length_arule(),
