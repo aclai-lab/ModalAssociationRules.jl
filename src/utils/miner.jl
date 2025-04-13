@@ -636,8 +636,8 @@ function _parallel_generaterules(
     itemsets::AbstractVector{Itemset},
     miner::Miner;
     # TODO: this parameter is momentary and enables the computation of additional metrics
-    # other than the `rulemeasures` specified within `miner`.
-    compute_additional_metrics::Bool=true
+    # other than the `rulemeasures` specified within `miner` (remove).
+    compute_additional_metrics::Bool=false
 )
     @threads for itemset in filter(x -> length(x) >= 2, itemsets)
         subsets = powerset(itemset)
