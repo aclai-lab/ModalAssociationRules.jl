@@ -36,8 +36,7 @@ using SoleData
 # euclidean distance between normalized(x) and normalized(y)
 function zeuclidean(x::Vector{<:Real}, y::Vector{<:Real})
     if length(x) != length(y)
-        # TODO - instead of returning a big number, throw an error
-        # and catch it during mining.
+        # TODO - instead of returning a big number, throw an error and catch it while mining
         return maxintfloat()
     end
 
@@ -53,6 +52,15 @@ function zeuclidean(x::Vector{<:Real}, y::Vector{<:Real})
 
     # z-normalized euclidean distance formula
     return sqrt(sum((x_z .- y_z).^2))
+end
+
+function _dtw(x::Vector{<:Real}, y::Vector{<:Real})
+    if length(x) != length(y)
+        # TODO - instead of returning a big number, throw an error and catch it while mining
+        return maxintfloat()
+    end
+
+    return dtw(x, y) |> first
 end
 
 
@@ -73,6 +81,7 @@ function suggest_threshold(
 
     return percentile(distances, _percentile), distances
 end
+
 
 # general experiment logic
 function experiment!(miner::Miner, reportname::String)
@@ -158,8 +167,9 @@ miningalgo = apriori
 # thus we now have only one column/var_id;
 # for simplicity, let's consider also just one motif.
 
-# we define a distance function between two time series x, y, where |x| = |y|
-_mydistance = (x, y) -> zeuclidean(x, y) # alternatively, use: dtw(x, y)
+# we define a distance function between two time series
+# you could choose between zeuclidean(x,y) or dtw(x,y) |> first
+_mydistance = (x, y) -> dtw(x, y) |> first
 
 ############################################################################################
 # Experiment #1: just a small example
