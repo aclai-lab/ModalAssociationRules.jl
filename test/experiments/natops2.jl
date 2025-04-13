@@ -55,13 +55,13 @@ __motif__v5_l30_rhand_y_inverting_descending = _motifs_v5_l30[6]
 
 __var__v5_l30_rhand_y_ascinvert = VariableDistance(5,
     __motif__v5_l30_rhand_y_ascending_inverting,
-    distance=x -> _mydistance(x, __motif__v5_l40_rhand_y_ascdesc),
+    distance=x -> _mydistance(x, __motif__v5_l30_rhand_y_ascending_inverting),
     featurename="Ascending⋅Inverting"
 )
 
 __var__v5_l30_rhand_y_invertdesc = VariableDistance(5,
     __motif__v5_l30_rhand_y_inverting_descending,
-    distance=x -> _mydistance(x, __motif__v5_l40_rhand_y_ascdesc),
+    distance=x -> _mydistance(x, __motif__v5_l30_rhand_y_inverting_descending),
     featurename="Inverting⋅Descending"
 )
 
@@ -150,7 +150,7 @@ _atoms = reduce(vcat, [
 )
 _items = Vector{Item}(_atoms)
 
-_itemsetmeasures = [(gsupport, 0.3, 0.3)]
+_itemsetmeasures = [(gsupport, 0.1, 0.1)]
 _rulemeasures = [
     (gconfidence, 0.3, 0.3),
     (glift, 0.0, 0.0)
