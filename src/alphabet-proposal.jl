@@ -56,8 +56,8 @@ function motifsalphabet(
     x::Vector{T},
     windowlength::Integer,
     nmotifs::Integer;
-    r::Integer=5,
-    th::Integer=0
+    r::Integer=2,
+    th::Integer=5
 ) where {T<:Real}
     xmprofile = matrix_profile(x, windowlength)
     xmotifs = motifs(xmprofile, nmotifs; r=r, th=th)
