@@ -83,6 +83,27 @@ function suggest_threshold(
 end
 
 
+# given a motif and the slice of a dataset (e.g., IHCC[:,5]), return an array containing
+# the minimum value distance(motif, IHCC[i,5]).
+function best_match_for_instance(
+    motif::Vector{<:Real},
+    data;
+    distance::Function=zeuclidean
+)
+    best_matches = []
+    for instance in 1:first(size(data))
+        append!(best_matches,
+            minimum([
+                distance(motif, data[instance][start:(start + length(motif) - 1)])
+                for start in 1:(length(data[instance]) - length(motif))
+            ])
+        )
+    end
+
+    return best_matches
+end
+
+
 # general experiment logic
 function experiment!(miner::Miner, reportname::String)
     # check that miner provides both confidence and lift measures
@@ -169,7 +190,7 @@ miningalgo = apriori
 
 # we define a distance function between two time series
 # you could choose between zeuclidean(x,y) or dtw(x,y) |> first
-_mydistance = (x, y) -> dtw(x, y) |> first
+_mydistance = (x, y) -> zeuclidean(x, y) |> first
 
 ############################################################################################
 # Experiment #1: just a small example
