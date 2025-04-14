@@ -19,7 +19,7 @@ function _load_epilepsy(dirpath::String, fileprefix::String)
         )
 
     variablenames = [
-        "x", "y", "z"
+        "x", "y", "z",
     ]
 
     X_train  = SoleData.fix_dataframe(X_train, variablenames)
