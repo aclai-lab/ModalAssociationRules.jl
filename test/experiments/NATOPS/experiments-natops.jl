@@ -4,13 +4,7 @@ include("test/experiments/experiments-driver.jl")
 X, y = load_NATOPS();
 insertcols!(X, 25, "ΔY[Thumb r and Hand tip r]" => X[:,5]-X[:,23])
 
-# right hand y axis
-var_id = 5
-
-# right hand in "I have command class"
-IHCC_rhand_y_only = Vector{Float64}.(X[1:30, var_id])
-
-# parameters for matrix profile generation
+# default parameters for matrix profile generation
 windowlength = 20
 nmotifs = 3
 _seed = 3498
@@ -20,10 +14,6 @@ th = 10  # how nearby in time two motifs are allowed to be
 # algorithm use for mining;
 # currently, it is set to apriori instead of fpgrowth because of issue #97
 miningalgo = apriori
-
-# we isolated the only var_id 5 from the class "I have command",
-# thus we now have only one column/var_id;
-# for simplicity, let's consider also just one motif.
 
 # we define a distance function between two time series
 # you could choose between zeuclidean(x,y) or dtw(x,y) |> first

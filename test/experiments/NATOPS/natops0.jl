@@ -1,3 +1,8 @@
+# right hand y axis
+var_id = 5
+
+# right hand in "I have command class"
+IHCC_rhand_y_only = Vector{Float64}.(X[1:30, var_id])
 
 mp, _raw_motifs, _motifs = motifsalphabet(
     IHCC_rhand_y_only, windowlength, nmotifs; r=r, th=th);
