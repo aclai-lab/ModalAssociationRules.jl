@@ -11,12 +11,12 @@ __motif__v4_l10_rhand_x_align = _motifs_v4_l10[3]
 
 __var__v4_l10_rhand_x_right = VariableDistance(4,
     __motif__v4_l10_rhand_x_right,
-    distance=x -> _mydistance(x, __motif__v4_l10_rhand_x_right),
+    distance=x -> expdistance(x, __motif__v4_l10_rhand_x_right),
     featurename="Right"
 )
 __var__v4_l10_rhand_x_align = VariableDistance(4,
     __motif__v4_l10_rhand_x_align,
-    distance=x -> _mydistance(x, __motif__v4_l10_rhand_x_align),
+    distance=x -> expdistance(x, __motif__v4_l10_rhand_x_align),
     featurename="Align"
 )
 
@@ -26,7 +26,7 @@ __motif__v4_l40_rhand_x_right_align_still = _motifs_v4_l40[1]
 
 __var__v4_l40_rhand_x_right_align_still = VariableDistance(4,
     __motif__v4_l40_rhand_x_right_align_still,
-    distance=x -> _mydistance(x, __motif__v4_l40_rhand_x_right_align_still),
+    distance=x -> expdistance(x, __motif__v4_l40_rhand_x_right_align_still),
     featurename="Right⋅Align⋅Still"
 )
 
@@ -39,12 +39,12 @@ __motif__v5_l10_rhand_y_descending = _motifs_v5_l10[2]
 
 __var__v5_l10_rhand_y_ascending = VariableDistance(5,
     __motif__v5_l10_rhand_y_ascending,
-    distance=x -> _mydistance(x, __motif__v5_l10_rhand_y_ascending),
+    distance=x -> expdistance(x, __motif__v5_l10_rhand_y_ascending),
     featurename="Ascending"
 )
 __var__v5_l10_rhand_y_descending = VariableDistance(5,
     __motif__v5_l10_rhand_y_descending,
-    distance=x -> _mydistance(x, __motif__v5_l10_rhand_y_descending),
+    distance=x -> expdistance(x, __motif__v5_l10_rhand_y_descending),
     featurename="Descending"
 )
 
@@ -55,13 +55,13 @@ __motif__v5_l30_rhand_y_inverting_descending = _motifs_v5_l30[6]
 
 __var__v5_l30_rhand_y_ascinvert = VariableDistance(5,
     __motif__v5_l30_rhand_y_ascending_inverting,
-    distance=x -> _mydistance(x, __motif__v5_l30_rhand_y_ascending_inverting),
+    distance=x -> expdistance(x, __motif__v5_l30_rhand_y_ascending_inverting),
     featurename="Ascending⋅Inverting"
 )
 
 __var__v5_l30_rhand_y_invertdesc = VariableDistance(5,
     __motif__v5_l30_rhand_y_inverting_descending,
-    distance=x -> _mydistance(x, __motif__v5_l30_rhand_y_inverting_descending),
+    distance=x -> expdistance(x, __motif__v5_l30_rhand_y_inverting_descending),
     featurename="Inverting⋅Descending"
 )
 
@@ -74,12 +74,12 @@ __motif__v25_l10_rhand_thumb_down = _motifs_v25_l10[3]
 
 __var__v25_l10_rhand_thumb_up = VariableDistance(25,
     __motif__v25_l10_rhand_thumb_up,
-    distance=x -> _mydistance(x, __motif__v25_l10_rhand_thumb_up),
+    distance=x -> expdistance(x, __motif__v25_l10_rhand_thumb_up),
     featurename="Up"
 )
 __var__v25_l10_rhand_thumb_down = VariableDistance(25,
     __motif__v25_l10_rhand_thumb_down,
-    distance=x -> _mydistance(x, __motif__v25_l10_rhand_thumb_down),
+    distance=x -> expdistance(x, __motif__v25_l10_rhand_thumb_down),
     featurename="Down"
 )
 
@@ -88,7 +88,7 @@ __motif__v25_l20_rhand_thumb_inversion = _motifs_v25_l20[5]
 
 __var__v25_l20_rhand_thumb_inversion = VariableDistance(25,
     __motif__v25_l20_rhand_thumb_inversion,
-    distance=x -> _mydistance(x, __motif__v25_l20_rhand_thumb_inversion),
+    distance=x -> expdistance(x, __motif__v25_l20_rhand_thumb_inversion),
     featurename="Inversion"
 )
 

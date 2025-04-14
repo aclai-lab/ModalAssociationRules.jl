@@ -13,12 +13,12 @@ __motif__v7_l10_lelbow_left = _motifs_v7_l10[5]
 
 __var__v7_l10_lelbow_reentrant = VariableDistance(7,
     __motif__v7_l10_lelbow_reentrant,
-    distance=x -> _mydistance(x, __motif__v7_l10_lelbow_reentrant),
+    distance=x -> expdistance(x, __motif__v7_l10_lelbow_reentrant),
     featurename="Reentrant"
 )
 __var__v7_l10_lelbow_left = VariableDistance(7,
     __motif__v7_l10_lelbow_left,
-    distance=x -> _mydistance(x, __motif__v7_l10_lelbow_left),
+    distance=x -> expdistance(x, __motif__v7_l10_lelbow_left),
     featurename="Left"
 )
 
@@ -28,13 +28,13 @@ __motif__v7_l30_lelbow_reen_left_reen = _motifs_v7_l30[2]
 
 __var__v7_l30_lelbow_left_reen_left = VariableDistance(7,
     __motif__v7_l30_lelbow_left_reen_left,
-    distance=x -> _mydistance(x, __motif__v7_l30_lelbow_left_reen_left),
+    distance=x -> expdistance(x, __motif__v7_l30_lelbow_left_reen_left),
     featurename="Left⋅Reentering⋅Left"
 )
 
 __var__v7_l30_lelbow_reen_left_reen = VariableDistance(7,
     __motif__v7_l30_lelbow_reen_left_reen,
-    distance=x -> _mydistance(x, __motif__v7_l30_lelbow_reen_left_reen),
+    distance=x -> expdistance(x, __motif__v7_l30_lelbow_reen_left_reen),
     featurename="Reentering⋅Left⋅Reentering"
 )
 
@@ -46,12 +46,12 @@ __motif__v10_l10_relbow_right = _motifs_v10_l10[3]
 
 __var__v10_l10_relbow_reentrant = VariableDistance(10,
     __motif__v10_l10_relbow_reentrant,
-    distance=x -> _mydistance(x, __motif__v10_l10_relbow_reentrant),
+    distance=x -> expdistance(x, __motif__v10_l10_relbow_reentrant),
     featurename="Reentrant"
 )
 __var__v10_l10_relbow_left = VariableDistance(10,
     __motif__v10_l10_relbow_right,
-    distance=x -> _mydistance(x, __motif__v10_l10_relbow_right),
+    distance=x -> expdistance(x, __motif__v10_l10_relbow_right),
     featurename="Right"
 )
 
@@ -61,13 +61,13 @@ __motif__v10_l30_relbow_reen_right_reen = _motifs_v10_l30[2]
 
 __var__v10_l30_relbow_right_reen_right = VariableDistance(10,
     __motif__v10_l30_relbow_right_reen_right,
-    distance=x -> _mydistance(x, __motif__v10_l30_relbow_right_reen_right),
+    distance=x -> expdistance(x, __motif__v10_l30_relbow_right_reen_right),
     featurename="Right⋅Reentering⋅Right"
 )
 
 __var__v10_l30_relbow_reen_right_reen = VariableDistance(10,
 __motif__v10_l30_relbow_reen_right_reen,
-    distance=x -> _mydistance(x, __motif__v10_l30_relbow_reen_right_reen),
+    distance=x -> expdistance(x, __motif__v10_l30_relbow_reen_right_reen),
     featurename="Reentering⋅Right⋅Reentering"
 )
 
@@ -82,12 +82,12 @@ __motif__v8_l10_lelbow_descending = _motifs_v8_l10[3]
 
 __var__v8_l10_lelbow_ascend = VariableDistance(8,
     __motif__v8_l10_lelbow_ascend,
-    distance=x -> _mydistance(x, __motif__v8_l10_lelbow_ascend),
+    distance=x -> expdistance(x, __motif__v8_l10_lelbow_ascend),
     featurename="Ascending"
 )
 __var__v8_l10_lelbow_descending = VariableDistance(8,
     __motif__v8_l10_lelbow_descending,
-    distance=x -> _mydistance(x, __motif__v8_l10_lelbow_descending),
+    distance=x -> expdistance(x, __motif__v8_l10_lelbow_descending),
     featurename="Descending"
 )
 
@@ -98,13 +98,13 @@ __motif__v8_l30_lelbow_descending = _motifs_v8_l30[1]
 
 __var__v8_l30_lelbow_ascending = VariableDistance(8,
     __motif__v8_l30_lelbow_ascending,
-    distance=x -> _mydistance(x, __motif__v8_l30_lelbow_ascending),
+    distance=x -> expdistance(x, __motif__v8_l30_lelbow_ascending),
     featurename="Long⋅Ascending"
 )
 
 __var__v8_l30_lelbow_descending = VariableDistance(8,
     __motif__v8_l30_lelbow_descending,
-    distance=x -> _mydistance(x, __motif__v8_l30_lelbow_descending),
+    distance=x -> expdistance(x, __motif__v8_l30_lelbow_descending),
     featurename="Long⋅Descending"
 )
 
@@ -115,12 +115,12 @@ __motif__v11_l10_relbow_ascend = _motifs_v11_l10[4]
 
 __var__v11_l10_relbow_descend = VariableDistance(11,
     __motif__v11_l10_relbow_descend,
-    distance=x -> _mydistance(x, __motif__v11_l10_relbow_descend),
+    distance=x -> expdistance(x, __motif__v11_l10_relbow_descend),
     featurename="Descending"
 )
 __var__v11_l10_relbow_ascend = VariableDistance(11,
     __motif__v11_l10_relbow_ascend,
-    distance=x -> _mydistance(x, __motif__v11_l10_relbow_ascend),
+    distance=x -> expdistance(x, __motif__v11_l10_relbow_ascend),
     featurename="Ascending"
 )
 
@@ -131,13 +131,13 @@ __motif__v11_l30_relbow_longascend = _motifs_v11_l30[2]
 
 __var__v11_l30_relbow_longdescend = VariableDistance(11,
     __motif__v11_l30_relbow_longdescend,
-    distance=x -> _mydistance(x, __motif__v11_l30_relbow_longdescend),
+    distance=x -> expdistance(x, __motif__v11_l30_relbow_longdescend),
     featurename="Long⋅Descending"
 )
 
 __var__v11_l30_relbow_longascend = VariableDistance(11,
 __motif__v11_l30_relbow_longascend,
-    distance=x -> _mydistance(x, __motif__v11_l30_relbow_longascend),
+    distance=x -> expdistance(x, __motif__v11_l30_relbow_longascend),
     featurename="Long⋅Ascending"
 )
 
@@ -152,12 +152,12 @@ __motif__v9_l10_lelbow_neutral = _motifs_v9_l10[2]
 
 __var__v9_l10_lelbow_left = VariableDistance(9,
     __motif__v9_l10_lelbow_left,
-    distance=x -> _mydistance(x, __motif__v9_l10_lelbow_left),
+    distance=x -> expdistance(x, __motif__v9_l10_lelbow_left),
     featurename="Left"
 )
 __var__v9_l10_lelbow_neutral = VariableDistance(9,
     __motif__v9_l10_lelbow_neutral,
-    distance=x -> _mydistance(x, __motif__v9_l10_lelbow_neutral),
+    distance=x -> expdistance(x, __motif__v9_l10_lelbow_neutral),
     featurename="Neutral"
 )
 
@@ -167,7 +167,7 @@ __motif__v9_l30_lelbow_left_neutral = _motifs_v9_l30[1]
 
 __var__v9_l30_lelbow_left_neutral = VariableDistance(9,
     __motif__v9_l30_lelbow_left_neutral,
-    distance=x -> _mydistance(x, __motif__v9_l30_lelbow_left_neutral),
+    distance=x -> expdistance(x, __motif__v9_l30_lelbow_left_neutral),
     featurename="Left⋅Neutral"
 )
 
@@ -178,12 +178,12 @@ __motif__v12_l10_relbow_neutral = _motifs_v12_l10[4]
 
 __var__v12_l10_relbow_right = VariableDistance(12,
     __motif__v12_l10_relbow_right,
-    distance=x -> _mydistance(x, __motif__v12_l10_relbow_right),
+    distance=x -> expdistance(x, __motif__v12_l10_relbow_right),
     featurename="Right"
 )
 __var__v12_l10_relbow_neutral = VariableDistance(12,
     __motif__v12_l10_relbow_neutral,
-    distance=x -> _mydistance(x, __motif__v12_l10_relbow_neutral),
+    distance=x -> expdistance(x, __motif__v12_l10_relbow_neutral),
     featurename="Neutral"
 )
 
@@ -193,7 +193,7 @@ __motif__v12_l30_relbow_right_reentering = _motifs_v12_l30[1]
 
 __var__v12_l30_relbow_right_reentering = VariableDistance(12,
     __motif__v12_l30_relbow_right_reentering,
-    distance=x -> _mydistance(x, __motif__v12_l30_relbow_right_reentering),
+    distance=x -> expdistance(x, __motif__v12_l30_relbow_right_reentering),
     featurename="Right⋅Neutral"
 )
 

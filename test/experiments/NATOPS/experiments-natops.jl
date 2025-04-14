@@ -27,7 +27,7 @@ miningalgo = apriori
 
 # we define a distance function between two time series
 # you could choose between zeuclidean(x,y) or dtw(x,y) |> first
-_mydistance = (x, y) -> zeuclidean(x, y) |> first
+expdistance = (x, y) -> zeuclidean(x, y) |> first
 
 ############################################################################################
 # Experiment #1: just a small example
