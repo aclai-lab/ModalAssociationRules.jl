@@ -137,6 +137,8 @@ include("alphabet-proposal.jl")
 export motifsalphabet
 
 include("loaders/natops-loader.jl")
-export load_NATOPS
+include("loaders/libras-loader.jl")
+include("loaders/epilepsy-loader.jl")
+export load_NATOPS, load_libras, load_epilepsy
 
 end
