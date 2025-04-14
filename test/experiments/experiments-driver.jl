@@ -70,7 +70,6 @@ function _dtw(x::Vector{<:Real}, y::Vector{<:Real})
     return dtw(x, y) |> first
 end
 
-
 # suggest a threshold to associate with a given motif, to create a literal;
 # compute all the distances (for a given distance) and return the ith percentile
 # (also, as 2nd value, return the distances itself).
@@ -170,3 +169,18 @@ function experiment!(miner::Miner, foldername::String, reportname::String)
         end
     end
 end
+
+# default parameters for matrix profile generation
+windowlength = 20
+nmotifs = 3
+_seed = 3498
+r = 5    # how similar two windows must be to belong to the same motif
+th = 10  # how nearby in time two motifs are allowed to be
+
+# algorithm use for mining;
+# currently, it is set to apriori instead of fpgrowth because of issue #97
+miningalgo = apriori
+
+# we define a distance function between two time series
+# you could choose between zeuclidean(x,y) or dtw(x,y) |> first
+expdistance = (x, y) -> zeuclidean(x, y) |> first
