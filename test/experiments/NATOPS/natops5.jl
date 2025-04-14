@@ -1,4 +1,4 @@
-# README: see matrix-profile.jl
+# README: see experiments-driver.jl
 
 # this is identical to Experiment #2, but the instances are different
 FWC = X[121:150, :]

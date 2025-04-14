@@ -1,4 +1,4 @@
-# README: see matrix-profile.jl
+# README: see experiments-driver.jl
 
 # isolate "I have command class"
 IHCC = X[1:30, :]

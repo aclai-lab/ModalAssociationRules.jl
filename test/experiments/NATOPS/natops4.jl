@@ -1,4 +1,4 @@
-# README: see matrix-profile.jl
+# README: see experiments-driver.jl
 
 SWC = X[91:120, :]
 

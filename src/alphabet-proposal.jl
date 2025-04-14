@@ -31,6 +31,8 @@ identification capabilities.
 - `rng::Union{Integer,AbstractRNG}=Random.GLOBAL_RNG`: custom RNG, used internally by KNN;
 - `r::Integer=2`: how similar two windows must be to belong to the same motif;
 - `th::Integer=5`: how nearby in time two motifs are allowed to be;
+- `clipcorrection::Bool=true`: try to align the end of one signal with the start of the
+    next one;
 - `aggregator::Symbol=:cluster`: can be `:cluster` or `:mean`; in the former case, the
     representative for each motif group is its centroid, while in the latter case mean is
     computed at every point.
@@ -41,6 +43,7 @@ function motifsalphabet(
     x::Vector{<:Vector{<:Real}},
     windowlength::Integer,
     nmotifs::Integer;
+    clipcorrection::Bool=true,
     kwargs...
 )
     # concatenate all the samples one after the other;
@@ -48,8 +51,10 @@ function motifsalphabet(
     # the top k motifs.
 
     # when concatenating, apply a little correction to avoid clippings
-    for i in 2:length(x)
-        x[i] = x[i] .- (x[i][1] - x[i-1][1])
+    if clipcorrection
+        for i in 2:length(x)
+            x[i] = x[i] .- (x[i][1] - x[i-1][1])
+        end
     end
 
     motifsalphabet(reduce(vcat, x), windowlength, nmotifs; kwargs...)
