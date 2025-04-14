@@ -223,7 +223,6 @@ experiment!(miner, "v3_rhand_notclear.txt")
 
 ############################################################################################
 # Experiment #4: describe wrists and elbows in "Spread wings"
-# TODO: add elbows
 ############################################################################################
 include("test/experiments/NATOPS/natops4.jl")
 
@@ -232,7 +231,6 @@ experiment!(miner, "v4_wristelbow_spreadwings.txt")
 
 ############################################################################################
 # Experiment #5: describe wrists and elbows in "Fold wings"
-# TODO: add elbows
 ############################################################################################
 include("test/experiments/NATOPS/natops5.jl")
 
