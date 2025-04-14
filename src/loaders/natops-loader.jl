@@ -65,32 +65,6 @@ function _load_NATOPS(dirpath::String, fileprefix::String)
         "Z[Thumb r]",
     ]
 
-    variablenames_latex = [
-    "\\text{hand tip l}_X",
-    "\\text{hand tip l}_Y",
-    "\\text{hand tip l}_Z",
-    "\\text{hand tip r}_X",
-    "\\text{hand tip r}_Y",
-    "\\text{hand tip r}_Z",
-    "\\text{elbow l}_X",
-    "\\text{elbow l}_Y",
-    "\\text{elbow l}_Z",
-    "\\text{elbow r}_X",
-    "\\text{elbow r}_Y",
-    "\\text{elbow r}_Z",
-    "\\text{wrist l}_X",
-    "\\text{wrist l}_Y",
-    "\\text{wrist l}_Z",
-    "\\text{wrist r}_X",
-    "\\text{wrist r}_Y",
-    "\\text{wrist r}_Z",
-    "\\text{thumb l}_X",
-    "\\text{thumb l}_Y",
-    "\\text{thumb l}_Z",
-    "\\text{thumb r}_X",
-    "\\text{thumb r}_Y",
-    "\\text{thumb r}_Z",
-    ]
     X_train  = SoleData.fix_dataframe(X_train, variablenames)
     X_test   = SoleData.fix_dataframe(X_test, variablenames)
 
