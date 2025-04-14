@@ -1,3 +1,9 @@
+#
+# README
+#
+# Experiment suite general driver; include this file in any of your experiments.
+#
+#
 # This experiment suite is organized as follows:
 # 1. each experiment is organized in a file, ranging from natops0.jl to natops6.jl
 #   1.1 natops0.jl is just a little sketch with a few simple tests to ensure correctness
@@ -17,9 +23,10 @@
 #   6.2 this part is managed by the `experiment!` function
 #   6.3 also, association rules are printed, sorted decreasingly by global confidence
 #
-# Note: you can use the following regex to look for rows in a report having both the
+# Note; you can use the following regex to look for rows in a results report having both the
 # variable numbers specified:
 # ^(?=.*4)(?=.*5)(?=.*6).*
+#
 
 using Test
 
