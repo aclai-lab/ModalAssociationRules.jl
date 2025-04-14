@@ -1,5 +1,3 @@
-# This file is organized similarly to natops_loader.jl
-
 using ZipFile
 using DataFrames
 using CategoricalArrays
