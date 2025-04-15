@@ -111,64 +111,72 @@ variabledistances = [
 
 propositional_atoms = [
     Atom(ScalarCondition(
-            __var__v4_l10_rhand_x_right, <, round(suggest_threshold(
-                __motif__v4_l10_rhand_x_right, IHCC[:,4]; _percentile=5
-            ) |> first, digits=2)
+            __var__v4_l10_rhand_x_right, <, 5
+            # round(suggest_threshold(
+            #     __motif__v4_l10_rhand_x_right, IHCC[:,4]; _percentile=5
+            # ) |> first, digits=2)
         )
     ),
     Atom(ScalarCondition(
-            __var__v4_l10_rhand_x_align, <, round(suggest_threshold(
-                __motif__v4_l10_rhand_x_align, IHCC[:,4]; _percentile=5
-            ) |> first, digits=2)
+            __var__v4_l10_rhand_x_align, <, 5
+            # round(suggest_threshold(
+            #     __motif__v4_l10_rhand_x_align, IHCC[:,4]; _percentile=5
+            # ) |> first, digits=2)
         )
     ),
     Atom(ScalarCondition(
-            __var__v4_l40_rhand_x_align_inverting_right, <, round(suggest_threshold(
-                __motif__v4_l40_rhand_x_align_inverting_right, IHCC[:,4]; _percentile=5
-            ) |> first, digits=2)
-        )
-    ),
-
-    Atom(ScalarCondition(
-            __var__v5_l10_rhand_y_ascending, <, round(suggest_threshold(
-                __motif__v5_l10_rhand_y_ascending, IHCC[:,5]; _percentile=5
-            ) |> first, digits=2)
-        )
-    ),
-    Atom(ScalarCondition(
-            __var__v5_l10_rhand_y_descending, <, round(suggest_threshold(
-                __motif__v5_l10_rhand_y_descending, IHCC[:,5]; _percentile=5
-            ) |> first, digits=2)
-        )
-    ),
-    Atom(ScalarCondition(
-            __var__v5_l40_rhand_y_ascdesc, <, round(suggest_threshold(
-                __motif__v5_l40_rhand_y_ascdesc, IHCC[:,5]; _percentile=5
-            ) |> first, digits=2)
+            __var__v4_l40_rhand_x_align_inverting_right, <, 5
+            # round(suggest_threshold(
+            #     __motif__v4_l40_rhand_x_align_inverting_right, IHCC[:,4]; _percentile=5
+            # ) |> first, digits=2)
         )
     ),
 
     Atom(ScalarCondition(
-            __var__v6_l10_rhand_z_away_front, <, round(suggest_threshold(
-                __motif__v6_l10_rhand_z_away_front, IHCC[:,6]; _percentile=5
-            ) |> first, digits=2)
+            __var__v5_l10_rhand_y_ascending, <, 5
+            # round(suggest_threshold(
+            #     __motif__v5_l10_rhand_y_ascending, IHCC[:,5]; _percentile=5
+            # ) |> first, digits=2)
         )
     ),
     Atom(ScalarCondition(
-            __var__v6_l10_rhand_z_closer_front, <, round(suggest_threshold(
-                __motif__v6_l10_rhand_z_closer_front, IHCC[:,6]; _percentile=5
-            ) |> first, digits=2)
+            __var__v5_l10_rhand_y_descending, <, 5
+            # round(suggest_threshold(
+            #     __motif__v5_l10_rhand_y_descending, IHCC[:,5]; _percentile=5
+            # ) |> first, digits=2)
+        )
+    ),
+    Atom(ScalarCondition(
+            __var__v5_l40_rhand_y_ascdesc, <, 5
+            # round(suggest_threshold(
+            #     __motif__v5_l40_rhand_y_ascdesc, IHCC[:,5]; _percentile=5
+            # ) |> first, digits=2)
+        )
+    ),
+
+    Atom(ScalarCondition(
+            __var__v6_l10_rhand_z_away_front, <, 5
+            # round(suggest_threshold(
+            #     __motif__v6_l10_rhand_z_away_front, IHCC[:,6]; _percentile=5
+            # ) |> first, digits=2)
+        )
+    ),
+    Atom(ScalarCondition(
+            __var__v6_l10_rhand_z_closer_front, <, 5
+            # round(suggest_threshold(
+            #     __motif__v6_l10_rhand_z_closer_front, IHCC[:,6]; _percentile=5
+            # ) |> first, digits=2)
         )
     ),
 ];
 
 _atoms = reduce(vcat, [
         propositional_atoms,
-        # diamond(IA_A).(propositional_atoms),
+        diamond(IA_A).(propositional_atoms),
         # diamond(IA_L).(propositional_atoms),
-        # diamond(IA_B).(propositional_atoms),
-        # diamond(IA_E).(propositional_atoms),
-        # diamond(IA_D).(propositional_atoms),
+        diamond(IA_B).(propositional_atoms),
+        diamond(IA_E).(propositional_atoms),
+        diamond(IA_D).(propositional_atoms),
         # diamond(IA_O).(propositional_atoms),
     ]
 )
