@@ -154,7 +154,9 @@ function experiment!(miner::Miner, foldername::String, reportname::String)
     # sort by lift (the 5th position in rulecollection)
     sort!(rulecollection, by=x->x[5], rev=true);
 
-    reportname = joinpath([foldername, "results", reportname])
+    reportname = joinpath([
+        @__DIR__, "test", "experiments", foldername, "results", reportname
+    ])
     println("Writing to: $(reportname)")
     open(reportname, "w") do io
         println(io, "Columns are: rule, ant support, ant+cons support,  confidence, lift")
