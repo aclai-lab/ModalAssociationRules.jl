@@ -155,7 +155,7 @@ function experiment!(miner::Miner, foldername::String, reportname::String)
     sort!(rulecollection, by=x->x[5], rev=true);
 
     reportname = joinpath([
-        @__DIR__, "test", "experiments", foldername, "results", reportname
+        @__DIR__, foldername, "results", reportname
     ])
     println("Writing to: $(reportname)")
     open(reportname, "w") do io
