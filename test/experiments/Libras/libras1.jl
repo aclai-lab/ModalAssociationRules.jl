@@ -1,4 +1,4 @@
-# README: see experiments-driver.jl
+# README: see experiments-driver.jl and experiments-libras.jl
 
 # isolate "Vertical zigzag" class
 VZZ = X[1:24, :]
