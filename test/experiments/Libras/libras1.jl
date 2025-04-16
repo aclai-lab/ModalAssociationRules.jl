@@ -27,7 +27,7 @@ __var__v1_l10_rhand_x_left = VariableDistance(1,
 _mp, _raw_motifs, _motifs_v1_l40 = motifsalphabet(
     VZZ[:,1], 40, 5; r=2, th=0, clipcorrection=false
 );
-__motif__v1_l40_rhand_x_wave = _motifs_v1_l40[4]
+__motif__v1_l40_rhand_x_wave = _motifs_v1_l40[1]
 
 __var__v1_l40_rhand_x_wave = VariableDistance(1,
     __motif__v1_l40_rhand_x_wave,
