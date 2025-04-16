@@ -13,13 +13,13 @@ __motif__v1_l10_rhand_x_right = _motifs_v1_l10[4]
 __motif__v1_l10_rhand_x_left = _motifs_v1_l10[1]
 
 __var__v1_l10_rhand_x_right = VariableDistance(1,
-    __motif__v1_l10_rhand_x_right,
-    distance=x -> expdistance(x, __motif__v1_l10_rhand_x_right),
+    [__motif__v1_l10_rhand_x_right],
+    distance=expdistance,
     featurename="Right"
 )
 __var__v1_l10_rhand_x_left = VariableDistance(1,
-    __motif__v1_l10_rhand_x_left,
-    distance=x -> expdistance(x, __motif__v1_l10_rhand_x_left),
+    [__motif__v1_l10_rhand_x_left],
+    distance=expdistance,
     featurename="Left"
 )
 
@@ -30,8 +30,8 @@ _mp, _raw_motifs, _motifs_v1_l40 = motifsalphabet(
 __motif__v1_l40_rhand_x_wave = _motifs_v1_l40[1]
 
 __var__v1_l40_rhand_x_wave = VariableDistance(1,
-    __motif__v1_l40_rhand_x_wave,
-    distance=x -> expdistance(x, __motif__v1_l40_rhand_x_wave),
+    [__motif__v1_l40_rhand_x_wave],
+    distance=expdistance,
     featurename="Wave"
 )
 
