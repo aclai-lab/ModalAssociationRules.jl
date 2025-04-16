@@ -12,12 +12,12 @@ __motif__v4_l10_rhand_x_align = _motifs_v4_l10[5]
 
 __var__v4_l10_rhand_x_right = VariableDistance(4,
     __motif__v4_l10_rhand_x_right,
-    distance=x -> expdistance(x, __motif__v4_l10_rhand_x_right),
+    distance=expdistance
     featurename="Right"
 )
 __var__v4_l10_rhand_x_align = VariableDistance(4,
     __motif__v4_l10_rhand_x_align,
-    distance=x -> expdistance(x, __motif__v4_l10_rhand_x_align),
+    distance=expdistance
     featurename="Align"
 )
 
@@ -27,7 +27,7 @@ __motif__v4_l40_rhand_x_align_inverting_right = _motifs_v4_l40[8]
 
 __var__v4_l40_rhand_x_align_inverting_right = VariableDistance(4,
     __motif__v4_l40_rhand_x_align_inverting_right,
-    distance=x -> expdistance(x, __motif__v4_l40_rhand_x_align_inverting_right),
+    distance=expdistance
     featurename="Align⋅Right"
 )
 
@@ -40,12 +40,12 @@ __motif__v5_l10_rhand_y_descending = _motifs_v5_l10[2]
 
 __var__v5_l10_rhand_y_ascending = VariableDistance(5,
     __motif__v5_l10_rhand_y_ascending,
-    distance=x -> expdistance(x, __motif__v5_l10_rhand_y_ascending),
+    distance=expdistance
     featurename="Ascending"
 )
 __var__v5_l10_rhand_y_descending = VariableDistance(5,
     __motif__v5_l10_rhand_y_descending,
-    distance=x -> expdistance(x, __motif__v5_l10_rhand_y_descending),
+    distance=expdistance
     featurename="Descending"
 )
 
@@ -55,7 +55,7 @@ __motif__v5_l40_rhand_y_ascdesc = _motifs_v5_l40[7]
 
 __var__v5_l40_rhand_y_ascdesc = VariableDistance(5,
     __motif__v5_l40_rhand_y_ascdesc,
-    distance=x -> expdistance(x, __motif__v5_l40_rhand_y_ascdesc),
+    distance=expdistance
     featurename="Ascending⋅Descending"
 )
 
@@ -68,13 +68,13 @@ __motif__v6_l10_rhand_z_closer_front = _motifs_v5_l10[6]
 
 __var__v6_l10_rhand_z_away_front = VariableDistance(6,
     __motif__v6_l10_rhand_z_away_front,
-    distance=x -> expdistance(x, __motif__v6_l10_rhand_z_away_front),
+    distance=expdistance
     featurename="AwayFront"
 )
 
 __var__v6_l10_rhand_z_closer_front = VariableDistance(6,
     __motif__v6_l10_rhand_z_closer_front,
-    distance=x -> expdistance(x, __motif__v6_l10_rhand_z_closer_front),
+    distance=expdistance
     featurename="NeutralFront"
 )
 
