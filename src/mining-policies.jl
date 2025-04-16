@@ -104,7 +104,7 @@ function isdimensionally_coherent_itemset(;)::Function
         end
 
         # also, all their references must be of the same size (e.g., 5-length intervals)
-        _referencesize = vardistance -> feature(vardistance) |> reference |> size
+        _referencesize = vardistance -> feature(vardistance) |> refsize
         _anchorsize = _referencesize(anchors[1])
 
         return all(anchor -> _referencesize(anchor) == _anchorsize, anchors)
