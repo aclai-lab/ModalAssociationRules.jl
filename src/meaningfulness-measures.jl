@@ -277,7 +277,7 @@ _dimensionalwise_lsupport_logic = (itemset, X, ith_instance, miner) -> begin
     end
 
     _repr = _features[_anchor_feature_idx]
-    _repr_size = _repr |> reference |> size
+    _repr_size = _repr |> refsize
 
     # TODO: implement this for various GeometricalWorld types in SoleLogics
     # see https://github.com/aclai-lab/SoleLogics.jl/issues/68
