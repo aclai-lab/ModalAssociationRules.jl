@@ -369,6 +369,11 @@ _glift_logic = (rule, X, threshold, miner) -> begin
     num = gconfidence(rule, X, threshold, miner)
     den = gsupport(consequent(rule), X, threshold, miner)
 
+    # TODO - think about this claim:
+    # when the rule's consequent is anchored, this definition is ok;
+    # when it is not, then lift should be computed as:
+    # P(X U Y) / (P(X) * P(bar(Y)UX)) or something similar.
+
     return Dict(:measure => num/den)
 end
 
