@@ -11,14 +11,14 @@ mp, _raw_motifs, _motifs = motifsalphabet(
 vd1 = VariableDistance(
     var_id,
     _motifs[1],
-    distance=expdistance
+    distance=expdistance,
     featurename="DescendingYArm"
 )
 
 vd2 = VariableDistance(
     var_id,
     _motifs[3],
-    distance=expdistance
+    distance=expdistance,
     featurename="AscendingYArm"
 )
 
