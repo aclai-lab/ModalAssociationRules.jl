@@ -9,16 +9,16 @@ VZZ = reduce(vcat, [X[1:12, :], X[180:192, :]])
 _mp, _raw_motifs, _motifs_v1_l10 = motifsalphabet(
     VZZ[:,1], 10, 5; r=1, th=10, clipcorrection=false
 );
-__motif__v1_l10_rhand_x_right = _motifs_v1_l10[4]
-__motif__v1_l10_rhand_x_left = _motifs_v1_l10[1]
+__motifs__v1_l10_rhand_x_right = _motifs_v1_l10[[3,4]]
+__motifs__v1_l10_rhand_x_left = _motifs_v1_l10[[1,2,5]]
 
 __var__v1_l10_rhand_x_right = VariableDistance(1,
-    [__motif__v1_l10_rhand_x_right],
+    __motifs__v1_l10_rhand_x_right,
     distance=expdistance,
     featurename="Right"
 )
 __var__v1_l10_rhand_x_left = VariableDistance(1,
-    [__motif__v1_l10_rhand_x_left],
+    __motifs__v1_l10_rhand_x_left,
     distance=expdistance,
     featurename="Left"
 )
@@ -27,10 +27,10 @@ __var__v1_l10_rhand_x_left = VariableDistance(1,
 _mp, _raw_motifs, _motifs_v1_l40 = motifsalphabet(
     VZZ[:,1], 40, 5; r=2, th=0, clipcorrection=false
 );
-__motif__v1_l40_rhand_x_wave = _motifs_v1_l40[1]
+__motifs__v1_l40_rhand_x_wave = _motifs_v1_l40
 
 __var__v1_l40_rhand_x_wave = VariableDistance(1,
-    [__motif__v1_l40_rhand_x_wave],
+    __motifs__v1_l40_rhand_x_wave,
     distance=expdistance,
     featurename="Wave"
 )
@@ -38,9 +38,9 @@ __var__v1_l40_rhand_x_wave = VariableDistance(1,
 # assembly the motifs here
 
 allmotifs = [
-    __motif__v1_l10_rhand_x_right,
-    __motif__v1_l10_rhand_x_left,
-    __motif__v1_l40_rhand_x_wave,
+    __motifs__v1_l10_rhand_x_right,
+    __motifs__v1_l10_rhand_x_left,
+    __motifs__v1_l40_rhand_x_wave,
 ]
 
 variabledistances = [
