@@ -2,13 +2,16 @@
 
 # isolate "I have command class"
 IHCC = X[1:30, :]
+r_4 = 1
+r_5 = 1
+r_6 = 1
 
 # right hand X variable generations
 
 # remember: motifsalphabet(data, windowlength, #extractions)
-_mp, _raw_motifs, _motifs_v4_l10 = motifsalphabet(IHCC[:,4], 10, 5; r=5, th=2);
-__motif__v4_l10_rhand_x_right = _motifs_v4_l10[3]
-__motif__v4_l10_rhand_x_align = _motifs_v4_l10[5]
+_mp, _raw_motifs, _motifs_v4_l10 = motifsalphabet(IHCC[:,4], 10, 30; r=r_4, th=5);
+__motif__v4_l10_rhand_x_right = _motifs_v4_l10[[1,2,3,5,6,8,19,20]]
+__motif__v4_l10_rhand_x_align = _motifs_v4_l10[[15,16,23,26,28,30]]
 
 __var__v4_l10_rhand_x_right = VariableDistance(4,
     __motif__v4_l10_rhand_x_right,
@@ -22,21 +25,21 @@ __var__v4_l10_rhand_x_align = VariableDistance(4,
 )
 
 
-_mp, _raw_motifs, _motifs_v4_l40 = motifsalphabet(IHCC[:,4], 30, 10; r=5, th=0);
-__motif__v4_l40_rhand_x_align_inverting_right = _motifs_v4_l40[8]
+_mp, _raw_motifs, _motifs_v4_l40 = motifsalphabet(IHCC[:,4], 40, 20; r=r_4, th=5);
+__motif__v4_l40_rhand_x_align_inverting_right = _motifs_v4_l40[[7,8,9,11]]
 
 __var__v4_l40_rhand_x_align_inverting_right = VariableDistance(4,
     __motif__v4_l40_rhand_x_align_inverting_right,
     distance=expdistance,
-    featurename="Align⋅Right"
+    featurename="Right⋅Align⋅Right"
 )
 
 
 # right hand Y variable generations
 
-_mp, _raw_motifs, _motifs_v5_l10 = motifsalphabet(IHCC[:,5], 10, 10; r=5, th=0);
-__motif__v5_l10_rhand_y_ascending = _motifs_v5_l10[7]
-__motif__v5_l10_rhand_y_descending = _motifs_v5_l10[2]
+_mp, _raw_motifs, _motifs_v5_l10 = motifsalphabet(IHCC[:,5], 10, 20; r=r_5, th=5);
+__motif__v5_l10_rhand_y_ascending = _motifs_v5_l10[[3,11,12,14]]
+__motif__v5_l10_rhand_y_descending = _motifs_v5_l10[[2,4,5,13]]
 
 __var__v5_l10_rhand_y_ascending = VariableDistance(5,
     __motif__v5_l10_rhand_y_ascending,
@@ -50,8 +53,8 @@ __var__v5_l10_rhand_y_descending = VariableDistance(5,
 )
 
 
-_mp, _raw_motifs, _motifs_v5_l40 = motifsalphabet(IHCC[:,5], 40, 10; r=5, th=5);
-__motif__v5_l40_rhand_y_ascdesc = _motifs_v5_l40[7]
+_mp, _raw_motifs, _motifs_v5_l40 = motifsalphabet(IHCC[:,5], 40, 20; r=r_5, th=5);
+__motif__v5_l40_rhand_y_ascdesc = _motifs_v5_l40[[16,12]]
 
 __var__v5_l40_rhand_y_ascdesc = VariableDistance(5,
     __motif__v5_l40_rhand_y_ascdesc,
@@ -61,9 +64,9 @@ __var__v5_l40_rhand_y_ascdesc = VariableDistance(5,
 
 # right hand Z variable generation
 
-_mp, _raw_motifs, _motifs_v6_l10 = motifsalphabet(IHCC[:,6], 10, 10; r=5, th=2);
-__motif__v6_l10_rhand_z_away_front = _motifs_v6_l10[2]
-__motif__v6_l10_rhand_z_closer_front = _motifs_v5_l10[6]
+_mp, _raw_motifs, _motifs_v6_l10 = motifsalphabet(IHCC[:,6], 10, 20; r=r_6, th=5);
+__motif__v6_l10_rhand_z_away_front = _motifs_v6_l10[[1,2,5,18,19,20]]
+__motif__v6_l10_rhand_z_closer_front = _motifs_v6_l10[[10,11]]
 
 
 __var__v6_l10_rhand_z_away_front = VariableDistance(6,
@@ -111,61 +114,37 @@ variabledistances = [
 
 propositional_atoms = [
     Atom(ScalarCondition(
-            __var__v4_l10_rhand_x_right, <, 5
-            # round(suggest_threshold(
-            #     __motif__v4_l10_rhand_x_right, IHCC[:,4]; _percentile=5
-            # ) |> first, digits=2)
+            __var__v4_l10_rhand_x_right, <, r_4
         )
     ),
     Atom(ScalarCondition(
-            __var__v4_l10_rhand_x_align, <, 5
-            # round(suggest_threshold(
-            #     __motif__v4_l10_rhand_x_align, IHCC[:,4]; _percentile=5
-            # ) |> first, digits=2)
+            __var__v4_l10_rhand_x_align, <, r_4
         )
     ),
     Atom(ScalarCondition(
-            __var__v4_l40_rhand_x_align_inverting_right, <, 5
-            # round(suggest_threshold(
-            #     __motif__v4_l40_rhand_x_align_inverting_right, IHCC[:,4]; _percentile=5
-            # ) |> first, digits=2)
+            __var__v4_l40_rhand_x_align_inverting_right, <, r_4
         )
     ),
 
     Atom(ScalarCondition(
-            __var__v5_l10_rhand_y_ascending, <, 5
-            # round(suggest_threshold(
-            #     __motif__v5_l10_rhand_y_ascending, IHCC[:,5]; _percentile=5
-            # ) |> first, digits=2)
+            __var__v5_l10_rhand_y_ascending, <, r_5
         )
     ),
     Atom(ScalarCondition(
-            __var__v5_l10_rhand_y_descending, <, 5
-            # round(suggest_threshold(
-            #     __motif__v5_l10_rhand_y_descending, IHCC[:,5]; _percentile=5
-            # ) |> first, digits=2)
+            __var__v5_l10_rhand_y_descending, <, r_5
         )
     ),
     Atom(ScalarCondition(
-            __var__v5_l40_rhand_y_ascdesc, <, 5
-            # round(suggest_threshold(
-            #     __motif__v5_l40_rhand_y_ascdesc, IHCC[:,5]; _percentile=5
-            # ) |> first, digits=2)
+            __var__v5_l40_rhand_y_ascdesc, <, r_5
         )
     ),
 
     Atom(ScalarCondition(
-            __var__v6_l10_rhand_z_away_front, <, 5
-            # round(suggest_threshold(
-            #     __motif__v6_l10_rhand_z_away_front, IHCC[:,6]; _percentile=5
-            # ) |> first, digits=2)
+            __var__v6_l10_rhand_z_away_front, <, r_6
         )
     ),
     Atom(ScalarCondition(
-            __var__v6_l10_rhand_z_closer_front, <, 5
-            # round(suggest_threshold(
-            #     __motif__v6_l10_rhand_z_closer_front, IHCC[:,6]; _percentile=5
-            # ) |> first, digits=2)
+            __var__v6_l10_rhand_z_closer_front, <, r_6
         )
     ),
 ];
