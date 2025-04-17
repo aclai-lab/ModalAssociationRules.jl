@@ -290,7 +290,7 @@ _items = Vector{Item}(_atoms)
 
 _itemsetmeasures = [(gsupport, 0.1, 0.1)]
 _rulemeasures = [
-    (gconfidence, 0.3, 0.3),
+    (gconfidence, 0.1, 0.1),
     (glift, 0.0, 0.0)
 ]
 
@@ -304,20 +304,11 @@ miner = Miner(
     _rulemeasures;
     itemset_mining_policies=Function[
         isanchored_itemset(),
-        isdimensionally_coherent_itemset(),
-        islimited_length_itemset(
-            maxlength=5
-        ),
+        isdimensionally_coherent_itemset()
     ],
     arule_mining_policies=Function[
-        islimited_length_arule(
-            antecedent_maxlength=4,
-            consequent_maxlength=1
-        ),
+        islimited_length_arule(),
         isanchored_arule(),
-        isheterogeneous_arule(
-            antecedent_nrepetitions=1,
-            consequent_nrepetitions=0
-        ),
+        # isheterogeneous_arule(),
     ]
 )

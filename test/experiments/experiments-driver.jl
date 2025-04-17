@@ -40,6 +40,11 @@ using Statistics
 using StatsBase
 using SoleData
 
+function _normalize(x::Vector{<:Real})
+    eps = 1e-10
+    return (x .- mean(x)) ./ (std(x) + eps)
+end
+
 # euclidean distance between normalized(x) and normalized(y)
 function zeuclidean(x::Vector{<:Real}, y::Vector{<:Real})
     if length(x) != length(y)
@@ -54,8 +59,8 @@ function zeuclidean(x::Vector{<:Real}, y::Vector{<:Real})
     # avoid division by zero
     eps = 1e-10
 
-    x_z = (x .- mean(x)) ./ (std(x) + eps)
-    y_z = (y .- mean(y)) ./ (std(y) + eps)
+    x_z = _normalize(x)
+    y_z = _normalize(y)
 
     # z-normalized euclidean distance formula
     return sqrt(sum((x_z .- y_z).^2))
