@@ -10,14 +10,14 @@ mp, _raw_motifs, _motifs = motifsalphabet(
 
 vd1 = VariableDistance(
     var_id,
-    _motifs[1],
+    [_motifs[1]],
     distance=expdistance,
     featurename="DescendingYArm"
 )
 
 vd2 = VariableDistance(
     var_id,
-    _motifs[3],
+    [_motifs[3]],
     distance=expdistance,
     featurename="AscendingYArm"
 )
@@ -53,7 +53,7 @@ apriori_miner = Miner(
 )
 
 @test_nowarn mine!(apriori_miner)
-@test freqitems(apriori_miner) |> length == 5
+@test freqitems(apriori_miner) |> length == 6
 
 fpgrowth_miner = Miner(
     logiset,
@@ -65,4 +65,4 @@ fpgrowth_miner = Miner(
 )
 
 @test_nowarn mine!(fpgrowth_miner)
-@test freqitems(fpgrowth_miner) |> length == 5
+@test freqitems(fpgrowth_miner) |> length == 6
