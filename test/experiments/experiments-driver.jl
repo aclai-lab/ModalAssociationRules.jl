@@ -151,6 +151,9 @@ function experiment!(miner::Miner, foldername::String, reportname::String)
             ),
             round(
                 globalmemo(miner, (:glift, rule)), digits=2
+            ),
+            round(
+                globalmemo(miner, (:dimensional_glift, rule)), digits=2
             )
         )
         for rule in arules(miner)
@@ -164,14 +167,14 @@ function experiment!(miner::Miner, foldername::String, reportname::String)
     ])
     println("Writing to: $(reportname)")
     open(reportname, "w") do io
-        println(io, "Columns are: rule, ant support, ant+cons support,  confidence, lift")
+        println(io, "Columns are: rule, ant support, ant+cons support,  confidence, lift, dimlift")
 
         padding = maximum(length.(miner |> freqitems))
-        for (rule, antgsupp, consgsupp, conf, lift) in rulecollection
+        for (rule, antgsupp, consgsupp, conf, lift, dimlift) in rulecollection
             println(io,
                 rpad(rule, 30 * padding) * " " * rpad(string(antgsupp), 10) * " " *
                 rpad(string(consgsupp), 10) * " " * rpad(string(conf), 10) * " " *
-                string(lift)
+                rpad(string(lift), 10) * " " * string(dimlift)
             )
         end
     end
