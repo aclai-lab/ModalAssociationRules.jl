@@ -228,7 +228,6 @@ allmotifs = [
     # additions from Circle class
     __motifs__v1_l40_full_right_left,
     __motifs__v1_l40_full_left_right,
-    __motifs__v1_l40_right_to_left
 ]
 
 variabledistances = [
