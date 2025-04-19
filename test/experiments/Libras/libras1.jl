@@ -3,6 +3,8 @@
 # isolate "Curved swing" class
 CSW = reduce(vcat, [X[1:12, :], X[180:192, :]])
 
+_r = 1
+
 ############################################################################################
 # right hand X variable generations
 ############################################################################################
@@ -46,7 +48,7 @@ _mp, _raw_motifs, _motifs_v2_l10 = motifsalphabet(
     CSW[:,2], 10, 10; r=1, th=0, clipcorrection=true
 );
 __motifs__v2_l10_rhand_y_up = _motifs_v2_l10[[1,2,4,5,7]]
-__motifs__v2_l10_rhand_y_down = _motifs_v2_l10[[8,9,10]]
+__motifs__v2_l10_rhand_y_down = _motifs_v2_l10[[9,10]]
 
 __var__v2_l10_rhand_y_up = VariableDistance(2,
     __motifs__v2_l10_rhand_y_up,
@@ -102,18 +104,19 @@ variabledistances = [
 
 
 propositional_atoms = [
-    Atom(ScalarCondition(__var__v1_l10_rhand_x_right, <=, 1)),
-    Atom(ScalarCondition(__var__v1_l10_rhand_x_left, <=, 1)),
-    Atom(ScalarCondition(__var__v1_l40_rhand_x_wave, <=, 2)),
+    Atom(ScalarCondition(__var__v1_l10_rhand_x_right, <=, _r)),
+    Atom(ScalarCondition(__var__v1_l10_rhand_x_left, <=, _r)),
+    Atom(ScalarCondition(__var__v1_l40_rhand_x_wave, <=, _r)),
 
-    Atom(ScalarCondition(__var__v2_l10_rhand_y_up, <=, 1)),
-    Atom(ScalarCondition(__var__v2_l10_rhand_y_down, <=, 1)),
-    Atom(ScalarCondition(__var__v2_l40_rhand_y_wave, <=, 2)),
+    Atom(ScalarCondition(__var__v2_l10_rhand_y_up, <=, _r)),
+    Atom(ScalarCondition(__var__v2_l10_rhand_y_down, <=, _r)),
+    Atom(ScalarCondition(__var__v2_l40_rhand_y_wave, <=, _r)),
 ];
 
 _atoms = reduce(vcat, [
         propositional_atoms,
         diamond(IA_A).(propositional_atoms),
+        diamond(IA_A).(diamond(IA_A).(propositional_atoms)),
         # diamond(IA_L).(propositional_atoms),
         diamond(IA_B).(propositional_atoms),
         diamond(IA_E).(propositional_atoms),
