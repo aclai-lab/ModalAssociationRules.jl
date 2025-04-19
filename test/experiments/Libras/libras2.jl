@@ -11,7 +11,7 @@ miner = Miner(
     _rulemeasures;
     itemset_mining_policies=Function[
         isanchored_itemset(),
-        # isdimensionally_coherent_itemset()
+        isdimensionally_coherent_itemset()
     ],
     arule_mining_policies=Function[
         islimited_length_arule(
