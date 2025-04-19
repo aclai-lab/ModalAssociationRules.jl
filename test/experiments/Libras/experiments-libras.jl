@@ -98,12 +98,49 @@ __motifs__v2_l10_up = [_snippet(S,2)]
 __motifs__v2_l10_up_down = [_snippet(S,3), _snippet(S,5)]
 __motifs__v2_l10_down_up = [_snippet(S,4)]
 
+__var__v2_l10_down = VariableDistance(2,
+    __motifs__v2_l10_down,
+    distance=expdistance,
+    featurename="Down"
+)
+__var__v2_l10_up = VariableDistance(2,
+    __motifs__v2_l10_up,
+    distance=expdistance,
+    featurename="Up"
+)
+__var__v2_l10_up_down = VariableDistance(2,
+    __motifs__v2_l10_up_down,
+    distance=expdistance,
+    featurename="UpDown"
+)
+__var__v2_l10_down_up = VariableDistance(2,
+    __motifs__v2_l10_down_up,
+    distance=expdistance,
+    featurename="DownUp"
+)
 
 # Y length 20
 S = snippets(reduce(vcat, CSW[:,2]), 5, 20; m=20)
 __motifs__v2_l20_down_slightlyup = [_snippet(S,1)]
 __motifs__v2_l20_up_down = [_snippet(S,2), _snippet(S,4)]
 __motifs__v2_l20_slightlyup_down_up = [_snippet(S,3), _snippet(S,5)]
+
+__var__v2_l20_down_slightlyup = VariableDistance(2,
+    __motifs__v2_l20_down_slightlyup,
+    distance=expdistance,
+    featurename="^.-"
+)
+__var__v2_l20_up_down = VariableDistance(2,
+    __motifs__v2_l20_up_down,
+    distance=expdistance,
+    featurename="LongUpDown"
+)
+__var__v2_l20_slightlyup_down_up = VariableDistance(2,
+    __motifs__v2_l20_slightlyup_down_up,
+    distance=expdistance,
+    featurename=".-.^"
+)
+
 
 # Y length 40
 S = snippets(reduce(vcat, CSW[:,2]), 5, 40; m=40)
@@ -112,6 +149,21 @@ __motifs__v2_l40_short_movement_range = [_snippet(S,1)]
 __motifs__v2_l40_perfect_movement = [_snippet(S,2), _snippet(S,4)]
 __motifs__v2_l40_slightlyup_down_up = [_snippet(S,3), _snippet(S,5)]
 
+__var__v2_l40_short_movement_range = VariableDistance(2,
+    __motifs__v2_l40_short_movement_range,
+    distance=expdistance,
+    featurename="FullLazyRange"
+)
+__var__v2_l40_perfect_movement = VariableDistance(2,
+    __motifs__v2_l40_perfect_movement,
+    distance=expdistance,
+    featurename="∩U∩"
+)
+__var__v2_l40_slightlyup_down_up = VariableDistance(2,
+    __motifs__v2_l40_slightlyup_down_up,
+    distance=expdistance,
+    featurename="-^-"
+)
 
 ############################################################################################
 # Experiment #1: Curved swing
