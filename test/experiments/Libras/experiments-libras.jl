@@ -169,6 +169,47 @@ __var__v2_l40_slightlyup_down_up = VariableDistance(2,
     featurename="-^-"
 )
 
+
+# fallback to _suggest_threshold for VariableDistances
+function __suggest_threshold(var::VariableDistance, data; kwargs...)
+    _refs = references(var)
+    _i_variable = i_variable(var)
+
+    _ans = first.(map(
+        _ref -> suggest_threshold(_ref, data[:,_i_variable]; kwargs...) , _refs)) |> maximum
+    return round(_ans; digits=2)
+end
+
+variable_distances_CSW = [
+    __var__v1_l10_left,
+    __var__v1_l10_right,
+    __var__v1_l10_right_to_left,
+    __var__v1_l10_left_to_right,
+    __var__v1_l20_right_inv_left_inv_right,
+    __var__v1_l20_left_inv_right_inv_left,
+    __var__v1_l20_left_inv_right,
+    __var__v1_l20_right_inv_left,
+    __var__v1_l40_fullleft_fullright_fullleft,
+    __var__v1_l40_fullright_fullleft_fullright,
+    __var__v1_l40_right_left_right_left,
+    __var__v2_l10_down,
+    __var__v2_l10_up,
+    __var__v2_l10_up_down,
+    __var__v2_l10_down_up,
+    __var__v2_l20_down_slightlyup,
+    __var__v2_l20_up_down,
+    __var__v2_l20_slightlyup_down_up,
+    __var__v2_l40_short_movement_range,
+    __var__v2_l40_perfect_movement,
+    __var__v2_l40_slightlyup_down_up,
+]
+
+propositional_atoms_CSW = [
+    Atom(ScalarCondition(var, <=, __suggest_threshold(var, CSW; _percentile=15)))
+    for var in variable_distances_CSW
+]
+
+
 ############################################################################################
 # Literals from Circle
 ############################################################################################
@@ -192,75 +233,24 @@ __var__v1_l40_full_left_right = VariableDistance(1,
     featurename="⟸⟹"
 )
 
-# Y length 10
-# Y length 20
-# Y length 40
+# Y are the same as Curved Swing Class
 
+variable_distances_CRC = [
+    __var__v1_l40_full_right_left,
+    __var__v1_l40_full_left_right
+]
+
+propositional_atoms_CRC = [
+    Atom(ScalarCondition(var, <=, __suggest_threshold(var, CRC; _percentile=15)))
+    for var in variable_distances_CRC
+]
 
 ############################################################################################
 # Final Assembly
 ############################################################################################
 
-allmotifs = [
-    # from Curved Swing class
-    __motifs__v1_l10_left,
-    __motifs__v1_l10_right,
-    __motifs__v1_l10_right_to_left,
-    __motifs__v1_l10_left_to_right,
-    __motifs__v1_l20_right_inv_left_inv_right,
-    __motifs__v1_l20_left_inv_right_inv_left,
-    __motifs__v1_l20_left_inv_right,
-    __motifs__v1_l20_right_inv_left,
-    __motifs__v1_l40_fullleft_fullright_fullleft,
-    __motifs__v1_l40_fullright_fullleft_fullright,
-    __motifs__v1_l40_right_left_right_left,
-    __motifs__v2_l10_down,
-    __motifs__v2_l10_up,
-    __motifs__v2_l10_up_down,
-    __motifs__v2_l10_down_up,
-    __motifs__v2_l20_down_slightlyup,
-    __motifs__v2_l20_up_down,
-    __motifs__v2_l20_slightlyup_down_up,
-    __motifs__v2_l40_short_movement_range,
-    __motifs__v2_l40_perfect_movement,
-    __motifs__v2_l40_slightlyup_down_up,
-
-    # additions from Circle class
-    __motifs__v1_l40_full_right_left,
-    __motifs__v1_l40_full_left_right,
-]
-
-variabledistances = [
-    __var__v1_l10_left,
-    __var__v1_l10_right,
-    __var__v1_l10_right_to_left,
-    __var__v1_l10_left_to_right,
-    __var__v1_l20_right_inv_left_inv_right,
-    __var__v1_l20_left_inv_right_inv_left,
-    __var__v1_l20_left_inv_right,
-    __var__v1_l20_right_inv_left,
-    __var__v1_l40_fullleft_fullright_fullleft,
-    __var__v1_l40_fullright_fullleft_fullright,
-    __var__v1_l40_right_left_right_left,
-    __var__v2_l10_down,
-    __var__v2_l10_up,
-    __var__v2_l10_up_down,
-    __var__v2_l10_down_up,
-    __var__v2_l20_down_slightlyup,
-    __var__v2_l20_up_down,
-    __var__v2_l20_slightlyup_down_up,
-    __var__v2_l40_short_movement_range,
-    __var__v2_l40_perfect_movement,
-    __var__v2_l40_slightlyup_down_up,
-    __var__v1_l40_full_right_left,
-    __var__v1_l40_full_left_right,
-]
-
-_r = 1.0
-propositional_atoms = [
-    Atom(ScalarCondition(var, <=, _r))
-    for var in variabledistances
-]
+variabledistances = reduce(vcat, [variable_distances_CSW, variable_distances_CRC])
+propositional_atoms = reduce(vcat, [propositional_atoms_CSW, propositional_atoms_CRC])
 
 _atoms = reduce(vcat, [
     propositional_atoms,
@@ -270,12 +260,14 @@ _atoms = reduce(vcat, [
 
     # diamond(IA_L).(propositional_atoms),
 
-    diamond(IA_A).(diamond(IA_B).(propositional_atoms)),
-    diamond(SoleLogics.converse(IA_A)).(diamond(IA_E).(propositional_atoms)),
+    diamond(IA_B).(propositional_atoms),
+    # diamond(IA_A).(diamond(IA_B).(propositional_atoms)),
+    diamond(IA_E).(propositional_atoms),
+    # diamond(SoleLogics.converse(IA_A)).(diamond(IA_E).(propositional_atoms)),
 
-    diamond(IA_D).(propositional_atoms),
+    # diamond(IA_D).(propositional_atoms),
 
-    # diamond(IA_O).(propositional_atoms),
+    diamond(IA_O).(propositional_atoms),
 ])
 
 _items = Vector{Item}(_atoms)

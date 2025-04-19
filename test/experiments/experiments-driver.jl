@@ -26,7 +26,7 @@
 # Note; you can use the following regex to look for rows in a results report having both the
 # variable numbers specified:
 # ^(?=.*4)(?=.*5)(?=.*6).*
-#
+# ^(?=.*V1)(?=.*V2).*
 
 using Test
 
