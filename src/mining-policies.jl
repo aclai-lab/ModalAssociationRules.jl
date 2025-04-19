@@ -231,7 +231,11 @@ function isheterogeneous_arule(;
 
     function __extract_value(item::Item)
         _formula = formula(item)
-        _formula = _formula isa Atom ? _formula : _formula.children |> first
+
+        while _formula isa SoleLogics.SyntaxBranch
+            _formula = _formula |> SoleLogics.children |> first
+        end
+
         return _formula |> SoleLogics.value
     end
 
