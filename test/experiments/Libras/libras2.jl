@@ -1,9 +1,7 @@
-# README: see experiments-driver.jl and experiments-libras.jl
+# isolate "Circle" class
+CRC = reduce(vcat, [X[133:144, :], X[313:324, :]])
 
-# isolate "Vertical zig-zag" class
-VZZ = reduce(vcat, [X[13:24, :], X[193:204, :]])
-
-logiset = scalarlogiset(VZZ, variabledistances)
+logiset = scalarlogiset(CRC, variabledistances)
 
 miner = Miner(
     logiset,
@@ -23,3 +21,6 @@ miner = Miner(
         # isheterogeneous_arule(),
     ]
 )
+
+println("Running Libras' Circle experiment")
+experiment!(miner, "Libras", "v2_circle.txt")

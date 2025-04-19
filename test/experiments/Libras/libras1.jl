@@ -1,5 +1,3 @@
-# README: see experiments-driver.jl and experiments-libras.jl
-
 CSW = reduce(vcat, [X[1:12, :], X[180:192, :]])
 
 logiset = scalarlogiset(CSW, variabledistances)

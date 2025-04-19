@@ -5,9 +5,13 @@ X, y = load_libras();
 ############################################################################################
 # General alphabet definition
 ############################################################################################
+
+# utility to extract a snippet's inner Vector from the definition in MatrixProfiles.jl
 _snippet(_snippets, i) = _snippets.snippets[i].seq
 
-# snippets from "Curved Swing"
+############################################################################################
+# Literals from Curve Swing class
+############################################################################################
 CSW = reduce(vcat, [X[1:12, :], X[180:192, :]])
 
 # X length 10
@@ -165,7 +169,40 @@ __var__v2_l40_slightlyup_down_up = VariableDistance(2,
     featurename="-^-"
 )
 
+############################################################################################
+# Literals from Circle
+############################################################################################
+CRC = reduce(vcat, [X[133:144, :], X[313:324, :]])
+
+# X length 10 (they are identical to those of Curved Swing class)
+# X length 20 " "
+# X length 40
+S = snippets(reduce(vcat, CRC[:,1]), 5, 40; m=40)
+__motifs__v1_l40_full_right_left = [_snippet(S,1), _snippet(S,4)]
+__motifs__v1_l40_full_left_right = [_snippet(S,2), _snippet(S,3)]
+
+__var__v1_l40_full_right_left = VariableDistance(1,
+    __motifs__v1_l40_full_right_left,
+    distance=expdistance,
+    featurename="⟹⟸"
+)
+__var__v1_l40_full_left_right = VariableDistance(1,
+    __motifs__v1_l40_full_left_right,
+    distance=expdistance,
+    featurename="⟸⟹"
+)
+
+# Y length 10
+# Y length 20
+# Y length 40
+
+
+############################################################################################
+# Final Assembly
+############################################################################################
+
 allmotifs = [
+    # from Curved Swing class
     __motifs__v1_l10_left,
     __motifs__v1_l10_right,
     __motifs__v1_l10_right_to_left,
@@ -187,30 +224,37 @@ allmotifs = [
     __motifs__v2_l40_short_movement_range,
     __motifs__v2_l40_perfect_movement,
     __motifs__v2_l40_slightlyup_down_up,
+
+    # additions from Circle class
+    __motifs__v1_l40_full_right_left,
+    __motifs__v1_l40_full_left_right,
+    __motifs__v1_l40_right_to_left
 ]
 
 variabledistances = [
-    __var__v1_l10_left
-    __var__v1_l10_right
-    __var__v1_l10_right_to_left
-    __var__v1_l10_left_to_right
-    __var__v1_l20_right_inv_left_inv_right
-    __var__v1_l20_left_inv_right_inv_left
-    __var__v1_l20_left_inv_right
-    __var__v1_l20_right_inv_left
-    __var__v1_l40_fullleft_fullright_fullleft
-    __var__v1_l40_fullright_fullleft_fullright
-    __var__v1_l40_right_left_right_left
-    __var__v2_l10_down
-    __var__v2_l10_up
-    __var__v2_l10_up_down
-    __var__v2_l10_down_up
-    __var__v2_l20_down_slightlyup
-    __var__v2_l20_up_down
-    __var__v2_l20_slightlyup_down_up
-    __var__v2_l40_short_movement_range
-    __var__v2_l40_perfect_movement
-    __var__v2_l40_slightlyup_down_up
+    __var__v1_l10_left,
+    __var__v1_l10_right,
+    __var__v1_l10_right_to_left,
+    __var__v1_l10_left_to_right,
+    __var__v1_l20_right_inv_left_inv_right,
+    __var__v1_l20_left_inv_right_inv_left,
+    __var__v1_l20_left_inv_right,
+    __var__v1_l20_right_inv_left,
+    __var__v1_l40_fullleft_fullright_fullleft,
+    __var__v1_l40_fullright_fullleft_fullright,
+    __var__v1_l40_right_left_right_left,
+    __var__v2_l10_down,
+    __var__v2_l10_up,
+    __var__v2_l10_up_down,
+    __var__v2_l10_down_up,
+    __var__v2_l20_down_slightlyup,
+    __var__v2_l20_up_down,
+    __var__v2_l20_slightlyup_down_up,
+    __var__v2_l40_short_movement_range,
+    __var__v2_l40_perfect_movement,
+    __var__v2_l40_slightlyup_down_up,
+    __var__v1_l40_full_right_left,
+    __var__v1_l40_full_left_right,
 ]
 
 _r = 1.0
@@ -221,12 +265,17 @@ propositional_atoms = [
 
 _atoms = reduce(vcat, [
     propositional_atoms,
+
     diamond(IA_A).(propositional_atoms),
     diamond(IA_A).(diamond(IA_A).(propositional_atoms)),
+
     # diamond(IA_L).(propositional_atoms),
-    diamond(IA_B).(propositional_atoms),
-    diamond(IA_E).(propositional_atoms),
+
+    diamond(IA_A).(diamond(IA_B).(propositional_atoms)),
+    diamond(SoleLogics.converse(IA_A)).(diamond(IA_E).(propositional_atoms)),
+
     diamond(IA_D).(propositional_atoms),
+
     # diamond(IA_O).(propositional_atoms),
 ])
 
@@ -241,15 +290,8 @@ _rulemeasures = [
 ]
 
 ############################################################################################
-# Experiment #1: Curved swing
+# Experiments
 ############################################################################################
-include("test/experiments/Libras/libras1.jl")
 
-############################################################################################
-# Experiment #2: Vertical zig-zag
-############################################################################################
-# include("test/experiments/Libras/libras2.jl")
-#
-# println("Running experiment #2: ")
-# experiment!(miner, "Libras", "v2_vertical_zigzac.txt")
-#
+include("test/experiments/Libras/libras1.jl")
+include("test/experiments/Libras/libras2.jl")
