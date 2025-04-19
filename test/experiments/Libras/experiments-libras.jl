@@ -58,7 +58,7 @@ __var__v1_l20_right_inv_left_inv_right = VariableDistance(1,
 __var__v1_l20_left_inv_right_inv_left = VariableDistance(1,
     __motifs__v1_l20_left_inv_right_inv_left,
     distance=expdistance,
-    featurename="LUR∩R"
+    featurename="LUR∩L"
 )
 __var__v1_l20_left_inv_right = VariableDistance(1,
     __motifs__v1_l20_left_inv_right,

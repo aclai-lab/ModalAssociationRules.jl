@@ -115,6 +115,12 @@ function best_match_for_instance(
 end
 
 
+function arule_to_plot()
+    # TODO - might be an idea to simplify arules reading;
+    # we need a translator between the string wrapped within a VariableDistance and a motif
+end
+
+
 # general experiment logic
 function experiment!(miner::Miner, foldername::String, reportname::String)
     # check that miner provides both confidence and lift measures

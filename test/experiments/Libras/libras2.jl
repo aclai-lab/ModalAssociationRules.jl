@@ -10,7 +10,7 @@ miner = Miner(
     _itemsetmeasures,
     _rulemeasures;
     itemset_mining_policies=Function[
-        isanchored_itemset(),
+        isanchored_itemset(ignoreuntillength=2),
         isdimensionally_coherent_itemset()
     ],
     arule_mining_policies=Function[
