@@ -64,9 +64,14 @@ function isanchored_itemset(; npropositions::Integer=1, ignoreuntillength::Integ
                 "npropositions=$(npropositions), ignoreuntillength=$(ignoreuntillength))"))
     end
 
+    # beware to this policy; consider a candidate-based mining algorithm such as apriori;
+    # since this policy discards the itemset "⟨A⟩Up[V2] ≤ 1.0 ∧ ⟨A⟩⟨A⟩Down[V2] ≤ 1.0"
+    # there is no way to join it with an anchored one such as
+    # "⟨A⟩Up[V2] ≤ 1.0 ∧ Down[V2] ≤ 1.0";
+
     return function _isanchored_itemset(itemset::Itemset)
-        length(itemset) <= ignoreuntillength ||
-        count(it -> formula(it) isa Atom, itemset) >= npropositions
+        return length(itemset) <= ignoreuntillength ||
+            count(it -> formula(it) isa Atom, itemset) >= npropositions
     end
 end
 
