@@ -165,18 +165,91 @@ __var__v2_l40_slightlyup_down_up = VariableDistance(2,
     featurename="-^-"
 )
 
+allmotifs = [
+    __motifs__v1_l10_left,
+    __motifs__v1_l10_right,
+    __motifs__v1_l10_right_to_left,
+    __motifs__v1_l10_left_to_right,
+    __motifs__v1_l20_right_inv_left_inv_right,
+    __motifs__v1_l20_left_inv_right_inv_left,
+    __motifs__v1_l20_left_inv_right,
+    __motifs__v1_l20_right_inv_left,
+    __motifs__v1_l40_fullleft_fullright_fullleft,
+    __motifs__v1_l40_fullright_fullleft_fullright,
+    __motifs__v1_l40_right_left_right_left,
+    __motifs__v2_l10_down,
+    __motifs__v2_l10_up,
+    __motifs__v2_l10_up_down,
+    __motifs__v2_l10_down_up,
+    __motifs__v2_l20_down_slightlyup,
+    __motifs__v2_l20_up_down,
+    __motifs__v2_l20_slightlyup_down_up,
+    __motifs__v2_l40_short_movement_range,
+    __motifs__v2_l40_perfect_movement,
+    __motifs__v2_l40_slightlyup_down_up,
+]
+
+variabledistances = [
+    __var__v1_l10_left
+    __var__v1_l10_right
+    __var__v1_l10_right_to_left
+    __var__v1_l10_left_to_right
+    __var__v1_l20_right_inv_left_inv_right
+    __var__v1_l20_left_inv_right_inv_left
+    __var__v1_l20_left_inv_right
+    __var__v1_l20_right_inv_left
+    __var__v1_l40_fullleft_fullright_fullleft
+    __var__v1_l40_fullright_fullleft_fullright
+    __var__v1_l40_right_left_right_left
+    __var__v2_l10_down
+    __var__v2_l10_up
+    __var__v2_l10_up_down
+    __var__v2_l10_down_up
+    __var__v2_l20_down_slightlyup
+    __var__v2_l20_up_down
+    __var__v2_l20_slightlyup_down_up
+    __var__v2_l40_short_movement_range
+    __var__v2_l40_perfect_movement
+    __var__v2_l40_slightlyup_down_up
+]
+
+_r = 1.0
+propositional_atoms = [
+    Atom(ScalarCondition(var, <=, _r))
+    for var in variabledistances
+]
+
+_atoms = reduce(vcat, [
+    propositional_atoms,
+    diamond(IA_A).(propositional_atoms),
+    diamond(IA_A).(diamond(IA_A).(propositional_atoms)),
+    # diamond(IA_L).(propositional_atoms),
+    diamond(IA_B).(propositional_atoms),
+    diamond(IA_E).(propositional_atoms),
+    diamond(IA_D).(propositional_atoms),
+    # diamond(IA_O).(propositional_atoms),
+])
+
+_items = Vector{Item}(_atoms)
+
+_itemsetmeasures = [(gsupport, 0.1, 0.1)]
+
+_rulemeasures = [
+    (gconfidence, 0.1, 0.1),
+    (glift, 0.0, 0.0),
+    (dimensional_glift, 0.0, 0.0)
+]
+
 ############################################################################################
 # Experiment #1: Curved swing
 ############################################################################################
 include("test/experiments/Libras/libras1.jl")
 
-println("Running experiment #1: ")
-experiment!(miner, "Libras", "v1_curved_swing.txt")
-
 ############################################################################################
 # Experiment #2: Vertical zig-zag
 ############################################################################################
-include("test/experiments/Libras/libras2.jl")
-
-println("Running experiment #2: ")
-experiment!(miner, "Libras", "v2_vertical_zigzac.txt")
+# include("test/experiments/Libras/libras2.jl")
+#
+# println("Running experiment #2: ")
+# experiment!(miner, "Libras", "v2_vertical_zigzac.txt")
+#
