@@ -654,7 +654,7 @@ function _parallel_generaterules(
             _antecedent = symdiff(itemset, _consequent) |> Itemset
 
             # degenerate case
-            if length(_antecedent) < 1 || length(_consequent) != 1
+            if length(_antecedent) < 1 || length(_consequent) < 1
                 continue
             end
 
