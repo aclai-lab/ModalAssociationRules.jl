@@ -152,10 +152,14 @@ propositional_atoms = [
 _atoms = reduce(vcat, [
         propositional_atoms,
         diamond(IA_A).(propositional_atoms),
+        diamond(IA_A).(diamond(IA_A).(propositional_atoms)),
+
         # diamond(IA_L).(propositional_atoms),
+
         diamond(IA_B).(propositional_atoms),
         diamond(IA_E).(propositional_atoms),
         diamond(IA_D).(propositional_atoms),
+
         # diamond(IA_O).(propositional_atoms),
     ]
 )

@@ -55,3 +55,7 @@ include("test/experiments/NATOPS/natops6.jl")
 
 println("Running experiment #6: ")
 experiment!(miner, "NATOPS", "v6_elbowhand_lockwings.txt")
+
+############################################################################################
+# Experiment #7: try to describe every class starting from a common dictionary
+############################################################################################

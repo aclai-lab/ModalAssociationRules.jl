@@ -21,7 +21,6 @@ __motifs__v1_l10_right = [_snippet(S,2)]
 __motifs__v1_l10_right_to_left = [_snippet(S,3), _snippet(S,5)]
 __motifs__v1_l10_left_to_right = [_snippet(S,4)]
 
-
 __var__v1_l10_left = VariableDistance(1,
     __motifs__v1_l10_left,
     distance=expdistance,
@@ -93,8 +92,6 @@ __var__v1_l40_right_left_right_left = VariableDistance(1,
     featurename="V^V"
 )
 
-
-
 # Y length 10
 S = snippets(reduce(vcat, CSW[:,2]), 5, 10; m=10)
 __motifs__v2_l10_down = [_snippet(S,1)]
@@ -144,7 +141,6 @@ __var__v2_l20_slightlyup_down_up = VariableDistance(2,
     distance=expdistance,
     featurename=".-.^"
 )
-
 
 # Y length 40
 S = snippets(reduce(vcat, CSW[:,2]), 5, 40; m=40)
