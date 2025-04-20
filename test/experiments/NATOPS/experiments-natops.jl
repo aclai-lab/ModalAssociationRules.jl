@@ -68,4 +68,4 @@ miner = Miner(logiset, miningalgo, _items, _itemsetmeasures, _rulemeasures;
     arule_mining_policies=Function[islimited_length_arule(consequent_maxlength=3), isanchored_arule()]
 )
 
-experiment!(miner, "NATOPS", "v7_i_have_command")
+experiment!(miner, "test/experiments/NATOPS", "v7_i_have_command")
