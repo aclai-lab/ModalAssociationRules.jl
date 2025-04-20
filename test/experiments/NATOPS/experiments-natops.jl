@@ -59,3 +59,4 @@ experiment!(miner, "NATOPS", "v6_elbowhand_lockwings.txt")
 ############################################################################################
 # Experiment #7: try to describe every class starting from a common dictionary
 ############################################################################################
+include("test/experiments/NATOPS/natops7.jl")
