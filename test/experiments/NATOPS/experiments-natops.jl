@@ -63,8 +63,9 @@ include("test/experiments/NATOPS/natops7.jl")
 
 
 function __init_experiment(data)
-    return scalarlogiset(data, variables), Miner(
-        logiset, miningalgo, _items, _itemsetmeasures, _rulemeasures;
+    _logiset = scalarlogiset(data, variables)
+    return _logiset, Miner(
+        _logiset, miningalgo, _items, _itemsetmeasures, _rulemeasures;
         itemset_mining_policies=Function[
             isanchored_itemset(), isdimensionally_coherent_itemset()],
         arule_mining_policies=Function[
@@ -75,8 +76,17 @@ end
 logiset, miner = __init_experiment(IHCC)
 experiment!(miner, "test/experiments/NATOPS", "v7c1_i_have_command")
 
+logiset, miner = __init_experiment(IHCC)
+experiment!(miner, "test/experiments/NATOPS", "v7c2_all_clear")
+
+logiset, miner = __init_experiment(IHCC)
+experiment!(miner, "test/experiments/NATOPS", "v7c3_not_clear")
+
 logiset, miner = __init_experiment(ACC)
 experiment!(miner, "test/experiments/NATOPS", "v7c4_spread_wings")
 
 logiset, miner = __init_experiment(FWC)
 experiment!(miner, "test/experiments/NATOPS", "v7c5_fold_wings")
+
+logiset, miner = __init_experiment(IHCC)
+experiment!(miner, "test/experiments/NATOPS", "v7c6_lock_wings")
