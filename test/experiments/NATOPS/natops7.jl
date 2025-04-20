@@ -2,6 +2,7 @@ using Serialization
 import Base: isequal
 
 X, y = load_NATOPS();
+insertcols!(X, 25, "ΔY[Thumb r and Hand tip r]" => X[:,5]-X[:,23])
 
 # I have command
 IHCC = X[1:30, :]
@@ -11,7 +12,7 @@ ACC = X[31:60, :]
 NCC = X[61:90, :]
 # spread wings
 SWC = X[91:120, :]
-# lock wings
+# fold wings
 FWC = X[121:150, :]
 # lock wings
 LWC = X[151:180, :]
@@ -41,6 +42,7 @@ variablenames = [
     "X[Thumb r]",
     "Y[Thumb r]",
     "Z[Thumb r]",
+    "Delta Thumb"
 ]
 
 ############################################################################################
@@ -81,15 +83,21 @@ println("Do you need to manually create your literals? [Y,n]")
 _ans = readline()
 
 if _ans == "Y"
-    for varid in 1:12
-        S = snippets(reduce(vcat, X[:,varid]), 5, 10; m=10)
+    for varid in vcat(collect(1:12), 25) # all hands (1-6), all elbows (7-12), thumb-up (25)
+
+        _data = reduce(vcat, X[:,varid])
+        S = snippets(_data, 4, 10; m=10)
+        Slong = snippets(_data, 3, 20; m=20)
+
 
         motifs = [
             [_snippet(S,1)],
             [_snippet(S,2)],
             [_snippet(S,3)],
             [_snippet(S,4)],
-            [_snippet(S,5)]
+            [_snippet(Slong,1)],
+            [_snippet(Slong,2)],
+            [_snippet(Slong,3)]
         ]
 
         for (i, motif) in enumerate(motifs)
@@ -100,46 +108,20 @@ if _ans == "Y"
 
             _featurename = readline()
 
-            # OLD
-            # variable = VariableDistance(varid,
-            # motif,
-            # distance=expdistance,
-            # featurename=_featurename
-            # )
-            #
-            # atom = Atom(
-            #     ScalarCondition(variable, <, __suggest_threshold(variable, X; _percentile=10)))
-
-            # push!(variables, variable)
-            # push!(propositional_atoms, atom)
-
             push!(__ids, varid)
             push!(__motifs, motif)
             push!(__featurenames, _featurename)
         end
     end
-    # remember to serialize your variables after the labelling process
-    # serialize("test/experiments/NATOPS/NATOPS-variables", variables)
-    # serialize("test/experiments/NATOPS/NATOPS-propositions2", propositional_atoms)
 
     serialize("test/experiments/NATOPS/NATOPS-ids", __ids)
     serialize("test/experiments/NATOPS/NATOPS-motifs", __motifs)
     serialize("test/experiments/NATOPS/NATOPS-featurenames", __featurenames)
 else
-    # OLD
-    # or load them, if you already have them
-    # variables = deserialize("test/experiments/NATOPS/NATOPS-variables")
-    # propositional_atoms = deserialize("test/experiments/NATOPS/NATOPS-propositions")
-
     __ids = deserialize("test/experiments/NATOPS/NATOPS-ids")
     __motifs = deserialize("test/experiments/NATOPS/NATOPS-motifs")
     __featurenames = deserialize("test/experiments/NATOPS/NATOPS-featurenames")
 end
-
-# OLD
-# convert to exact types
-# variables = [v for v in variables]
-# propositional_atoms = [p for p in propositional_atoms]
 
 __ids = [id for id in __ids]
 __motifs = [m for m in __motifs]
