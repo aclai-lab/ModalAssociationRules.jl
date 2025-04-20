@@ -60,3 +60,12 @@ experiment!(miner, "NATOPS", "v6_elbowhand_lockwings.txt")
 # Experiment #7: try to describe every class starting from a common dictionary
 ############################################################################################
 include("test/experiments/NATOPS/natops7.jl")
+
+# I have command
+logiset = scalarlogiset(IHCC, variables)
+miner = Miner(logiset, miningalgo, _items, _itemsetmeasures, _rulemeasures;
+    itemset_mining_policies=Function[isanchored_itemset(), isdimensionally_coherent_itemset()],
+    arule_mining_policies=Function[islimited_length_arule(consequent_maxlength=3), isanchored_arule()]
+)
+
+experiment!(miner, "NATOPS", "v7_i_have_command")
