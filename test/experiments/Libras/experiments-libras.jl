@@ -176,7 +176,7 @@ function __suggest_threshold(var::VariableDistance, data; kwargs...)
     _i_variable = i_variable(var)
 
     _ans = first.(map(
-        _ref -> suggest_threshold(_ref, data[:,_i_variable]; kwargs...) , _refs)) |> maximum
+        _ref -> suggest_threshold(_ref, data[:,_i_variable]; kwargs...) , _refs)) |> minimum
     return round(_ans; digits=2)
 end
 
@@ -189,9 +189,9 @@ variable_distances_CSW = [
     __var__v1_l20_left_inv_right_inv_left,
     __var__v1_l20_left_inv_right,
     __var__v1_l20_right_inv_left,
-    __var__v1_l40_fullleft_fullright_fullleft,
-    __var__v1_l40_fullright_fullleft_fullright,
-    __var__v1_l40_right_left_right_left,
+    # __var__v1_l40_fullleft_fullright_fullleft,
+    # __var__v1_l40_fullright_fullleft_fullright,
+    # __var__v1_l40_right_left_right_left,
     __var__v2_l10_down,
     __var__v2_l10_up,
     __var__v2_l10_up_down,
@@ -199,13 +199,13 @@ variable_distances_CSW = [
     __var__v2_l20_down_slightlyup,
     __var__v2_l20_up_down,
     __var__v2_l20_slightlyup_down_up,
-    __var__v2_l40_short_movement_range,
-    __var__v2_l40_perfect_movement,
-    __var__v2_l40_slightlyup_down_up,
+    # __var__v2_l40_short_movement_range,
+    # __var__v2_l40_perfect_movement,
+    # __var__v2_l40_slightlyup_down_up,
 ]
 
 propositional_atoms_CSW = [
-    Atom(ScalarCondition(var, <=, __suggest_threshold(var, CSW; _percentile=15)))
+    Atom(ScalarCondition(var, <=, __suggest_threshold(var, CSW; _percentile=10)))
     for var in variable_distances_CSW
 ]
 
@@ -236,12 +236,12 @@ __var__v1_l40_full_left_right = VariableDistance(1,
 # Y are the same as Curved Swing Class
 
 variable_distances_CRC = [
-    __var__v1_l40_full_right_left,
-    __var__v1_l40_full_left_right
+    # __var__v1_l40_full_right_left,
+    # __var__v1_l40_full_left_right
 ]
 
 propositional_atoms_CRC = [
-    Atom(ScalarCondition(var, <=, __suggest_threshold(var, CRC; _percentile=15)))
+    Atom(ScalarCondition(var, <=, __suggest_threshold(var, CRC; _percentile=10)))
     for var in variable_distances_CRC
 ]
 
@@ -267,7 +267,7 @@ _atoms = reduce(vcat, [
 
     # diamond(IA_D).(propositional_atoms),
 
-    diamond(IA_O).(propositional_atoms),
+    # diamond(IA_O).(propositional_atoms),
 ])
 
 _items = Vector{Item}(_atoms)
@@ -286,3 +286,20 @@ _rulemeasures = [
 
 include("test/experiments/Libras/libras1.jl")
 include("test/experiments/Libras/libras2.jl")
+
+
+############################################################################################
+# Interesting plots
+# columns are rule, ant support, ant+const support, confidence and lift
+############################################################################################
+
+# ∩U^[V1] ≤ 5.22 => ⟨E⟩.-.^[V2] ≤ 3.03      0.24       0.24       1.0        8.33
+# - _antecedent = __motifs__v1_l40_fullright_fullleft_fullright |> first |> _normalize
+# - x_antecedent = 1:40
+#-
+# - _consequent = __motifs__v2_l20_slightlyup_down_up |> last |> _normalize
+# - x_consequent = 20:39
+#-
+# - plot1 = plot()
+# - plot!(x_antecedent, _antecedent)
+# - plot!(x_consequent, _consequent)
