@@ -64,9 +64,14 @@ function isanchored_itemset(; npropositions::Integer=1, ignoreuntillength::Integ
                 "npropositions=$(npropositions), ignoreuntillength=$(ignoreuntillength))"))
     end
 
+    # beware to this policy; consider a candidate-based mining algorithm such as apriori;
+    # since this policy discards the itemset "⟨A⟩Up[V2] ≤ 1.0 ∧ ⟨A⟩⟨A⟩Down[V2] ≤ 1.0"
+    # there is no way to join it with an anchored one such as
+    # "⟨A⟩Up[V2] ≤ 1.0 ∧ Down[V2] ≤ 1.0";
+
     return function _isanchored_itemset(itemset::Itemset)
-        length(itemset) <= ignoreuntillength ||
-        count(it -> formula(it) isa Atom, itemset) >= npropositions
+        return length(itemset) <= ignoreuntillength ||
+            count(it -> formula(it) isa Atom, itemset) >= npropositions
     end
 end
 
@@ -104,7 +109,7 @@ function isdimensionally_coherent_itemset(;)::Function
         end
 
         # also, all their references must be of the same size (e.g., 5-length intervals)
-        _referencesize = vardistance -> feature(vardistance) |> reference |> size
+        _referencesize = vardistance -> feature(vardistance) |> refsize
         _anchorsize = _referencesize(anchors[1])
 
         return all(anchor -> _referencesize(anchor) == _anchorsize, anchors)
@@ -202,7 +207,7 @@ in `rule` [`antecedent`](@ref) and [`consequent`](@ref), the number of identical
 
 # Arguments
 - `antecedent_nrepetitions::Integer=1`: maximum allowed number of identical variables in the
-    antecedent of the given rule.+
+    antecedent of the given rule.
 - `consequent_nrepetitions::Integer=0`: maximum allowed number of identical variables
     between the antecedent and the consequent of the given rule.
 - `consider_thresholds::Bool=false`: if true, both identical variables and thresholds
@@ -231,7 +236,11 @@ function isheterogeneous_arule(;
 
     function __extract_value(item::Item)
         _formula = formula(item)
-        _formula = _formula isa Atom ? _formula : _formula.children |> first
+
+        while _formula isa SoleLogics.SyntaxBranch
+            _formula = _formula |> SoleLogics.children |> first
+        end
+
         return _formula |> SoleLogics.value
     end
 

@@ -26,7 +26,7 @@
 # Note; you can use the following regex to look for rows in a results report having both the
 # variable numbers specified:
 # ^(?=.*4)(?=.*5)(?=.*6).*
-#
+# ^(?=.*V1)(?=.*V2).*
 
 using Test
 
@@ -39,6 +39,11 @@ using Random
 using Statistics
 using StatsBase
 using SoleData
+
+function _normalize(x::Vector{<:Real})
+    eps = 1e-10
+    return (x .- mean(x)) ./ (std(x) + eps)
+end
 
 # euclidean distance between normalized(x) and normalized(y)
 function zeuclidean(x::Vector{<:Real}, y::Vector{<:Real})
@@ -54,8 +59,8 @@ function zeuclidean(x::Vector{<:Real}, y::Vector{<:Real})
     # avoid division by zero
     eps = 1e-10
 
-    x_z = (x .- mean(x)) ./ (std(x) + eps)
-    y_z = (y .- mean(y)) ./ (std(y) + eps)
+    x_z = _normalize(x)
+    y_z = _normalize(y)
 
     # z-normalized euclidean distance formula
     return sqrt(sum((x_z .- y_z).^2))
@@ -110,6 +115,12 @@ function best_match_for_instance(
 end
 
 
+function arule_to_plot()
+    # TODO - might be an idea to simplify arules reading;
+    # we need a translator between the string wrapped within a VariableDistance and a motif
+end
+
+
 # general experiment logic
 function experiment!(miner::Miner, foldername::String, reportname::String)
     # check that miner provides both confidence and lift measures
@@ -146,6 +157,9 @@ function experiment!(miner::Miner, foldername::String, reportname::String)
             ),
             round(
                 globalmemo(miner, (:glift, rule)), digits=2
+            ),
+            round(
+                globalmemo(miner, (:dimensional_glift, rule)), digits=2
             )
         )
         for rule in arules(miner)
@@ -154,17 +168,19 @@ function experiment!(miner::Miner, foldername::String, reportname::String)
     # sort by lift (the 5th position in rulecollection)
     sort!(rulecollection, by=x->x[5], rev=true);
 
-    reportname = joinpath([foldername, "results", reportname])
+    reportname = joinpath([
+        @__DIR__, foldername, "results", reportname
+    ])
     println("Writing to: $(reportname)")
     open(reportname, "w") do io
-        println(io, "Columns are: rule, ant support, ant+cons support,  confidence, lift")
+        println(io, "Columns are: rule, ant support, ant+cons support,  confidence, lift, dimlift")
 
         padding = maximum(length.(miner |> freqitems))
-        for (rule, antgsupp, consgsupp, conf, lift) in rulecollection
+        for (rule, antgsupp, consgsupp, conf, lift, dimlift) in rulecollection
             println(io,
                 rpad(rule, 30 * padding) * " " * rpad(string(antgsupp), 10) * " " *
                 rpad(string(consgsupp), 10) * " " * rpad(string(conf), 10) * " " *
-                string(lift)
+                rpad(string(lift), 10) * " " * string(dimlift)
             )
         end
     end

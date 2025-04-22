@@ -1,6 +1,7 @@
-CSW = reduce(vcat, [X[1:12, :], X[180:192, :]])
+# isolate "Circle" class
+CRC = reduce(vcat, [X[133:144, :], X[313:324, :]])
 
-logiset = scalarlogiset(CSW, variabledistances)
+logiset = scalarlogiset(CRC, variabledistances)
 
 miner = Miner(
     logiset,
@@ -21,5 +22,5 @@ miner = Miner(
     ]
 )
 
-println("Running Libras' Curved Swing experiment")
-experiment!(miner, "Libras", "v1_curved_swing.txt")
+println("Running Libras' Circle experiment")
+experiment!(miner, "Libras", "v2_circle.txt")

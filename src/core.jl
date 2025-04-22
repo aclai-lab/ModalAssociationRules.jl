@@ -49,9 +49,11 @@ Utility to extract the feature wrapped within an [`Item`](@ref).
 See also [`Item`](@ref), `SoleData.VarFeature`, `SoleData.AbstractUnivariateFeature`.
 """
 function feature(item::Item)
+    # temporary variable holding the intermediate steps of item's manipulation
     _intermediate = item |> formula
 
-    if _intermediate isa SoleLogics.SyntaxBranch
+    # _intermediate could be <A>(Feature) or <A><A>(Feature) and so on.
+    while _intermediate isa SoleLogics.SyntaxBranch
         _intermediate = _intermediate |> SoleLogics.children |> first
     end
 

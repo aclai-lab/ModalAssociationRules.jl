@@ -153,6 +153,8 @@ struct Miner{
 
         worldfilter::Union{Nothing,WorldFilter}=nothing,
         itemset_mining_policies::Vector{<:Function}=Vector{Function}([
+            isanchored_itemset(), # to ensure one proposition is the point-of-reference
+            isdimensionally_coherent_itemset() # to ensure no different anchors coexist
 
         ]),
         arule_mining_policies::Vector{<:Function}=Vector{Function}([
@@ -652,7 +654,7 @@ function _parallel_generaterules(
             _antecedent = symdiff(itemset, _consequent) |> Itemset
 
             # degenerate case
-            if length(_antecedent) < 1 || length(_consequent) != 1
+            if length(_antecedent) < 1 || length(_consequent) < 1
                 continue
             end
 
