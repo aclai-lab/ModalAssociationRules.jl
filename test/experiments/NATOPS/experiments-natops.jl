@@ -61,6 +61,10 @@ experiment!(miner, "NATOPS", "v6_elbowhand_lockwings.txt")
 ############################################################################################
 include("test/experiments/NATOPS/natops7.jl")
 
+function findvar(variables, name)
+    return variables[findall(v -> featurename(v) == name, variables)] |> first
+end
+
 
 function __init_experiment(data)
     _logiset = scalarlogiset(data, variables)

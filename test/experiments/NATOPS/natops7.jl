@@ -1,5 +1,4 @@
 using Serialization
-import Base: isequal
 
 X, y = load_NATOPS();
 insertcols!(X, 25, "ΔY[Thumb r and Hand tip r]" => X[:,5]-X[:,23])
