@@ -95,7 +95,7 @@ end
 
 
 # general experiment logic
-function experiment!(miner::Miner, foldername::String, reportname::String)
+function experiment!(miner::Miner, reportname::String)
     # check that miner provides both confidence and lift measures
     _allmeasures = first.(rulemeasures(miner))
     gconfidence in _allmeasures || throw(DomainError, "Miner does not provide gconfidence.")
@@ -138,19 +138,17 @@ function experiment!(miner::Miner, foldername::String, reportname::String)
     # sort by lift (the 5th position in rulecollection)
     sort!(rulecollection, by=x->x[5], rev=true);
 
-    reportname = joinpath([
-        @__DIR__, foldername, "results", reportname
-    ])
+    reportname = joinpath([@__DIR__, "results", reportname])
     println("Writing to: $(reportname)")
     open(reportname, "w") do io
-        println(io, "Columns are: rule, ant support, ant+cons support,  confidence, lift, dimlift")
+        println(io, "Columns are: rule, ant support, ant+cons support,  confidence, lift")
 
         padding = maximum(length.(miner |> freqitems))
-        for (rule, antgsupp, consgsupp, conf, lift, dimlift) in rulecollection
+        for (rule, antgsupp, consgsupp, conf, lift) in rulecollection
             println(io,
                 rpad(rule, 30 * padding) * " " * rpad(string(antgsupp), 10) * " " *
                 rpad(string(consgsupp), 10) * " " * rpad(string(conf), 10) * " " *
-                rpad(string(lift), 10) * " " * string(dimlift)
+                string(lift)
             )
         end
     end
