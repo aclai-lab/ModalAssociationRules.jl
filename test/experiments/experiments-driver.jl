@@ -167,12 +167,18 @@ function initialize_experiment(data)
 )
 end
 
-# default parameters for matrix profile generation
-windowlength = 20
-nmotifs = 3
-_seed = 3498
-r = 5    # how similar two windows must be to belong to the same motif
-th = 10  # how nearby in time two motifs are allowed to be
+# extract a snippet's inner Vector from the definition in MatrixProfiles.jl
+_snippet(_snippets, i) = _snippets.snippets[i].seq
+
+# fallback to _suggest_threshold for VariableDistances
+function __suggest_threshold(var::VariableDistance, data; kwargs...)
+    _refs = references(var)
+    _i_variable = i_variable(var)
+
+    _ans = first.(map(
+        _ref -> suggest_threshold(_ref, data[:,_i_variable]; kwargs...) , _refs;)) |> minimum
+    return round(_ans; digits=2)
+end
 
 # algorithm use for mining;
 # currently, it is set to apriori instead of fpgrowth because of issue #97
@@ -181,3 +187,13 @@ miningalgo = apriori
 # we define a distance function between two time series
 # you could choose between zeuclidean(x,y) or dtw(x,y) |> first
 expdistance = (x, y) -> zeuclidean(x, y) |> first
+
+
+# TODO - these parameters are deprecated and should be ignored
+
+# default parameters for matrix profile generation
+windowlength = 20
+nmotifs = 3
+_seed = 3498
+r = 5    # how similar two windows must be to belong to the same motif
+th = 10  # how nearby in time two motifs are allowed to be
