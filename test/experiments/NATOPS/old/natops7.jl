@@ -41,25 +41,12 @@ variablenames = [
     "X[Thumb r]",
     "Y[Thumb r]",
     "Z[Thumb r]",
-    "Delta Thumb"
+    "ΔY[Thumb r and Hand tip r]"
 ]
 
 ############################################################################################
 # Utilities
 ############################################################################################
-
-# extract a snippet's inner Vector from the definition in MatrixProfiles.jl
-_snippet(_snippets, i) = _snippets.snippets[i].seq
-
-# fallback to _suggest_threshold for VariableDistances
-function __suggest_threshold(var::VariableDistance, data; kwargs...)
-    _refs = references(var)
-    _i_variable = i_variable(var)
-
-    _ans = first.(map(
-        _ref -> suggest_threshold(_ref, data[:,_i_variable]; kwargs...) , _refs;)) |> minimum
-    return round(_ans; digits=2)
-end
 
 ############################################################################################
 # Labeling Logic
