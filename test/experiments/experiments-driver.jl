@@ -178,6 +178,57 @@ function __suggest_threshold(var::VariableDistance, data; kwargs...)
     return round(_ans; digits=2)
 end
 
+# helper to label motifs and serialize the result
+function label_motifs(data, varids::Vector{Int64}, save_filename_prefix::String)
+    ids = []
+    motifs = []
+    featurenames = []
+
+    # we only want to consider right hand and right elbow variables
+    for varid in varids
+
+        data = reduce(vcat, data[:,varid])
+        S = snippets(data, 4, 10; m=10)
+        Slong = snippets(data, 3, 20; m=20)
+
+        _motifs = [
+            [_snippet(S,1)], [_snippet(S,2)], [_snippet(S,3)], [_snippet(S,4)],
+            [_snippet(Slong,1)], [_snippet(Slong,2)], [_snippet(Slong,3)]
+        ]
+
+        for (i, _motif) in enumerate(_motifs)
+            println("Plotting $(i)-th motif of class $(variablenames[varid])")
+            _plot = plot()
+            plot!(_motif)
+            display(_plot)
+
+            _featurename = readline()
+
+            push!(ids, varid)
+            push!(motifs, _motif)
+            push!(featurenames, _featurename)
+        end
+
+    end
+
+    serialize(joinpath("serialized", "$(save_filename_prefix)-ids"), ids)
+    serialize(joinpath("serialized", "$(save_filename_prefix)-motifs"), motifs)
+    serialize(joinpath("serialized", "$(save_filename_prefix)-featurenames"), featurenames)
+
+    return ids, motifs, featurenames
+end
+
+function load_motifs(save_filename_prefix)
+    ids = [id for id in deserialize(
+        joinpath("serialized", "$(save_filename_prefix)-ids"))];
+    motifs = [m for m in deserialize(
+        joinpath("serialized", "$(save_filename_prefix)-motifs"))];
+    featurenames = [f for f in deserialize(
+        joinpath("serialized", "$(save_filename_prefix)-featurenames"))];
+
+    return ids, motifs, featurenames
+end
+
 # algorithm use for mining;
 # currently, it is set to apriori instead of fpgrowth because of issue #97
 miningalgo = apriori
