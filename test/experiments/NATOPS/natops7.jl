@@ -4,17 +4,17 @@ X, y = load_NATOPS();
 insertcols!(X, 25, "ΔY[Thumb r and Hand tip r]" => X[:,5]-X[:,23])
 
 # I have command
-IHCC = X[1:30, :]
+IHCC = reduce(vcat, [X[1:30, :], X[(180+1):(180+30), :]])
 # all clear
-ACC = X[31:60, :]
+ACC = reduce(vcat, [X[31:60, :], X[(180+31):(180+60), :]])
 # not clear
-NCC = X[61:90, :]
+NCC = reduce(vcat, [X[61:90, :], X[(180+61):(180+90), :]])
 # spread wings
-SWC = X[91:120, :]
+SWC = reduce(vcat, [X[91:120, :], X[(180+91):(180+120), :]])
 # fold wings
-FWC = X[121:150, :]
+FWC = reduce(vcat, [X[121:150, :], X[(180+121):(180+150), :]])
 # lock wings
-LWC = X[151:180, :]
+LWC = reduce(vcat, [X[151:180, :], X[(180+151):(360), :]])
 
 variablenames = [
     "X[Hand tip l]",
@@ -133,7 +133,7 @@ variables = [
 ]
 
 propositional_atoms = [
-    Atom(ScalarCondition(v, <=, __suggest_threshold(v, X; _percentile=5)))
+    Atom(ScalarCondition(v, <=, __suggest_threshold(v, X; _percentile=3)))
     for v in variables
 ]
 
@@ -150,7 +150,6 @@ _itemsetmeasures = [(gsupport, 0.1, 0.1)]
 _rulemeasures = [
     (gconfidence, 0.1, 0.1),
     (glift, 0.0, 0.0),
-    (dimensional_glift, 0.0, 0.0)
 ]
 
 # WARNING: for some reason, after deserializing anything, isequal is not working properly;

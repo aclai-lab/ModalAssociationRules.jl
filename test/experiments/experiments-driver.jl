@@ -94,33 +94,6 @@ function suggest_threshold(
 end
 
 
-# given a motif and the slice of a dataset (e.g., IHCC[:,5]), return an array containing
-# the minimum value distance(motif, IHCC[i,5]).
-function best_match_for_instance(
-    motif::Vector{<:Real},
-    data;
-    distance::Function=zeuclidean
-)
-    best_matches = []
-    for instance in 1:first(size(data))
-        append!(best_matches,
-            minimum([
-                distance(motif, data[instance][start:(start + length(motif) - 1)])
-                for start in 1:(length(data[instance]) - length(motif))
-            ])
-        )
-    end
-
-    return best_matches
-end
-
-
-function arule_to_plot()
-    # TODO - might be an idea to simplify arules reading;
-    # we need a translator between the string wrapped within a VariableDistance and a motif
-end
-
-
 # general experiment logic
 function experiment!(miner::Miner, foldername::String, reportname::String)
     # check that miner provides both confidence and lift measures
@@ -158,9 +131,6 @@ function experiment!(miner::Miner, foldername::String, reportname::String)
             round(
                 globalmemo(miner, (:glift, rule)), digits=2
             ),
-            round(
-                globalmemo(miner, (:dimensional_glift, rule)), digits=2
-            )
         )
         for rule in arules(miner)
     ]

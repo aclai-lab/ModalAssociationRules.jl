@@ -330,7 +330,6 @@ _itemsetmeasures = [(gsupport, 0.1, 0.1)]
 _rulemeasures = [
     (gconfidence, 0.1, 0.1),
     (glift, 0.0, 0.0),
-    (dimensional_glift, 0.0, 0.0)
 ]
 
 logiset = scalarlogiset(LWC, variabledistances)

@@ -644,6 +644,7 @@ See also [`llift`](@ref).
 """
 @globalmeasure glift _glift_logic
 
+# TODO - remove this as gives the same result as classic lift
 @globalmeasure dimensional_glift _dimensionalwise_glift_logic
 
 
