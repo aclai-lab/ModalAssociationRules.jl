@@ -67,18 +67,6 @@ function findvar(variables, name)
     return variables[findall(v -> featurename(v) == name, variables)] |> first
 end
 
-
-function __init_experiment(data)
-    _logiset = scalarlogiset(data, variables)
-    return _logiset, Miner(
-        _logiset, miningalgo, _items, _itemsetmeasures, _rulemeasures;
-        itemset_mining_policies=Function[
-            isanchored_itemset(), isdimensionally_coherent_itemset()],
-        arule_mining_policies=Function[
-            islimited_length_arule(consequent_maxlength=3), isanchored_arule()]
-)
-end
-
 logiset, miner = __init_experiment(IHCC)
 experiment!(miner, "test/experiments/NATOPS", "v7c1_i_have_command")
 

@@ -156,6 +156,17 @@ function experiment!(miner::Miner, foldername::String, reportname::String)
     end
 end
 
+function initialize_experiment(data)
+    _logiset = scalarlogiset(data, variables)
+    return _logiset, Miner(
+        _logiset, miningalgo, _items, _itemsetmeasures, _rulemeasures;
+        itemset_mining_policies=Function[
+            isanchored_itemset(), isdimensionally_coherent_itemset()],
+        arule_mining_policies=Function[
+            islimited_length_arule(consequent_maxlength=3), isanchored_arule()]
+)
+end
+
 # default parameters for matrix profile generation
 windowlength = 20
 nmotifs = 3
