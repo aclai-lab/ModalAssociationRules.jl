@@ -59,6 +59,8 @@ experiment!(miner, "NATOPS", "v6_elbowhand_lockwings.txt")
 ############################################################################################
 # Experiment #7: try to describe every class starting from a common dictionary
 ############################################################################################
+
+expdistance = zeuclidean
 include("test/experiments/NATOPS/natops7.jl")
 
 function findvar(variables, name)
@@ -94,3 +96,9 @@ experiment!(miner, "test/experiments/NATOPS", "v7c5_fold_wings")
 
 logiset, miner = __init_experiment(IHCC)
 experiment!(miner, "test/experiments/NATOPS", "v7c6_lock_wings")
+
+
+expdistance = (x,y) -> sqrt(sum((x .- y).^2))
+include("test/experiments/NATOPS/natops7.jl")
+logiset, miner = __init_experiment(IHCC)
+experiment!(miner, "NATOPS", "v7c1_i_have_command_euclidean")

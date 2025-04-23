@@ -81,7 +81,7 @@ end
 function suggest_threshold(
     motif::Vector{<:Real},
     data;
-    distance::Function=zeuclidean,
+    distance::Function=expdistance,
     _percentile::Integer=25
 )
     distances = [

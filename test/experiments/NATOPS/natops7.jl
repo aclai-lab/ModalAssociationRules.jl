@@ -57,7 +57,7 @@ function __suggest_threshold(var::VariableDistance, data; kwargs...)
     _i_variable = i_variable(var)
 
     _ans = first.(map(
-        _ref -> suggest_threshold(_ref, data[:,_i_variable]; kwargs...) , _refs)) |> minimum
+        _ref -> suggest_threshold(_ref, data[:,_i_variable]; kwargs...) , _refs;)) |> minimum
     return round(_ans; digits=2)
 end
 
@@ -133,7 +133,7 @@ variables = [
 ]
 
 propositional_atoms = [
-    Atom(ScalarCondition(v, <=, __suggest_threshold(v, X; _percentile=10)))
+    Atom(ScalarCondition(v, <=, __suggest_threshold(v, X; _percentile=5)))
     for v in variables
 ]
 
