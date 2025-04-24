@@ -101,19 +101,22 @@ function experiment!(miner::Miner, reportname::String)
     gconfidence in _allmeasures || throw(DomainError, "Miner does not provide gconfidence.")
     glift in _allmeasures || throw(DomainError, "Miner does not provide glift.")
 
-    # mine
-    println("Mining...")
-    mining_start = time()
-    mine!(miner)
-    mining_end = time()
-    println("Mining duration: $(round(mining_end - mining_start, digits=2))")
+    if !info(miner, :istrained)
+        # mine
+        println("Mining...")
+        mining_start = time()
+        mine!(miner)
+        mining_end = time()
+        println("Mining duration: $(round(mining_end - mining_start, digits=2))")
 
-    # generate association rules
-    println("Generating rules...")
-    generating_start = time()
-    generaterules!(miner) |> collect
-    generating_end = time()
-    println("Generation duration: $(round(generating_end - generating_start, digits=2))")
+        # generate association rules
+        println("Generating rules...")
+        generating_start = time()
+        generaterules!(miner) |> collect
+        generating_end = time()
+        println(
+            "Generation duration: $(round(generating_end - generating_start, digits=2))")
+    end
 
     # collect all the results
     rulecollection = [
