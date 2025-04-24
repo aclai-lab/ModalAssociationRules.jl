@@ -164,7 +164,7 @@ function initialize_experiment(
     featurenames,
     data;
     _distance=expdistance,
-    _alpha_percentile=15
+    _alpha_percentile=10
 )
     variables = [
         VariableDistance(id, m, distance=_distance, featurename=name)
