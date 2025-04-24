@@ -163,7 +163,7 @@ function initialize_experiment(
     featurenames,
     data;
     _distance=expdistance,
-    _alpha_percentile=10
+    _alpha_percentile=20
 )
     variables = [
         VariableDistance(id, m, distance=_distance, featurename=name)
@@ -201,7 +201,9 @@ function initialize_experiment(
         itemset_mining_policies=Function[
             isanchored_itemset(), isdimensionally_coherent_itemset()],
         arule_mining_policies=Function[
-            islimited_length_arule(consequent_maxlength=3), isanchored_arule()]
+            islimited_length_arule(consequent_maxlength=3),
+            isanchored_arule()
+        ]
     )
 end
 
