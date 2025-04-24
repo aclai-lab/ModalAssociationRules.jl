@@ -27,6 +27,7 @@
 # variable numbers specified:
 # ^(?=.*4)(?=.*5)(?=.*6).*
 # ^(?=.*V1)(?=.*V2).*
+# ^(?=.*⟨B⟩)(?=.*⟨A⟩).*
 
 using Test
 
@@ -163,7 +164,7 @@ function initialize_experiment(
     featurenames,
     data;
     _distance=expdistance,
-    _alpha_percentile=20
+    _alpha_percentile=15
 )
     variables = [
         VariableDistance(id, m, distance=_distance, featurename=name)
@@ -199,7 +200,9 @@ function initialize_experiment(
     return _logiset, Miner(
         _logiset, miningalgo, _items, _itemsetmeasures, _rulemeasures;
         itemset_mining_policies=Function[
-            isanchored_itemset(), isdimensionally_coherent_itemset()],
+            isanchored_itemset(ignoreuntillength=2),
+            isdimensionally_coherent_itemset()
+        ],
         arule_mining_policies=Function[
             islimited_length_arule(consequent_maxlength=3),
             isanchored_arule()
