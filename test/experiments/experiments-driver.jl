@@ -154,15 +154,52 @@ function experiment!(miner::Miner, reportname::String)
     end
 end
 
-function initialize_experiment(data)
+function initialize_experiment(
+    ids,
+    motifs,
+    featurenames,
+    data;
+    _distance=expdistance,
+    _alpha_percentile=10
+)
+    variables = [
+        VariableDistance(id, m, distance=_distance, featurename=name)
+        for (id, m, name) in zip(ids, motifs, featurenames)
+    ]
+
+    propositionalatoms = [
+        Atom(ScalarCondition(
+            v, <=, __suggest_threshold(v, data; _percentile=_alpha_percentile)
+        ))
+        for v in variables
+    ]
+
+    atoms = reduce(vcat, [
+        propositionalatoms,
+        diamond(IA_A).(propositionalatoms),
+        diamond(IA_B).(propositionalatoms),
+        diamond(IA_E).(propositionalatoms),
+        diamond(IA_D).(propositionalatoms),
+        diamond(IA_O).(propositionalatoms),
+    ])
+
+    _items = Vector{Item}(atoms)
+
+    _itemsetmeasures = [(gsupport, 0.1, 0.1)]
+    _rulemeasures = [
+        (gconfidence, 0.1, 0.1),
+        (glift, 0.0, 0.0), # we want to compute lift, regardless of a threshold
+    ]
+
     _logiset = scalarlogiset(data, variables)
+
     return _logiset, Miner(
         _logiset, miningalgo, _items, _itemsetmeasures, _rulemeasures;
         itemset_mining_policies=Function[
             isanchored_itemset(), isdimensionally_coherent_itemset()],
         arule_mining_policies=Function[
             islimited_length_arule(consequent_maxlength=3), isanchored_arule()]
-)
+    )
 end
 
 # extract a snippet's inner Vector from the definition in MatrixProfiles.jl
