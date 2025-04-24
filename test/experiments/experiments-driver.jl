@@ -224,9 +224,9 @@ function label_motifs(data, varids::Vector{Int64}, save_filename_prefix::String)
     # we only want to consider right hand and right elbow variables
     for varid in varids
 
-        data = reduce(vcat, data[:,varid])
-        S = snippets(data, 4, 10; m=10)
-        Slong = snippets(data, 3, 20; m=20)
+        _data = reduce(vcat, data[:,varid])
+        S = snippets(_data, 4, 10; m=10)
+        Slong = snippets(_data, 3, 20; m=20)
 
         _motifs = [
             [_snippet(S,1)], [_snippet(S,2)], [_snippet(S,3)], [_snippet(S,4)],
