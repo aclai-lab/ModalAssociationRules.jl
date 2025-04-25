@@ -189,7 +189,7 @@ function initialize_experiment(
 
     _items = Vector{Item}(atoms)
 
-    _itemsetmeasures = [(gsupport, 0.1, 0.1)]
+    _itemsetmeasures = [(gsupport, 0.2, 0.2)]
     _rulemeasures = [
         (gconfidence, 0.1, 0.1),
         (glift, 0.0, 0.0), # we want to compute lift, regardless of a threshold
