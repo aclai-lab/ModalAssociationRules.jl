@@ -51,7 +51,7 @@ function load_hugadb(
 
     X = DataFrame([
         # get the i-th element from each line, and concatenate them together
-        [line[i] for line in lines]
+        [[line[i] for line in lines]]
         for i in 1:length(variablenames)
     ], variablenames)
 
