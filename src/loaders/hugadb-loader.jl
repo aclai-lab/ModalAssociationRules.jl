@@ -49,9 +49,11 @@ function load_hugadb(
 
     close(f)
 
-    return DataFrame([
+    X = DataFrame([
         # get the i-th element from each line, and concatenate them together
         [line[i] for line in lines]
         for i in 1:length(variablenames)
     ], variablenames)
+
+    return X, activities, variablenames
 end
