@@ -29,9 +29,11 @@ makedocs(;
 
 @info "`makedocs` has finished running. "
 
+
 deploydocs(;
     repo = "github.com/aclai-lab/ModalAssociationRules.jl",
+    devbranch = "main",
     target = "build",
     branch = "gh-pages",
-    versions = ["main" => "main", "stable" => "v^", "v#.#", "dev" => "dev"],
+    versions = ["main" => "main", "stable" => "v^", "v#.#"],
 )
