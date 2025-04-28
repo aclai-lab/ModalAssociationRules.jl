@@ -139,6 +139,7 @@ export motifsalphabet
 include("loaders/natops-loader.jl")
 include("loaders/libras-loader.jl")
 include("loaders/epilepsy-loader.jl")
-export load_NATOPS, load_libras, load_epilepsy
+include("loaders/hugadb-loader.jl")
+export load_NATOPS, load_libras, load_epilepsy, load_hugadb
 
 end
