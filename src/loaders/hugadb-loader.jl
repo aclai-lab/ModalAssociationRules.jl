@@ -12,8 +12,11 @@ using DataStructures: OrderedDict
 
 function load_hugadb(
     filepath::String=joinpath(dirname(pathof(ModalAssociationRules)),
-        "..", "test", "data", "HuGaDB", "HuGaDB_v2_various_01_00.txt"),
+        "..", "test", "data", "HuGaDB");
+    filename::String="HuGaDB_v2_various_01_00.txt"
 )
+    filepath = joinpath(filepath, filename)
+
     variablenames = ["acc_rf_x","acc_rf_y","acc_rf_z",
         "gyro_rf_x","gyro_rf_y","gyro_rf_z",
         "acc_rs_x","acc_rs_y","acc_rs_z",
