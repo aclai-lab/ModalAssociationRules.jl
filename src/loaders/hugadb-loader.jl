@@ -14,12 +14,6 @@ function load_hugadb(
     filepath::String=joinpath(dirname(pathof(ModalAssociationRules)),
         "..", "test", "data", "HuGaDB", "HuGaDB_v2_various_01_00.txt"),
 )
-    (X_train, y_train), (X_test, y_test) =
-        (
-            read("$(dirpath)/$(fileprefix)_TEST.arff", String) |> SoleData.parseARFF,
-            read("$(dirpath)/$(fileprefix)_TRAIN.arff", String) |> SoleData.parseARFF,
-        )
-
     variablenames = ["acc_rf_x","acc_rf_y","acc_rf_z",
         "gyro_rf_x","gyro_rf_y","gyro_rf_z",
         "acc_rs_x","acc_rs_y","acc_rs_z",
@@ -35,29 +29,29 @@ function load_hugadb(
         "EMG_r","EMG_l","act",
     ]
 
-    X_train  = SoleData.fix_dataframe(X_train, variablenames)
-    X_test   = SoleData.fix_dataframe(X_test, variablenames)
+    # e.g. open("test/data/HuGaDB/HuGaDB_v2_various_01_00.txt", "r")
+    f = open(filepath, "r")
 
-    class_names = [
-        "I have command",
-        "All clear",
-        "Not clear",
-        "Spread wings",
-        "Fold wings",
-        "Lock wings",
-    ]
+    activities = split(readline(f), " ")[1:end-1]
+    activities[1] = activities[1][11:end] # remove the initial "#Activity\t"
 
-    fix_class_names(y) = class_names[round(Int, parse(Float64, y))]
+    # ignore #ActivityID array (we only keep the string version instead of integer IDs)
+    readline(f)
 
-    y_train = map(fix_class_names, y_train)
-    y_test  = map(fix_class_names, y_test)
+    # ignore #Date row
+    readline(f)
 
-    # if !(nrow(X_train) == length(y_train))
-    #     throw(ArgumentError("Mismatching dimensions for X_train ($(nrow(X_train))) and " *
-    #         "y_train ($(length(y_train)))"))
-    # end
+    # ignore the variable names, as we already explicited them in `variablenames`
+    readline(f)
 
-    y_train = categorical(y_train)
-    y_test = categorical(y_test)
-    vcat(X_train, X_test), vcat(y_train, y_test)
+    _substr2float = x -> parse(Float64, x)
+    lines = [_substr2float.(split(line, "\t")) for line in eachline(f)]
+
+    close(f)
+
+    return DataFrame([
+        # get the i-th element from each line, and concatenate them together
+        [line[i] for line in lines]
+        for i in 1:length(variablenames)
+    ], variablenames)
 end
