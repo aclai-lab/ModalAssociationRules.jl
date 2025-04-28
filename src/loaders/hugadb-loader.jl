@@ -10,9 +10,9 @@ using CategoricalArrays
 
 using DataStructures: OrderedDict
 
-function load_hugadb(
+function load_hugadb(;
     filepath::String=joinpath(dirname(pathof(ModalAssociationRules)),
-        "..", "test", "data", "HuGaDB");
+        "..", "test", "data", "HuGaDB"),
     filename::String="HuGaDB_v2_various_01_00.txt"
 )
     filepath = joinpath(filepath, filename)
