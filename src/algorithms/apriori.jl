@@ -96,8 +96,6 @@ function apriori(
                 push!(frequents, candidate)
 
                 push!(freqitems(miner), candidate)
-                # TODO: remove this if push! above works; if not, place this out of the loop
-                # push!(freqitems(miner), frequents...)
             end
         end
 

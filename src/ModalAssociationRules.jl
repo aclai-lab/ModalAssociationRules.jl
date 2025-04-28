@@ -136,10 +136,9 @@ export fpgrowth
 include("alphabet-proposal.jl")
 export motifsalphabet
 
-include("natops-loader.jl")
-
-# include("deprecated.jl")
-
-export load_NATOPS
+include("loaders/natops-loader.jl")
+include("loaders/libras-loader.jl")
+include("loaders/epilepsy-loader.jl")
+export load_NATOPS, load_libras, load_epilepsy
 
 end

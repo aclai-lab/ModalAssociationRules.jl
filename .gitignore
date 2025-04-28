@@ -13,5 +13,6 @@
 /test/notes
 /test/deprecated
 *.txt
+*.zip
 
 TODO

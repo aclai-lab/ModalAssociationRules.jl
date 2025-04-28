@@ -89,14 +89,14 @@ macro localmeasure(measname, measlogic)
             # also, do more stuff depending on `miningstate` dispatch (see the documentation).
             localmemo!(miner, memokey, measure)
 
-            # for state in LOCAL_MINING_STATES
-            #     # the numerical value to save more informations about the relation
-            #     # between an instance and a subject must be obtained by the internal logic
-            #     # of the meaningfulness measure callback.
-            #     if hasminingstate(miner, state) && haskey(response, state)
-            #         miningstate!(miner, state, (ith_instance,subject), response[state])
-            #     end
-            # end
+            for state in LOCAL_MINING_STATES
+                # the numerical value to save more informations about the relation
+                # between an instance and a subject must be obtained by the internal logic
+                # of the meaningfulness measure callback.
+                if hasminingstate(miner, state) && haskey(response, state)
+                    miningstate!(miner, state, (ith_instance,subject), response[state])
+                end
+            end
 
             # Note that the miningstate system could potentially irrorate the entire package
             # and could be expandend/specialized;
@@ -277,7 +277,7 @@ _dimensionalwise_lsupport_logic = (itemset, X, ith_instance, miner) -> begin
     end
 
     _repr = _features[_anchor_feature_idx]
-    _repr_size = _repr |> reference |> size
+    _repr_size = _repr |> refsize
 
     # TODO: implement this for various GeometricalWorld types in SoleLogics
     # see https://github.com/aclai-lab/SoleLogics.jl/issues/68
@@ -369,9 +369,39 @@ _glift_logic = (rule, X, threshold, miner) -> begin
     num = gconfidence(rule, X, threshold, miner)
     den = gsupport(consequent(rule), X, threshold, miner)
 
+    # TODO - think about this claim:
+    # when the rule's consequent is anchored, this definition is ok;
+    # when it is not, then lift should be computed as:
+    # P(X U Y) / (P(X) * P(bar(Y)UX)) or something similar.
+
     return Dict(:measure => num/den)
 end
 
+_dimensionalwise_glift_logic = (rule, X, threshold, miner) -> begin
+    # given rule ::= X => Y, wa want to compute
+    # P(XUY) / (P(X) * P(inv(Y))) = confidence(X => Y) / P(inv(Y))
+
+    num = gconfidence(rule, X, threshold, miner)
+
+    _consequent = consequent(rule)
+
+    # if Y is a standard, propositional literal (i.e., it is not a temporal one),
+    # then this definition is the same as standard lift and we can go on.
+    if isa(_consequent, SoleLogics.SyntaxBranch)
+        # let us say we have a consequent c that is: <Relation>FeatName[Var] < Threshold;
+        # we can see the formula as a tree, whose root is <Relation>.
+        # here, we first separate the relation from the body (its children),
+        # then we find the converse of the relation (synonym for inverse) and we reassembly
+        # the initial literal.
+        _tok, _child = SoleLogics.token(_consequent), SoleLogics.children(_consequent)
+        invrelation = _tok |> SoleLogics.relation |> SoleLogics.converse
+        _consequent = invrelation(_child)
+    end
+
+    den = gsupport(_consequent, X, threshold, miner)
+
+    return Dict(:measure => num/den)
+end
 
 
 _lconviction_logic = (rule, X, ith_instance, miner) -> begin
@@ -613,6 +643,9 @@ See also [`AbstractMiner`](@ref), [`antecedent`](@ref), [`ARule`](@ref), [`glift
 See also [`llift`](@ref).
 """
 @globalmeasure glift _glift_logic
+
+# TODO - remove this as gives the same result as classic lift
+@globalmeasure dimensional_glift _dimensionalwise_glift_logic
 
 
 
