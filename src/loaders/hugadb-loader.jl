@@ -1,8 +1,12 @@
-# Loader for HuGaDB dataset.
+# Loader for HuGaDB dataset;
+# see https://github.com/romanchereshnev/HuGaDB
 
 # Usage:
 # call `load_hugadb(filepath)`, specifying one specific the filepath containing the
 # recordings for one specific partecipant.
+
+# Warning: as stated on the official GitHub page of the dataset, some data has been
+# corrupted: be careful about the file you are choosing to load.
 
 using ZipFile
 using DataFrames
@@ -13,7 +17,8 @@ using DataStructures: OrderedDict
 function load_hugadb(;
     filepath::String=joinpath(dirname(pathof(ModalAssociationRules)),
         "..", "test", "data", "HuGaDB"),
-    filename::String="HuGaDB_v2_various_01_00.txt"
+    filename::String="HuGaDB_v2_various_01_00.txt",
+    activities2ids::Bool=false
 )
     filepath = joinpath(filepath, filename)
 
@@ -35,6 +40,8 @@ function load_hugadb(;
     # e.g. open("test/data/HuGaDB/HuGaDB_v2_various_01_00.txt", "r")
     f = open(filepath, "r")
 
+    # get the activities recorded for the performer specified in `filename`
+    # if activities2ids kwarg is set to true, these activities will be converted into ids
     activities = split(readline(f), " ")[1:end-1]
     activities[1] = activities[1][11:end] # remove the initial "#Activity\t"
 
@@ -57,6 +64,10 @@ function load_hugadb(;
         [[line[i] for line in lines]]
         for i in 1:length(variablenames)
     ], variablenames)
+
+
+    # activity strings to ids as in the table at https://github.com/romanchereshnev/HuGaDB
+
 
     return X, activities, variablenames
 end
