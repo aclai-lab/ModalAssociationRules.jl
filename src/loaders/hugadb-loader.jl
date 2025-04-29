@@ -18,7 +18,6 @@ function load_hugadb(;
     filepath::String=joinpath(dirname(pathof(ModalAssociationRules)),
         "..", "test", "data", "HuGaDB"),
     filename::String="HuGaDB_v2_various_01_00.txt",
-    activities2ids::Bool=false
 )
     filepath = joinpath(filepath, filename)
 
@@ -41,9 +40,16 @@ function load_hugadb(;
     f = open(filepath, "r")
 
     # get the activities recorded for the performer specified in `filename`
-    # if activities2ids kwarg is set to true, these activities will be converted into ids
     activities = split(readline(f), " ")[1:end-1]
     activities[1] = activities[1][11:end] # remove the initial "#Activity\t"
+
+    # activity strings to ids as in the table at https://github.com/romanchereshnev/HuGaDB
+    _activity2id = x -> findfirst(activity -> x == activity, [
+        "walking", "running", "going_up", "going_down", "sitting", "sitting_down",
+        "standing_up", "standing", "bicycling", "elevator_up", "elevator_down",
+        "sitting_car"
+    ])
+    activity_ids = [_activity2id(activity) for activity in activities]
 
     # ignore #ActivityID array (we only keep the string version instead of integer IDs)
     readline(f)
@@ -65,9 +71,5 @@ function load_hugadb(;
         for i in 1:length(variablenames)
     ], variablenames)
 
-
-    # activity strings to ids as in the table at https://github.com/romanchereshnev/HuGaDB
-
-
-    return X, activities, variablenames
+    return X, (activities, activity_ids), variablenames
 end
