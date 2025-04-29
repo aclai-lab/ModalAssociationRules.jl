@@ -98,12 +98,14 @@ end
 
 # in each instance, isolate the recorded part dedicated to `id` movement;
 # if no such part exists, discard the instance.
+# The survivor tracks are trimmed to have the same length.
 """
 TODO
 """
 function filter_hugadb(X::DataFrame, id)
     nvariables = X |> size |> last
 
+    # pick only the instances for which an `id` type of movement is recorded
     _X = [
         let indices = findall(x -> x == id, X[instance, 39])
         isempty(indices) ? nothing :
@@ -115,5 +117,18 @@ function filter_hugadb(X::DataFrame, id)
         for instance in 1:_ninstances
     ] |> x -> filter(!isnothing, x)
 
-    return vcat(_X...)
+    # concatenate all the picked instances in an unique DataFrame
+    _Xfiltered = vcat(_X...)
+
+    # we want to trim every recording to have the same length across instances;
+    # since, when selecting an instance, each column of the latter has the same length,
+    # we arbitrarily choose to compute the minimum length starting from the first column.
+    minimum_length = minimum(length.(_Xfiltered[:,1]))
+    for instance in 1:(_Xfiltered |> size |> first )
+        for variable in 1:nvariables
+            _Xfiltered[instance,variable] = _Xfiltered[instance,variable][1:minimum_length]
+        end
+    end
+
+    return _Xfiltered
 end
