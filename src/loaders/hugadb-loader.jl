@@ -112,7 +112,7 @@ function filter_hugadb(X::DataFrame, id)
         DataFrame([
                 [X[instance, variable][indices]]
                 for variable in 1:nvariables
-            ], variablenames)
+            ], HUGADB_VARIABLENAMES)
         end
         for instance in 1:(X |> size |> first)
     ] |> x -> filter(!isnothing, x)
