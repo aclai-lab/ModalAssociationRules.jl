@@ -114,7 +114,7 @@ function filter_hugadb(X::DataFrame, id)
                 for variable in 1:nvariables
             ], variablenames)
         end
-        for instance in 1:_ninstances
+        for instance in 1:(X |> size |> first)
     ] |> x -> filter(!isnothing, x)
 
     # concatenate all the picked instances in an unique DataFrame
@@ -124,7 +124,7 @@ function filter_hugadb(X::DataFrame, id)
     # since, when selecting an instance, each column of the latter has the same length,
     # we arbitrarily choose to compute the minimum length starting from the first column.
     minimum_length = minimum(length.(_Xfiltered[:,1]))
-    for instance in 1:(_Xfiltered |> size |> first )
+    for instance in 1:(_Xfiltered |> size |> first)
         for variable in 1:nvariables
             _Xfiltered[instance,variable] = _Xfiltered[instance,variable][1:minimum_length]
         end
