@@ -242,12 +242,12 @@ function label_motifs(
     # we only want to consider right hand and right elbow variables
     for varid in varids
         _data = reduce(vcat, data[:,varid])
-        S = snippets(_data, n1, m1; m=m1)
-        Slong = snippets(_data, n2, m2; m=m2)
+        S1 = snippets(_data, n1, m1; m=m1)
+        S2 = snippets(_data, n2, m2; m=m2)
 
         _motifs = [
-            [_snippet(S,1)], [_snippet(S,2)], [_snippet(S,3)], [_snippet(S,4)],
-            [_snippet(Slong,1)], [_snippet(Slong,2)], [_snippet(Slong,3)]
+            [[_snippet(S1,i)] for i in 1:n1]...,
+            [[_snippet(S2,i)] for i in 1:n2]...
         ]
 
         for (i, _motif) in enumerate(_motifs)
