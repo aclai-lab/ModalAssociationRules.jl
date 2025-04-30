@@ -164,7 +164,8 @@ function initialize_experiment(
     featurenames,
     data;
     _distance=expdistance,
-    _alpha_percentile=10
+    _alpha_percentile=10,
+    _worldfilter::Union{Nothing,WorldFilter}=nothing
 )
     variables = [
         VariableDistance(id, m, distance=_distance, featurename=name)
@@ -199,6 +200,7 @@ function initialize_experiment(
 
     return _logiset, Miner(
         _logiset, miningalgo, _items, _itemsetmeasures, _rulemeasures;
+        worldfilter=_worldfilter,
         itemset_mining_policies=Function[
             isanchored_itemset(ignoreuntillength=2),
             isdimensionally_coherent_itemset()
