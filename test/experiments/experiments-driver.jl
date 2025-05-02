@@ -165,7 +165,12 @@ function initialize_experiment(
     data;
     _distance=expdistance,
     _alpha_percentile=10,
-    _worldfilter::Union{Nothing,WorldFilter}=nothing
+    _worldfilter::Union{Nothing,WorldFilter}=nothing,
+    _itemsetmeasures = [(gsupport, 0.1, 0.1)],
+    _rulemeasures = [
+        (gconfidence, 0.1, 0.1),
+        (glift, 0.0, 0.0), # we want to compute lift, regardless of a threshold
+    ]
 )
     variables = [
         VariableDistance(id, m, distance=_distance, featurename=name)
@@ -189,12 +194,6 @@ function initialize_experiment(
     ])
 
     _items = Vector{Item}(atoms)
-
-    _itemsetmeasures = [(gsupport, 0.2, 0.2)]
-    _rulemeasures = [
-        (gconfidence, 0.1, 0.1),
-        (glift, 0.0, 0.0), # we want to compute lift, regardless of a threshold
-    ]
 
     _logiset = scalarlogiset(data, variables)
 
