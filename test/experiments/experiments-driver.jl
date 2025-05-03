@@ -190,7 +190,7 @@ function initialize_experiment(
         diamond(IA_B).(propositionalatoms),
         diamond(IA_E).(propositionalatoms),
         diamond(IA_D).(propositionalatoms),
-        diamond(IA_O).(propositionalatoms),
+        # diamond(IA_O).(propositionalatoms),
     ])
 
     _items = Vector{Item}(atoms)
