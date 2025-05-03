@@ -228,13 +228,14 @@ end
 function label_motifs(
     data,
     varids::Vector{Int64},
+    variablenames::Vector{String},
     save_filename_prefix::String;
     # length and numerosity of each snippet to extract (first set)
     m1::Integer=10,
     n1::Integer=4,
     # length and numerosity of each snippet to extract (first set)
     m2::Integer=20,
-    n2::Integer=3
+    n2::Integer=3,
 )
     ids = []
     motifs = []
