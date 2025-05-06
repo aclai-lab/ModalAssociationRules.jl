@@ -12,6 +12,9 @@ using CategoricalArrays
 
 using DataStructures: OrderedDict
 
+"""
+TODO
+"""
 function load_NATOPS(
     dirpath::String=joinpath(dirname(pathof(ModalAssociationRules)), "../test/data/NATOPS"),
     fileprefix::String="NATOPS"

@@ -164,7 +164,13 @@ function initialize_experiment(
     featurenames,
     data;
     _distance=expdistance,
-    _alpha_percentile=10
+    _alpha_percentile=10,
+    _worldfilter::Union{Nothing,WorldFilter}=nothing,
+    _itemsetmeasures = [(gsupport, 0.1, 0.1)],
+    _rulemeasures = [
+        (gconfidence, 0.1, 0.1),
+        (glift, 0.0, 0.0), # we want to compute lift, regardless of a threshold
+    ]
 )
     variables = [
         VariableDistance(id, m, distance=_distance, featurename=name)
@@ -184,21 +190,16 @@ function initialize_experiment(
         diamond(IA_B).(propositionalatoms),
         diamond(IA_E).(propositionalatoms),
         diamond(IA_D).(propositionalatoms),
-        diamond(IA_O).(propositionalatoms),
+        # diamond(IA_O).(propositionalatoms),
     ])
 
     _items = Vector{Item}(atoms)
-
-    _itemsetmeasures = [(gsupport, 0.2, 0.2)]
-    _rulemeasures = [
-        (gconfidence, 0.1, 0.1),
-        (glift, 0.0, 0.0), # we want to compute lift, regardless of a threshold
-    ]
 
     _logiset = scalarlogiset(data, variables)
 
     return _logiset, Miner(
         _logiset, miningalgo, _items, _itemsetmeasures, _rulemeasures;
+        worldfilter=_worldfilter,
         itemset_mining_policies=Function[
             isanchored_itemset(ignoreuntillength=2),
             isdimensionally_coherent_itemset()
@@ -224,21 +225,31 @@ function __suggest_threshold(var::VariableDistance, data; kwargs...)
 end
 
 # helper to label motifs and serialize the result
-function label_motifs(data, varids::Vector{Int64}, save_filename_prefix::String)
+function label_motifs(
+    data,
+    varids::Vector{Int64},
+    variablenames::Vector{String},
+    save_filename_prefix::String;
+    # length and numerosity of each snippet to extract (first set)
+    m1::Integer=10,
+    n1::Integer=4,
+    # length and numerosity of each snippet to extract (first set)
+    m2::Integer=20,
+    n2::Integer=3,
+)
     ids = []
     motifs = []
     featurenames = []
 
     # we only want to consider right hand and right elbow variables
     for varid in varids
-
         _data = reduce(vcat, data[:,varid])
-        S = snippets(_data, 4, 10; m=10)
-        Slong = snippets(_data, 3, 20; m=20)
+        S1 = snippets(_data, n1, m1; m=m1)
+        S2 = snippets(_data, n2, m2; m=m2)
 
         _motifs = [
-            [_snippet(S,1)], [_snippet(S,2)], [_snippet(S,3)], [_snippet(S,4)],
-            [_snippet(Slong,1)], [_snippet(Slong,2)], [_snippet(Slong,3)]
+            [[_snippet(S1,i)] for i in 1:n1]...,
+            [[_snippet(S2,i)] for i in 1:n2]...
         ]
 
         for (i, _motif) in enumerate(_motifs)
