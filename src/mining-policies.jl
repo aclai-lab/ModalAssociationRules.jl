@@ -19,7 +19,7 @@ Closure returning a boolean function `F` with one argument `itemset::Itemset`.
 - `maxlength::Union{Nothing,Integer}=nothing`: maximum `itemset`'s length; when `nothing`,
     defaults to `typemax(Int16)`.
 
-See also [`Itemset`](@ref), [`itemset_mining_policies`](@ref).
+See also [`Itemset`](@ref), [`itemset_policies`](@ref).
 """
 function islimited_length_itemset(; maxlength::Union{Nothing,Integer}=nothing)::Function
     if isnothing(maxlength)
@@ -53,7 +53,7 @@ Closure returning a boolean function `F` with one argument `rule::Itemset`.
 - `ignoreuntillength::Integer=1`: avoid applying the policy to isolated [`Item`](@ref)s, or
     [`Itemset`](@ref) short enough.
 
-See [`Item`](@ref), [`Itemset`](@ref), [`itemset_mining_policies`](@ref),
+See [`Item`](@ref), [`Itemset`](@ref), [`itemset_policies`](@ref),
 [`isanchored_arule`](@ref).
 """
 function isanchored_itemset(; npropositions::Integer=1, ignoreuntillength::Integer=1)::Function
@@ -85,7 +85,7 @@ This is needed to ensure the Itemset is coherent with the dimensional definition
 support. All the propositions (or anchors) in an itemset must be `VariableDistance`s
 wrapping references of the same size.
 
-See also [`Itemset`](@ref), [`itemset_mining_policies`](@ref), `SoleData.VariableDistance`.
+See also [`Itemset`](@ref), [`itemset_policies`](@ref), `SoleData.VariableDistance`.
 """
 function isdimensionally_coherent_itemset(;)::Function
     # since we have no arguments, this closure seems useless;
@@ -137,7 +137,7 @@ not exceed the given thresholds.
 - `consequent_maxlength::Union{Nothing,Integer}=1`: maximum consequent length of the given
     rule; when `nothing`, defaults to `typemax(Int16)`.
 
-See also [`antecedent`](@ref), [`ARule`](@ref), [`arule_mining_policies`](@ref),
+See also [`antecedent`](@ref), [`ARule`](@ref), [`arule_policies`](@ref),
 [`consequent`](@ref).
 """
 function islimited_length_arule(;
@@ -175,7 +175,7 @@ Closure returning a boolean function `F` with one argument `rule::ARule`.
 - `npropositions::Integer=1`: minimum number of propositional anchors (propositions with
     no modal operators) in the antecedent of the given rule.
 
-See [`antecedent`](@ref), [`ARule`](@ref), [`arule_mining_policies`](@ref),
+See [`antecedent`](@ref), [`ARule`](@ref), [`arule_policies`](@ref),
 [`generaterules`](@ref), [`Item`](@ref), [`Miner`](@ref).
 """
 function isanchored_arule(; npropositions::Integer=1)::Function

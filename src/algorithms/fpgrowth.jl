@@ -190,7 +190,7 @@ function fpgrowth(miner::AbstractMiner, X::MineableData)::Nothing
         saveflag = true
 
         # apply frequent items mining policies here
-        for policy in itemset_mining_policies(miner)
+        for policy in itemset_policies(miner)
             if !policy(itemset)
                 saveflag = false
                 break
@@ -410,9 +410,9 @@ function _fpgrowth_count_phase(
     miner::Bulldozer
 )
     # we consider each combination of items (where the itemset `survivor_itemset` is fixed)
-    # which also do honor the `itemset_mining_policies`
+    # which also do honor the `itemset_policies`
     for combo in Iterators.filter(
-            _combo -> all(__policy -> __policy(_combo), itemset_mining_policies(miner)),
+            _combo -> all(__policy -> __policy(_combo), itemset_policies(miner)),
             combine_items(survivor_itemset, leftout_itemset)
         )
         # each combo must be reshaped, following a certain order specified

@@ -24,8 +24,8 @@ For example, [`Miner`](@ref) does completely implement the interface while
 - globalmemo!(miner::AbstractMiner)
 
 - worldfilter(miner::AbstractMiner)
-- itemset_mining_policies(miner::AbstractMiner)
-- arule_mining_policies(miner::AbstractMiner)
+- itemset_policies(miner::AbstractMiner)
+- arule_policies(miner::AbstractMiner)
 
 - miningstate(miner::AbstractMiner)
 - miningstate!(miner::AbstractMiner)
@@ -169,7 +169,7 @@ See also [`AbstractMiner`](@ref), [`data(::AbstractMiner)`](@ref), `SoleLogics.W
 worldfilter(::AbstractMiner) = error("Not implemented.")
 
 """
-    function itemset_mining_policies(::AbstractMiner)
+    function itemset_policies(::AbstractMiner)
 
 Return the mining policies vector wrapped within an [`AbstractMiner`](@ref).
 Each mining policies is a meta-rule describing which [`Itemset`](@ref) are accepted
@@ -187,12 +187,12 @@ during the mining phase and which are discarded.
     generation policies are applied before saving an itemset inside the miner:
     thus, they reduce the waste of memory, but not necessarily of computational time.
 
-See also [`AbstractMiner`](@ref), [`generaterules`](@ref), [`arule_mining_policies`](@ref).
+See also [`AbstractMiner`](@ref), [`generaterules`](@ref), [`arule_policies`](@ref).
 """
-itemset_mining_policies(::AbstractMiner) = error("Not implemented.")
+itemset_policies(::AbstractMiner) = error("Not implemented.")
 
 """
-    arule_mining_policies(::AbstractMiner)
+    arule_policies(::AbstractMiner)
 
 Return the association rules generation policies vector wrapped within an
 [`AbstractMiner`](@ref).
@@ -200,9 +200,9 @@ Each generation policies is a meta-rule describing which [`ARule`](@ref) are acc
 during the generation algorithm and which are discarded.
 
 See also [`AbstractMiner`](@ref), [`generaterules`](@ref),
-[`itemset_mining_policies`](@ref).
+[`itemset_policies`](@ref).
 """
-arule_mining_policies(::AbstractMiner) = error("Not implemented").
+arule_policies(::AbstractMiner) = error("Not implemented").
 
 
 

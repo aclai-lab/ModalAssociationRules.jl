@@ -200,11 +200,11 @@ function initialize_experiment(
     return _logiset, Miner(
         _logiset, miningalgo, _items, _itemsetmeasures, _rulemeasures;
         worldfilter=_worldfilter,
-        itemset_mining_policies=Function[
+        itemset_policies=Function[
             isanchored_itemset(ignoreuntillength=2),
             isdimensionally_coherent_itemset()
         ],
-        arule_mining_policies=Function[
+        arule_policies=Function[
             islimited_length_arule(consequent_maxlength=3),
             isanchored_arule()
         ]

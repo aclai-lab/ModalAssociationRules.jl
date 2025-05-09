@@ -71,7 +71,7 @@ export localmemo, localmemo!
 export globalmemo, globalmemo!
 
 export worldfilter
-export itemset_mining_policies, arule_mining_policies
+export itemset_policies, arule_policies
 
 export miningstate, miningstate!, hasminingstate, initminingstate
 export info, info!, hasinfo

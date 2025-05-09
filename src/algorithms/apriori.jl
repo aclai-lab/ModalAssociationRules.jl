@@ -110,3 +110,29 @@ function apriori(
         filter!(candidates, miner)  # apply filtering policies
     end
 end
+
+"""
+    anchored_apriori(miner::AbstractMiner, X::MineableData; kwargs...)::Nothing
+
+Anchored version of [`apriori`](@ref) algorithm, that is exactly `apriori` but assuring
+that `miner` possess atleast [`isanchored_itemset`](@ref) policy, with `ignoreuntillength`
+parameter set to 1 or higher.
+
+TODO - insert a reference to TIME2025 article.
+
+See also [`AbstractMiner`](@ref), [`apriori`](@ref), [`isanchored_itemset`](@ref),
+[`MineableData`](@ref).
+"""
+function anchored_apriori(miner::AbstractMiner, X::MineableData; kwargs...)::Nothing
+
+    itemset_policies = itemset_policies(miner)
+    isanchored_policy_index = findfirst(
+        policy -> policy |> Symbol == :_isanchored_itemset, itemset_policies(miner))
+
+
+
+    throw(AssertionError("The miner must possess isanchored_itemset policy, " *
+        "with ignoreuntillength parameter set to 1 or higher"))
+
+
+end

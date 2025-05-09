@@ -22,7 +22,7 @@
 
         # special fields related to mining algorithms
         worldfilter::Union{Nothing,WorldFilter}
-        itemset_mining_policies::Vector{<:Function}
+        itemset_policies::Vector{<:Function}
         miningstate::MiningState
 
         # locks on data, memoization structure and miningstate structure
@@ -65,7 +65,7 @@ struct Bulldozer{D<:MineableData,I<:Item} <: AbstractMiner
 
     # special fields related to mining algorithms
     worldfilter::Union{Nothing,WorldFilter}
-    itemset_mining_policies::Vector{<:Function}
+    itemset_policies::Vector{<:Function}
     miningstate::MiningState
 
     # locks on data, memoization structure and miningstate structure
@@ -79,11 +79,11 @@ struct Bulldozer{D<:MineableData,I<:Item} <: AbstractMiner
         items::Vector{I},
         itemsetmeasures::Vector{<:MeaningfulnessMeasure};
         worldfilter::Union{Nothing,WorldFilter}=nothing,
-        itemset_mining_policies::Vector{<:Function}=Function[],
+        itemset_policies::Vector{<:Function}=Function[],
         miningstate::MiningState=MiningState()
     ) where {D<:MineableData,I<:Item}
         return new{D,I}(data, instancesrange, items, itemsetmeasures, LmeasMemo(),
-            worldfilter, itemset_mining_policies, miningstate,
+            worldfilter, itemset_policies, miningstate,
             ReentrantLock(), ReentrantLock(), ReentrantLock()
         )
     end
@@ -97,7 +97,7 @@ struct Bulldozer{D<:MineableData,I<:Item} <: AbstractMiner
                 items(miner),
                 itemsetmeasures(miner),
                 worldfilter=deepcopy(worldfilter(miner)),
-                itemset_mining_policies=deepcopy(itemset_mining_policies(miner)),
+                itemset_policies=deepcopy(itemset_policies(miner)),
                 miningstate=deepcopy(miningstate(miner))
             )
     end
@@ -258,11 +258,11 @@ See also [`worldfilter(::AbstractMiner)`](@ref).
 worldfilter(bulldozer::Bulldozer) = bulldozer.worldfilter
 
 """
-    itemset_mining_policies(bulldozer::Bulldozer)
+    itemset_policies(bulldozer::Bulldozer)
 
-See also [`itemset_mining_policies(::AbstractMiner)`](@ref).
+See also [`itemset_policies(::AbstractMiner)`](@ref).
 """
-itemset_mining_policies(bulldozer::Bulldozer) = bulldozer.itemset_mining_policies
+itemset_policies(bulldozer::Bulldozer) = bulldozer.itemset_policies
 
 
 """
