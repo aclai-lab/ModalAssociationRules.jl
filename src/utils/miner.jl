@@ -373,6 +373,7 @@ miningstate!(miner::Miner, key::Symbol, inner_key, val) = begin
     end
 end
 
+# TODO - this should be moved to core
 """
     Base.filter!(
         targets::Vector{Union{ARule,Itemset}},
