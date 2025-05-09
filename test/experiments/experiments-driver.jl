@@ -229,6 +229,7 @@ function label_motifs(
     data,
     varids::Vector{Int64},
     variablenames::Vector{String},
+    save_filepath::String,
     save_filename_prefix::String;
     # length and numerosity of each snippet to extract (first set)
     m1::Integer=10,
@@ -267,20 +268,20 @@ function label_motifs(
 
     end
 
-    serialize(joinpath("serialized", "$(save_filename_prefix)-ids"), ids)
-    serialize(joinpath("serialized", "$(save_filename_prefix)-motifs"), motifs)
-    serialize(joinpath("serialized", "$(save_filename_prefix)-featurenames"), featurenames)
+    serialize(joinpath(save_filepath, "$(save_filename_prefix)-ids"), ids)
+    serialize(joinpath(save_filepath, "$(save_filename_prefix)-motifs"), motifs)
+    serialize(joinpath(save_filepath, "$(save_filename_prefix)-featurenames"), featurenames)
 
     return ids, motifs, featurenames
 end
 
-function load_motifs(save_filename_prefix)
+function load_motifs(filepath, save_filename_prefix)
     ids = [id for id in deserialize(
-        joinpath("serialized", "$(save_filename_prefix)-ids"))];
+        joinpath(filepath, "$(save_filename_prefix)-ids"))];
     motifs = [m for m in deserialize(
-        joinpath("serialized", "$(save_filename_prefix)-motifs"))];
+        joinpath(filepath, "$(save_filename_prefix)-motifs"))];
     featurenames = [f for f in deserialize(
-        joinpath("serialized", "$(save_filename_prefix)-featurenames"))];
+        joinpath(filepath, "$(save_filename_prefix)-featurenames"))];
 
     return ids, motifs, featurenames
 end
