@@ -1,12 +1,9 @@
-# this script collects policies regarding mining;
-# they are both structural, syntactical and semantical.
+# this script collects policies to regulate mining, controlling both shape and semantics
+# of the extracted frequent itemsets and association rules.
 
-
-# policies related to the mining structure
-# deprecated: there are no such filters at the moment.
-# see "data_mining_policies(::AbstractMiner)".
 
 # policies related to frequent itemsets mining
+
 
 """
     function islimited_length_itemset(; maxlength::Union{Nothing,Integer}=nothing)::Function
@@ -291,4 +288,21 @@ end
 TODO
 """
 function similar_pattern()
+end
+
+
+# utilities
+# TODO - call this within anchored_apriori;
+# maybe use a kwarg to regulate if this should throw an error or just return a boolean
+function isanchored_miner(miner::AbstractMiner; )
+    _itemset_policies = itemset_policies(miner)
+    _isanchored_index = findfirst(
+        policy -> policy |> Symbol == :_isanchored_itemset, _itemset_policies)
+
+    if isnothing(_isanchored_index) || getfield(
+        _itemset_policies[_isanchored_index], :ignoreuntillength) == 0
+
+        throw(AssertionError("The miner must possess isanchored_itemset " *
+            "policy, with ignoreuntillength parameter set to 1 or higher"))
+    end
 end
