@@ -448,6 +448,11 @@ function anchored_fpgrowth(miner::M; kwargs...)::M where {M<:AbstractMiner}
 
     # perform multiple fpgrowth calls in parallel and reduce the results together
     tasks = map(miners) do _miner
+
+        # TODO - after building a standard, propositional FPTree,
+        # integrate temporal literals by recursively branching every possible path
+        # and early stopping on non-meaningful ones
+
         Threads.@spawn fpgrowth(_miner; kwargs...)
     end
 
