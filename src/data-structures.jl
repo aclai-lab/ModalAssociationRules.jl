@@ -604,7 +604,7 @@ function grow!(
         subfptree = _children[_children_idx]
         addcount!(subfptree, _count)
         grow!(
-            subfptree, (_itemset[2:end], _count) |> EnhancedItemset; miner=miner; kwargs...)
+            subfptree, (_itemset[2:end], _count) |> EnhancedItemset; miner=miner, kwargs...)
     else
         # here we want to create a new children FPTree, and set this as its parent;
         # note that we don't want to update count and contributors since we already
@@ -621,7 +621,7 @@ function grow!(
     miner::Union{Nothing,AbstractMiner},
     kwargs...
 ) where {IT<:Itemset}
-    grow!(fptree, convert(EnhancedItemset, itemset, 1); miner=miner; kwargs...)
+    grow!(fptree, convert(EnhancedItemset, itemset, 1); miner=miner, kwargs...)
 end
 
 """$(doc_fptree_grow)"""
@@ -631,5 +631,5 @@ function grow!(
     miner::Union{Nothing,AbstractMiner},
     kwargs...
 ) where {IT<:Itemset}
-    map(element -> grow!(fptree, element; miner=miner; kwargs...), collection)
+    map(element -> grow!(fptree, element; miner=miner, kwargs...), collection)
 end

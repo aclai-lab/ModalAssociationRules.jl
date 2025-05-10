@@ -376,7 +376,7 @@ function mine!(miner::AbstractMiner; kwargs...)
 end
 
 """
-    apply!(miner::AbstractMiner, X::MineableData; forcemining::Bool=false; kwargs...)
+    apply!(miner::AbstractMiner, X::MineableData; forcemining::Bool=false, kwargs...)
 
 Extract association rules from data referenced by `miner` ([`data`](@ref)),
 saving the interesting [`Itemset`](@ref)s inside `miner`'s appropriate structure
@@ -389,7 +389,7 @@ Return a generator of interesting [`ARule`](@ref)s.
 
 See also [`ARule`](@ref), [`data`](@ref), [`freqitems`](@ref), [`Itemset`](@ref).
 """
-function apply!(miner::AbstractMiner, X::MineableData; forcemining::Bool=false; kwargs...)
+function apply!(miner::AbstractMiner, X::MineableData; forcemining::Bool=false, kwargs...)
     _info = info(miner)
 
     # if miner is already trained, do not perform mining and return the arules generator

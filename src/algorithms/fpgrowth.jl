@@ -476,6 +476,8 @@ function anchored_fpgrowth(miner::AbstractMiner, X::MineableData; kwargs...)::No
         rethrow()
     end
 
+    # TODO - separate propositional motifs of different length here
+
     # fpgrowth is going to express the anchored semantics, thus, is safe to call it
     fpgrowth(miner, X; kwargs...)
 end
