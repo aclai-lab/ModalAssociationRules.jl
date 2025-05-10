@@ -159,7 +159,7 @@ implemented:
 See also [`AbstractMiner`](@ref), [`Bulldozer`](@ref), [`FPTree`](@ref),
 [`HeaderTable`](@ref), [`SoleBase.AbstractDataset`](@ref)
 """
-function fpgrowth(miner::AbstractMiner)::Nothing
+function fpgrowth(miner::M)::M where {M<:AbstractMiner}
     if !(ModalAssociationRules.gsupport in reduce(vcat, itemsetmeasures(miner)))
         throw(ArgumentError("FP-Growth " *
             "requires global support (gsupport) as meaningfulness measure in order to " *
@@ -232,6 +232,8 @@ function fpgrowth(miner::AbstractMiner)::Nothing
             end
         end
     end
+
+    return miner
 end
 
 # `fpgrowth` main logic
@@ -465,11 +467,11 @@ function anchored_fpgrowth(miner::AbstractMiner; kwargs...)::Nothing
 
     # perform multiple fpgrowth calls in parallel and reduce the results together
     tasks = map(miners) do _miner
-        Threads.@spawn _fpgrowth(_miner; kwargs...)
+        Threads.@spawn fpgrowth(_miner; kwargs...)
     end
     results = fetch.(tasks)
 
-    local_results = bulldozer_reduce(local_results)
+    local_results = miner_reduce(local_results)
 
 end
 
