@@ -146,4 +146,6 @@ include("loaders/hugadb-loader.jl")
 export load_NATOPS, load_libras, load_epilepsy
 export load_hugadb, filter_hugadb
 
+include("deprecated.jl")
+
 end
