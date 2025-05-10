@@ -292,9 +292,17 @@ end
 
 
 # utilities
-# TODO - call this within anchored_apriori;
-# maybe use a kwarg to regulate if this should throw an error or just return a boolean
-function isanchored_miner(miner::AbstractMiner; )
+
+
+"""
+    isanchored_miner(miner::AbstractMiner)
+
+Check if `miner` is provided of the `isanchored_itemset` policy and, in particular,
+if `ignoreuntillength` parameter is set to 1 or above.
+
+See also [`AbstractMiner`](@ref), [`isanchored_itemset`](@ref).
+"""
+function isanchored_miner(miner::AbstractMiner)
     _itemset_policies = itemset_policies(miner)
     _isanchored_index = findfirst(
         policy -> policy |> Symbol == :_isanchored_itemset, _itemset_policies)
