@@ -265,21 +265,6 @@ function _fpgrowth(miner::Bulldozer{D,I}) where {D<:MineableData,I<:Item}
         close(frequents_channel)
         frequents = unique(collect(frequents_channel))
 
-        # alternative way to get the frequent 1-length itemsets;
-        # this is serial, thus does not leverage Channel nor Threads.@threads
-        # frequents = [candidate
-        #     for candidate in Itemset{I}.(items(miner))
-        #     for (gmeas_algo, lthreshold, gthreshold) in itemsetmeasures(miner)
-        #     # in all the existing literature, the only measure needed here is `lsupport`;
-        #     # however, we give the possibility to control more granularly what does it mean
-        #     # for an itemset to be *locally frequent*.
-        #     if localof(gmeas_algo)(
-        #         candidate,
-        #         data(miner, ith_instance),
-        #         miner
-        #     ) >= lthreshold
-        # ] |> unique
-
         for (nworld, _) in enumerate(SoleLogics.allworlds(miner; ith_instance=ith_instance))
             _itemset_in_world = [
                 itemset
@@ -471,7 +456,9 @@ function anchored_fpgrowth(miner::AbstractMiner; kwargs...)::Nothing
     end
     resulting_miner = miner_reduce!(fetch.(tasks))
 
-
+    # perform one latest reduce operation to overwrite the argument miner;
+    # this is a bit of overhead.
+    return miner_reduce!([miner, resulting_miner])
 end
 
 
