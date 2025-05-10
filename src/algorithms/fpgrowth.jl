@@ -133,9 +133,6 @@ function projection(
 end
 
 
-
-# fpgrowth implementation starts here
-
 """
     fpgrowth(miner::AbstractMiner, X::MineableData; verbose::Bool=true)::Nothing
 
