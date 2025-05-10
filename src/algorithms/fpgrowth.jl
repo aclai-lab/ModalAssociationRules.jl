@@ -457,10 +457,13 @@ function anchored_fpgrowth(miner::AbstractMiner, X::MineableData; kwargs...)::No
     anchor_groups = SoleBase._groupby(item -> formula(item) |> SoleLogics.value |>
         SoleData.metacond |> SoleData.feature |> refsize, anchor_items)
 
-
+    miners = [partial_deepcopy(miner; newitems=group) for (_size,group) in anchor_groups]
 
     # fpgrowth is going to express the anchored semantics, thus, is safe to call it
-    fpgrowth(miner, X; kwargs...)
+    Threads.@threads for _miner in miners
+        fpgrowth(_miner, X; kwargs...)
+    end
+
 end
 
 
