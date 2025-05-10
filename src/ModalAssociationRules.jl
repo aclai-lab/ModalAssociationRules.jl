@@ -110,7 +110,7 @@ export isanchored_miner
 include("algorithms/apriori.jl")
 
 export combine_items, grow_prune
-export apriori
+export apriori, anchored_apriori
 
 include("data-structures.jl")
 
@@ -132,7 +132,7 @@ export checksanity!
 include("algorithms/fpgrowth.jl")
 
 export patternbase, bounce!, projection
-export fpgrowth
+export fpgrowth, anchored_fpgrowth
 
 include("alphabet-proposal.jl")
 export motifsalphabet
