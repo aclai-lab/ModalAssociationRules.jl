@@ -439,6 +439,20 @@ function _fpgrowth_count_phase(
     end
 end
 
+function anchored_fpgrowth(miner::AbstractMiner, X::MineableData; kwargs...)::Nothing
+    try
+        isanchored_miner(miner)
+    catch
+        rethrow()
+    end
+
+    # TODO - separate propositional motifs of different length here
+
+    # fpgrowth is going to express the anchored semantics, thus, is safe to call it
+    fpgrowth(miner, X; kwargs...)
+end
+
+
 """
     initminingstate(::typeof(fpgrowth), ::MineableData)::MiningState
 
@@ -467,17 +481,4 @@ function initminingstate(
         # keep track of which instance (of a generic MineableData) is currently being mined
         :current_instance => 1
     ])
-end
-
-function anchored_fpgrowth(miner::AbstractMiner, X::MineableData; kwargs...)::Nothing
-    try
-        isanchored_miner(miner)
-    catch
-        rethrow()
-    end
-
-    # TODO - separate propositional motifs of different length here
-
-    # fpgrowth is going to express the anchored semantics, thus, is safe to call it
-    fpgrowth(miner, X; kwargs...)
 end
