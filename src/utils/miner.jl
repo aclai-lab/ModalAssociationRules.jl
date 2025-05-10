@@ -739,7 +739,7 @@ function partial_deepcopy(
     end
 
     return Miner(
-        original.X, # keep the reference here
+        data(original), # keep the reference here
         deepcopy(original |> algorithm),
         newitems,
         deepcopy(original |> itemsetmeasures),
