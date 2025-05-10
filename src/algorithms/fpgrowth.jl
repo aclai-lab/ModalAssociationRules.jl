@@ -428,7 +428,7 @@ function _fpgrowth_count_phase(
 end
 
 
-function anchored_fpgrowth(miner::AbstractMiner; kwargs...)::Nothing
+function anchored_fpgrowth(miner::M; kwargs...)::M where {M<:AbstractMiner}
     try
         isanchored_miner(miner)
     catch
