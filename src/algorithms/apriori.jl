@@ -131,5 +131,5 @@ function anchored_apriori(miner::AbstractMiner, X::MineableData; kwargs...)::Not
     end
 
     # apriori is going to express the anchored semantics, thus, is safe to call it
-    apriori(miner, X, kwargs...)
+    apriori(miner, X; kwargs...)
 end

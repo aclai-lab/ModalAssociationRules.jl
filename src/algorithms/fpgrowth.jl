@@ -446,7 +446,10 @@ end
 
 See also [`hasminingstate`](@ref), [`MiningState`](@ref), [`miningstate`](@ref).
 """
-function initminingstate(::typeof(fpgrowth), ::MineableData)::MiningState
+function initminingstate(
+    ::Union{typeof(fpgrowth), typeof(anchored_fpgrowth)},
+    ::MineableData
+)::MiningState
     return MiningState([
         # given an instance I and an itemset λ, the default behaviour when computing
         # local support is to perform model checking in order to establish in how
@@ -464,4 +467,15 @@ function initminingstate(::typeof(fpgrowth), ::MineableData)::MiningState
         # keep track of which instance (of a generic MineableData) is currently being mined
         :current_instance => 1
     ])
+end
+
+function anchored_fpgrowth(miner::AbstractMiner, X::MineableData; kwargs...)::Nothing
+    try
+        isanchored_miner(miner)
+    catch
+        rethrow()
+    end
+
+    # fpgrowth is going to express the anchored semantics, thus, is safe to call it
+    fpgrowth(miner, X; kwargs...)
 end
