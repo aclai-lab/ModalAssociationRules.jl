@@ -454,6 +454,10 @@ function anchored_fpgrowth(miner::M; kwargs...)::M where {M<:AbstractMiner}
     tasks = map(miners) do _miner
         Threads.@spawn fpgrowth(_miner; kwargs...)
     end
+
+    # NOTE - miner_reduce! is currently called with default kwargs, as they are virtually
+    # always the best choice
+
     resulting_miner = miner_reduce!(fetch.(tasks))
 
     # perform one latest reduce operation to overwrite the argument miner;
