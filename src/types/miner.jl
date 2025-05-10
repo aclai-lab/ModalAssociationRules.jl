@@ -363,20 +363,8 @@ function getglobalthreshold(miner::AbstractMiner, meas::Function)::Threshold
 end
 
 
-
 """
-    mine!(miner::AbstractMiner; kwargs...)
-
-Synonym for [`apply!](@ref).
-
-See also [`ARule`](@ref), [`Itemset`](@ref), [`apply`](@ref).
-"""
-function mine!(miner::AbstractMiner; kwargs...)
-    return apply!(miner, data(miner); kwargs...)
-end
-
-"""
-    apply!(miner::AbstractMiner, X::MineableData; forcemining::Bool=false, kwargs...)
+apply!(miner::AbstractMiner; forcemining::Bool=false, kwargs...)
 
 Extract association rules from data referenced by `miner` ([`data`](@ref)),
 saving the interesting [`Itemset`](@ref)s inside `miner`'s appropriate structure
@@ -385,24 +373,24 @@ saving the interesting [`Itemset`](@ref)s inside `miner`'s appropriate structure
 Return a generator of interesting [`ARule`](@ref)s.
 
 !!! note
-    All the kwargs are forwarded to the mining algorithm within `miner`.
+All the kwargs are forwarded to the mining algorithm within `miner`.
 
 See also [`ARule`](@ref), [`data`](@ref), [`freqitems`](@ref), [`Itemset`](@ref).
 """
-function apply!(miner::AbstractMiner, X::MineableData; forcemining::Bool=false, kwargs...)
+function apply!(miner::AbstractMiner; forcemining::Bool=false, kwargs...)
     _info = info(miner)
 
     # if miner is already trained, do not perform mining and return the arules generator
     if haskey(_info, :istrained) && !forcemining
         if _info[:istrained] == true
             @warn "The miner has already been trained. " *
-                "To force mining, please set `forcemining=true`."
+            "To force mining, please set `forcemining=true`."
             return generaterules(freqitems(miner), miner)
         end
     end
 
     # apply mining algorithm
-    algorithm(miner)(miner, X; kwargs...)
+    algorithm(miner)(miner; kwargs...)
 
     # fill the info field
     if haskey(_info, :istrained)
@@ -419,7 +407,14 @@ end
 
 
 """
-    generaterules(itemsets::AbstractVector{Itemset}, miner::AbstractMiner)
+    mine!(miner::AbstractMiner; kwargs...)
+
+Synonym for [`apply!](@ref).
+"""
+mine!(miner::AbstractMiner; kwargs...) = apply!(miner::AbstractMiner; kwargs...)
+
+"""
+generaterules(itemsets::AbstractVector{Itemset}, miner::AbstractMiner)
 
 Raw subroutine of [`generaterules!(miner::AbstractMiner; kwargs...)`](@ref).
 
