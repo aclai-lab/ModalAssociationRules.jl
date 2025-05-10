@@ -98,3 +98,6 @@ function motifsalphabet(
 
     return xmprofile, xmotifs, _clean_xmotifs
 end
+
+# TODO - consider the experiments for TIM2 2025, and move here the method to perform
+# the labeling of VariableDistance variables
