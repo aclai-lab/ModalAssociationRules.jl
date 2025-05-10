@@ -238,7 +238,6 @@ end
 
 # `fpgrowth` main logic
 function _fpgrowth(miner::Bulldozer{D,I}) where {D<:MineableData,I<:Item}
-    kripkeframe = frame(miner)
     _nworlds = nworlds(miner)
     nworld_to_itemset = [Itemset{I}() for _ in 1:_nworlds]
 
