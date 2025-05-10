@@ -1,5 +1,5 @@
-@deprecate apriori(miner::Miner, X::MineableData) = apriori(miner)
-@deprecate fpgrowth(miner::Miner, X::MineableData) = fpgrowth(miner)
+@deprecate apriori(miner::Miner, X::MineableData) apriori(miner)
+@deprecate fpgrowth(miner::Miner, X::MineableData) fpgrowth(miner)
 
 @deprecate __lsupport lsupport
 @deprecate __gsupport gsupport
