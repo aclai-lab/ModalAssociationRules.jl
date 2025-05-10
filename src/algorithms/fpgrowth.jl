@@ -159,7 +159,7 @@ implemented:
 See also [`AbstractMiner`](@ref), [`Bulldozer`](@ref), [`FPTree`](@ref),
 [`HeaderTable`](@ref), [`SoleBase.AbstractDataset`](@ref)
 """
-function fpgrowth(miner::AbstractMiner, X::MineableData)::Nothing
+function fpgrowth(miner::AbstractMiner)::Nothing
     if !(ModalAssociationRules.gsupport in reduce(vcat, itemsetmeasures(miner)))
         throw(ArgumentError("FP-Growth " *
             "requires global support (gsupport) as meaningfulness measure in order to " *
@@ -170,6 +170,7 @@ function fpgrowth(miner::AbstractMiner, X::MineableData)::Nothing
         ))
     end
 
+    X = data(miner)
     _ninstances = ninstances(X)
     local_results = Vector{Bulldozer}(undef, _ninstances)
 
@@ -440,7 +441,7 @@ function _fpgrowth_count_phase(
 end
 
 
-function anchored_fpgrowth(miner::AbstractMiner, X::MineableData; kwargs...)::Nothing
+function anchored_fpgrowth(miner::AbstractMiner; kwargs...)::Nothing
     try
         isanchored_miner(miner)
     catch

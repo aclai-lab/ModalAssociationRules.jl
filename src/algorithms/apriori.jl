@@ -73,11 +73,11 @@ to also work with modal logic.
 See also [`Miner`](@ref), [`SoleBase.MineableData`](@ref).
 """
 function apriori(
-    miner::AbstractMiner,
-    X::MineableData;
+    miner::AbstractMiner;
     verbose::Bool=false
 )::Nothing
     _itemtype = itemtype(miner)
+    X = data(miner)
 
     # candidates of length 1 are all the letters in our items
     candidates = Itemset{_itemtype}.(items(miner))
@@ -123,7 +123,7 @@ TODO - insert a reference to TIME2025 article.
 See also [`AbstractMiner`](@ref), [`apriori`](@ref), [`isanchored_itemset`](@ref),
 [`MineableData`](@ref).
 """
-function anchored_apriori(miner::AbstractMiner, X::MineableData; kwargs...)::Nothing
+function anchored_apriori(miner::AbstractMiner; kwargs...)::Nothing
     try
         isanchored_miner(miner)
     catch
