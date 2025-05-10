@@ -78,6 +78,8 @@ export info, info!, hasinfo
 export mine!, apply!
 export generaterules, generaterules!
 
+export partial_deepcopy
+
 include("utils/miner.jl")
 
 export Miner
