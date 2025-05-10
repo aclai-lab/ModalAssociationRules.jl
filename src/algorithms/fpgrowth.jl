@@ -439,6 +439,7 @@ function _fpgrowth_count_phase(
     end
 end
 
+
 function anchored_fpgrowth(miner::AbstractMiner, X::MineableData; kwargs...)::Nothing
     try
         isanchored_miner(miner)
@@ -446,7 +447,17 @@ function anchored_fpgrowth(miner::AbstractMiner, X::MineableData; kwargs...)::No
         rethrow()
     end
 
-    # TODO - separate propositional motifs of different length here
+    # separate the propositional items (the anchors) from modal literals
+    _items = items(miner)
+    anchor_items = filter(item -> formula(item) isa Atom, _items)
+    modal_literals = setdiff(_items, anchor_items)
+
+    # within the anchors, further separate by dimension of the wrapped references
+    # (e.g., a scalar, whose size is "()", or a sequence, whose size is "(1,)" and so on);
+    anchor_groups = SoleBase._groupby(item -> formula(item) |> SoleLogics.value |>
+        SoleData.metacond |> SoleData.feature |> refsize, anchor_items)
+
+
 
     # fpgrowth is going to express the anchored semantics, thus, is safe to call it
     fpgrowth(miner, X; kwargs...)

@@ -42,11 +42,11 @@ items = Vector{Item}([p, q, r, lp, lq, lr])
 # 0.1 is the local minsup, while 0.2 is the global minsup.
 itemsetmeasures = [(gsupport, 0.1, 0.2)]
 # 0.3 is the local minconfidence, while 0.5 is the global one.
-rulemeasures = [(gconfidence, 0.3, 0.5)]
+arulemeasures = [(gconfidence, 0.3, 0.5)]
 
 # choose an association rule mining algorithm, like fpgrowth;
 # we can finally define a Miner machine.
-miner = Miner(X, fpgrowth, items, itemsetmeasures, rulemeasures)
+miner = Miner(X, fpgrowth, items, itemsetmeasures, arulemeasures)
 ```
 
 Miner execution and results retrieval.
@@ -65,7 +65,7 @@ miner = Miner(
     fpgrowth,
     items,
     itemsetmeasures,
-    rulemeasures,
+    arulemeasures,
 
     # we specify a condition that the worlds of the logiset X must honor
     worldfilter=SoleLogics.FunctionalWorldFilter(

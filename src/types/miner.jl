@@ -16,7 +16,7 @@ For example, [`Miner`](@ref) does completely implement the interface while
 - arules(miner::AbstractMiner)
 
 - itemsetmeasures(miner::AbstractMiner)
-- rulemeasures(miner::AbstractMiner)
+- arulemeasures(miner::AbstractMiner)
 
 - localmemo(miner::AbstractMiner)
 - localmemo!(miner::AbstractMiner)
@@ -94,14 +94,14 @@ See also [`AbstractMiner`](@ref), [`Itemset`](@ref).
 itemsetmeasures(::AbstractMiner) = error("Not implemented")
 
 """
-    rulemeasures(miner::AbstractMiner)
+    arulemeasures(miner::AbstractMiner)
 
 Getter for `miner`'s collection dedicated to store the [`MeaningfulnessMeasure`](@ref)s
 that must be honored by all the extracted [`ARule`](@ref)s.
 
 See also [`AbstractMiner`](@ref), [`ARule`](@ref).
 """
-rulemeasures(::AbstractMiner) = error("Not implemented")
+arulemeasures(::AbstractMiner) = error("Not implemented")
 
 
 
@@ -300,10 +300,10 @@ end
 Return all the [`MeaningfulnessMeasures`](@ref) wrapped by `miner`.
 
 See also [`AbstractMiner`](@ref), [`itemsetmeasures`](@ref),
-[`MeaningfulnessMeasure`](@ref), [`rulemeasures`](@ref).
+[`MeaningfulnessMeasure`](@ref), [`arulemeasures`](@ref).
 """
 function measures(miner::AbstractMiner)::Vector{<:MeaningfulnessMeasure}
-    return vcat(itemsetmeasures(miner), rulemeasures(miner))
+    return vcat(itemsetmeasures(miner), arulemeasures(miner))
 end
 
 """
@@ -330,7 +330,7 @@ function findmeasure(
         if isa(e, ArgumentError)
             error("The provided miner has no measure $meas. " *
             "Maybe the miner is not initialized properly, and $meas is omitted. " *
-            "Please use itemsetmeasures/rulemeasures to check which measures are , " *
+            "Please use itemsetmeasures/arulemeasures to check which measures are , " *
             "available and miner's setters to add a new measures and their thresholds.")
         end
     end
@@ -430,10 +430,10 @@ The strategy followed is
 at section 2.2.
 
 To establish the meaningfulness of each association rule, check if it meets the global
-constraints specified in `rulemeasures(miner)`, and yields the rule if so.
+constraints specified in `arulemeasures(miner)`, and yields the rule if so.
 
 See also [`AbstractMiner`](@ref), [`ARule`](@ref), [`Itemset`](@ref),
-[`rulemeasures`](@ref).
+[`arulemeasures`](@ref).
 """
 @resumable function generaterules(::AbstractVector{Itemset}, ::AbstractMiner)
     error("Not implemented")
@@ -484,7 +484,32 @@ function all_arule_analysis(miner::AbstractMiner, args...; kwargs...)
 end
 
 
+# utilities
+
+"""
+    partial_deepcopy(original::AbstractMiner)
+
+Deepcopy an [`AbstractMiner`](@ref), but maintain a reference to the original data wrapped
+from the original miner.
+
+See also [`AbstractMiner`](@ref).
+"""
+function partial_deepcopy(original::AbstractMiner)
+    error("Not implemented.")
+end
+
+
+"""
+
+Partition the atoms wrapped within an [`AbstractMiner`](@ref),
+"""
+function partition_atoms(miner::AbstractMiner)
+end
+
+
+
 # interface extending dispatches coming from external packages
+
 
 """
     function SoleLogics.frame(::AbstractMiner)

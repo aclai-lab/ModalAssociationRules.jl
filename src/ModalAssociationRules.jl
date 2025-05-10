@@ -63,7 +63,7 @@ include("types/miner.jl")
 export AbstractMiner
 export data, algorithm
 export items, freqitems, arules
-export itemsetmeasures, rulemeasures
+export itemsetmeasures, arulemeasures
 
 export measures, findmeasure
 export getlocalthreshold, getglobalthreshold

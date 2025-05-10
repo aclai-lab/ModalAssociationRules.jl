@@ -259,11 +259,11 @@ itemsetmeasures(miner::Miner)::Vector{<:MeaningfulnessMeasure} =
 miner.itemset_constrained_measures
 
 """
-rulemeasures(miner::Miner)::Vector{<:MeaningfulnessMeasure}
+arulemeasures(miner::Miner)::Vector{<:MeaningfulnessMeasure}
 
-See [`rulemeasures(miner::AbstractMiner)`](@ref).
+See [`arulemeasures(miner::AbstractMiner)`](@ref).
 """
-rulemeasures(miner::Miner)::Vector{<:MeaningfulnessMeasure} =
+arulemeasures(miner::Miner)::Vector{<:MeaningfulnessMeasure} =
 miner.arule_constrained_measures
 
 """
@@ -441,7 +441,7 @@ function Base.show(io::IO, miner::Miner)
 
     println(io, "Alphabet: $(items(miner))\n")
     println(io, "Items measures: $(itemsetmeasures(miner))")
-    println(io, "Rules measures: $(rulemeasures(miner))\n")
+    println(io, "Rules measures: $(arulemeasures(miner))\n")
 
     println(io, "# of frequent patterns mined: $(length(freqitems(miner)))")
     println(io, "# of association rules mined: $(length(arules(miner)))\n")
@@ -546,7 +546,7 @@ See [`generaterules(::AbstractVector{Itemset}, ::AbstractMiner)`](@ref).
     itemsets::AbstractVector{Itemset},
     miner::Miner;
     # TODO: this parameter is momentary and enables the computation of additional metrics
-    # other than the `rulemeasures` specified within `miner`.
+    # other than the `arulemeasures` specified within `miner`.
     compute_additional_metrics::Bool=true
 )
     # From the original paper at 3.4 here:
@@ -596,7 +596,7 @@ See [`generaterules(::AbstractVector{Itemset}, ::AbstractMiner)`](@ref).
             interesting = true
 
             # compute meaningfulness measures
-            for meas in rulemeasures(miner)
+            for meas in arulemeasures(miner)
                 (gmeas_algo, lthreshold, gthreshold) = meas
                 gmeas_result = gmeas_algo(
                     currentrule, data(miner), lthreshold, miner)
@@ -614,7 +614,7 @@ See [`generaterules(::AbstractVector{Itemset}, ::AbstractMiner)`](@ref).
                 if compute_additional_metrics
                     # TODO: deprecate `compute_additional_metrics` kwarg and move this code
                     # in the cycle where a generic global measure is computed.
-                    (_, __lthreshold, _) = rulemeasures(miner) |> first
+                    (_, __lthreshold, _) = arulemeasures(miner) |> first
 
                     for gmeas_algo in [glift, gconviction, gleverage]
                         gmeas_algo(currentrule, data(miner), __lthreshold, miner)
@@ -639,7 +639,7 @@ function _parallel_generaterules(
     itemsets::AbstractVector{Itemset},
     miner::Miner;
     # TODO: this parameter is momentary and enables the computation of additional metrics
-    # other than the `rulemeasures` specified within `miner` (remove).
+    # other than the `arulemeasures` specified within `miner` (remove).
     compute_additional_metrics::Bool=false
 )
     @threads for itemset in filter(x -> length(x) >= 2, itemsets)
@@ -675,7 +675,7 @@ function _parallel_generaterules(
             end
 
             interesting = true
-            for meas in rulemeasures(miner)
+            for meas in arulemeasures(miner)
                 (gmeas_algo, lthreshold, gthreshold) = meas
                 gmeas_result = gmeas_algo(
                     currentrule, data(miner), lthreshold, miner)
@@ -693,7 +693,7 @@ function _parallel_generaterules(
                 if compute_additional_metrics
                     # TODO: deprecate `compute_additional_metrics` kwarg and move this code
                     # in the cycle where a generic global measure is computed.
-                    (_, __lthreshold, _) = rulemeasures(miner) |> first
+                    (_, __lthreshold, _) = arulemeasures(miner) |> first
 
                     for gmeas_algo in [glift, gconviction, gleverage]
                         gmeas_algo(currentrule, data(miner), __lthreshold, miner)
@@ -712,7 +712,47 @@ function _parallel_generaterules(
     return arules(miner)
 end
 
-# some utilities and new dispatches coming from external packages
+
+# utilities
+
+
+"""
+    partial_deepcopy(original::Miner, newitems::Union{nothing,Vector{I}}=nothing)
+
+Use this method if you need to split a [`Miner`](@ref) in multiple pieces before performing
+learning.
+
+Deepcopy an [`Miner`](@ref), but maintain a reference to the original data wrapped
+from the original miner.
+
+If `newitems` argument is set, the [`items`](@ref) from the original miner are overloaded
+with the ones provided.
+
+See also [`Miner`](@ref).
+"""
+function partial_deepcopy(
+    original::Miner;
+    newitems::Union{Nothing,Vector{I}}=nothing
+) where {I<:Item}
+    if isnothing(newitems)
+        newitems = deepcopy(original |> items)
+    end
+
+    return Miner(
+        original.X, # keep the reference here
+        deepcopy(original |> algorithm),
+        newitems,
+        deepcopy(original |> itemsetmeasures),
+        deepcopy(original |> arulemeasures);
+        worldfilter = deepcopy(original |> worldfilter),
+        itemset_policies = deepcopy(original |> itemset_policies),
+        arule_policies = deepcopy(original |> arule_policies),
+        info = deepcopy(original |> info)
+    )
+end
+
+# dispatches coming for external packages
+
 
 """
     function SoleLogics.frame(miner::AbstractMiner)

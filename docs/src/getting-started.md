@@ -102,7 +102,7 @@ items(miner::Miner)
 measures(miner::Miner)
 findmeasure(miner::Miner,meas::Function; recognizer::Function=islocalof)
 itemsetmeasures(miner::Miner)
-rulemeasures(miner::Miner)
+arulemeasures(miner::Miner)
 
 getlocalthreshold(miner::Miner, meas::Function)
 getglobalthreshold(miner::Miner, meas::Function)

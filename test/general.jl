@@ -112,7 +112,7 @@ mine!(fpgrowth_miner)
 @test items(Miner(X1, apriori, manual_items)) == manual_items
 
 @test itemsetmeasures(fpgrowth_miner) == _itemsetmeasures
-@test rulemeasures(fpgrowth_miner) == _rulemeasures
+@test arulemeasures(fpgrowth_miner) == _rulemeasures
 
 function _association_rules_test1(miner::Miner)
     countdown = 3
@@ -147,7 +147,7 @@ _temp_miner = Miner(X2, fpgrowth, manual_items, [(gsupport, 0.1, 0.1)], _rulemea
 @test _temp_miner.globalmemo == GmeasMemo()
 
 @test length(itemsetmeasures(_temp_miner)) == 1
-@test length(rulemeasures(_temp_miner)) == 1
+@test length(arulemeasures(_temp_miner)) == 1
 @test length(ModalAssociationRules.measures(_temp_miner)) == 2
 
 @test_nowarn findmeasure(_temp_miner, lsupport, recognizer=islocalof)
@@ -433,7 +433,7 @@ _genericMiner = genericMiner()
 @test_throws ErrorException freqitems(_genericMiner)
 @test_throws ErrorException arules(_genericMiner)
 @test_throws ErrorException itemsetmeasures(_genericMiner)
-@test_throws ErrorException rulemeasures(_genericMiner)
+@test_throws ErrorException arulemeasures(_genericMiner)
 @test_throws ErrorException localmemo(_genericMiner)
 @test_throws ErrorException globalmemo(_genericMiner)
 @test_throws ErrorException worldfilter(_genericMiner)

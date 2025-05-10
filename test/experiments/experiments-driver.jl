@@ -98,7 +98,7 @@ end
 # general experiment logic
 function experiment!(miner::Miner, reportname::String)
     # check that miner provides both confidence and lift measures
-    _allmeasures = first.(rulemeasures(miner))
+    _allmeasures = first.(arulemeasures(miner))
     gconfidence in _allmeasures || throw(DomainError, "Miner does not provide gconfidence.")
     glift in _allmeasures || throw(DomainError, "Miner does not provide glift.")
 
