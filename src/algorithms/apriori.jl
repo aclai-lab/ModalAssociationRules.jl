@@ -124,15 +124,10 @@ See also [`AbstractMiner`](@ref), [`apriori`](@ref), [`isanchored_itemset`](@ref
 [`MineableData`](@ref).
 """
 function anchored_apriori(miner::AbstractMiner, X::MineableData; kwargs...)::Nothing
-    _itemset_policies = itemset_policies(miner)
-    _isanchored_index = findfirst(
-        policy -> policy |> Symbol == :_isanchored_itemset, _itemset_policies)
-
-    if isnothing(_isanchored_index) || getfield(
-        _itemset_policies[_isanchored_index], :ignoreuntillength) == 0
-
-        throw(AssertionError("The miner must possess isanchored_itemset " *
-            "policy, with ignoreuntillength parameter set to 1 or higher"))
+    try
+        isanchored_miner(miner)
+    catch
+        rethrow()
     end
 
     # apriori is going to express the anchored semantics, thus, is safe to call it
