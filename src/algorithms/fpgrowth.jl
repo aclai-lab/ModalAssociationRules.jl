@@ -458,12 +458,18 @@ function anchored_fpgrowth(miner::AbstractMiner; kwargs...)::Nothing
     anchor_groups = SoleBase._groupby(item -> formula(item) |> SoleLogics.value |>
         SoleData.metacond |> SoleData.feature |> refsize, anchor_items)
 
-    miners = [partial_deepcopy(miner; newitems=group) for (_size,group) in anchor_groups]
+    # build one miner for each group of anchors, each of which contains the group itself
+    # enriched with all the modal_literals set.
+    miners = [partial_deepcopy(
+        miner; newitems=vcat(group,modal_literals)) for (_size, group) in anchor_groups]
 
-    # fpgrowth is going to express the anchored semantics, thus, is safe to call it
-    Threads.@threads for _miner in miners
-        fpgrowth(_miner, X; kwargs...)
+    # perform multiple fpgrowth calls in parallel and reduce the results together
+    tasks = map(miners) do _miner
+        Threads.@spawn _fpgrowth(_miner; kwargs...)
     end
+    results = fetch.(tasks)
+
+    local_results = bulldozer_reduce(local_results)
 
 end
 

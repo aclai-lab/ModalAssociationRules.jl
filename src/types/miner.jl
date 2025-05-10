@@ -498,6 +498,45 @@ function partial_deepcopy(original::AbstractMiner)
     error("Not implemented.")
 end
 
+"""
+    miner_reduce(miners::AbstractVector{M}) where {M<:AbstractMiner}
+
+Reduce multiple [`AbstractMiner`](@ref), obtaining a new miner of the same type, wrapping
+all the items within `miners` vector, as well as the data related to [`localmemo`](@ref)
+and [`globalmemo`](@ref) [`MeaningfulnessMeasure`](@ref)s.
+
+!!! note
+    Be careful, only information between items, and local and global meaningfulness measures
+    are reduced together. The assumption is that everything else can virtually be ignored
+    (e.g., [`info`](@ref), [`worldfilter`], [`itemset_policies`](@ref), etc.)
+
+See also [`AbstractMiner0`](@ref), [`localmemo`](@ref), [`MeaningfulnessMeasure`](@ref),
+[`globalmemo`](@ref).
+"""
+function miner_reduce(miners::AbstractVector{M}) where {M<:AbstractMiner}
+    main_miner = miners |> first
+
+    decant = (to, from) -> begin
+        for k in keys(from)
+            to[k] = from[k]
+        end
+    end
+
+    # decant all the other miners in the first one
+    for secondary_miner in miners[2:end]
+        # decant all the items
+        union!(main_miner |> items, secondary_miner |> items)
+
+        # decant the info related to local meaningfulness measure
+        decant(main_miner |> localmemo, secondary_miner |> localmemo)
+
+        # decant the info related to global meaningfulness measures
+        decant(main_miner |> globalmemo, secondary_miner |> globalmemo)
+    end
+
+    return main_miner
+end
+
 
 # interface extending dispatches coming from external packages
 
