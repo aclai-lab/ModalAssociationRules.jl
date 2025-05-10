@@ -499,15 +499,6 @@ function partial_deepcopy(original::AbstractMiner)
 end
 
 
-"""
-
-Partition the atoms wrapped within an [`AbstractMiner`](@ref),
-"""
-function partition_atoms(miner::AbstractMiner)
-end
-
-
-
 # interface extending dispatches coming from external packages
 
 
