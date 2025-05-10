@@ -494,7 +494,7 @@ function partial_deepcopy(original::AbstractMiner)
 end
 
 """
-    miner_reduce(miners::AbstractVector{M}) where {M<:AbstractMiner}
+    miner_reduce!(miners::AbstractVector{M}) where {M<:AbstractMiner}
 
 Reduce multiple [`AbstractMiner`](@ref), obtaining a new miner of the same type, wrapping
 all the items within `miners` vector, as well as the data related to [`localmemo`](@ref)
@@ -508,7 +508,7 @@ and [`globalmemo`](@ref) [`MeaningfulnessMeasure`](@ref)s.
 See also [`AbstractMiner0`](@ref), [`localmemo`](@ref), [`MeaningfulnessMeasure`](@ref),
 [`globalmemo`](@ref).
 """
-function miner_reduce(miners::AbstractVector{M}) where {M<:AbstractMiner}
+function miner_reduce!(miners::AbstractVector{M}) where {M<:AbstractMiner}
     main_miner = miners |> first
 
     decant = (to, from) -> begin

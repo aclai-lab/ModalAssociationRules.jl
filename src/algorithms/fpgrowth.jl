@@ -182,7 +182,7 @@ function fpgrowth(miner::M)::M where {M<:AbstractMiner}
 
     # reduce all the local-memoization structures obtained before,
     # and proceed to compute global supports
-    local_results = bulldozer_reduce(local_results)
+    local_results = miner_reduce!(local_results)
     fpgrowth_fragments = load_localmemo!(miner, local_results)
 
     # global setting
@@ -469,9 +469,8 @@ function anchored_fpgrowth(miner::AbstractMiner; kwargs...)::Nothing
     tasks = map(miners) do _miner
         Threads.@spawn fpgrowth(_miner; kwargs...)
     end
-    results = fetch.(tasks)
+    resulting_miner = miner_reduce!(fetch.(tasks))
 
-    local_results = miner_reduce(local_results)
 
 end
 

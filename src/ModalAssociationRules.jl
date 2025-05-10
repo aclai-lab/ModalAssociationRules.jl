@@ -78,7 +78,7 @@ export info, info!, hasinfo
 export mine!, apply!
 export generaterules, generaterules!
 
-export partial_deepcopy, miner_reduce
+export partial_deepcopy, miner_reduce!
 
 include("utils/miner.jl")
 
@@ -91,7 +91,6 @@ include("utils/bulldozer.jl")
 
 export Bulldozer
 export datalock, memolock, miningstatelock
-export bulldozer_reduce
 export frame
 
 include("meaningfulness-measures.jl")

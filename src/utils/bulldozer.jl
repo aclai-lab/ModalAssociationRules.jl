@@ -329,14 +329,14 @@ measures(bulldozer::Bulldozer) = itemsetmeasures(bulldozer)
 # utilities
 
 """
-    function bulldozer_reduce(b1::Bulldozer, b2::Bulldozer)::LmeasMemo
+    function miner_reduce!(b1::Bulldozer, b2::Bulldozer)::LmeasMemo
 
 Reduce many [`Bulldozer`](@ref)s together, merging their local memo structures in linear
 time.
 
 See also [`LmeasMemo`](@ref), [`localmemo(::Bulldozer)`](@ref);
 """
-function bulldozer_reduce(local_results::AbstractVector{<:Bulldozer})
+function miner_reduce!(local_results::AbstractVector{B}) where {B<:Bulldozer}
     b1lmemo = local_results |> first |> localmemo
 
     for i in 2:length(local_results)
