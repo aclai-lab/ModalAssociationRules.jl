@@ -719,34 +719,52 @@ end
 """
     partial_deepcopy(original::Miner, newitems::Union{nothing,Vector{I}}=nothing)
 
-Use this method if you need to split a [`Miner`](@ref) in multiple pieces before performing
-learning.
-
-Deepcopy an [`Miner`](@ref), but maintain a reference to the original data wrapped
+Deepcopy a [`Miner`](@ref), but maintain a reference to the original data wrapped
 from the original miner.
 
-If `newitems` argument is set, the [`items`](@ref) from the original miner are overloaded
-with the ones provided.
+This is useful if you need to split a Miner in many pieces to
+extract frequent [`Itemset`](@ref)s with different characteristics, while maintaining a
+common reference to the same [`MineableData`](@ref).
 
-See also [`Miner`](@ref).
+# Arguments
+- `original::Miner`: the miner from which perform deepcopy.
+
+# Keyword Arguments
+- `new_items::Union{Nothing,Vector{I}}=nothing`: overwrites [`items`](@ref) collection;
+- `new_worldfilter::Union{Nothing,WorldFilter}`: overwrites [`worldfilter`](@ref);
+- `new_itemset_policies`::Union{Nothing,Vector{<:Function}}`: overwrites [`itemset_policies`](@ref);
+- `new_arule_policies`::Union{Nothing,Vector{<:Function}}`: overwritest [`arule_policies`](@ref).
+
+See also [`anchored_fpgrowth`](@ref), [`arule_policies`](@ref), [`items`](@ref),
+[`Itemset`](@ref), [`itemset_policies`](@ref), [`MineableData`](@ref), [`Miner`](@ref),
+[`worldfilter`](@ref).
 """
 function partial_deepcopy(
     original::Miner;
-    newitems::Union{Nothing,Vector{I}}=nothing
+    new_items::Union{Nothing,Vector{I}}=nothing
 ) where {I<:Item}
-    if isnothing(newitems)
-        newitems = deepcopy(original |> items)
+    if isnothing(new_items)
+        new_items = deepcopy(original |> items)
+    end
+    if isnothing(new_worldfilter)
+        new_worldfilter = deepcopy(original |> worldfilter)
+    end
+    if isnothing(new_itemset_policies)
+        new_itemset_policies = deepcopy(original |> itemset_policies)
+    end
+    if isnothing(new_arule_policies)
+        new_arule_policies = deepcopy(original |> arule_policies)
     end
 
     return Miner(
         data(original), # keep the reference here
         deepcopy(original |> algorithm),
-        newitems,
+        new_items,
         deepcopy(original |> itemsetmeasures),
         deepcopy(original |> arulemeasures);
-        worldfilter = deepcopy(original |> worldfilter),
-        itemset_policies = deepcopy(original |> itemset_policies),
-        arule_policies = deepcopy(original |> arule_policies),
+        worldfilter = new_worldfilter,
+        itemset_policies = new_itemset_policies,
+        arule_policies = new_arule_policies,
         info = deepcopy(original |> info)
     )
 end
