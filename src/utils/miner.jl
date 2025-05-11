@@ -744,7 +744,10 @@ See also [`anchored_fpgrowth`](@ref), [`arule_policies`](@ref), [`items`](@ref),
 """
 function partial_deepcopy(
     original::Miner;
-    new_items::Union{Nothing,Vector{I}}=nothing
+    new_items::Union{Nothing,Vector{I}}=nothing,
+    new_worldfilter::Union{Nothing,WorldFilter}=nothing,
+    new_itemset_policies::Union{Nothing,Vector{<:Function}}=nothing,
+    new_arule_policies::Union{Nothing,Vector{<:Function}}=nothing
 ) where {I<:Item}
     if isnothing(new_items)
         new_items = deepcopy(original |> items)
