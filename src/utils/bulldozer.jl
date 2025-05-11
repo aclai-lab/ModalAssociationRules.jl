@@ -89,7 +89,7 @@ struct Bulldozer{D<:MineableData,I<:Item} <: AbstractMiner
     end
 
     function Bulldozer(miner::Miner, instancesrange::UnitRange{<:Integer}; kwargs...)
-        data_slice = slicedataset(data(miner), instancesrange; kwargs...)
+        data_slice = slicedataset(data(miner), instancesrange)
 
         return Bulldozer(
                 data_slice,
@@ -98,7 +98,8 @@ struct Bulldozer{D<:MineableData,I<:Item} <: AbstractMiner
                 itemsetmeasures(miner),
                 worldfilter=deepcopy(worldfilter(miner)),
                 itemset_policies=deepcopy(itemset_policies(miner)),
-                miningstate=deepcopy(miningstate(miner))
+                miningstate=deepcopy(miningstate(miner));
+                kwargs...
             )
     end
 
