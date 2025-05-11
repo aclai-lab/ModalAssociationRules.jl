@@ -173,7 +173,8 @@ function fpgrowth(miner::M)::M where {M<:AbstractMiner}
 
     chunks = Iterators.partition(1:_ninstances, div(_ninstances, Threads.nthreads()))
     tasks = map(chunks) do chunk
-        Threads.@spawn _fpgrowth(Bulldozer(miner, chunk))
+        Threads.@spawn _fpgrowth(
+            Bulldozer(miner, chunk; itemset_policies=itemset_policies(miner)))
     end
     local_results = fetch.(tasks)
 
@@ -188,17 +189,19 @@ function fpgrowth(miner::M)::M where {M<:AbstractMiner}
         saveflag = true
 
         # apply frequent items mining policies here
-        for policy in itemset_policies(miner)
-            if !policy(itemset)
-                saveflag = false
-                break
-            end
-        end
+        # NOTE - policies are already checked in _fpgrowth_count_phase, where itemsets
+        # are generated and also tested against local meaningfulness measures
+        # for policy in itemset_policies(miner)
+        #     if !policy(itemset)
+        #         saveflag = false
+        #         break
+        #     end
+        # end
 
-        if !saveflag
-            # atleast one policy does not hold
-            continue
-        end
+        # if !saveflag
+        #     # atleast one policy does not hold
+        #     continue
+        # end
 
         # manually compute and save miner's global support if >= min threhsold;
         _threshold = getglobalthreshold(miner, gsupport)
@@ -304,7 +307,7 @@ function _fpgrowth_kernel(
     miner::Bulldozer{D,I},
     leftout_fptree::FPTree
 ) where {D<:MineableData,I<:Item}
-    # if `fptree` contains only one path (hence, it can be considered a linked list),
+    # if `fptree` contains only one path (i.e., it is a linked list),
     # then combine all the Itemsets collected from previous step with the remained ones.
     if islist(fptree)
         # all the survived items, from which compose new frequent itemsets
@@ -399,6 +402,7 @@ function _fpgrowth_count_phase(
             _combo -> all(__policy -> __policy(_combo), itemset_policies(miner)),
             combine_items(survivor_itemset, leftout_itemset)
         )
+
         # each combo must be reshaped, following a certain order specified
         # universally by the miner (lexicographic ordering).
         sort!(combo)
@@ -465,9 +469,11 @@ function anchored_fpgrowth(miner::M; kwargs...)::M where {M<:AbstractMiner}
             # size(::GeometricalWorld) is implemented in SoleLogics; see the following issue
             # https://github.com/aclai-lab/SoleLogics.jl/issues/68
             new_worldfilter=SoleLogics.FunctionalWorldFilter(
-                interval -> interval.y - interval.x + 1 == _item_refsize(group |> first), Interval{Int})
+                interval -> (interval.y - interval.x,) == groupsize, Interval{Int})
         )
-        for (_size, group) in anchor_groups
+
+        # groupsize here means "the size of every VariableDistance element in a group"
+        for (groupsize, group) in anchor_groups
     ]
 
     # perform multiple fpgrowth calls in parallel and reduce the results together
@@ -478,7 +484,7 @@ function anchored_fpgrowth(miner::M; kwargs...)::M where {M<:AbstractMiner}
     # NOTE - miner_reduce! is currently called with default kwargs, as they are virtually
     # always the best choice
 
-    resulting_miner = miner_reduce!(fetch.(tasks))
+    resulting_miner = miner_reduce!(fetch.(tasks); includelmemo=true)
 
     # perform one latest reduce operation to overwrite the argument miner;
     # this is a bit of overhead.

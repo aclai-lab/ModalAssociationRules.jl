@@ -297,17 +297,23 @@ end
 """
     isanchored_miner(miner::AbstractMiner)
 
-Check if `miner` is provided of the `isanchored_itemset` policy and, in particular,
-if `ignoreuntillength` parameter is set to 1 or above.
+Check if `miner` is provided of both `isdimensionally_coherent_itemset` and
+`isanchored_itemset` policy and, in particular, if `ignoreuntillength` parameter is set to 1
+or above in the latter.
 
-See also [`AbstractMiner`](@ref), [`isanchored_itemset`](@ref).
+See also [`AbstractMiner`](@ref), [`isanchored_itemset`](@ref),
+[`isdimensionally_coherent_itemset`](@ref).
 """
 function isanchored_miner(miner::AbstractMiner)
     _itemset_policies = itemset_policies(miner)
+
     _isanchored_index = findfirst(
         policy -> policy |> Symbol == :_isanchored_itemset, _itemset_policies)
 
-    if isnothing(_isanchored_index) || getfield(
+    _isdimensionally_coherent = findfirst(
+        policy -> policy |> Symbol == :_isdimensionally_coherent, _itemset_policies)
+
+    if isnothing(_isanchored_index) || isnothing(_isdimensionally_coherent) || getfield(
         _itemset_policies[_isanchored_index], :ignoreuntillength) == 0
 
         throw(AssertionError("The miner must possess isanchored_itemset " *
