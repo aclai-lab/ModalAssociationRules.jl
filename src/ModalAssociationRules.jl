@@ -135,6 +135,10 @@ include("algorithms/fpgrowth.jl")
 export patternbase, bounce!, projection
 export fpgrowth, anchored_fpgrowth
 
+include("algorithms/anchored-semantics.jl")
+
+export anchored_semantics
+
 include("alphabet-proposal.jl")
 export motifsalphabet
 
