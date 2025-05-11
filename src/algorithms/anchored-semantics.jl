@@ -3,6 +3,8 @@
     anchored_semantics(miner::M, miningalgo; kwargs...)::M where {M<:AbstractMiner}
 
 Logic to be executed before `miningalgo` to make the latter coherent with Anchored.
+
+Keyword arguments are forwarded to `miningalgo`.
 """
 function anchored_semantics(
     miner::M,
