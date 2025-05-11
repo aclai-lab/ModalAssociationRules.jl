@@ -15,13 +15,15 @@ function isanchored_miner(miner::AbstractMiner)
         policy -> policy |> Symbol == :_isanchored_itemset, _itemset_policies)
 
     _isdimensionally_coherent = findfirst(
-        policy -> policy |> Symbol == :_isdimensionally_coherent, _itemset_policies)
+        policy -> policy |> Symbol == :_isdimensionally_coherent_itemset, _itemset_policies)
 
     if isnothing(_isanchored_index) || isnothing(_isdimensionally_coherent) || getfield(
         _itemset_policies[_isanchored_index], :ignoreuntillength) == 0
 
-        throw(AssertionError("The miner must possess isanchored_itemset " *
-            "policy, with ignoreuntillength parameter set to 1 or higher"))
+        throw(AssertionError("The miner must possess both isdimensionally_coherent_itemset " *
+            "and anchored_itemset policy, the latter with ignoreuntillength parameter set to 1 " *
+            "or higher."
+        ))
     end
 end
 
