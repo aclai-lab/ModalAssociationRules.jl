@@ -423,7 +423,17 @@ function _fpgrowth_count_phase(
     end
 end
 
+"""
+    function anchored_fpgrowth(miner::M; kwargs...)::M where {M<:AbstractMiner}
 
+Implementation of [`fpgrowth`](@ref) with *anchored semantics*.
+Essentially, [`Item`](@ref)s are `SoleData.VariableDistance`s wrapping motifs.
+
+More information about motifs: <insert-link>
+More information about the implementation: <insert-link>
+
+See also [`AbstractMiner`](@ref), ['fpgrowth`](@ref), [`Item`](@ref).
+"""
 function anchored_fpgrowth(miner::M; kwargs...)::M where {M<:AbstractMiner}
     try
         isanchored_miner(miner)
@@ -436,23 +446,32 @@ function anchored_fpgrowth(miner::M; kwargs...)::M where {M<:AbstractMiner}
     anchor_items = filter(item -> formula(item) isa Atom, _items)
     modal_literals = setdiff(_items, anchor_items)
 
+    # lambda to return the refsize of a VariableIstance wrapped within the item
+    _item_refsize = item -> formula(item) |> SoleLogics.value |> SoleData.metacond |>
+        SoleData.feature |> refsize
+
     # within the anchors, further separate by dimension of the wrapped references
     # (e.g., a scalar, whose size is "()", or a sequence, whose size is "(1,)" and so on);
-    anchor_groups = SoleBase._groupby(item -> formula(item) |> SoleLogics.value |>
-        SoleData.metacond |> SoleData.feature |> refsize, anchor_items)
+    anchor_groups = SoleBase._groupby(item -> _item_refsize(item), anchor_items)
 
     # build one miner for each group of anchors, each of which contains the group itself
     # enriched with all the modal_literals set.
-    miners = [partial_deepcopy(
-        miner; newitems=vcat(group,modal_literals)) for (_size, group) in anchor_groups]
+    miners = [
+        partial_deepcopy(
+            miner;
+            new_items=vcat(group, modal_literals),
+
+            # TODO - change interval.y - interval.x + 1 into "size(interval)" when
+            # size(::GeometricalWorld) is implemented in SoleLogics; see the following issue
+            # https://github.com/aclai-lab/SoleLogics.jl/issues/68
+            new_worldfilter=SoleLogics.FunctionalWorldFilter(
+                interval -> interval.y - interval.x + 1 == _item_refsize(group |> first), Interval{Int})
+        )
+        for (_size, group) in anchor_groups
+    ]
 
     # perform multiple fpgrowth calls in parallel and reduce the results together
     tasks = map(miners) do _miner
-
-        # TODO - after building a standard, propositional FPTree,
-        # integrate temporal literals by recursively branching every possible path
-        # and early stopping on non-meaningful ones
-
         Threads.@spawn fpgrowth(_miner; kwargs...)
     end
 
