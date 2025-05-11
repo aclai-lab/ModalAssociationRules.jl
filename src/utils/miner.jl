@@ -731,9 +731,12 @@ common reference to the same [`MineableData`](@ref).
 
 # Keyword Arguments
 - `new_items::Union{Nothing,Vector{I}}=nothing`: overwrites [`items`](@ref) collection;
-- `new_worldfilter::Union{Nothing,WorldFilter}`: overwrites [`worldfilter`](@ref);
-- `new_itemset_policies`::Union{Nothing,Vector{<:Function}}`: overwrites [`itemset_policies`](@ref);
-- `new_arule_policies`::Union{Nothing,Vector{<:Function}}`: overwritest [`arule_policies`](@ref).
+- `new_worldfilter::Union{Nothing,WorldFilter}=nothing`: overwrites
+[`worldfilter`](@ref);
+- `new_itemset_policies`::Union{Nothing,Vector{<:Function}}=nothing`: overwrites
+[`itemset_policies`](@ref);
+- `new_arule_policies`::Union{Nothing,Vector{<:Function}}=nothing`: overwrites
+[`arule_policies`](@ref).
 
 See also [`anchored_fpgrowth`](@ref), [`arule_policies`](@ref), [`items`](@ref),
 [`Itemset`](@ref), [`itemset_policies`](@ref), [`MineableData`](@ref), [`Miner`](@ref),
