@@ -88,8 +88,8 @@ struct Bulldozer{D<:MineableData,I<:Item} <: AbstractMiner
         )
     end
 
-    function Bulldozer(miner::Miner, instancesrange::UnitRange{<:Integer})
-        data_slice = slicedataset(data(miner), instancesrange)
+    function Bulldozer(miner::Miner, instancesrange::UnitRange{<:Integer}; kwargs...)
+        data_slice = slicedataset(data(miner), instancesrange; kwargs...)
 
         return Bulldozer(
                 data_slice,
@@ -102,9 +102,9 @@ struct Bulldozer{D<:MineableData,I<:Item} <: AbstractMiner
             )
     end
 
-    function Bulldozer(miner::Miner, ith_instance::Integer)
+    function Bulldozer(miner::Miner, ith_instance::Integer; kwargs...)
         # fallback to UnitRange constructor
-        Bulldozer(miner, ith_instance:ith_instance)
+        Bulldozer(miner, ith_instance:ith_instance; kwargs...)
     end
 end
 
