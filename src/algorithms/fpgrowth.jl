@@ -436,7 +436,7 @@ end
 See also [`hasminingstate`](@ref), [`MiningState`](@ref), [`miningstate`](@ref).
 """
 function initminingstate(
-    ::Union{typeof(fpgrowth), typeof(anchored_fpgrowth)},
+    ::typeof(fpgrowth),
     ::MineableData
 )::MiningState
     return MiningState([

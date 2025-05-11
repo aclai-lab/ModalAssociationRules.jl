@@ -120,3 +120,16 @@ See also [`AbstractMiner`](@ref), ['fpgrowth`](@ref), [`Item`](@ref).
 function anchored_fpgrowth(miner::M; kwargs...)::M where {M<:AbstractMiner}
     return anchored_semantics(miner, fpgrowth; kwargs...)
 end
+
+
+# forward from initminingstate(::typeof(fpgrowth))
+function initminingstate(
+    ::typeof(anchored_fpgrowth),
+    ::MineableData
+)::MiningState
+    return MiningState([
+        :instance_item_toworlds => Dict{Tuple{Int,Itemset},WorldMask}([]),
+        :current_items_frequency => DefaultDict{Item,Int}(0),
+        :current_instance => 1
+    ])
+end
