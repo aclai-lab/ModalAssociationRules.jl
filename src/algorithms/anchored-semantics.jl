@@ -83,9 +83,40 @@ function anchored_semantics(
     # NOTE - miner_reduce! is currently called with default kwargs, as they are virtually
     # always the best choice
 
-    resulting_miner = miner_reduce!(fetch.(tasks); includelmemo=true)
+    resulting_miner = miner_reduce!(fetch.(tasks))
 
     # perform one latest reduce operation to overwrite the argument miner;
     # this is a bit of overhead.
     return miner_reduce!([miner, resulting_miner])
+end
+
+"""
+    anchored_apriori(miner::AbstractMiner, X::MineableData; kwargs...)::Nothing
+
+Anchored version of [`apriori`](@ref) algorithm, that is exactly `apriori` but assuring
+that `miner` possess atleast [`isanchored_itemset`](@ref) policy, with `ignoreuntillength`
+parameter set to 1 or higher.
+
+TODO - insert a reference to TIME2025 article.
+
+See also [`AbstractMiner`](@ref), [`apriori`](@ref), [`isanchored_itemset`](@ref),
+[`MineableData`](@ref).
+"""
+function anchored_apriori(miner::M; kwargs...)::M where {M<:AbstractMiner}
+    return anchored_semantics(miner, apriori; kwargs...)
+end
+
+"""
+    function anchored_fpgrowth(miner::M; kwargs...)::M where {M<:AbstractMiner}
+
+Implementation of [`fpgrowth`](@ref) with *anchored semantics*.
+Essentially, [`Item`](@ref)s are `SoleData.VariableDistance`s wrapping motifs.
+
+More information about motifs: <insert-link>
+More information about the implementation: <insert-link>
+
+See also [`AbstractMiner`](@ref), ['fpgrowth`](@ref), [`Item`](@ref).
+"""
+function anchored_fpgrowth(miner::M; kwargs...)::M where {M<:AbstractMiner}
+    return anchored_semantics(miner, fpgrowth; kwargs...)
 end

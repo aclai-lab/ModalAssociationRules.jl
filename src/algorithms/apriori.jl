@@ -72,10 +72,7 @@ to also work with modal logic.
 
 See also [`Miner`](@ref), [`SoleBase.MineableData`](@ref).
 """
-function apriori(
-    miner::AbstractMiner;
-    verbose::Bool=false
-)::Nothing
+function apriori(miner::M; verbose::Bool=false)::M where {M<:AbstractMiner}
     _itemtype = itemtype(miner)
     X = data(miner)
 
@@ -109,27 +106,6 @@ function apriori(
 
         filter!(candidates, miner)  # apply filtering policies
     end
-end
 
-"""
-    anchored_apriori(miner::AbstractMiner, X::MineableData; kwargs...)::Nothing
-
-Anchored version of [`apriori`](@ref) algorithm, that is exactly `apriori` but assuring
-that `miner` possess atleast [`isanchored_itemset`](@ref) policy, with `ignoreuntillength`
-parameter set to 1 or higher.
-
-TODO - insert a reference to TIME2025 article.
-
-See also [`AbstractMiner`](@ref), [`apriori`](@ref), [`isanchored_itemset`](@ref),
-[`MineableData`](@ref).
-"""
-function anchored_apriori(miner::AbstractMiner; kwargs...)::Nothing
-    try
-        isanchored_miner(miner)
-    catch
-        rethrow()
-    end
-
-    # apriori is going to express the anchored semantics, thus, is safe to call it
-    apriori(miner, X; kwargs...)
+    return miner
 end

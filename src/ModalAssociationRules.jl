@@ -108,14 +108,10 @@ export islimited_length_itemset, isanchored_itemset, isdimensionally_coherent_it
 export islimited_length_arule, isanchored_arule, isheterogeneous_arule
 export isanchored_miner
 
-include("algorithms/anchored-semantics.jl")
-
-export anchored_semantics
-
 include("algorithms/apriori.jl")
 
 export combine_items, grow_prune
-export apriori, anchored_apriori
+export apriori
 
 include("data-structures.jl")
 
@@ -137,10 +133,15 @@ export checksanity!
 include("algorithms/fpgrowth.jl")
 
 export patternbase, bounce!, projection
-export fpgrowth, anchored_fpgrowth
+export fpgrowth
+
+include("algorithms/anchored-semantics.jl")
+
+export anchored_semantics
+export anchored_fpgrowth
 
 include("alphabet-proposal.jl")
-export motifsalphabet
+export anchored_apriori, motifsalphabet
 
 include("loaders/natops-loader.jl")
 include("loaders/libras-loader.jl")
