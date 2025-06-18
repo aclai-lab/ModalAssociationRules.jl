@@ -51,13 +51,26 @@ function anchored_semantics(
     anchor_items = filter(item -> formula(item) isa Atom, _items)
     modal_literals = setdiff(_items, anchor_items)
 
-    # lambda to return the refsize of a VariableIstance wrapped within the item
+    # lambda to return the refsize of a VariableDistance wrapped within the item
     _item_refsize = item -> formula(item) |> SoleLogics.value |> SoleData.metacond |>
         SoleData.feature |> refsize
 
-    # within the anchors, further separate by dimension of the wrapped references
-    # (e.g., a scalar, whose size is "()", or a sequence, whose size is "(1,)" and so on);
-    anchor_groups = SoleBase._groupby(item -> _item_refsize(item), anchor_items)
+    try
+        # within the anchors, further separate by dimension of the wrapped references
+        # (e.g., a scalar, whose size is "()", or a sequence, whose size is "(1,)" and so on);
+        anchor_groups = SoleBase._groupby(item -> _item_refsize(item), anchor_items)
+    catch e
+        if isa(e, MethodError)
+            throw(ErrorException(
+                "The items provided within the miner are not suitable for itemsets " *
+                "extraction under the anchored semantics; please provide a list of " *
+                "SoleData.VariableDistance."
+            ))
+        else
+            rethrow(e)
+        end
+    end
+
 
     # build one miner for each group of anchors, each of which contains the group itself
     # enriched with all the modal_literals set.
