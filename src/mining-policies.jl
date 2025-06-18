@@ -1,6 +1,7 @@
 # this script collects policies to regulate mining, controlling both shape and semantics
 # of the extracted frequent itemsets and association rules.
 
+using SoleData: VariableDistance
 
 # policies related to frequent itemsets mining
 
