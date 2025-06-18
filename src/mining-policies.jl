@@ -96,12 +96,12 @@ function isdimensionally_coherent_itemset(;)::Function
 
         # in particular, every Variable must not be a VariableDistance (e.g., VariableMin)
         _anchortypes = Set([feature(anchor) |> typeof for anchor in anchors])
-        if !any(_anchortype -> _anchortype <: VariableDistance, _anchortypes)
+        if !any(_anchortype -> _anchortype <: SoleData.VariableDistance, _anchortypes)
             return true
         end
 
         # or all the anchors must be VariableDistances (the two cannot be mixed)
-        if !all(type -> type <: VariableDistance, _anchortypes)
+        if !all(type -> type <: SoleData.VariableDistance, _anchortypes)
             return false
         end
 
