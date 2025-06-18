@@ -28,7 +28,7 @@ using SoleLogics: nworlds, frame, allworlds, nworlds
 using SoleLogics: filterworlds, WorldFilter
 
 using SoleData: SupportedLogiset
-using SoleData: VariableMin, VariableMax
+using SoleData: VariableMin, VariableMax, VariableDistance
 
 using StatsBase
 
