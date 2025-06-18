@@ -20,9 +20,10 @@ function isanchored_miner(miner::AbstractMiner)
     if isnothing(_isanchored_index) || isnothing(_isdimensionally_coherent) || getfield(
         _itemset_policies[_isanchored_index], :ignoreuntillength) == 0
 
-        throw(AssertionError("The miner must possess both isdimensionally_coherent_itemset " *
-            "and anchored_itemset policy, the latter with ignoreuntillength parameter set to 1 " *
-            "or higher."
+        throw(
+            AssertionError("The miner must possess both isdimensionally_coherent_itemset " *
+            "and anchored_itemset policy, the latter with ignoreuntillength parameter " *
+            "set to 1 or higher."
         ))
     end
 end
@@ -90,6 +91,42 @@ function anchored_semantics(
     return miner_reduce!([miner, resulting_miner])
 end
 
+
+"""
+    anchored_grow_prune(
+        candidates::AbstractVector{Itemset},
+        frequents::AbstractVector{Itemset},
+        k::Integer
+    )
+
+Return a generator, which yields only the `candidates` for which every (k-1)-length subset
+is in `frequents`.
+
+Differently from [`grow_prune`](@ref), this method supports anchored semantics.
+This means that, for example, the following [`Itemset`](@ref)s are not pruned
+`[[L]min[V1] > -0.5, min[V3] > -3.6]`, `[min[V3] > -3.6, [L]min[V3] > -3.6]` and can be
+merged in `[[L]min[V1] > -0.5, min[V3] > -3.6, [L]min[V3] > -3.6]`, since it would be
+impossible to generate `[[L]min[V1] > -0.5, [L]min[V3] > -3.6]`.
+
+See also [`grow_prune`](@ref), [`Itemset`](@ref).
+"""
+function anchored_grow_prune(
+    candidates::AbstractVector{Itemset{I}},
+    frequents::AbstractVector{Itemset{I}},
+    k::Integer
+) where {I<:Item}
+    return Iterators.filter(
+        itemset -> all(
+                # if combo does not contain an ancor, just ignore it;
+                # this utility is not the most convenient place to apply itemset policies
+                # related to anchoredness (e.g., during anchored apriori).
+                combo -> (Itemset{I}(combo) in frequents) || !(isanchored_itemset()(combo)),
+                combinations(itemset, k-1)
+            ),
+        combine_items(candidates, k) |> unique
+    )
+end
+
 """
     anchored_apriori(miner::AbstractMiner, X::MineableData; kwargs...)::Nothing
 
@@ -103,7 +140,7 @@ See also [`AbstractMiner`](@ref), [`apriori`](@ref), [`isanchored_itemset`](@ref
 [`MineableData`](@ref).
 """
 function anchored_apriori(miner::M; kwargs...)::M where {M<:AbstractMiner}
-    return anchored_semantics(miner, apriori; kwargs...)
+    return anchored_semantics(miner, apriori; grow_prune=anchored_grow_prune, kwargs...)
 end
 
 """

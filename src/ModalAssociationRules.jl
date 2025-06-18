@@ -138,10 +138,11 @@ export fpgrowth
 include("algorithms/anchored-semantics.jl")
 
 export anchored_semantics
+export anchored_grow_prune, anchored_apriori
 export anchored_fpgrowth
 
 include("alphabet-proposal.jl")
-export anchored_apriori, motifsalphabet
+export motifsalphabet
 
 include("loaders/natops-loader.jl")
 include("loaders/libras-loader.jl")
