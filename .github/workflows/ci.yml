@@ -12,20 +12,17 @@ jobs:
         with:
           version: "1.11.0"
 
-      - name: Add SoleBase#main
-        run: julia --project -e 'using Pkg; Pkg.add(PackageSpec(url="https://github.com/aclai-lab/SoleBase.jl", rev="main"))'
-
-      - name: Add MultiData#dev
-        run: julia --project -e 'using Pkg; Pkg.add(PackageSpec(url="https://github.com/aclai-lab/MultiData.jl", rev="main"))'
-
-      - name: Add SoleLogics#dev
-        run: julia --project -e 'using Pkg; Pkg.add(PackageSpec(url="https://github.com/aclai-lab/SoleLogics.jl", rev="dev"))'
-
-      - name: Add SoleData#dev
-        run: julia --project -e 'using Pkg; Pkg.add(PackageSpec(url="https://github.com/aclai-lab/SoleData.jl", rev="dev"))'
-
-      - name: Add SoleModels#main
-        run: julia --project -e 'using Pkg; Pkg.add(PackageSpec(url="https://github.com/aclai-lab/SoleModels.jl", rev="main"))'
+      - name: Add dependencies as in local environment
+        run: |
+          julia --project -e '
+            using Pkg;
+            Pkg.add([
+              PackageSpec(url="https://github.com/aclai-lab/SoleBase.jl", rev="main"),
+              PackageSpec(url="https://github.com/aclai-lab/MultiData.jl", rev="main"),
+              PackageSpec(url="https://github.com/aclai-lab/SoleLogics.jl", rev="dev"),
+              PackageSpec(url="https://github.com/aclai-lab/SoleData.jl", rev="dev"),
+              PackageSpec(url="https://github.com/aclai-lab/SoleModels.jl", rev="main")
+            ])'
 
       - uses: julia-actions/julia-buildpkg@v1
 
