@@ -22,7 +22,7 @@
 
         # special fields related to mining algorithms
         worldfilter::Union{Nothing,WorldFilter}
-        itemset_mining_policies::Vector{<:Function}
+        itemset_policies::Vector{<:Function}
         miningstate::MiningState
 
         # locks on data, memoization structure and miningstate structure
@@ -65,7 +65,7 @@ struct Bulldozer{D<:MineableData,I<:Item} <: AbstractMiner
 
     # special fields related to mining algorithms
     worldfilter::Union{Nothing,WorldFilter}
-    itemset_mining_policies::Vector{<:Function}
+    itemset_policies::Vector{<:Function}
     miningstate::MiningState
 
     # locks on data, memoization structure and miningstate structure
@@ -79,16 +79,16 @@ struct Bulldozer{D<:MineableData,I<:Item} <: AbstractMiner
         items::Vector{I},
         itemsetmeasures::Vector{<:MeaningfulnessMeasure};
         worldfilter::Union{Nothing,WorldFilter}=nothing,
-        itemset_mining_policies::Vector{<:Function}=Function[],
+        itemset_policies::Vector{<:Function}=Function[],
         miningstate::MiningState=MiningState()
     ) where {D<:MineableData,I<:Item}
         return new{D,I}(data, instancesrange, items, itemsetmeasures, LmeasMemo(),
-            worldfilter, itemset_mining_policies, miningstate,
+            worldfilter, itemset_policies, miningstate,
             ReentrantLock(), ReentrantLock(), ReentrantLock()
         )
     end
 
-    function Bulldozer(miner::Miner, instancesrange::UnitRange{<:Integer})
+    function Bulldozer(miner::Miner, instancesrange::UnitRange{<:Integer}; kwargs...)
         data_slice = slicedataset(data(miner), instancesrange)
 
         return Bulldozer(
@@ -97,14 +97,15 @@ struct Bulldozer{D<:MineableData,I<:Item} <: AbstractMiner
                 items(miner),
                 itemsetmeasures(miner),
                 worldfilter=deepcopy(worldfilter(miner)),
-                itemset_mining_policies=deepcopy(itemset_mining_policies(miner)),
-                miningstate=deepcopy(miningstate(miner))
+                itemset_policies=deepcopy(itemset_policies(miner)),
+                miningstate=deepcopy(miningstate(miner));
+                kwargs...
             )
     end
 
-    function Bulldozer(miner::Miner, ith_instance::Integer)
+    function Bulldozer(miner::Miner, ith_instance::Integer; kwargs...)
         # fallback to UnitRange constructor
-        Bulldozer(miner, ith_instance:ith_instance)
+        Bulldozer(miner, ith_instance:ith_instance; kwargs...)
     end
 end
 
@@ -258,11 +259,11 @@ See also [`worldfilter(::AbstractMiner)`](@ref).
 worldfilter(bulldozer::Bulldozer) = bulldozer.worldfilter
 
 """
-    itemset_mining_policies(bulldozer::Bulldozer)
+    itemset_policies(bulldozer::Bulldozer)
 
-See also [`itemset_mining_policies(::AbstractMiner)`](@ref).
+See also [`itemset_policies(::AbstractMiner)`](@ref).
 """
-itemset_mining_policies(bulldozer::Bulldozer) = bulldozer.itemset_mining_policies
+itemset_policies(bulldozer::Bulldozer) = bulldozer.itemset_policies
 
 
 """
@@ -329,14 +330,14 @@ measures(bulldozer::Bulldozer) = itemsetmeasures(bulldozer)
 # utilities
 
 """
-    function bulldozer_reduce(b1::Bulldozer, b2::Bulldozer)::LmeasMemo
+    function miner_reduce!(b1::Bulldozer, b2::Bulldozer)::LmeasMemo
 
 Reduce many [`Bulldozer`](@ref)s together, merging their local memo structures in linear
 time.
 
 See also [`LmeasMemo`](@ref), [`localmemo(::Bulldozer)`](@ref);
 """
-function bulldozer_reduce(local_results::AbstractVector{<:Bulldozer})
+function miner_reduce!(local_results::AbstractVector{B}) where {B<:Bulldozer}
     b1lmemo = local_results |> first |> localmemo
 
     for i in 2:length(local_results)

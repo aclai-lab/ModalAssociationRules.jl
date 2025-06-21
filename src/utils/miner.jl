@@ -23,8 +23,8 @@ using Base.Threads
         globalmemo::GmeasMemo           # global memoization structure
 
         worldfilter::Union{Nothing,WorldFilter}       # metarules about world filterings
-        itemset_mining_policies::Vector{<:Function}   # metarules about itemsets mining
-        arule_mining_policies::Vector{<:Function}     # metarules about arules mining
+        itemset_policies::Vector{<:Function}   # metarules about itemsets mining
+        arule_policies::Vector{<:Function}     # metarules about arules mining
 
         miningstate::MiningState        # mining algorithm miningstate (see documentation)
 
@@ -74,11 +74,11 @@ julia> my_worldfilter = SoleLogics.FunctionalWorldFilter(
     )
 
 # (optional) Establish a policy to further restrict itemsets that can be considered frequent
-julia> my_itemset_mining_policies = [islimited_length_itemset()]
+julia> my_itemset_policies = [islimited_length_itemset()]
 
 # (optional) Establish a policy to further restrict rules that can be considered
 # association rules
-julia> my_arule_mining_policies = [
+julia> my_arule_policies = [
         islimited_length_arule(), isanchored_arule(), isheterogeneous_arule()
     ]
 
@@ -86,8 +86,8 @@ julia> my_arule_mining_policies = [
 julia> miner = Miner(X, fpgrowth, my_alphabet,
         my_itemsetmeasures, my_rulemeasures,
         worldfilter=my_worldfilter,
-        itemset_mining_policies=my_itemset_mining_policies,
-        arule_mining_policies=my_arule_mining_policies
+        itemset_policies=my_itemset_policies,
+        arule_policies=my_arule_policies
     )
 
 # We mine using mine!
@@ -127,8 +127,8 @@ struct Miner{
     globalmemo::GmeasMemo           # global memoization structure
 
     worldfilter::Union{Nothing,WorldFilter}       # metarules about world filterings
-    itemset_mining_policies::Vector{<:Function}   # metarules about itemsets mining
-    arule_mining_policies::Vector{<:Function}     # metarules about arules mining
+    itemset_policies::Vector{<:Function}   # metarules about itemsets mining
+    arule_policies::Vector{<:Function}     # metarules about arules mining
 
     miningstate::MiningState        # mining algorithm miningstate (see documentation)
 
@@ -152,12 +152,12 @@ struct Miner{
         ];
 
         worldfilter::Union{Nothing,WorldFilter}=nothing,
-        itemset_mining_policies::Vector{<:Function}=Vector{Function}([
+        itemset_policies::Vector{<:Function}=Vector{Function}([
             isanchored_itemset(), # to ensure one proposition is the point-of-reference
             isdimensionally_coherent_itemset() # to ensure no different anchors coexist
 
         ]),
-        arule_mining_policies::Vector{<:Function}=Vector{Function}([
+        arule_policies::Vector{<:Function}=Vector{Function}([
             islimited_length_arule(),
             isanchored_arule(),
             isheterogeneous_arule(),
@@ -195,7 +195,7 @@ struct Miner{
             itemset_constrained_measures, arule_constrained_measures,
             Vector{Itemset}([]), Vector{ARule}([]),
             LmeasMemo(), GmeasMemo(),
-            worldfilter, itemset_mining_policies, arule_mining_policies,
+            worldfilter, itemset_policies, arule_policies,
             miningstate, info,
             ReentrantLock(), ReentrantLock(), ReentrantLock()
         )
@@ -259,11 +259,11 @@ itemsetmeasures(miner::Miner)::Vector{<:MeaningfulnessMeasure} =
 miner.itemset_constrained_measures
 
 """
-rulemeasures(miner::Miner)::Vector{<:MeaningfulnessMeasure}
+arulemeasures(miner::Miner)::Vector{<:MeaningfulnessMeasure}
 
-See [`rulemeasures(miner::AbstractMiner)`](@ref).
+See [`arulemeasures(miner::AbstractMiner)`](@ref).
 """
-rulemeasures(miner::Miner)::Vector{<:MeaningfulnessMeasure} =
+arulemeasures(miner::Miner)::Vector{<:MeaningfulnessMeasure} =
 miner.arule_constrained_measures
 
 """
@@ -343,18 +343,18 @@ See also [`worldfilter(::AbstractMiner)`](@ref).
 worldfilter(miner::Miner) = miner.worldfilter
 
 """
-    function itemset_mining_policies(miner::Miner)
+    function itemset_policies(miner::Miner)
 
-See [`itemset_mining_policies(::AbstractMiner)`](@ref).
+See [`itemset_policies(::AbstractMiner)`](@ref).
 """
-itemset_mining_policies(miner::Miner) = miner.itemset_mining_policies
+itemset_policies(miner::Miner) = miner.itemset_policies
 
 """
-    arule_mining_policies(miner::Miner)
+    arule_policies(miner::Miner)
 
-See [`itemset_mining_policies(::AbstractMiner)`](@ref).
+See [`itemset_policies(::AbstractMiner)`](@ref).
 """
-arule_mining_policies(miner::Miner) = miner.arule_mining_policies
+arule_policies(miner::Miner) = miner.arule_policies
 
 """
     miningstate!(miner::Miner, key::Symbol, val)
@@ -399,20 +399,20 @@ end
 `filter!` the [`Itemset`](@ref)s wrapped in `miner`.
 
 See also [`Base.filter!(::Vector{ARule}, ::Miner)`](@ref), [`Itemset`](@ref),
-[`itemset_mining_policies`](@ref), [`Miner`](@ref).
+[`itemset_policies`](@ref), [`Miner`](@ref).
 """
 Base.filter!(itemsets::Vector{<:Itemset}, miner::Miner) = filter!(
-    itemsets, itemset_mining_policies(miner)
+    itemsets, itemset_policies(miner)
 )
 
 """
     Base.filter!(arules::Vector{ARule}, miner::Miner)
 
-See also [`ARule`](@ref), [`arule_mining_policies`](@ref),
+See also [`ARule`](@ref), [`arule_policies`](@ref),
 [`Base.filter!(::Vector{Itemset}, ::Miner)`](@ref), [`Itemset`](@ref), [`Miner`](@ref).
 """
 Base.filter!(arules::Vector{ARule}, miner::Miner) = filter!(
-    arules, arule_mining_policies(miner)
+    arules, arule_policies(miner)
 )
 
 """
@@ -441,7 +441,7 @@ function Base.show(io::IO, miner::Miner)
 
     println(io, "Alphabet: $(items(miner))\n")
     println(io, "Items measures: $(itemsetmeasures(miner))")
-    println(io, "Rules measures: $(rulemeasures(miner))\n")
+    println(io, "Rules measures: $(arulemeasures(miner))\n")
 
     println(io, "# of frequent patterns mined: $(length(freqitems(miner)))")
     println(io, "# of association rules mined: $(length(arules(miner)))\n")
@@ -546,7 +546,7 @@ See [`generaterules(::AbstractVector{Itemset}, ::AbstractMiner)`](@ref).
     itemsets::AbstractVector{Itemset},
     miner::Miner;
     # TODO: this parameter is momentary and enables the computation of additional metrics
-    # other than the `rulemeasures` specified within `miner`.
+    # other than the `arulemeasures` specified within `miner`.
     compute_additional_metrics::Bool=true
 )
     # From the original paper at 3.4 here:
@@ -582,7 +582,7 @@ See [`generaterules(::AbstractVector{Itemset}, ::AbstractMiner)`](@ref).
 
             # apply generation policies to remove unwanted rules
             unwanted = false
-            for policy in arule_mining_policies(miner)
+            for policy in arule_policies(miner)
                 if !policy(currentrule)
                     unwanted = true
                     break
@@ -596,7 +596,7 @@ See [`generaterules(::AbstractVector{Itemset}, ::AbstractMiner)`](@ref).
             interesting = true
 
             # compute meaningfulness measures
-            for meas in rulemeasures(miner)
+            for meas in arulemeasures(miner)
                 (gmeas_algo, lthreshold, gthreshold) = meas
                 gmeas_result = gmeas_algo(
                     currentrule, data(miner), lthreshold, miner)
@@ -614,7 +614,7 @@ See [`generaterules(::AbstractVector{Itemset}, ::AbstractMiner)`](@ref).
                 if compute_additional_metrics
                     # TODO: deprecate `compute_additional_metrics` kwarg and move this code
                     # in the cycle where a generic global measure is computed.
-                    (_, __lthreshold, _) = rulemeasures(miner) |> first
+                    (_, __lthreshold, _) = arulemeasures(miner) |> first
 
                     for gmeas_algo in [glift, gconviction, gleverage]
                         gmeas_algo(currentrule, data(miner), __lthreshold, miner)
@@ -639,7 +639,7 @@ function _parallel_generaterules(
     itemsets::AbstractVector{Itemset},
     miner::Miner;
     # TODO: this parameter is momentary and enables the computation of additional metrics
-    # other than the `rulemeasures` specified within `miner` (remove).
+    # other than the `arulemeasures` specified within `miner` (remove).
     compute_additional_metrics::Bool=false
 )
     @threads for itemset in filter(x -> length(x) >= 2, itemsets)
@@ -663,7 +663,7 @@ function _parallel_generaterules(
 
             # apply generation policies to remove unwanted rules
             unwanted = false
-            for policy in arule_mining_policies(miner)
+            for policy in arule_policies(miner)
                 if !policy(currentrule)
                     unwanted = true
                     break
@@ -675,7 +675,7 @@ function _parallel_generaterules(
             end
 
             interesting = true
-            for meas in rulemeasures(miner)
+            for meas in arulemeasures(miner)
                 (gmeas_algo, lthreshold, gthreshold) = meas
                 gmeas_result = gmeas_algo(
                     currentrule, data(miner), lthreshold, miner)
@@ -693,7 +693,7 @@ function _parallel_generaterules(
                 if compute_additional_metrics
                     # TODO: deprecate `compute_additional_metrics` kwarg and move this code
                     # in the cycle where a generic global measure is computed.
-                    (_, __lthreshold, _) = rulemeasures(miner) |> first
+                    (_, __lthreshold, _) = arulemeasures(miner) |> first
 
                     for gmeas_algo in [glift, gconviction, gleverage]
                         gmeas_algo(currentrule, data(miner), __lthreshold, miner)
@@ -712,7 +712,71 @@ function _parallel_generaterules(
     return arules(miner)
 end
 
-# some utilities and new dispatches coming from external packages
+
+# utilities
+
+
+"""
+    partial_deepcopy(original::Miner, newitems::Union{nothing,Vector{I}}=nothing)
+
+Deepcopy a [`Miner`](@ref), but maintain a reference to the original data wrapped
+from the original miner.
+
+This is useful if you need to split a Miner in many pieces to
+extract frequent [`Itemset`](@ref)s with different characteristics, while maintaining a
+common reference to the same [`MineableData`](@ref).
+
+# Arguments
+- `original::Miner`: the miner from which perform deepcopy.
+
+# Keyword Arguments
+- `new_items::Union{Nothing,Vector{I}}=nothing`: overwrites [`items`](@ref) collection;
+- `new_worldfilter::Union{Nothing,WorldFilter}=nothing`: overwrites
+[`worldfilter`](@ref);
+- `new_itemset_policies`::Union{Nothing,Vector{<:Function}}=nothing`: overwrites
+[`itemset_policies`](@ref);
+- `new_arule_policies`::Union{Nothing,Vector{<:Function}}=nothing`: overwrites
+[`arule_policies`](@ref).
+
+See also [`anchored_fpgrowth`](@ref), [`arule_policies`](@ref), [`items`](@ref),
+[`Itemset`](@ref), [`itemset_policies`](@ref), [`MineableData`](@ref), [`Miner`](@ref),
+[`worldfilter`](@ref).
+"""
+function partial_deepcopy(
+    original::Miner;
+    new_items::Union{Nothing,Vector{I}}=nothing,
+    new_worldfilter::Union{Nothing,WorldFilter}=nothing,
+    new_itemset_policies::Union{Nothing,Vector{<:Function}}=nothing,
+    new_arule_policies::Union{Nothing,Vector{<:Function}}=nothing
+) where {I<:Item}
+    if isnothing(new_items)
+        new_items = deepcopy(original |> items)
+    end
+    if isnothing(new_worldfilter)
+        new_worldfilter = deepcopy(original |> worldfilter)
+    end
+    if isnothing(new_itemset_policies)
+        new_itemset_policies = deepcopy(original |> itemset_policies)
+    end
+    if isnothing(new_arule_policies)
+        new_arule_policies = deepcopy(original |> arule_policies)
+    end
+
+    return Miner(
+        data(original), # keep the reference here
+        deepcopy(original |> algorithm),
+        new_items,
+        deepcopy(original |> itemsetmeasures),
+        deepcopy(original |> arulemeasures);
+        worldfilter = new_worldfilter,
+        itemset_policies = new_itemset_policies,
+        arule_policies = new_arule_policies,
+        info = deepcopy(original |> info)
+    )
+end
+
+# dispatches coming for external packages
+
 
 """
     function SoleLogics.frame(miner::AbstractMiner)

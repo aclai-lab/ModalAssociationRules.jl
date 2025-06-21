@@ -28,7 +28,7 @@ using SoleLogics: nworlds, frame, allworlds, nworlds
 using SoleLogics: filterworlds, WorldFilter
 
 using SoleData: SupportedLogiset
-using SoleData: VariableMin, VariableMax
+using SoleData: VariableMin, VariableMax, VariableDistance
 
 using StatsBase
 
@@ -63,7 +63,7 @@ include("types/miner.jl")
 export AbstractMiner
 export data, algorithm
 export items, freqitems, arules
-export itemsetmeasures, rulemeasures
+export itemsetmeasures, arulemeasures
 
 export measures, findmeasure
 export getlocalthreshold, getglobalthreshold
@@ -71,12 +71,14 @@ export localmemo, localmemo!
 export globalmemo, globalmemo!
 
 export worldfilter
-export itemset_mining_policies, arule_mining_policies
+export itemset_policies, arule_policies
 
 export miningstate, miningstate!, hasminingstate, initminingstate
 export info, info!, hasinfo
 export mine!, apply!
 export generaterules, generaterules!
+
+export partial_deepcopy, miner_reduce!
 
 include("utils/miner.jl")
 
@@ -89,7 +91,6 @@ include("utils/bulldozer.jl")
 
 export Bulldozer
 export datalock, memolock, miningstatelock
-export bulldozer_reduce
 export frame
 
 include("meaningfulness-measures.jl")
@@ -105,6 +106,7 @@ include("mining-policies.jl")
 
 export islimited_length_itemset, isanchored_itemset, isdimensionally_coherent_itemset
 export islimited_length_arule, isanchored_arule, isheterogeneous_arule
+export isanchored_miner
 
 include("algorithms/apriori.jl")
 
@@ -133,6 +135,12 @@ include("algorithms/fpgrowth.jl")
 export patternbase, bounce!, projection
 export fpgrowth
 
+include("algorithms/anchored-semantics.jl")
+
+export anchored_semantics
+export anchored_grow_prune, anchored_apriori
+export anchored_fpgrowth
+
 include("alphabet-proposal.jl")
 export motifsalphabet
 
@@ -142,5 +150,7 @@ include("loaders/epilepsy-loader.jl")
 include("loaders/hugadb-loader.jl")
 export load_NATOPS, load_libras, load_epilepsy
 export load_hugadb, filter_hugadb
+
+include("deprecated.jl")
 
 end

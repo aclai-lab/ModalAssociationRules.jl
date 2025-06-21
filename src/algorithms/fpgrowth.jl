@@ -133,9 +133,6 @@ function projection(
 end
 
 
-
-# fpgrowth implementation starts here
-
 """
     fpgrowth(miner::AbstractMiner, X::MineableData; verbose::Bool=true)::Nothing
 
@@ -159,7 +156,7 @@ implemented:
 See also [`AbstractMiner`](@ref), [`Bulldozer`](@ref), [`FPTree`](@ref),
 [`HeaderTable`](@ref), [`SoleBase.AbstractDataset`](@ref)
 """
-function fpgrowth(miner::AbstractMiner, X::MineableData)::Nothing
+function fpgrowth(miner::M)::M where {M<:AbstractMiner}
     if !(ModalAssociationRules.gsupport in reduce(vcat, itemsetmeasures(miner)))
         throw(ArgumentError("FP-Growth " *
             "requires global support (gsupport) as meaningfulness measure in order to " *
@@ -170,18 +167,20 @@ function fpgrowth(miner::AbstractMiner, X::MineableData)::Nothing
         ))
     end
 
+    X = data(miner)
     _ninstances = ninstances(X)
     local_results = Vector{Bulldozer}(undef, _ninstances)
 
     chunks = Iterators.partition(1:_ninstances, div(_ninstances, Threads.nthreads()))
     tasks = map(chunks) do chunk
-        Threads.@spawn _fpgrowth(Bulldozer(miner, chunk))
+        Threads.@spawn _fpgrowth(
+            Bulldozer(miner, chunk; itemset_policies=itemset_policies(miner)))
     end
     local_results = fetch.(tasks)
 
     # reduce all the local-memoization structures obtained before,
     # and proceed to compute global supports
-    local_results = bulldozer_reduce(local_results)
+    local_results = miner_reduce!(local_results)
     fpgrowth_fragments = load_localmemo!(miner, local_results)
 
     # global setting
@@ -190,17 +189,19 @@ function fpgrowth(miner::AbstractMiner, X::MineableData)::Nothing
         saveflag = true
 
         # apply frequent items mining policies here
-        for policy in itemset_mining_policies(miner)
-            if !policy(itemset)
-                saveflag = false
-                break
-            end
-        end
+        # NOTE - policies are already checked in _fpgrowth_count_phase, where itemsets
+        # are generated and also tested against local meaningfulness measures
+        # for policy in itemset_policies(miner)
+        #     if !policy(itemset)
+        #         saveflag = false
+        #         break
+        #     end
+        # end
 
-        if !saveflag
-            # atleast one policy does not hold
-            continue
-        end
+        # if !saveflag
+        #     # atleast one policy does not hold
+        #     continue
+        # end
 
         # manually compute and save miner's global support if >= min threhsold;
         _threshold = getglobalthreshold(miner, gsupport)
@@ -231,11 +232,12 @@ function fpgrowth(miner::AbstractMiner, X::MineableData)::Nothing
             end
         end
     end
+
+    return miner
 end
 
 # `fpgrowth` main logic
 function _fpgrowth(miner::Bulldozer{D,I}) where {D<:MineableData,I<:Item}
-    kripkeframe = frame(miner)
     _nworlds = nworlds(miner)
     nworld_to_itemset = [Itemset{I}() for _ in 1:_nworlds]
 
@@ -261,21 +263,6 @@ function _fpgrowth(miner::Bulldozer{D,I}) where {D<:MineableData,I<:Item}
         end
         close(frequents_channel)
         frequents = unique(collect(frequents_channel))
-
-        # alternative way to get the frequent 1-length itemsets;
-        # this is serial, thus does not leverage Channel nor Threads.@threads
-        # frequents = [candidate
-        #     for candidate in Itemset{I}.(items(miner))
-        #     for (gmeas_algo, lthreshold, gthreshold) in itemsetmeasures(miner)
-        #     # in all the existing literature, the only measure needed here is `lsupport`;
-        #     # however, we give the possibility to control more granularly what does it mean
-        #     # for an itemset to be *locally frequent*.
-        #     if localof(gmeas_algo)(
-        #         candidate,
-        #         data(miner, ith_instance),
-        #         miner
-        #     ) >= lthreshold
-        # ] |> unique
 
         for (nworld, _) in enumerate(SoleLogics.allworlds(miner; ith_instance=ith_instance))
             _itemset_in_world = [
@@ -320,7 +307,7 @@ function _fpgrowth_kernel(
     miner::Bulldozer{D,I},
     leftout_fptree::FPTree
 ) where {D<:MineableData,I<:Item}
-    # if `fptree` contains only one path (hence, it can be considered a linked list),
+    # if `fptree` contains only one path (i.e., it is a linked list),
     # then combine all the Itemsets collected from previous step with the remained ones.
     if islist(fptree)
         # all the survived items, from which compose new frequent itemsets
@@ -410,11 +397,12 @@ function _fpgrowth_count_phase(
     miner::Bulldozer
 )
     # we consider each combination of items (where the itemset `survivor_itemset` is fixed)
-    # which also do honor the `itemset_mining_policies`
+    # which also do honor the `itemset_policies`
     for combo in Iterators.filter(
-            _combo -> all(__policy -> __policy(_combo), itemset_mining_policies(miner)),
+            _combo -> all(__policy -> __policy(_combo), itemset_policies(miner)),
             combine_items(survivor_itemset, leftout_itemset)
         )
+
         # each combo must be reshaped, following a certain order specified
         # universally by the miner (lexicographic ordering).
         sort!(combo)
@@ -439,6 +427,7 @@ function _fpgrowth_count_phase(
     end
 end
 
+
 """
     initminingstate(::typeof(fpgrowth), ::MineableData)::MiningState
 
@@ -446,7 +435,10 @@ end
 
 See also [`hasminingstate`](@ref), [`MiningState`](@ref), [`miningstate`](@ref).
 """
-function initminingstate(::typeof(fpgrowth), ::MineableData)::MiningState
+function initminingstate(
+    ::typeof(fpgrowth),
+    ::MineableData
+)::MiningState
     return MiningState([
         # given an instance I and an itemset λ, the default behaviour when computing
         # local support is to perform model checking in order to establish in how
