@@ -98,7 +98,7 @@ end
 # general experiment logic
 function experiment!(miner::Miner, reportname::String)
     # check that miner provides both confidence and lift measures
-    _allmeasures = first.(rulemeasures(miner))
+    _allmeasures = first.(arulemeasures(miner))
     gconfidence in _allmeasures || throw(DomainError, "Miner does not provide gconfidence.")
     glift in _allmeasures || throw(DomainError, "Miner does not provide glift.")
 
@@ -200,11 +200,12 @@ function initialize_experiment(
     return _logiset, Miner(
         _logiset, miningalgo, _items, _itemsetmeasures, _rulemeasures;
         worldfilter=_worldfilter,
-        itemset_mining_policies=Function[
-            isanchored_itemset(ignoreuntillength=2),
+        itemset_policies=Function[
+            # put ignoreuntillength=2 to reproduce the experiments in TIME2025
+            isanchored_itemset(ignoreuntillength=1), # isanchored_itemset(ignoreuntillength=2),
             isdimensionally_coherent_itemset()
         ],
-        arule_mining_policies=Function[
+        arule_policies=Function[
             islimited_length_arule(consequent_maxlength=3),
             isanchored_arule()
         ]
@@ -229,6 +230,7 @@ function label_motifs(
     data,
     varids::Vector{Int64},
     variablenames::Vector{String},
+    save_filepath::String,
     save_filename_prefix::String;
     # length and numerosity of each snippet to extract (first set)
     m1::Integer=10,
@@ -267,20 +269,20 @@ function label_motifs(
 
     end
 
-    serialize(joinpath("serialized", "$(save_filename_prefix)-ids"), ids)
-    serialize(joinpath("serialized", "$(save_filename_prefix)-motifs"), motifs)
-    serialize(joinpath("serialized", "$(save_filename_prefix)-featurenames"), featurenames)
+    serialize(joinpath(save_filepath, "$(save_filename_prefix)-ids"), ids)
+    serialize(joinpath(save_filepath, "$(save_filename_prefix)-motifs"), motifs)
+    serialize(joinpath(save_filepath, "$(save_filename_prefix)-featurenames"), featurenames)
 
     return ids, motifs, featurenames
 end
 
-function load_motifs(save_filename_prefix)
+function load_motifs(filepath, save_filename_prefix)
     ids = [id for id in deserialize(
-        joinpath("serialized", "$(save_filename_prefix)-ids"))];
+        joinpath(filepath, "$(save_filename_prefix)-ids"))];
     motifs = [m for m in deserialize(
-        joinpath("serialized", "$(save_filename_prefix)-motifs"))];
+        joinpath(filepath, "$(save_filename_prefix)-motifs"))];
     featurenames = [f for f in deserialize(
-        joinpath("serialized", "$(save_filename_prefix)-featurenames"))];
+        joinpath(filepath, "$(save_filename_prefix)-featurenames"))];
 
     return ids, motifs, featurenames
 end

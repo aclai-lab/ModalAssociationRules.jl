@@ -16,7 +16,7 @@ For example, [`Miner`](@ref) does completely implement the interface while
 - arules(miner::AbstractMiner)
 
 - itemsetmeasures(miner::AbstractMiner)
-- rulemeasures(miner::AbstractMiner)
+- arulemeasures(miner::AbstractMiner)
 
 - localmemo(miner::AbstractMiner)
 - localmemo!(miner::AbstractMiner)
@@ -24,8 +24,8 @@ For example, [`Miner`](@ref) does completely implement the interface while
 - globalmemo!(miner::AbstractMiner)
 
 - worldfilter(miner::AbstractMiner)
-- itemset_mining_policies(miner::AbstractMiner)
-- arule_mining_policies(miner::AbstractMiner)
+- itemset_policies(miner::AbstractMiner)
+- arule_policies(miner::AbstractMiner)
 
 - miningstate(miner::AbstractMiner)
 - miningstate!(miner::AbstractMiner)
@@ -94,14 +94,14 @@ See also [`AbstractMiner`](@ref), [`Itemset`](@ref).
 itemsetmeasures(::AbstractMiner) = error("Not implemented")
 
 """
-    rulemeasures(miner::AbstractMiner)
+    arulemeasures(miner::AbstractMiner)
 
 Getter for `miner`'s collection dedicated to store the [`MeaningfulnessMeasure`](@ref)s
 that must be honored by all the extracted [`ARule`](@ref)s.
 
 See also [`AbstractMiner`](@ref), [`ARule`](@ref).
 """
-rulemeasures(::AbstractMiner) = error("Not implemented")
+arulemeasures(::AbstractMiner) = error("Not implemented")
 
 
 
@@ -169,7 +169,7 @@ See also [`AbstractMiner`](@ref), [`data(::AbstractMiner)`](@ref), `SoleLogics.W
 worldfilter(::AbstractMiner) = error("Not implemented.")
 
 """
-    function itemset_mining_policies(::AbstractMiner)
+    function itemset_policies(::AbstractMiner)
 
 Return the mining policies vector wrapped within an [`AbstractMiner`](@ref).
 Each mining policies is a meta-rule describing which [`Itemset`](@ref) are accepted
@@ -187,12 +187,12 @@ during the mining phase and which are discarded.
     generation policies are applied before saving an itemset inside the miner:
     thus, they reduce the waste of memory, but not necessarily of computational time.
 
-See also [`AbstractMiner`](@ref), [`generaterules`](@ref), [`arule_mining_policies`](@ref).
+See also [`AbstractMiner`](@ref), [`generaterules`](@ref), [`arule_policies`](@ref).
 """
-itemset_mining_policies(::AbstractMiner) = error("Not implemented.")
+itemset_policies(::AbstractMiner) = error("Not implemented.")
 
 """
-    arule_mining_policies(::AbstractMiner)
+    arule_policies(::AbstractMiner)
 
 Return the association rules generation policies vector wrapped within an
 [`AbstractMiner`](@ref).
@@ -200,9 +200,9 @@ Each generation policies is a meta-rule describing which [`ARule`](@ref) are acc
 during the generation algorithm and which are discarded.
 
 See also [`AbstractMiner`](@ref), [`generaterules`](@ref),
-[`itemset_mining_policies`](@ref).
+[`itemset_policies`](@ref).
 """
-arule_mining_policies(::AbstractMiner) = error("Not implemented").
+arule_policies(::AbstractMiner) = error("Not implemented").
 
 
 
@@ -300,10 +300,10 @@ end
 Return all the [`MeaningfulnessMeasures`](@ref) wrapped by `miner`.
 
 See also [`AbstractMiner`](@ref), [`itemsetmeasures`](@ref),
-[`MeaningfulnessMeasure`](@ref), [`rulemeasures`](@ref).
+[`MeaningfulnessMeasure`](@ref), [`arulemeasures`](@ref).
 """
 function measures(miner::AbstractMiner)::Vector{<:MeaningfulnessMeasure}
-    return vcat(itemsetmeasures(miner), rulemeasures(miner))
+    return vcat(itemsetmeasures(miner), arulemeasures(miner))
 end
 
 """
@@ -330,7 +330,7 @@ function findmeasure(
         if isa(e, ArgumentError)
             error("The provided miner has no measure $meas. " *
             "Maybe the miner is not initialized properly, and $meas is omitted. " *
-            "Please use itemsetmeasures/rulemeasures to check which measures are , " *
+            "Please use itemsetmeasures/arulemeasures to check which measures are , " *
             "available and miner's setters to add a new measures and their thresholds.")
         end
     end
@@ -363,20 +363,8 @@ function getglobalthreshold(miner::AbstractMiner, meas::Function)::Threshold
 end
 
 
-
 """
-    mine!(miner::AbstractMiner; kwargs...)
-
-Synonym for [`apply!](@ref).
-
-See also [`ARule`](@ref), [`Itemset`](@ref), [`apply`](@ref).
-"""
-function mine!(miner::AbstractMiner; kwargs...)
-    return apply!(miner, data(miner); kwargs...)
-end
-
-"""
-    apply!(miner::AbstractMiner, X::MineableData; forcemining::Bool=false, kwargs...)
+apply!(miner::AbstractMiner; forcemining::Bool=false, kwargs...)
 
 Extract association rules from data referenced by `miner` ([`data`](@ref)),
 saving the interesting [`Itemset`](@ref)s inside `miner`'s appropriate structure
@@ -385,24 +373,24 @@ saving the interesting [`Itemset`](@ref)s inside `miner`'s appropriate structure
 Return a generator of interesting [`ARule`](@ref)s.
 
 !!! note
-    All the kwargs are forwarded to the mining algorithm within `miner`.
+All the kwargs are forwarded to the mining algorithm within `miner`.
 
 See also [`ARule`](@ref), [`data`](@ref), [`freqitems`](@ref), [`Itemset`](@ref).
 """
-function apply!(miner::AbstractMiner, X::MineableData; forcemining::Bool=false, kwargs...)
+function apply!(miner::AbstractMiner; forcemining::Bool=false, kwargs...)
     _info = info(miner)
 
     # if miner is already trained, do not perform mining and return the arules generator
     if haskey(_info, :istrained) && !forcemining
         if _info[:istrained] == true
             @warn "The miner has already been trained. " *
-                "To force mining, please set `forcemining=true`."
+            "To force mining, please set `forcemining=true`."
             return generaterules(freqitems(miner), miner)
         end
     end
 
     # apply mining algorithm
-    algorithm(miner)(miner, X; kwargs...)
+    algorithm(miner)(miner; kwargs...)
 
     # fill the info field
     if haskey(_info, :istrained)
@@ -419,7 +407,14 @@ end
 
 
 """
-    generaterules(itemsets::AbstractVector{Itemset}, miner::AbstractMiner)
+    mine!(miner::AbstractMiner; kwargs...)
+
+Synonym for [`apply!](@ref).
+"""
+mine!(miner::AbstractMiner; kwargs...) = apply!(miner::AbstractMiner; kwargs...)
+
+"""
+generaterules(itemsets::AbstractVector{Itemset}, miner::AbstractMiner)
 
 Raw subroutine of [`generaterules!(miner::AbstractMiner; kwargs...)`](@ref).
 
@@ -430,10 +425,10 @@ The strategy followed is
 at section 2.2.
 
 To establish the meaningfulness of each association rule, check if it meets the global
-constraints specified in `rulemeasures(miner)`, and yields the rule if so.
+constraints specified in `arulemeasures(miner)`, and yields the rule if so.
 
 See also [`AbstractMiner`](@ref), [`ARule`](@ref), [`Itemset`](@ref),
-[`rulemeasures`](@ref).
+[`arulemeasures`](@ref).
 """
 @resumable function generaterules(::AbstractVector{Itemset}, ::AbstractMiner)
     error("Not implemented")
@@ -484,7 +479,89 @@ function all_arule_analysis(miner::AbstractMiner, args...; kwargs...)
 end
 
 
+# utilities
+
+"""
+    partial_deepcopy(original::AbstractMiner)
+
+Deepcopy an [`AbstractMiner`](@ref), but maintain a reference to the original data wrapped
+from the original miner.
+
+See also [`AbstractMiner`](@ref).
+"""
+function partial_deepcopy(original::AbstractMiner)
+    error("Not implemented.")
+end
+
+"""
+    miner_reduce!(miners::AbstractVector{M}) where {M<:AbstractMiner}
+
+Reduce multiple [`AbstractMiner`](@ref), obtaining a new miner of the same type, wrapping
+all the items within `miners` vector, as well as the data related to [`localmemo`](@ref)
+and [`globalmemo`](@ref) [`MeaningfulnessMeasure`](@ref)s.
+
+!!! note
+    Be careful, only information between items, and local and global meaningfulness measures
+    are reduced together. The assumption is that everything else can virtually be ignored
+    (e.g., [`info`](@ref), [`worldfilter`], [`itemset_policies`](@ref), etc.)
+
+# Arguments
+- `miners::AbstractVector{M}`: the list of miners to be reduced together.
+
+# Keyword Arguments
+- `includeitems::Bool=true`: whether to reduce `items(miner)`;
+- `includefreqitems::Bool=true`: whether to reduce `freqitems(miner)`;
+- `includelmemo::Bool=false`: whether to reduce `lmemo(miner)`; defaulted to false for performances;
+- `includegmemo::Bool=true`: whether to reduce `gmemo(miner)`.
+
+See also [`AbstractMiner0`](@ref), [`localmemo`](@ref), [`MeaningfulnessMeasure`](@ref),
+[`globalmemo`](@ref).
+"""
+function miner_reduce!(
+    miners::AbstractVector{M};
+    includeitems::Bool=true,
+    includefreqitems::Bool=true,
+    includelmemo::Bool=false,
+    includegmemo::Bool=true,
+) where {M<:AbstractMiner}
+    main_miner = miners |> first
+
+    decant = (to, from) -> begin
+        for k in keys(from)
+            to[k] = from[k]
+        end
+    end
+
+    # decant all the other miners in the first one
+    for secondary_miner in miners[2:end]
+        # instead of if-else, one could leverage metaprogramming to avoid repeating
+        # these checks in the first place.
+
+        if includeitems
+            union!(main_miner |> items, secondary_miner |> items)
+        end
+
+        # beware: heavy computation
+        if includefreqitems
+            union!(main_miner |> freqitems, secondary_miner |> freqitems)
+        end
+
+        # beware: heavy computation
+        if includelmemo
+            decant(main_miner |> localmemo, secondary_miner |> localmemo)
+        end
+
+        if includegmemo
+            decant(main_miner |> globalmemo, secondary_miner |> globalmemo)
+        end
+    end
+
+    return main_miner
+end
+
+
 # interface extending dispatches coming from external packages
+
 
 """
     function SoleLogics.frame(::AbstractMiner)

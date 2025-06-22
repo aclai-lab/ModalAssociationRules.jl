@@ -86,7 +86,7 @@ macro localmeasure(measname, measlogic)
             measure = response[:measure]
 
             # save measure in memoization structure;
-            # also, do more stuff depending on `miningstate` dispatch (see the documentation).
+            # do more stuff depending on `miningstate` dispatch (see the documentation).
             localmemo!(miner, memokey, measure)
 
             for state in LOCAL_MINING_STATES
@@ -173,13 +173,12 @@ macro globalmeasure(measname, measlogic)
             measure = response[:measure]
 
             # save measure in memoization structure;
-            # also, do more stuff depending on `miningstate` dispatch (see the documentation).
+            # do more stuff depending on `miningstate` dispatch (see the documentation).
             # to know more, see `localmeasure` comments.
             globalmemo!(miner, memokey, measure)
 
             for state in GLOBAL_MINING_STATES
-                # Is this functionality useful?
-                # TODO - enable when finding an application
+                # TODO - enable when an application is found
                 # if hasminingstate(miner, state) && haskey(response, state)
                 #     miningstate!(miner, state, (subject), response[state])
                 # end

@@ -1,12 +1,10 @@
-# this script collects policies regarding mining;
-# they are both structural, syntactical and semantical.
+# this script collects policies to regulate mining, controlling both shape and semantics
+# of the extracted frequent itemsets and association rules.
 
-
-# policies related to the mining structure
-# deprecated: there are no such filters at the moment.
-# see "data_mining_policies(::AbstractMiner)".
+using SoleData: VariableDistance
 
 # policies related to frequent itemsets mining
+
 
 """
     function islimited_length_itemset(; maxlength::Union{Nothing,Integer}=nothing)::Function
@@ -19,7 +17,7 @@ Closure returning a boolean function `F` with one argument `itemset::Itemset`.
 - `maxlength::Union{Nothing,Integer}=nothing`: maximum `itemset`'s length; when `nothing`,
     defaults to `typemax(Int16)`.
 
-See also [`Itemset`](@ref), [`itemset_mining_policies`](@ref).
+See also [`Itemset`](@ref), [`itemset_policies`](@ref).
 """
 function islimited_length_itemset(; maxlength::Union{Nothing,Integer}=nothing)::Function
     if isnothing(maxlength)
@@ -53,7 +51,7 @@ Closure returning a boolean function `F` with one argument `rule::Itemset`.
 - `ignoreuntillength::Integer=1`: avoid applying the policy to isolated [`Item`](@ref)s, or
     [`Itemset`](@ref) short enough.
 
-See [`Item`](@ref), [`Itemset`](@ref), [`itemset_mining_policies`](@ref),
+See [`Item`](@ref), [`Itemset`](@ref), [`itemset_policies`](@ref),
 [`isanchored_arule`](@ref).
 """
 function isanchored_itemset(; npropositions::Integer=1, ignoreuntillength::Integer=1)::Function
@@ -85,7 +83,7 @@ This is needed to ensure the Itemset is coherent with the dimensional definition
 support. All the propositions (or anchors) in an itemset must be `VariableDistance`s
 wrapping references of the same size.
 
-See also [`Itemset`](@ref), [`itemset_mining_policies`](@ref), `SoleData.VariableDistance`.
+See also [`Itemset`](@ref), [`itemset_policies`](@ref), `SoleData.VariableDistance`.
 """
 function isdimensionally_coherent_itemset(;)::Function
     # since we have no arguments, this closure seems useless;
@@ -99,12 +97,12 @@ function isdimensionally_coherent_itemset(;)::Function
 
         # in particular, every Variable must not be a VariableDistance (e.g., VariableMin)
         _anchortypes = Set([feature(anchor) |> typeof for anchor in anchors])
-        if !any(_anchortype -> _anchortype <: VariableDistance, _anchortypes)
+        if !any(_anchortype -> _anchortype <: SoleData.VariableDistance, _anchortypes)
             return true
         end
 
         # or all the anchors must be VariableDistances (the two cannot be mixed)
-        if !all(type -> type <: VariableDistance, _anchortypes)
+        if !all(type -> type <: SoleData.VariableDistance, _anchortypes)
             return false
         end
 
@@ -137,7 +135,7 @@ not exceed the given thresholds.
 - `consequent_maxlength::Union{Nothing,Integer}=1`: maximum consequent length of the given
     rule; when `nothing`, defaults to `typemax(Int16)`.
 
-See also [`antecedent`](@ref), [`ARule`](@ref), [`arule_mining_policies`](@ref),
+See also [`antecedent`](@ref), [`ARule`](@ref), [`arule_policies`](@ref),
 [`consequent`](@ref).
 """
 function islimited_length_arule(;
@@ -175,7 +173,7 @@ Closure returning a boolean function `F` with one argument `rule::ARule`.
 - `npropositions::Integer=1`: minimum number of propositional anchors (propositions with
     no modal operators) in the antecedent of the given rule.
 
-See [`antecedent`](@ref), [`ARule`](@ref), [`arule_mining_policies`](@ref),
+See [`antecedent`](@ref), [`ARule`](@ref), [`arule_policies`](@ref),
 [`generaterules`](@ref), [`Item`](@ref), [`Miner`](@ref).
 """
 function isanchored_arule(; npropositions::Integer=1)::Function

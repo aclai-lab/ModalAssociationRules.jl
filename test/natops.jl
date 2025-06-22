@@ -75,8 +75,20 @@ _4_items = Vector{Item}([manual_q, manual_r, manual_lp, manual_lr])
 _4_itemsetmeasures = [(gsupport, 0.4, 0.4)]
 _4_rulemeasures = [(gconfidence, 0.7, 0.7)]
 
-apriori_miner = Miner(X2, apriori, _4_items, _4_itemsetmeasures, _4_rulemeasures)
-fpgrowth_miner = Miner(X2, fpgrowth, _4_items, _4_itemsetmeasures, _4_rulemeasures)
+apriori_miner = Miner(X2,
+    apriori,
+    _4_items,
+    _4_itemsetmeasures,
+    _4_rulemeasures;
+    itemset_policies=Function[]
+)
+fpgrowth_miner = Miner(X2,
+    fpgrowth,
+    _4_items,
+    _4_itemsetmeasures,
+    _4_rulemeasures;
+    itemset_policies=Function[]
+)
 
 compare(apriori_miner, fpgrowth_miner)
 
@@ -149,15 +161,24 @@ fpgrowth_miner = Miner(X_1_have_command,
 
 @test_nowarn mine!(fpgrowth_miner)
 
-# TODO - it seems that mining is broken when support thresholds are set to 0.
-# This may be due to a tricky > / >= which is well hidden...
-#
-# _7_items = _1_items
-# _7_itemsetmeasures = [(gsupport, 0.0, 0.0)]
-# _7_rulemeasures = [(gconfidence, 0.0, 0.0)]
-#
-# apriori_miner = Miner(deepcopy(X1), apriori, _7_items, _7_itemsetmeasures, _7_rulemeasures)
-# fpgrowth_miner = Miner(
-#     deepcopy(X1), fpgrowth, _7_items, _7_itemsetmeasures, _7_rulemeasures)
-#
-# @test_broken compare(apriori_miner, fpgrowth_miner)
+_7_items = _1_items
+_7_itemsetmeasures = [(gsupport, 0.1, 0.1)]
+_7_rulemeasures = [(gconfidence, 0.0, 0.0)]
+apriori_miner = Miner(
+    deepcopy(X1),
+    apriori,
+    _7_items,
+    _7_itemsetmeasures,
+    _7_rulemeasures;
+    itemset_policies=Function[]
+)
+fpgrowth_miner = Miner(
+    deepcopy(X2),
+    fpgrowth,
+    _7_items,
+    _7_itemsetmeasures,
+    _7_rulemeasures;
+    itemset_policies=Function[]
+)
+
+compare(apriori_miner, fpgrowth_miner)

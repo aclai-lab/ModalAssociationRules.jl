@@ -49,13 +49,13 @@ function grow_prune(
     # if the frequents set does not contain the subset of a certain candidate,
     # that candidate is pruned out.
     return Iterators.filter(
-            # the iterator yields only itemsets for which every combo is in frequents;
-            # note: why first(combo)? Because combinations(itemset, k-1) returns vectors,
-            # each one wrapping one Itemset, but we just need that exact itemset.
-            itemset -> all(
-                    combo -> Itemset{I}(combo) in frequents, combinations(itemset, k-1)),
-            combine_items(candidates, k) |> unique
-        )
+        # the iterator yields only itemsets for which every combo is in frequents;
+        # note: why first(combo)? Because combinations(itemset, k-1) returns vectors,
+        # each one wrapping one Itemset, but we just need that exact itemset.
+        itemset -> all(
+                combo -> Itemset{I}(combo) in frequents, combinations(itemset, k-1)),
+        combine_items(candidates, k) |> unique
+    )
 end
 
 """
@@ -66,18 +66,20 @@ to also work with modal logic.
 
 # Arguments
 
-- `miner`: miner containing the extraction parameterization;
-- `X`: data from which you want to mine association rules;
-- `verbose`: print informations about each iteration.
+- `miner::M`: miner containing the data and the extraction parameterization;
+- `prune_strategy::Function=grow_prune`: strategy to prune candidates between one iteration
+and the successive;
+- `verbose::Bool=false`: print informations about each iteration.
 
-See also [`Miner`](@ref), [`SoleBase.MineableData`](@ref).
+See also [`grow_prune`](@ref), [`Miner`](@ref), [`SoleBase.MineableData`](@ref).
 """
 function apriori(
-    miner::AbstractMiner,
-    X::MineableData;
+    miner::M;
+    prune_strategy::Function=grow_prune,
     verbose::Bool=false
-)::Nothing
+)::M where {M<:AbstractMiner}
     _itemtype = itemtype(miner)
+    X = data(miner)
 
     # candidates of length 1 are all the letters in our items
     candidates = Itemset{_itemtype}.(items(miner))
@@ -102,11 +104,13 @@ function apriori(
         # retrieve the new generation of candidates by doing some combinatorics trick;
         # we do not want duplicates ([p,q,r] and [q,r,p] are considered duplicates).
         k = (candidates |> first |> length) + 1
-        candidates = sort.(grow_prune(candidates, frequents, k) |> collect) |> unique
+        candidates = sort.(prune_strategy(candidates, frequents, k) |> collect) |> unique
 
         verbose && printstyled("Starting new computational loop with " *
             "$(length(candidates)) candidates (of length $(k))...\n", color=:green)
 
         filter!(candidates, miner)  # apply filtering policies
     end
+
+    return miner
 end
