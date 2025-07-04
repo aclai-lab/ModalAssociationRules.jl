@@ -177,12 +177,12 @@ macro globalmeasure(measname, measlogic)
             # to know more, see `localmeasure` comments.
             globalmemo!(miner, memokey, measure)
 
-            for state in GLOBAL_MINING_STATES
-                # TODO - enable when an application is found
-                # if hasminingstate(miner, state) && haskey(response, state)
-                #     miningstate!(miner, state, (subject), response[state])
-                # end
-            end
+            # TODO - enable when an application is found
+            # for state in GLOBAL_MINING_STATES
+            #     if hasminingstate(miner, state) && haskey(response, state)
+            #         miningstate!(miner, state, (subject), response[state])
+            #     end
+            # end
 
             return measure
         end
