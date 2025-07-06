@@ -475,4 +475,12 @@ _my_gsupport_logic = (itemset, X, threshold, miner) -> begin
 end
 
 @localmeasure my_lsupport _my_lsupport_logic
-@localmeasure my_gsupport _my_gsupport_logic
+@globalmeasure my_gsupport _my_gsupport_logic
+
+@linkmeas Main.my_gsupport Main.my_lsupport
+
+@test islocalof(my_lsupport, my_gsupport) == true
+@test isglobalof(my_gsupport, my_lsupport) == true
+
+@test localof(my_gsupport) == my_lsupport
+@test globalof(my_lsupport) == my_gsupport
