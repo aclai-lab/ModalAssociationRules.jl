@@ -501,7 +501,21 @@ _my_vd1 = VariableDistance(1, [[1,2,3,4,5], [1,2,3,4,5]])
 
 
 ##### Dataset loaders
+
 @test_nowarn load_NATOPS()
 @test_nowarn load_hugadb()
 @test_nowarn load_libras()
 @test_nowarn load_epilepsy()
+
+
+
+##### AbstractMiner functionalities
+
+localmemo!(fpgrowth_miner, (:lsupport, pq, 1), 0.56)
+@test localmemo(fpgrowth_miner, (:lsupport, pq, 1)) == 0.56
+
+globalmemo!(fpgrowth_miner, (:gsupport, pq), 0.61)
+@test globalmemo(fpgrowth_miner, (:gsupport, pq)) == 0.61
+
+miningstate!(fpgrowth_miner, :instance_item_toworlds, (1, pq), [0,0,0])
+@test miningstate(fpgrowth_miner, :instance_item_toworlds)[(1,pq)] == BitVector([0,0,0])
