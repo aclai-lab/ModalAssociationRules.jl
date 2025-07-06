@@ -519,3 +519,20 @@ globalmemo!(fpgrowth_miner, (:gsupport, pq), 0.61)
 
 miningstate!(fpgrowth_miner, :instance_item_toworlds, (1, pq), [0,0,0])
 @test miningstate(fpgrowth_miner, :instance_item_toworlds)[(1,pq)] == BitVector([0,0,0])
+
+@test_throws ErrorException generaterules([pq], genericMiner()) |> collect
+@test_throws ErrorException generaterules!(genericMiner())
+@test_throws ErrorException arule_analysis(arule3, genericMiner())
+@test_throws ErrorException all_arule_analysis(genericMiner())
+@test_throws ErrorException partial_deepcopy(genericMiner())
+@test_throws ErrorException SoleLogics.frame(genericMiner())
+
+filtered_miner = Miner(
+    X2,
+    fpgrowth,
+    manual_items,
+    _itemsetmeasures,
+    _rulemeasures;
+    worldfilter=SoleLogics.FunctionalWorldFilter(interval -> (interval.y - interval.x,) == 5, Interval{Int})
+)
+@test_nowarn SoleLogics.allworlds(filtered_miner)
