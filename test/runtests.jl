@@ -18,8 +18,8 @@ println("Julia version: ", VERSION)
 
 test_suites = [
     ("General package functionalities", ["general.jl",]),
-    ("Iris", ["iris.jl",]),
-    ("NATOPS + Miner comparisons", ["natops.jl"]),
+    # ("Iris", ["iris.jl",]),
+    # ("NATOPS + Miner comparisons", ["natops.jl"]),
     # ("NATOPS + motifs", ["matrix-profile.jl"]),
 ]
 

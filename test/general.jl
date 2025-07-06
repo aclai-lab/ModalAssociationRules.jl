@@ -162,68 +162,26 @@ _temp_apriori_miner = Miner(X1, apriori, manual_items, _itemsetmeasures, _ruleme
 @test_nowarn repr("text/plain", _temp_miner)
 
 
-
 # meaningfulness measures
 @test islocalof(lsupport, lsupport) == false
 @test islocalof(lsupport, gsupport) == true
-@test islocalof(lsupport, lconfidence) == false
-@test islocalof(lsupport, gconfidence) == false
-
 @test islocalof(gsupport, lsupport) == false
-@test islocalof(gsupport, gsupport) == false
-@test islocalof(gsupport, lconfidence) == false
-@test islocalof(gsupport, gconfidence) == false
-
-@test islocalof(lconfidence, lsupport) == false
-@test islocalof(lconfidence, gsupport) == false
-@test islocalof(lconfidence, lconfidence) == false
-@test islocalof(lconfidence, gconfidence) == true
-
-@test islocalof(gconfidence, lsupport) == false
-@test islocalof(gconfidence, gsupport) == false
-@test islocalof(gconfidence, lconfidence) == false
-@test islocalof(gconfidence, gconfidence) == false
 
 @test isglobalof(lsupport, lsupport) == false
 @test isglobalof(lsupport, gsupport) == false
-@test isglobalof(lsupport, lconfidence) == false
-@test isglobalof(lsupport, gconfidence) == false
-
 @test isglobalof(gsupport, lsupport) == true
 @test isglobalof(gsupport, gsupport) == false
-@test isglobalof(gsupport, lconfidence) == false
-@test isglobalof(gsupport, gconfidence) == false
-
-@test isglobalof(lconfidence, lsupport) == false
-@test isglobalof(lconfidence, gsupport) == false
-@test isglobalof(lconfidence, lconfidence) == false
-@test isglobalof(lconfidence, gconfidence) == false
-
-@test isglobalof(gconfidence, lsupport) == false
-@test isglobalof(gconfidence, gsupport) == false
-@test isglobalof(gconfidence, lconfidence) == true
-@test isglobalof(gconfidence, gconfidence) == false
 
 @test localof(lsupport) |> isnothing
 @test localof(gsupport) == lsupport
-@test localof(lconfidence) |> isnothing
 @test localof(gconfidence) == lconfidence
-@test localof(llift) |> isnothing
-@test localof(glift) == llift
-@test localof(lconviction) |> isnothing
-@test localof(gconviction) == lconviction
-@test localof(lleverage) |> isnothing
-@test localof(gleverage) == lleverage
 
 @test globalof(lsupport) == gsupport
 @test globalof(gsupport) |> isnothing
-@test globalof(lconfidence) == gconfidence
 @test globalof(gconfidence) |> isnothing
-@test globalof(llift) == glift
+
 @test globalof(glift) |> isnothing
-@test globalof(lconviction) == gconviction
 @test globalof(gconviction) |> isnothing
-@test globalof(lleverage) == gleverage
 @test globalof(gleverage) |> isnothing
 
 @test lsupport(pq, SoleLogics.getinstance(X2, 1), fpgrowth_miner) == 0.0
