@@ -400,6 +400,9 @@ _genericMiner = genericMiner()
 @test_throws ErrorException info(_genericMiner)
 @test_throws ErrorException itemtype(_genericMiner)
 
+
+##### Creation of a custom Miner
+
 struct statefulMiner <: AbstractMiner
     miningstate::MiningState
 end
@@ -441,3 +444,45 @@ end
 
 @test localof(my_gsupport) == my_lsupport
 @test globalof(my_lsupport) == my_gsupport
+
+
+##### Mining policies edge cases
+
+_my_itemset = ["p", "q"] .|> Atom .|> Item |> Itemset
+@test_nowarn isanchored_itemset()(_my_itemset)
+@test_throws ArgumentError isanchored_itemset(npropositions=-1)(_my_itemset)
+
+_my_vd1 = VariableDistance(1, [[1,2,3,4,5]])
+_my_p = Atom(ScalarCondition(_my_vd1, <=, 1.5)) |> Item
+isdimensionally_coherent_itemset()(_my_p |> Itemset)
+
+_my_q = Atom(ScalarCondition(VariableMin(1), >=, 3)) |> Item
+_my_non_dimensionally_coherent_itemset = [_my_p, _my_q] |> Itemset
+
+# the following is false, since _my_q references a generic variable #1, while
+# _my_p is applied specifically to vectors having 5 components.
+@test isdimensionally_coherent_itemset()(_my_non_dimensionally_coherent_itemset) == false
+
+_my_vd2 = VariableDistance(1, [[5,6,7]])
+_my_r = Atom(ScalarCondition(_my_vd2, <=, 1.5)) |> Item
+_my_non_dimensionally_coherent_itemset2 = [_my_p, _my_r] |> Itemset
+
+# the following is false since _my_p references a vector having 5 components, while
+# _my_r, although being a VariableDistance, is designed to deal with 3-component vectors.
+@test isdimensionally_coherent_itemset()(_my_non_dimensionally_coherent_itemset2) == false
+
+
+# beware: the following are dimensionally coherent since they both wrap scalars!
+# for example, the first one wraps a cluster of five scalars.
+# This is because the "references" field inside a VariableDistance is designed to compare
+# possibly multiple tensors to a scalar!
+# For example, one could do "distance(element_in_cluster, target) < 1.0" and then check if
+# enough elements in a cluster honoured the condition.
+@test isdimensionally_coherent_itemset()(
+    Itemset([
+        ScalarCondition(VariableDistance(1, [1,2,3,4,5]), <=, 1.0) |> Atom |> Item,
+        ScalarCondition(VariableDistance(1, [1,2,3]), <=, 1.0) |> Atom |> Item
+    ])
+) == true
+
+_my_vd1 = VariableDistance(1, [[1,2,3,4,5], [1,2,3,4,5]])
