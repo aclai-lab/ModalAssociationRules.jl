@@ -456,6 +456,7 @@ end
 @test globalof(my_lsupport) == my_gsupport
 
 
+
 ##### Mining policies edge cases
 
 _my_itemset = ["p", "q"] .|> Atom .|> Item |> Itemset
@@ -496,3 +497,11 @@ _my_non_dimensionally_coherent_itemset2 = [_my_p, _my_r] |> Itemset
 ) == true
 
 _my_vd1 = VariableDistance(1, [[1,2,3,4,5], [1,2,3,4,5]])
+
+
+
+##### Dataset loaders
+@test_nowarn load_NATOPS()
+@test_nowarn load_hugadb()
+@test_nowarn load_libras()
+@test_nowarn load_epilepsy()
