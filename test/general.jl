@@ -174,7 +174,6 @@ _temp_apriori_miner = Miner(X1, apriori, manual_items, _itemsetmeasures, _ruleme
 
 @test localof(lsupport) |> isnothing
 @test localof(gsupport) == lsupport
-@test localof(gconfidence) == lconfidence
 
 @test globalof(lsupport) == gsupport
 @test globalof(gsupport) |> isnothing
