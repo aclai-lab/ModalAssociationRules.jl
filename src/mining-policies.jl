@@ -110,7 +110,6 @@ function isdimensionally_coherent_itemset(;)::Function
         _referencesize = vardistance -> feature(vardistance) |> refsize
         _anchorsize = _referencesize(anchors[1])
 
-        println("Last condition")
         return all(anchor -> _referencesize(anchor) == _anchorsize, anchors)
     end
 end
