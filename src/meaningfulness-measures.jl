@@ -323,8 +323,10 @@ end
 
 
 _llift_logic = (rule, X, ith_instance, miner) -> begin
-    num = lconfidence(rule, X, ith_instance, miner)
-    den = lsupport(consequent(rule), getinstance(X, ith_instance), miner)
+    _instance = getinstance(X, ith_instance)
+
+    num = lconfidence(rule, _instance, miner)
+    den = lsupport(consequent(rule), _instance, miner)
 
     return Dict(:measure => num/den)
 end
@@ -333,11 +335,6 @@ _glift_logic = (rule, X, threshold, miner) -> begin
     num = gconfidence(rule, X, threshold, miner)
     den = gsupport(consequent(rule), X, threshold, miner)
 
-    # TODO - think about this claim:
-    # when the rule's consequent is anchored, this definition is ok;
-    # when it is not, then lift should be computed as:
-    # P(X U Y) / (P(X) * P(bar(Y)UX)) or something similar.
-
     return Dict(:measure => num/den)
 end
 
@@ -345,8 +342,8 @@ end
 _lconviction_logic = (rule, X, ith_instance, miner) -> begin
     _instance = getinstance(X, ith_instance)
 
-    num = 1 - lsupport(consequent(rule), X, _instance, miner)
-    den = 1 - lconfidence(rule, X, _instance, miner)
+    num = 1 - lsupport(consequent(rule), _instance, miner)
+    den = 1 - lconfidence(rule, _instance, miner)
 
     return Dict(:measure => num/den)
 end
@@ -362,9 +359,9 @@ end
 _lleverage_logic = (rule, X, ith_instance, miner) -> begin
     _instance = getinstance(X, ith_instance)
 
-    _ans = lsupport(convert(Itemset, rule), X, _instance, miner) - \
-        lsupport(antecedent(rule), X, _instance, miner) * \
-        lsupport(consequent(rule), X, _instance, miner)
+    _ans = lsupport(convert(Itemset, rule), _instance, miner) -
+        lsupport(antecedent(rule), _instance, miner) *
+        lsupport(consequent(rule), _instance, miner)
 
     return Dict(:measure => _ans)
 end

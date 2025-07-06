@@ -184,6 +184,16 @@ _temp_apriori_miner = Miner(X1, apriori, manual_items, _itemsetmeasures, _ruleme
 @test globalof(gleverage) |> isnothing
 
 @test lsupport(pq, SoleLogics.getinstance(X2, 1), fpgrowth_miner) == 0.0
+@test_nowarn lconfidence(arule3, SoleLogics.getinstance(X2, 1), fpgrowth_miner)
+@test_nowarn llift(arule3, SoleLogics.getinstance(X2, 1), fpgrowth_miner)
+@test_nowarn lconviction(arule3, SoleLogics.getinstance(X2, 1), fpgrowth_miner)
+@test_nowarn lleverage(arule3, SoleLogics.getinstance(X2, 1), fpgrowth_miner)
+
+@test_nowarn gsupport(pq, X2, 0.0, fpgrowth_miner) == 1.0
+@test_nowarn gconfidence(arule3, X2, 0.0, fpgrowth_miner)
+@test_nowarn glift(arule3, X2, 0.0, fpgrowth_miner)
+@test_nowarn gconviction(arule3, X2, 0.0, fpgrowth_miner)
+@test_nowarn gleverage(arule3, X2, 0.0, fpgrowth_miner)
 
 _temp_lsupport = lsupport(pq, SoleLogics.getinstance(X2, 7), fpgrowth_miner)
 @test _temp_lsupport >= 0.0 && _temp_lsupport <= 1.0
