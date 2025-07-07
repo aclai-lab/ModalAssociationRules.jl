@@ -540,9 +540,9 @@ See also [`HeaderTable`](@ref), [`Item`](@ref).
 """
 Base.reverse(htable::HeaderTable) = reverse(items(htable))
 
+# TODO - rewrite this docstring
+# TODO - move miner from kwargs to standard args
 doc_fptree_grow = """
-    TODO - rewrite this docstring
-
     function grow!(
         fptree::FPTree,
         itemset::Itemset,
