@@ -493,12 +493,11 @@ _my_non_dimensionally_coherent_itemset2 = [_my_p, _my_r] |> Itemset
 # possibly multiple tensors to a scalar!
 # For example, one could do "distance(element_in_cluster, target) < 1.0" and then check if
 # enough elements in a cluster honoured the condition.
-@test isdimensionally_coherent_itemset()(
-    Itemset([
-        ScalarCondition(VariableDistance(1, [1,2,3,4,5]), <=, 1.0) |> Atom |> Item,
-        ScalarCondition(VariableDistance(1, [1,2,3]), <=, 1.0) |> Atom |> Item
-    ])
-) == true
+_my_dimensionally_itemset = Itemset([
+    ScalarCondition(VariableDistance(1, [1,2,3,4,5]), <=, 1.0) |> Atom |> Item,
+    ScalarCondition(VariableDistance(1, [1,2,3]), <=, 1.0) |> Atom |> Item
+])
+@test isdimensionally_coherent_itemset()(_my_dimensionally_itemset) == true
 
 _my_vd1 = VariableDistance(1, [[1,2,3,4,5], [1,2,3,4,5]])
 
@@ -619,3 +618,6 @@ end
 
 @test_throws ArgumentError isheterogeneous_arule(antecedent_nrepetitions=0)
 @test_throws ArgumentError isheterogeneous_arule(consequent_nrepetitions=-1)
+
+@test ModalAssociationRules._lsupport_logic(
+    _my_dimensionally_itemset, X2, 1, fpgrowth_miner)[:measure] |> isnan
