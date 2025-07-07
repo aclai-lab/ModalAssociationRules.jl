@@ -548,9 +548,10 @@ See [`Itemset`](@ref), [`Miner`](@ref).
 """
 function generaterules(
     itemsets::AbstractVector{Itemset},
-    miner::Miner;
-    compute_additional_metrics::Bool=false
+    miner::Miner
 )
+    arule_lock = ReentrantLock()
+
     @threads for itemset in filter(x -> length(x) >= 2, itemsets)
         subsets = powerset(itemset)
 
@@ -598,7 +599,9 @@ function generaterules(
 
             # all meaningfulness measure tests passed
             if interesting
-                push!(arules(miner), currentrule)
+                lock(arule_lock) do
+                    push!(arules(miner), currentrule)
+                end
             else
                 break
             end
