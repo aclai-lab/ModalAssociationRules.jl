@@ -533,6 +533,27 @@ filtered_miner = Miner(
     manual_items,
     _itemsetmeasures,
     _rulemeasures;
-    worldfilter=SoleLogics.FunctionalWorldFilter(interval -> (interval.y - interval.x,) == 5, Interval{Int})
+    worldfilter=SoleLogics.FunctionalWorldFilter(
+        interval -> (interval.y - interval.x,) == 5, SoleLogics.Interval{Int}
+    )
 )
 @test_nowarn SoleLogics.allworlds(filtered_miner)
+
+
+##### Bulldozer
+
+r1 = 1:10
+r2 = 11:20
+
+b1 = Bulldozer(fpgrowth_miner, r1; itemset_policies=itemset_policies(fpgrowth_miner))
+for x in r1
+    localmemo!(b1, (:lsupport, pq, x), 0.56)
+end
+
+b2 = Bulldozer(fpgrowth_miner, r2; itemset_policies=itemset_policies(fpgrowth_miner))
+for x in r2
+    localmemo!(b1, (:lsupport, pq, x), 0.56)
+end
+
+blmemo = miner_reduce!([b1,b2])
+@test length(blmemo) == 20
