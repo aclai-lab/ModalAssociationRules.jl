@@ -273,6 +273,9 @@ grow!(fpt2, pqs; miner=fpgrowth_miner)
 @test ModalAssociationRules.retrievebycontent(fpt, "z" |> Atom |> Item) |> isnothing
 
 @test_throws ArgumentError ModalAssociationRules.retrieveleaf(fpt2)
+
+# the following error is thrown if you try to link the tree to itself 2 times in a row
+ModalAssociationRules.link!(fpt2, fpt2)
 @test_throws ErrorException ModalAssociationRules.link!(fpt2, fpt2)
 
 # manual FPTree construction and antagonist functions;
