@@ -347,9 +347,6 @@ function miner_reduce!(local_results::AbstractVector{B}) where {B<:Bulldozer}
     for i in 2:length(local_results)
         b2lmemo = local_results[i] |> localmemo
         for k in keys(b2lmemo)
-            # There is no need of the `if` statement below, since each Bulldozer
-            # refers to a different instance intrinsically for its nature.
-            # if haskey(b1lmemo, k) b1lmemo[k] += b2lmemo[k] else
             b1lmemo[k] = b2lmemo[k]
         end
     end
