@@ -422,6 +422,8 @@ _statefulMiner = statefulMiner(MiningState())
 
 @test_nowarn miningstate!(_statefulMiner, :field, 2)
 @test_nowarn miningstate!(_statefulMiner, :field, Dict(:inner_field => 3))
+@test_nowarn miningstate!(_statefulMiner, :field, :inner_field, 3)
+
 @test_throws ErrorException miningstate(_statefulMiner)
 @test_throws ErrorException miningstate(_statefulMiner, :field, :inner_field)
 
@@ -513,17 +515,17 @@ _my_vd1 = VariableDistance(1, [[1,2,3,4,5], [1,2,3,4,5]])
 
 ##### AbstractMiner functionalities
 
-localmemo!(fpgrowth_miner, (:lsupport, pq, 1), 0.56)
+@test_nowarn localmemo!(fpgrowth_miner, (:lsupport, pq, 1), 0.56)
 @test localmemo(fpgrowth_miner, (:lsupport, pq, 1)) == 0.56
 
-globalmemo!(fpgrowth_miner, (:gsupport, pq), 0.61)
+@test_nowarn globalmemo!(fpgrowth_miner, (:gsupport, pq), 0.61)
 @test globalmemo(fpgrowth_miner, (:gsupport, pq)) == 0.61
 
 @test_nowarn miningstate!(fpgrowth_miner, :current_instance, 2)
 @test_nowarn miningstate!(fpgrowth_miner, :instance_item_toworlds, (1, pq), [0,0,0])
 @test miningstate(fpgrowth_miner, :instance_item_toworlds)[(1,pq)] == BitVector([0,0,0])
 
-@test_throws ErrorException generaterules([pq], genericMiner()) |> collect
+@test_throws ErrorException generaterules([pq], genericMiner()) |> first
 @test_throws ErrorException generaterules!(genericMiner())
 @test_throws ErrorException arule_analysis(arule3, genericMiner())
 @test_throws ErrorException all_arule_analysis(genericMiner())
@@ -592,3 +594,15 @@ long_itemset2 = [convert(Char,i) for i in 81:90] .|> Atom .|> Item |> Itemset
 @test Base.filter!([ARule(long_itemset1, long_itemset2)], fpgrowth_miner) |> length == 0
 
 @test_nowarn partial_deepcopy(fpgrowth_miner)
+
+# dummy names to reference each item
+variablenames = [
+    "X[Hand tip l]", "Y[Hand tip l]", "Z[Hand tip l]",
+    "X[Hand tip r]", "Y[Hand tip r]", "Z[Hand tip r]",
+];
+
+@test_nowarn begin
+    redirect_stdout(devnull) do
+        all_arule_analysis(fpgrowth_miner, variablenames)
+    end
+end

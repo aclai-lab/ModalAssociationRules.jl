@@ -466,7 +466,12 @@ The collection of [`ARule`](@ref)s is sorted decreasingly by [`gconfidence`](@re
 See also [`AbstractMiner`](@ref), [`ARule`](@ref), [`arule_analysis`](@ref),
 [`gconfidence`](@ref).
 """
-function all_arule_analysis(miner::AbstractMiner, args...; kwargs...)
+function all_arule_analysis(
+    miner::AbstractMiner,
+    variablenames::Vector{S},
+    args...;
+    kwargs...
+) where {S<:AbstractString}
     # for each rule, sorted by global confidence, print them
     for r in sort(arules(miner), by = x -> miner.globalmemo[(:gconfidence, x)], rev=true)
         ModalAssociationRules.arule_analysis(
