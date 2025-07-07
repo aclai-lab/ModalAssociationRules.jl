@@ -525,6 +525,11 @@ _my_vd1 = VariableDistance(1, [[1,2,3,4,5], [1,2,3,4,5]])
 @test_nowarn load_libras()
 @test_nowarn load_epilepsy()
 
+@test_nowarn @eval X_hugadb = load_hugadb(["HuGaDB_v2_various_01_00.txt"]) |> first
+@test_nowarn @eval X_hugadb_filtered = filter_hugadb(X_hugadb, 5)
+
+@test X_hugadb[:,39][1] |> length == 3142
+@test X_hugadb_filtered[:,39][1] |> length == 1192
 
 
 ##### AbstractMiner functionalities
