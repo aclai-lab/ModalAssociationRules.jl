@@ -557,3 +557,5 @@ end
 
 blmemo = miner_reduce!([b1,b2])
 @test length(blmemo) == 20
+
+@test datatype(b1) <: SupportedLogiset
