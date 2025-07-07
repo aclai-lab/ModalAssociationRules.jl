@@ -272,6 +272,9 @@ grow!(fpt2, pqs; miner=fpgrowth_miner)
 @test_throws ArgumentError ModalAssociationRules.retrieveleaf(fpt2)
 @test_throws ErrorException ModalAssociationRules.link!(fpt2, fpt2)
 
+uncomplete_htable = HeaderTable(FPTree(pqr))
+link!(uncomplete_htable, FPTree(manual_s |> Itemset) |> children |> first)
+
 # manual FPTree construction and antagonist functions;
 # to compute the construction, we use the previously trained miner `fpgrowth_miner`;
 # since we are using it, each Itemset is inserted by following the order: r, then p, then q.

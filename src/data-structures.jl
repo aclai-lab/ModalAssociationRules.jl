@@ -482,19 +482,12 @@ function link!(htable::HeaderTable, fptree::FPTree)
     _content = content(fptree)
 
     hitems = items(htable)
+    # the content of `fptree` was never seen before by this `htable`
     if !(_content in hitems)
-        # the content of `fptree` was never seen before by this `htable`
         push!(hitems, _content)
         htable.link[_content] = fptree
         return
-    end
-
-    if isnothing(htable.link[_content])
-        # the content of `fptree` is already loaded: an empty `HeaderTable` constructor
-        # was called sometime before now and the entry associated with the content is empty.
-        htable.link[_content] = fptree
     else
-        # a new linkage is established
         from = follow(htable, _content)
         if from !== fptree
             link!(from, fptree)
