@@ -22,6 +22,7 @@ X3 = deepcopy(X1)
 manual_p = Atom(ScalarCondition(VariableMin(1), >, -0.5)) |> Item
 manual_q = Atom(ScalarCondition(VariableMin(2), <=, -2.2)) |> Item
 manual_r = Atom(ScalarCondition(VariableMin(3), >, -3.6)) |> Item
+manual_s = Atom(ScalarCondition(VariableMin(4), ==, 1.0)) |> Item
 
 manual_lp = box(IA_L)(manual_p |> formula) |> Item
 manual_lq = diamond(IA_L)(manual_q |> formula) |> Item
@@ -47,6 +48,7 @@ pq = Itemset{Item}([manual_p, manual_q])
 qr = Itemset{Item}([manual_q, manual_r])
 pr = Itemset{Item}([manual_p, manual_r])
 pqr = Itemset{Item}([manual_p, manual_q, manual_r])
+pqs = Itemset{Item}([manual_p, manual_q, manual_s])
 r = Itemset{Item}(manual_r)
 
 @test pq in pq
@@ -259,6 +261,16 @@ fpt_linked = FPTree()
 @test link!(fpt_c1, fpt_linked) == fpt_linked
 
 @test_nowarn repr("text/plain", fpt_c1)
+
+fpt2 = FPTree(pqr)
+grow!(fpt2, pqs; miner=fpgrowth_miner)
+
+@test_throws ArgumentError itemset_from_fplist(fpt2)
+@test_throws ArgumentError ModalAssociationRules.retrievebycontent(fpt2, manual_p)
+@test isnothing <| ModalAssociationRules.retrievebycontent(fpt, "z" |> Atom |> Item)
+
+@test_throws ArgumentError ModalAssociationRules.retrieveleaf(fpt2)
+@test_throws ErrorException ModalAssociationRules.link!(fpt2, fpt2)
 
 # manual FPTree construction and antagonist functions;
 # to compute the construction, we use the previously trained miner `fpgrowth_miner`;

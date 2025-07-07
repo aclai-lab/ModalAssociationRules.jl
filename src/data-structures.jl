@@ -272,7 +272,6 @@ See also [`FPTree`](@ref)
 """
 function islist(fptree::FPTree)::Bool
     arity = fptree |> children |> length
-
     if arity == 1
         return islist(fptree |> children |> first)
     elseif arity > 1
