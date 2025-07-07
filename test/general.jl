@@ -270,7 +270,7 @@ grow!(fpt2, pqs; miner=fpgrowth_miner)
 
 @test_throws ArgumentError itemset_from_fplist(fpt2)
 @test_throws ArgumentError ModalAssociationRules.retrievebycontent(fpt2, manual_p)
-@test isnothing <| ModalAssociationRules.retrievebycontent(fpt, "z" |> Atom |> Item)
+@test ModalAssociationRules.retrievebycontent(fpt, "z" |> Atom |> Item) |> isnothing
 
 @test_throws ArgumentError ModalAssociationRules.retrieveleaf(fpt2)
 @test_throws ErrorException ModalAssociationRules.link!(fpt2, fpt2)
@@ -547,7 +547,7 @@ _my_vd1 = VariableDistance(1, [[1,2,3,4,5], [1,2,3,4,5]])
 @test_throws ErrorException generaterules([pq], genericMiner()) |> first
 @test_throws ErrorException generaterules!(genericMiner())
 @test_throws ErrorException arule_analysis(arule3, genericMiner())
-@test_throws ErrorException all_arule_analysis(genericMiner())
+@test_throws MethodError all_arule_analysis(genericMiner())
 @test_throws ErrorException partial_deepcopy(genericMiner())
 @test_throws ErrorException SoleLogics.frame(genericMiner())
 
@@ -640,3 +640,32 @@ end
 
 @test ModalAssociationRules._lsupport_logic(
     _my_dimensionally_itemset, X2, 1, fpgrowth_miner)[:measure] |> isnan
+
+
+##### Anchored semantics
+
+##### TODO - test this part
+##### apriori_unanchored_miner = Miner(
+#####     X1,
+#####     apriori,
+#####     manual_items,
+#####     _itemsetmeasures,
+#####     _rulemeasures;
+#####     itemset_policies=Function[]
+##### )
+#####
+##### @test_throws AssertionError isanchored_miner(apriori_unanchored_miner)
+##### @test_throws AssertionError anchored_semantics(apriori_unanchored_miner, apriori)
+#####
+##### @test_throws ErrorException anchored_semantics(fpgrowth_miner, fpgrowth)
+#####
+##### X3 = scalarlogiset(X_df, [_my_vd1, _my_vd2])
+##### anchored_fpgrowth_miner = Miner(
+#####     X3,
+#####     fpgrowth,
+#####     [_my_p, _my_r],
+#####     _itemsetmeasures,
+#####     _rulemeasures
+##### )
+##### anchored_semantics(anchored_fpgrowth_miner, fpgrowth)
+#####

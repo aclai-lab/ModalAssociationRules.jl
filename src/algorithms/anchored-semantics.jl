@@ -55,6 +55,7 @@ function anchored_semantics(
     _item_refsize = item -> formula(item) |> SoleLogics.value |> SoleData.metacond |>
         SoleData.feature |> refsize
 
+    anchor_groups = undef
     try
         # within the anchors, further separate by dimension of the wrapped references
         # (e.g., a scalar, whose size is "()", or a sequence, whose size is "(1,)" and so on);
