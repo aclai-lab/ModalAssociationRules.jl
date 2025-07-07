@@ -141,8 +141,10 @@ export anchored_semantics
 export anchored_grow_prune, anchored_apriori
 export anchored_fpgrowth
 
-include("alphabet-proposal.jl")
-export motifsalphabet
+# utilities to help an user generate an alphabet graphically;
+# see future-work folder.
+# include("alphabet-proposal.jl")
+# export motifsalphabet
 
 include("loaders/natops-loader.jl")
 include("loaders/libras-loader.jl")
