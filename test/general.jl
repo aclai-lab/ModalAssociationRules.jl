@@ -606,3 +606,16 @@ variablenames = [
         all_arule_analysis(fpgrowth_miner, variablenames)
     end
 end
+
+
+##### Policies
+
+@test_throws ArgumentError islimited_length_itemset(; maxlength=0)
+@test islimited_length_itemset(; maxlength=nothing)(long_itemset1) == true
+@test islimited_length_itemset(; maxlength=5)(long_itemset1) == false
+
+@test_throws ArgumentError islimited_length_arule(antecedent_maxlength=0)
+@test_throws ArgumentError isanchored_arule(npropositions=-1)
+
+@test_throws ArgumentError isheterogeneous_arule(antecedent_nrepetitions=0)
+@test_throws ArgumentError isheterogeneous_arule(consequent_nrepetitions=-1)
