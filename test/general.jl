@@ -2,8 +2,10 @@
 using Test
 
 using ModalAssociationRules
-using SoleData
 using StatsBase
+
+using SoleData
+using SoleLogics
 
 import ModalAssociationRules.children, ModalAssociationRules.info
 
@@ -559,3 +561,10 @@ blmemo = miner_reduce!([b1,b2])
 @test length(blmemo) == 20
 
 @test datatype(b1) <: SupportedLogiset
+
+
+
+##### Miner wrapping a custom Kripke structure MineableData
+
+X_multi = SoleData.MultiLogiset([scalarlogiset(X_df)])
+unvalid_miner = Miner(X1, apriori, manual_items, _itemsetmeasures, _rulemeasures)
