@@ -169,12 +169,9 @@ struct Miner{
         I<:Item,
     }
         # dataset frames must be equal
-        if !(allequal([SoleLogics.frame(X, ith_instance)
-            for ith_instance in 1:ninstances(X)]))
-            throw(ArgumentError("Instances frame is shaped " *
-                "differently. Please, provide an uniform dataset to guarantee " *
-                "mining correctness."
-            ))
+        # TODO - support MultiLogiset mining
+        if X isa SoleData.MultiLogiset
+            throw(ArgumentError("MultiLogiset mining is currently not supported."))
         end
 
         # gsupport is crucial to mine association rule

@@ -564,7 +564,17 @@ blmemo = miner_reduce!([b1,b2])
 
 
 
-##### Miner wrapping a custom Kripke structure MineableData
+##### Checking that MultiLogiset is Miner wrapping a custom MultiLogiset
 
-X_multi = SoleData.MultiLogiset([scalarlogiset(X_df)])
-unvalid_miner = Miner(X1, apriori, manual_items, _itemsetmeasures, _rulemeasures)
+# we artificially create a little frame
+X_df2 = deepcopy(X_df)
+_ninstances, _nvars = size(X_df2)
+
+for i in 1:_ninstances
+    for v in 1:_nvars
+        X_df2[i,v] = X_df2[i,v][1:5]
+    end
+end
+
+X_multi = SoleData.MultiLogiset([X1, scalarlogiset(X_df2)])
+@test_throws ArgumentError Miner(X_multi, apriori, manual_items, _itemsetmeasures, _rulemeasures)
