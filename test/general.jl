@@ -519,7 +519,8 @@ localmemo!(fpgrowth_miner, (:lsupport, pq, 1), 0.56)
 globalmemo!(fpgrowth_miner, (:gsupport, pq), 0.61)
 @test globalmemo(fpgrowth_miner, (:gsupport, pq)) == 0.61
 
-miningstate!(fpgrowth_miner, :instance_item_toworlds, (1, pq), [0,0,0])
+@test_nowarn miningstate!(fpgrowth_miner, :current_instance, 2)
+@test_nowarn miningstate!(fpgrowth_miner, :instance_item_toworlds, (1, pq), [0,0,0])
 @test miningstate(fpgrowth_miner, :instance_item_toworlds)[(1,pq)] == BitVector([0,0,0])
 
 @test_throws ErrorException generaterules([pq], genericMiner()) |> collect
@@ -578,3 +579,16 @@ end
 
 X_multi = SoleData.MultiLogiset([X1, scalarlogiset(X_df2)])
 @test_throws ArgumentError Miner(X_multi, apriori, manual_items, _itemsetmeasures, _rulemeasures)
+
+
+##### Utilities
+
+# fpgrowth contains a policy to filter out association rules that are "too long"
+long_itemset1 = [convert(Char,i) for i in 65:80] .|> Atom .|> Item |> Itemset
+long_itemset2 = [convert(Char,i) for i in 81:90] .|> Atom .|> Item |> Itemset
+
+# here, we try to apply such a policy to an arbitrary set of rules,
+# even if they are external to the miner itself.
+@test Base.filter!([ARule(long_itemset1, long_itemset2)], fpgrowth_miner) |> length == 0
+
+@test_nowarn partial_deepcopy(fpgrowth_miner)
