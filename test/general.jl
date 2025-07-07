@@ -86,9 +86,12 @@ enhanceditemset = convert(EnhancedItemset, pq, 42)
 @test ConditionalPatternBase <: Vector{EnhancedItemset}
 
 @test_nowarn ARule(pq, Itemset([manual_r]))
+
 arule = ARule(pq, Itemset([manual_r]))
 @test content(arule) |> first == antecedent(arule)
 @test content(arule) |> last == consequent(arule)
+@test Itemset(arule) == pqr
+
 arule2 = ARule(qr, Itemset([manual_p]))
 arule3 = ARule(Itemset([manual_q, manual_p]), Itemset([manual_r]))
 
