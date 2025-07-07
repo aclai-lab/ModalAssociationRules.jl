@@ -576,14 +576,13 @@ end
 
 b2 = Bulldozer(fpgrowth_miner, r2; itemset_policies=itemset_policies(fpgrowth_miner))
 for x in r2
-    localmemo!(b1, (:lsupport, pq, x), 0.56)
+    localmemo!(b2, (:lsupport, pq, x), 0.56)
 end
 
 blmemo = miner_reduce!([b1,b2])
 @test length(blmemo) == 20
 
 @test datatype(b1) <: SupportedLogiset
-
 
 
 ##### Checking that MultiLogiset is Miner wrapping a custom MultiLogiset
