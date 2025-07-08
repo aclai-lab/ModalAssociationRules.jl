@@ -17,6 +17,7 @@ load_libras
 ## HuGaDB
 ```@docs
 load_hugadb
+filter_hugadb
 ```
 
 ## Epilepsy

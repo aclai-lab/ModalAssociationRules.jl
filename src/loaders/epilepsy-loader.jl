@@ -5,7 +5,13 @@ using CategoricalArrays
 using DataStructures: OrderedDict
 
 """
-TODO
+function load_epilepsy(
+    dirpath::String=joinpath(dirname(pathof(ModalAssociationRules)), "../test/data/Epilepsy"),
+    fileprefix::String="Epilepsy"
+)
+
+Loader for Epilepsy dataset.
+More information on [timeseriesclassification.com](https://timeseriesclassification.com/description.php?Dataset=Epilepsy).
 """
 function load_epilepsy(
     dirpath::String=joinpath(dirname(pathof(ModalAssociationRules)), "../test/data/Epilepsy"),

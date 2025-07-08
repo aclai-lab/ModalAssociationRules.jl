@@ -13,7 +13,13 @@ using CategoricalArrays
 using DataStructures: OrderedDict
 
 """
-TODO
+function load_NATOPS(
+    dirpath::String=joinpath(dirname(pathof(ModalAssociationRules)), "../test/data/NATOPS"),
+    fileprefix::String="NATOPS"
+)
+
+Loader for NATOPS dataset.
+More on [the official GitHub repository](https://github.com/yalesong/natops).
 """
 function load_NATOPS(
     dirpath::String=joinpath(dirname(pathof(ModalAssociationRules)), "../test/data/NATOPS"),
