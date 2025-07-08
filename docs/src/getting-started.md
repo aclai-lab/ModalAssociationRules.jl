@@ -178,11 +178,10 @@ instanceprojection(bulldozer::Bulldozer, ith_instance::Integer)
 data(bulldozer::Bulldozer)
 
 items(bulldozer::Bulldozer)
-itemsetmeasures(bulldozer::Bulldozer)::Vector{<:MeaningfulnessMeasure}
+itemsetmeasures(bulldozer::Bulldozer)
 
 
 localmemo(bulldozer::Bulldozer)
-localmemo(bulldozer::Bulldozer, key::LmeasMemoKey)
 
 worldfilter(bulldozer::Bulldozer)
 
