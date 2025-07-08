@@ -200,7 +200,7 @@ items(bulldozer::Bulldozer) = bulldozer.items
     """
 itemsetmeasures(
     bulldozer::Bulldozer
-    )::Vector{<:MeaningfulnessMeasure} = bulldozer.itemsetmeasures
+)::Vector{<:MeaningfulnessMeasure} = bulldozer.itemsetmeasures
 
 """
     localmemo(bulldozer::Bulldozer)
@@ -364,18 +364,18 @@ its global support, in order to simplify `miner`'s job when working in the globa
 See also [`Itemset`](@ref), [`LmeasMemo`](@ref), [`lsupport`](@ref), [`Miner`](@ref).
 """
 function load_localmemo!(miner::AbstractMiner, localmemo::LmeasMemo)
-    fpgrowth_fragments = DefaultDict{Itemset,Integer}(0)
+    fragments = DefaultDict{Itemset,Integer}(0)
     min_lsupport_threshold = findmeasure(miner, lsupport)[2]
 
     for (lmemokey, lmeasvalue) in localmemo
         meas, subject, _ = lmemokey
         localmemo!(miner, lmemokey, lmeasvalue)
         if meas == :lsupport && lmeasvalue >= min_lsupport_threshold
-            fpgrowth_fragments[subject] += 1
+            fragments[subject] += 1
         end
     end
 
-    return fpgrowth_fragments
+    return fragments
 end
 
 # more utilities and new dispatches coming from external packages

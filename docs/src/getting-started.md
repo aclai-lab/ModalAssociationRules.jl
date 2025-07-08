@@ -166,37 +166,37 @@ To support parallel mining, we provide a [`Bulldozer`](@ref) miner, that is, a l
 
 ```@docs
 Bulldozer
-ModalAssociationRules.datalock :: Tuple{Bulldozer}
-ModalAssociationRules.memolock :: Tuple{Bulldozer}
-ModalAssociationRules.miningstatelock :: Tuple{Bulldozer}
+datalock(bulldozer::Bulldozer)
+memolock(bulldozer::Bulldozer)
+miningstatelock(bulldozer::Bulldozer)
 
-ModalAssociationRules.datatype :: Union{Tuple{Bulldozer{D}}, Tuple{D}} where D<:AbstractDataset
-ModalAssociationRules.itemtype :: Union{Tuple{Bulldozer{D, I}}, Tuple{I}, Tuple{D}} where {D, I<:Item}
-ModalAssociationRules.instancesrange :: Tuple{Bulldozer}
+datatype(::Bulldozer{D}) where {D<:MineableData}
+itemtype(::Bulldozer{D,I}) where {D,I<:Item}
+instancesrange(bulldozer::Bulldozer)
+instanceprojection(bulldozer::Bulldozer, ith_instance::Integer)
 
-ModalAssociationRules.data :: Tuple{Bulldozer}
-ModalAssociationRules.instanceprojection :: Tuple{Bulldozer, Integer}
+data(bulldozer::Bulldozer)
 
-ModalAssociationRules.items :: Tuple{Bulldozer}
-ModalAssociationRules.itemsetmeasures :: Tuple{Bulldozer}
+items(bulldozer::Bulldozer)
+itemsetmeasures(bulldozer::Bulldozer)::Vector{<:MeaningfulnessMeasure}
 
-ModalAssociationRules.localmemo :: Tuple{Bulldozer}
-ModalAssociationRules.localmemo! :: Tuple{Bulldozer, Tuple{Symbol, ARMSubject, Integer}, Float64}
+
+localmemo(bulldozer::Bulldozer)
+localmemo(bulldozer::Bulldozer, key::LmeasMemoKey)
 
 worldfilter(bulldozer::Bulldozer)
 
 itemset_policies(bulldozer::Bulldozer)
 
-ModalAssociationRules.miningstate :: Tuple{Bulldozer}
-ModalAssociationRules.miningstate! :: Tuple{Bulldozer, Symbol, Any}
+miningstate(bulldozer::Bulldozer)
+miningstate!(bulldozer::Bulldozer, key::Symbol, val)
 
-ModalAssociationRules.hasminingstate :: Tuple{Bulldozer, Symbol}
+hasminingstate(bulldozer::Bulldozer, key::Symbol)
 
-ModalAssociationRules.measures :: Tuple{Bulldozer}
+measures(bulldozer::Bulldozer)
 
-ModalAssociationRules.miner_reduce! :: Union{Tuple{AbstractVector{B}}, Tuple{B}} where B<:Bulldozer
-
-SoleLogics.frame :: Tuple{Bulldozer}
+miner_reduce!(local_results::AbstractVector{B}) where {B<:Bulldozer}
+load_localmemo!(miner::AbstractMiner, localmemo::LmeasMemo)
 ```
 
 
