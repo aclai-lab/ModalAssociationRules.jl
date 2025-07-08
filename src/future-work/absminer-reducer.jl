@@ -24,7 +24,7 @@
 ##### - `includelmemo::Bool=false`: whether to reduce `lmemo(miner)`; defaulted to false for performances;
 ##### - `includegmemo::Bool=true`: whether to reduce `gmemo(miner)`.
 #####
-##### See also [`AbstractMiner0`](@ref), [`localmemo`](@ref), [`MeaningfulnessMeasure`](@ref),
+##### See also [`AbstractMiner`](@ref), [`localmemo`](@ref), [`MeaningfulnessMeasure`](@ref),
 ##### [`globalmemo`](@ref).
 ##### """
 ##### function miner_reduce!(
