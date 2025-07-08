@@ -5,7 +5,7 @@ DocMeta.setdocmeta!(ModalAssociationRules, :DocTestSetup, :(using ModalAssociati
 
 makedocs(;
     modules = [ModalAssociationRules],
-    authors = "Mauro Milella, Giovanni Pagliarini, Edoardo Ponsanesi",
+    authors = "Mauro Milella, Giovanni Pagliarini",
     repo=Documenter.Remotes.GitHub("aclai-lab", "ModalAssociationRules.jl"),
     sitename = "ModalAssociationRules.jl",
     format = Documenter.HTML(;

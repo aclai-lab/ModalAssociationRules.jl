@@ -11,7 +11,6 @@ The following utilities often involve performing some combinatoric trick between
 ```@docs
 combine_items
 grow_prune
-coalesce_contributors(itemset::Itemset, miner::Miner; localmeasure::Function=lsupport)
 ```
 
 ## Association rules

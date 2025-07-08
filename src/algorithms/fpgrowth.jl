@@ -14,7 +14,7 @@ by an [`EnhancedItemset`](@ref).
 The [`EnhancedItemset`](@ref)s in the returned [`ConditionalPatternBase`](@ref) are sorted
 decreasingly by [`gsupport`](@ref).
 
-See also [`AbstractMiner`](@ref), [`ConditionalPatternBase`](@ref), [`contributors`](@ref),
+See also [`AbstractMiner`](@ref), [`ConditionalPatternBase`](@ref),
 [`EnhancedItemset`](@ref), [`fpgrowth`](@ref), [`FPTree`](@ref), [`Item`](@ref),
 [`Itemset`](@ref), [`WorldMask`](@ref).
 """

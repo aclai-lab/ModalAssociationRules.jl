@@ -18,10 +18,6 @@ ConditionalPatternBase
 
 ## Modal logic in action
 ```@docs
-Contributors
-contributors
-contributors!
-
 initminingstate(::typeof(fpgrowth), ::AbstractDataset)
 ```
 

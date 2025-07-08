@@ -32,7 +32,7 @@ patternbase(item::Item, htable::HeaderTable, miner::Miner)
 projection(pbase::ConditionalPatternBase, miner::Miner)
 ```
 
-Also, FPGrowth requires the [`Miner`](@ref) to remember the [`Contributors`](@ref) associated with the extracted frequent itemsets.
+Also, FPGrowth requires the [`Miner`](@ref) to remember the worlds associated with the extracted frequent itemsets.
 To add this functionality, we can define a new dispatch of [`initminingstate`](@ref): it is automatically considered to enrich the miner, while building it together with [`fpgrowth`](@ref) as mining algorithm.
 
 ```@docs

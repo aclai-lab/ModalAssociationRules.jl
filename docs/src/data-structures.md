@@ -25,10 +25,6 @@ Base.count(fptree::FPTree)
 count!(fptree::FPTree, newcount::Integer)
 addcount!(fptree::FPTree, deltacount::Integer)
 
-contributors(fptree::FPTree)
-contributors!(fptree::FPTree, contribution::WorldMask)
-addcontributors!(fptree::FPTree, contribution::WorldMask)
-
 Base.push!(fptree::FPTree, itemset::Itemset, ninstance::Integer, miner::Miner; htable::Union{Nothing,HeaderTable}=nothing)
 
 link(fptree::FPTree)
