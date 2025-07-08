@@ -647,28 +647,38 @@ end
 
 ##### Anchored semantics
 
-##### TODO - test this part
-##### apriori_unanchored_miner = Miner(
-#####     X1,
-#####     apriori,
-#####     manual_items,
-#####     _itemsetmeasures,
-#####     _rulemeasures;
-#####     itemset_policies=Function[]
-##### )
-#####
-##### @test_throws AssertionError isanchored_miner(apriori_unanchored_miner)
-##### @test_throws AssertionError anchored_semantics(apriori_unanchored_miner, apriori)
-#####
-##### @test_throws ErrorException anchored_semantics(fpgrowth_miner, fpgrowth)
-#####
-##### X3 = scalarlogiset(X_df, [_my_vd1, _my_vd2])
-##### anchored_fpgrowth_miner = Miner(
-#####     X3,
-#####     fpgrowth,
-#####     [_my_p, _my_r],
-#####     _itemsetmeasures,
-#####     _rulemeasures
-##### )
-##### anchored_semantics(anchored_fpgrowth_miner, fpgrowth)
-#####
+apriori_unanchored_miner = Miner(
+    X1,
+    apriori,
+    manual_items,
+    _itemsetmeasures,
+    _rulemeasures;
+    itemset_policies=Function[]
+)
+
+@test_throws AssertionError isanchored_miner(apriori_unanchored_miner)
+@test_throws AssertionError anchored_semantics(apriori_unanchored_miner, apriori)
+
+@test_throws ErrorException anchored_semantics(fpgrowth_miner, fpgrowth)
+
+variables = [
+    VariableDistance(id, m)
+    for (id, m) in [(1,[[1,2,3]]), (2,[[4,5,6]]), (3,[[7,8,9]])]
+]
+
+propositionalatoms = [Atom(ScalarCondition(v, <=, 200.0)) for v in variables]
+
+_items = Vector{Item}(propositionalatoms)
+
+X3 = scalarlogiset(X_df, variables)
+for miningalgo in [apriori, fpgrowth]
+    anchored_miner = Miner(
+        X3,
+        miningalgo,
+        _items,
+        _itemsetmeasures,
+        _rulemeasures
+    )
+    @test_nowarn anchored_semantics(anchored_miner, miningalgo)
+    @test globalmemo(anchored_miner) |> length == 7
+end
