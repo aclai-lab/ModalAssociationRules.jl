@@ -678,7 +678,16 @@ for miningalgo in [apriori, fpgrowth]
         _items,
         _itemsetmeasures,
         _rulemeasures
-    )
-    @test_nowarn anchored_semantics(anchored_miner)
-    @test globalmemo(anchored_miner) |> length == 7
-end
+        )
+        @test_nowarn anchored_semantics(anchored_miner)
+        @test globalmemo(anchored_miner) |> length == 7
+    end
+
+anchored_apriori_miner = Miner(X3, apriori, _items, _itemsetmeasures, _rulemeasures)
+anchored_fpgrowth_miner = Miner(X3, fpgrowth, _items, _itemsetmeasures, _rulemeasures)
+
+@test_throws ArgumentError anchored_fpgrowth(anchored_apriori_miner)
+@test_throws ArgumentError anchored_apriori(anchored_fpgrowth_miner)
+
+@test_nowarn anchored_apriori(anchored_apriori_miner)
+@test_nowarn anchored_fpgrowth(anchored_fpgrowth_miner)
