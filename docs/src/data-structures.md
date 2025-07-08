@@ -18,6 +18,8 @@ parent!(fptree::FPTree, parentfpt::Union{Nothing,FPTree})
 children(fptree::FPTree)
 children!(fptree::FPTree, child::FPTree)
 
+retrieveleaf
+
 Base.count(fptree::FPTree)
 count!(fptree::FPTree, newcount::Integer)
 addcount!(fptree::FPTree, deltacount::Integer)

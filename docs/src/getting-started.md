@@ -159,3 +159,44 @@ miningstate!(miner::Miner, key::Symbol, val)
 hasminingstate(miner::Miner, key::Symbol)
 initminingstate(::Function, ::AbstractDataset)
 ```
+
+## Parallelization
+
+To support parallel mining, we provide a [`Bulldozer`](@ref) miner, that is, a lightweight copy of [`Miner`](@ref) which mines a specific section of the data in its own thread.
+
+```@docs
+Bulldozer
+ModalAssociationRules.datalock :: Tuple{Bulldozer}
+ModalAssociationRules.memolock :: Tuple{Bulldozer}
+ModalAssociationRules.miningstatelock :: Tuple{Bulldozer}
+
+ModalAssociationRules.datatype :: Union{Tuple{Bulldozer{D}}, Tuple{D}} where D<:AbstractDataset
+ModalAssociationRules.itemtype :: Union{Tuple{Bulldozer{D, I}}, Tuple{I}, Tuple{D}} where {D, I<:Item}
+ModalAssociationRules.instancesrange :: Tuple{Bulldozer}
+
+ModalAssociationRules.data :: Tuple{Bulldozer}
+ModalAssociationRules.instanceprojection :: Tuple{Bulldozer, Integer}
+
+ModalAssociationRules.items :: Tuple{Bulldozer}
+ModalAssociationRules.itemsetmeasures :: Tuple{Bulldozer}
+
+ModalAssociationRules.localmemo :: Tuple{Bulldozer}
+ModalAssociationRules.localmemo! :: Tuple{Bulldozer, Tuple{Symbol, ARMSubject, Integer}, Float64}
+
+worldfilter(bulldozer::Bulldozer)
+
+itemset_policies(bulldozer::Bulldozer)
+
+ModalAssociationRules.miningstate :: Tuple{Bulldozer}
+ModalAssociationRules.miningstate! :: Tuple{Bulldozer, Symbol, Any}
+
+ModalAssociationRules.hasminingstate :: Tuple{Bulldozer, Symbol}
+
+ModalAssociationRules.measures :: Tuple{Bulldozer}
+
+ModalAssociationRules.miner_reduce! :: Union{Tuple{AbstractVector{B}}, Tuple{B}} where B<:Bulldozer
+
+SoleLogics.frame :: Tuple{Bulldozer}
+```
+
+
