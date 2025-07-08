@@ -20,7 +20,7 @@ makedocs(;
         "Mining with modal logic" => "modal-generalization.md",
         "Available algorithms" => "algorithms.md",
         "Built-in data structures" => "data-structures.md",
-        "Utilities" => "utilities.md",
+        "Advanced usage" => "advanced.md",
         "Hands on" => "hands-on.md",
     ],
     # NOTE: warning

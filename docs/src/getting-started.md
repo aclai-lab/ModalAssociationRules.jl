@@ -85,8 +85,14 @@ gconfidence(rule::ARule, X::SupportedLogiset, threshold::Threshold; miner::Union
 
 ## Mining structures
 
-Finally, we are ready to start mining. To do so, we need to create a [`Miner`](@ref) object.
-We just need to specify which dataset we are working with, together with a mining function, a vector of initial [`Item`](@ref)s, and the [`MeaningfulnessMeasure](@ref)s to establish [`ARMSubject`](@ref) interestingness.
+Finally, we are ready to start mining. To do so, we can create a custom [`AbstractMiner`](@ref) type.
+
+```@docs
+AbstractMiner
+```
+
+The main implementation of such an interface is embodied by the [`Miner`](@ref) object.
+To mine using a Miner, we just need to specify which dataset we are working with, together with a mining function, a vector of initial [`Item`](@ref)s, and the [`MeaningfulnessMeasure](@ref)s to establish [`ARMSubject`](@ref) interestingness.
 
 ```@docs
 Miner
