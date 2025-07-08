@@ -10,7 +10,7 @@ CurrentModule = ModalAssociationRules
 FPTree
 
 content(fptree::FPTree)
-content!(fptree::FPTree, item::Union{Nothing,Item})
+content!(fptree::FPTree, item::Item)
 
 parent(fptree::FPTree)
 parent!(fptree::FPTree, parentfpt::Union{Nothing,FPTree})
@@ -22,7 +22,7 @@ Base.count(fptree::FPTree)
 count!(fptree::FPTree, newcount::Integer)
 addcount!(fptree::FPTree, deltacount::Integer)
 
-Base.push!(fptree::FPTree, itemset::Itemset, ninstance::Integer, miner::Miner; htable::Union{Nothing,HeaderTable}=nothing)
+grow!(fptree::FPTree, itemset::Itemset, ith_instance::Integer, miner::AbstractMiner)
 
 link(fptree::FPTree)
 link!(from::FPTree, to::FPTree)

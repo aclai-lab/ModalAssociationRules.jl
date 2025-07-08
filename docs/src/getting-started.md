@@ -71,12 +71,13 @@ GmeasMemo
 
 What follows is a list of the already built-in meaningfulness measures.
 In the [`Hands on`](@hands-on) section you will learn how to implement your own measure.
+More information are available in the [`Modal generalization`](@man-modal-generalization) section.
 
 ```@docs
-lsupport(itemset::Itemset, logi_instance::LogicalInstance; miner::Union{Nothing,Miner}=nothing)
-gsupport(itemset::Itemset, X::SupportedLogiset, threshold::Threshold; miner::Union{Nothing,Miner}=nothing)
-lconfidence(rule::ARule, logi_instance::LogicalInstance; miner::Union{Nothing,Miner} = nothing)
-gconfidence(rule::ARule, X::SupportedLogiset, threshold::Threshold; miner::Union{Nothing,Miner}=nothing)
+lsupport
+gsupport
+lconfidence
+gconfidence
 ```
 
 ## Mining structures
@@ -88,7 +89,7 @@ AbstractMiner
 ```
 
 The main implementation of such an interface is embodied by the [`Miner`](@ref) object.
-To mine using a Miner, we just need to specify which dataset we are working with, together with a mining function, a vector of initial [`Item`](@ref)s, and the [`MeaningfulnessMeasure](@ref)s to establish [`ARMSubject`](@ref) interestingness.
+To mine using a Miner, we just need to specify which dataset we are working with, together with a mining function, a vector of initial [`Item`](@ref)s, and the [`MeaningfulnessMeasure`](@ref)s to establish [`ARMSubject`](@ref) interestingness.
 
 ```@docs
 Miner
@@ -97,7 +98,7 @@ Miner
 Let us see which getters and setters are available for [`Miner`](@ref).
 
 ```@docs
-dataset(miner::Miner)
+data(miner::Miner)
 algorithm(miner::Miner)
 items(miner::Miner)
 
@@ -116,10 +117,9 @@ freqitems(miner::Miner)
 arules(miner::Miner)
 ```
 
-Here is how to start mining.
+To start the mining algorithm, simply call the following:
 ```@docs
 mine!(miner::Miner)
-apply!(miner::Miner, X::AbstractDataset)
 ```
 
 The mining call returns an [`ARule`](@ref) generator. Since the extracted rules could be several, it's up to you to collect all the rules in a step or arule_analysis them lazily, collecting them one at a time. You can also call the mining function ignoring it's return value, and then generate the rules later by calling the following.
