@@ -272,7 +272,6 @@ See also [`FPTree`](@ref)
 """
 function islist(fptree::FPTree)::Bool
     arity = fptree |> children |> length
-
     if arity == 1
         return islist(fptree |> children |> first)
     elseif arity > 1
@@ -483,19 +482,12 @@ function link!(htable::HeaderTable, fptree::FPTree)
     _content = content(fptree)
 
     hitems = items(htable)
+    # the content of `fptree` was never seen before by this `htable`
     if !(_content in hitems)
-        # the content of `fptree` was never seen before by this `htable`
         push!(hitems, _content)
         htable.link[_content] = fptree
         return
-    end
-
-    if isnothing(htable.link[_content])
-        # the content of `fptree` is already loaded: an empty `HeaderTable` constructor
-        # was called sometime before now and the entry associated with the content is empty.
-        htable.link[_content] = fptree
     else
-        # a new linkage is established
         from = follow(htable, _content)
         if from !== fptree
             link!(from, fptree)
@@ -540,9 +532,9 @@ See also [`HeaderTable`](@ref), [`Item`](@ref).
 """
 Base.reverse(htable::HeaderTable) = reverse(items(htable))
 
+# TODO - rewrite this docstring
+# TODO - move miner from kwargs to standard args
 doc_fptree_grow = """
-    TODO - rewrite this docstring
-
     function grow!(
         fptree::FPTree,
         itemset::Itemset,

@@ -5,7 +5,13 @@ using CategoricalArrays
 using DataStructures: OrderedDict
 
 """
-TODO
+function load_libras(
+    dirpath::String=joinpath(dirname(pathof(ModalAssociationRules)), "../test/data/Libras"),
+    fileprefix::String="Libras"
+)
+
+Loader for Libras dataset.
+More information on [UCI Archive](https://archive.ics.uci.edu/dataset/181/libras+movement).
 """
 function load_libras(
     dirpath::String=joinpath(dirname(pathof(ModalAssociationRules)), "../test/data/Libras"),

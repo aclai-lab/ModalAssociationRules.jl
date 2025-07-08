@@ -430,7 +430,7 @@ constraints specified in `arulemeasures(miner)`, and yields the rule if so.
 See also [`AbstractMiner`](@ref), [`ARule`](@ref), [`Itemset`](@ref),
 [`arulemeasures`](@ref).
 """
-@resumable function generaterules(::AbstractVector{Itemset}, ::AbstractMiner)
+@resumable function generaterules(::AbstractVector{<:Itemset}, ::AbstractMiner)
     error("Not implemented")
 end
 
@@ -466,7 +466,12 @@ The collection of [`ARule`](@ref)s is sorted decreasingly by [`gconfidence`](@re
 See also [`AbstractMiner`](@ref), [`ARule`](@ref), [`arule_analysis`](@ref),
 [`gconfidence`](@ref).
 """
-function all_arule_analysis(miner::AbstractMiner, args...; kwargs...)
+function all_arule_analysis(
+    miner::AbstractMiner,
+    variablenames::Vector{S},
+    args...;
+    kwargs...
+) where {S<:AbstractString}
     # for each rule, sorted by global confidence, print them
     for r in sort(arules(miner), by = x -> miner.globalmemo[(:gconfidence, x)], rev=true)
         ModalAssociationRules.arule_analysis(
@@ -493,6 +498,10 @@ function partial_deepcopy(original::AbstractMiner)
     error("Not implemented.")
 end
 
+# To solve https://github.com/aclai-lab/ModalAssociationRules.jl/issues/99
+# (that is, remove the necessity of the Bulldozer subtype of Miner)
+# this generic reducer could be implemented;
+# it might require a bit of refactoring but should be correct.
 """
     miner_reduce!(miners::AbstractVector{M}) where {M<:AbstractMiner}
 
@@ -511,10 +520,11 @@ and [`globalmemo`](@ref) [`MeaningfulnessMeasure`](@ref)s.
 # Keyword Arguments
 - `includeitems::Bool=true`: whether to reduce `items(miner)`;
 - `includefreqitems::Bool=true`: whether to reduce `freqitems(miner)`;
-- `includelmemo::Bool=false`: whether to reduce `lmemo(miner)`; defaulted to false for performances;
+- `includelmemo::Bool=false`: whether to reduce `lmemo(miner)`; defaulted to false for
+    performances;
 - `includegmemo::Bool=true`: whether to reduce `gmemo(miner)`.
 
-See also [`AbstractMiner0`](@ref), [`localmemo`](@ref), [`MeaningfulnessMeasure`](@ref),
+See also [`AbstractMiner`](@ref), [`localmemo`](@ref), [`MeaningfulnessMeasure`](@ref),
 [`globalmemo`](@ref).
 """
 function miner_reduce!(
@@ -558,6 +568,7 @@ function miner_reduce!(
 
     return main_miner
 end
+
 
 
 # interface extending dispatches coming from external packages

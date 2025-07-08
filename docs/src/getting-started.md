@@ -2,19 +2,15 @@
 CurrentModule = ModalAssociationRules
 ```
 
-```@contents
-Pages = ["getting-started.md"]
-```
-
 # [Getting started](@id man-core)
 
-In this introductory section you will learn about the main building blocks of ModalAssociationRules.jl. 
-Also if a good picture about *association rule mining* (ARM, from now onwards) is given during the documentation, to make the most out of this guide we suggest to read the following articles:
-- [association rule mining introduction and Apriori algorithm](http://ictcs2024.di.unito.it/wp-content/uploads/2024/08/ICTCS_2024_paper_16.pdf)
+In this introductory section, you will learn about the main building blocks of ModalAssociationRules.jl. 
+Also if a good picture about *association rule mining* (ARM, from now onwards) is given during the documentation, to make the most out of this guide we suggest reading the following articles:
+- [Association rule mining introduction and Apriori algorithm](http://ictcs2024.di.unito.it/wp-content/uploads/2024/08/ICTCS_2024_paper_16.pdf)
 - [FPGrowth algorithm](https://www.cs.sfu.ca/~jpei/publications/sigmod00.pdf)
-Those up above introduce two important algorithms, which are also built-in in this package. Moreover, the latter one is the state-of-the-art in the field of ARM.
+The above introduce two important algorithms, which are also built-in into this package. Moreover, the latter one is the state-of-the-art in the field of ARM.
 
-Further on in the documentation, the potential of ModalAssociationRules.jl will emerge: this package's raison d'être is to generalize the already existing ARM algorithms to modal logics, which are more expressive than propositional one and computationally less expensive than first order logic. If you are new to Sole.jl and you want to learn more about modal logic, please have a look at [SoleLogics.jl](https://github.com/aclai-lab/SoleLogics.jl) for a general overview on the topic, or follow this documentation and return to this link if needed.
+Further on in the documentation, the potential of ModalAssociationRules.jl will emerge: this package's raison d'être is to generalize the already existing ARM algorithms to modal logics, which are more expressive than propositional ones and computationally less expensive than first-order logic. If you are new to Sole.jl and you want to learn more about modal logic, please have a look at [SoleLogics.jl](https://github.com/aclai-lab/SoleLogics.jl) for a general overview on the topic, or follow this documentation and return to this link if needed.
 
 ## Core definitions
 
@@ -75,18 +71,25 @@ GmeasMemo
 
 What follows is a list of the already built-in meaningfulness measures.
 In the [`Hands on`](@hands-on) section you will learn how to implement your own measure.
+More information are available in the [`Modal generalization`](@man-modal-generalization) section.
 
 ```@docs
-lsupport(itemset::Itemset, logi_instance::LogicalInstance; miner::Union{Nothing,Miner}=nothing)
-gsupport(itemset::Itemset, X::SupportedLogiset, threshold::Threshold; miner::Union{Nothing,Miner}=nothing)
-lconfidence(rule::ARule, logi_instance::LogicalInstance; miner::Union{Nothing,Miner} = nothing)
-gconfidence(rule::ARule, X::SupportedLogiset, threshold::Threshold; miner::Union{Nothing,Miner}=nothing)
+lsupport
+gsupport
+lconfidence
+gconfidence
 ```
 
 ## Mining structures
 
-Finally, we are ready to start mining. To do so, we need to create a [`Miner`](@ref) object.
-We just need to specify which dataset we are working with, together with a mining function, a vector of initial [`Item`](@ref)s, and the [`MeaningfulnessMeasure](@ref)s to establish [`ARMSubject`](@ref) interestingness.
+Finally, we are ready to start mining. To do so, we can create a custom [`AbstractMiner`](@ref) type.
+
+```@docs
+AbstractMiner
+```
+
+The main implementation of such an interface is embodied by the [`Miner`](@ref) object.
+To mine using a Miner, we just need to specify which dataset we are working with, together with a mining function, a vector of initial [`Item`](@ref)s, and the [`MeaningfulnessMeasure`](@ref)s to establish [`ARMSubject`](@ref) interestingness.
 
 ```@docs
 Miner
@@ -95,7 +98,7 @@ Miner
 Let us see which getters and setters are available for [`Miner`](@ref).
 
 ```@docs
-dataset(miner::Miner)
+data(miner::Miner)
 algorithm(miner::Miner)
 items(miner::Miner)
 
@@ -108,16 +111,15 @@ getlocalthreshold(miner::Miner, meas::Function)
 getglobalthreshold(miner::Miner, meas::Function)
 ```
 
-After a [`Miner`](@ref) ends mining (we will see how to mine in a second), frequent [`Itemset`](@ref)s and [`ARule`](@ref) are accessibles through the getters below.
+After a [`Miner`](@ref) ends mining (we will see how to mine in a second), frequent [`Itemset`](@ref)s and [`ARule`](@ref) are accessible through the getters below.
 ```@docs
 freqitems(miner::Miner)
 arules(miner::Miner)
 ```
 
-Here is how to start mining.
+To start the mining algorithm, simply call the following:
 ```@docs
 mine!(miner::Miner)
-apply!(miner::Miner, X::AbstractDataset)
 ```
 
 The mining call returns an [`ARule`](@ref) generator. Since the extracted rules could be several, it's up to you to collect all the rules in a step or arule_analysis them lazily, collecting them one at a time. You can also call the mining function ignoring it's return value, and then generate the rules later by calling the following.
@@ -137,9 +139,9 @@ globalmemo!(miner::Miner, key::GmeasMemoKey, val::Threshold)
 
 ## Miner customization
 
-A [`Miner`](@ref) also contains two fields to keep additional informations, those are [`info`](@ref) and [`miningstate`](@ref).
+A [`Miner`](@ref) also contains two fields to keep additional information, those are [`info`](@ref) and [`miningstate`](@ref).
 
-The [`info`](@ref) field in [`Miner`](@ref) is a dictionary used to store extra informations about the miner, such as statistics about mining. Currently, since the package is still being developed, the `info` field only contains a flag indicating whether the `miner` has been used for mining or no.
+The [`info`](@ref) field in [`Miner`](@ref) is a dictionary used to store extra information about the miner, such as statistics about mining. Currently, since the package is still being developed, the `info` field only contains a flag indicating whether the `miner` has been used for mining or not.
 
 ```@docs
 Info
@@ -148,7 +150,7 @@ info!(miner::Miner, key::Symbol, val)
 hasinfo(miner::Miner, key::Symbol)
 ```
 
-When writing your own mining algorithm, or when mining with a particular kind of dataset, you might need to specialize the [`Miner`](@ref), keeping, for example, custom meta data and data structures. To specialize a [`Miner`](@ref), you can fill a [`MiningState`](@ref) structure to fit your needs.
+When writing your own mining algorithm, or when mining with a particular kind of dataset, you might need to specialize the [`Miner`](@ref), keeping, for example, custom metadata and data structures. To specialize a [`Miner`](@ref), you can fill a [`MiningState`](@ref) structure to fit your needs.
 
 ```@docs
 MiningState
@@ -157,3 +159,43 @@ miningstate!(miner::Miner, key::Symbol, val)
 hasminingstate(miner::Miner, key::Symbol)
 initminingstate(::Function, ::AbstractDataset)
 ```
+
+## Parallelization
+
+To support parallel mining, we provide a [`Bulldozer`](@ref) miner, that is, a lightweight copy of [`Miner`](@ref) which mines a specific section of the data in its own thread.
+
+```@docs
+Bulldozer
+datalock(bulldozer::Bulldozer)
+memolock(bulldozer::Bulldozer)
+miningstatelock(bulldozer::Bulldozer)
+
+datatype(::Bulldozer{D}) where {D<:MineableData}
+itemtype(::Bulldozer{D,I}) where {D,I<:Item}
+instancesrange(bulldozer::Bulldozer)
+instanceprojection(bulldozer::Bulldozer, ith_instance::Integer)
+
+data(bulldozer::Bulldozer)
+
+items(bulldozer::Bulldozer)
+itemsetmeasures(bulldozer::Bulldozer)
+
+
+localmemo(bulldozer::Bulldozer)
+
+worldfilter(bulldozer::Bulldozer)
+
+itemset_policies(bulldozer::Bulldozer)
+
+miningstate(bulldozer::Bulldozer)
+miningstate!(bulldozer::Bulldozer, key::Symbol, val)
+
+hasminingstate(bulldozer::Bulldozer, key::Symbol)
+
+measures(bulldozer::Bulldozer)
+
+miner_reduce!(local_results::AbstractVector{B}) where {B<:Bulldozer}
+load_localmemo!(miner::AbstractMiner, localmemo::LmeasMemo)
+```
+
+

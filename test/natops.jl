@@ -153,7 +153,6 @@ _6_rulemeasures = [
     (glift, 0.5, 0.5),          # [-∞,+∞]
     (gconviction, 1.0, 1.0),    # [0,+∞]
     (gleverage, -0.25, -0.25),  # [-0.25,0.25]
-    (gchisquared, 0.0, 0.0),
 ]
 
 fpgrowth_miner = Miner(X_1_have_command,

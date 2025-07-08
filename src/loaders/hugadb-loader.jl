@@ -33,7 +33,13 @@ HUGADB_VARIABLENAMES = ["acc_rf_x","acc_rf_y","acc_rf_z",
 ]
 
 """
-TODO
+    load_hugadb(;
+        filepath::String=HUGADB_FILEPATH,
+        filename::String="HuGaDB_v2_various_01_00.txt",
+    )
+
+Loader for HuGaDB dataset.
+More information on [the official GitHub repository](https://github.com/romanchereshnev/HuGaDB).
 """
 function load_hugadb(;
     filepath::String=HUGADB_FILEPATH,
@@ -100,7 +106,10 @@ end
 # if no such part exists, discard the instance.
 # The survivor tracks are trimmed to have the same length.
 """
-TODO
+    filter_hugadb(X::DataFrame, id)
+
+Isolate from `X`, which is a `DataFrame` encoding a set of HuGaDB instances, the only parts
+corresponding to a specific movement `id`.
 """
 function filter_hugadb(X::DataFrame, id)
     nvariables = X |> size |> last

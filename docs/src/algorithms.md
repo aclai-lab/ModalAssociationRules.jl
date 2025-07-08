@@ -2,16 +2,12 @@
 CurrentModule = ModalAssociationRules
 ```
 
-```@contents
-Pages = ["algorithms.md"]
-```
-
 # [Available algorithms](@id algorithms)
 
 ## Candidate generation based
 
 ```@docs
-apriori(miner::Miner, X::AbstractDataset; verbose::Bool=false)
+apriori
 ```
 
 ## TreeProjection based
@@ -19,7 +15,7 @@ apriori(miner::Miner, X::AbstractDataset; verbose::Bool=false)
 ### FPGrowth
 
 ```@docs
-fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)
+fpgrowth
 ```
 
 FPGrowth algorithm relies on two data structures, [`FPTree`](@ref) and [`HeaderTable`](@ref).
@@ -32,9 +28,17 @@ patternbase(item::Item, htable::HeaderTable, miner::Miner)
 projection(pbase::ConditionalPatternBase, miner::Miner)
 ```
 
-Also, FPGrowth requires the [`Miner`](@ref) to remember the [`Contributors`](@ref) associated with the extracted frequent itemsets.
+Also, FPGrowth requires the [`Miner`](@ref) to remember the worlds associated with the extracted frequent itemsets.
 To add this functionality, we can define a new dispatch of [`initminingstate`](@ref): it is automatically considered to enrich the miner, while building it together with [`fpgrowth`](@ref) as mining algorithm.
 
 ```@docs
 initminingstate(::typeof(fpgrowth), ::AbstractDataset)
+```
+
+## Anchored semantics
+
+```@docs
+anchored_semantics
+anchored_apriori
+anchored_fpgrowth
 ```

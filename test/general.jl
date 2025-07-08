@@ -2,8 +2,10 @@
 using Test
 
 using ModalAssociationRules
-using SoleData
 using StatsBase
+
+using SoleData
+using SoleLogics
 
 import ModalAssociationRules.children, ModalAssociationRules.info
 
@@ -20,6 +22,7 @@ X3 = deepcopy(X1)
 manual_p = Atom(ScalarCondition(VariableMin(1), >, -0.5)) |> Item
 manual_q = Atom(ScalarCondition(VariableMin(2), <=, -2.2)) |> Item
 manual_r = Atom(ScalarCondition(VariableMin(3), >, -3.6)) |> Item
+manual_s = Atom(ScalarCondition(VariableMin(4), ==, 1.0)) |> Item
 
 manual_lp = box(IA_L)(manual_p |> formula) |> Item
 manual_lq = diamond(IA_L)(manual_q |> formula) |> Item
@@ -45,6 +48,7 @@ pq = Itemset{Item}([manual_p, manual_q])
 qr = Itemset{Item}([manual_q, manual_r])
 pr = Itemset{Item}([manual_p, manual_r])
 pqr = Itemset{Item}([manual_p, manual_q, manual_r])
+pqs = Itemset{Item}([manual_p, manual_q, manual_s])
 r = Itemset{Item}(manual_r)
 
 @test pq in pq
@@ -82,9 +86,12 @@ enhanceditemset = convert(EnhancedItemset, pq, 42)
 @test ConditionalPatternBase <: Vector{EnhancedItemset}
 
 @test_nowarn ARule(pq, Itemset([manual_r]))
+
 arule = ARule(pq, Itemset([manual_r]))
 @test content(arule) |> first == antecedent(arule)
 @test content(arule) |> last == consequent(arule)
+@test Itemset(arule) == pqr
+
 arule2 = ARule(qr, Itemset([manual_p]))
 arule3 = ARule(Itemset([manual_q, manual_p]), Itemset([manual_r]))
 
@@ -162,71 +169,38 @@ _temp_apriori_miner = Miner(X1, apriori, manual_items, _itemsetmeasures, _ruleme
 @test_nowarn repr("text/plain", _temp_miner)
 
 
-
 # meaningfulness measures
 @test islocalof(lsupport, lsupport) == false
 @test islocalof(lsupport, gsupport) == true
-@test islocalof(lsupport, lconfidence) == false
-@test islocalof(lsupport, gconfidence) == false
-
 @test islocalof(gsupport, lsupport) == false
-@test islocalof(gsupport, gsupport) == false
-@test islocalof(gsupport, lconfidence) == false
-@test islocalof(gsupport, gconfidence) == false
-
-@test islocalof(lconfidence, lsupport) == false
-@test islocalof(lconfidence, gsupport) == false
-@test islocalof(lconfidence, lconfidence) == false
-@test islocalof(lconfidence, gconfidence) == true
-
-@test islocalof(gconfidence, lsupport) == false
-@test islocalof(gconfidence, gsupport) == false
-@test islocalof(gconfidence, lconfidence) == false
-@test islocalof(gconfidence, gconfidence) == false
 
 @test isglobalof(lsupport, lsupport) == false
 @test isglobalof(lsupport, gsupport) == false
-@test isglobalof(lsupport, lconfidence) == false
-@test isglobalof(lsupport, gconfidence) == false
-
 @test isglobalof(gsupport, lsupport) == true
 @test isglobalof(gsupport, gsupport) == false
-@test isglobalof(gsupport, lconfidence) == false
-@test isglobalof(gsupport, gconfidence) == false
-
-@test isglobalof(lconfidence, lsupport) == false
-@test isglobalof(lconfidence, gsupport) == false
-@test isglobalof(lconfidence, lconfidence) == false
-@test isglobalof(lconfidence, gconfidence) == false
-
-@test isglobalof(gconfidence, lsupport) == false
-@test isglobalof(gconfidence, gsupport) == false
-@test isglobalof(gconfidence, lconfidence) == true
-@test isglobalof(gconfidence, gconfidence) == false
 
 @test localof(lsupport) |> isnothing
 @test localof(gsupport) == lsupport
-@test localof(lconfidence) |> isnothing
-@test localof(gconfidence) == lconfidence
-@test localof(llift) |> isnothing
-@test localof(glift) == llift
-@test localof(lconviction) |> isnothing
-@test localof(gconviction) == lconviction
-@test localof(lleverage) |> isnothing
-@test localof(gleverage) == lleverage
 
 @test globalof(lsupport) == gsupport
 @test globalof(gsupport) |> isnothing
-@test globalof(lconfidence) == gconfidence
 @test globalof(gconfidence) |> isnothing
-@test globalof(llift) == glift
+
 @test globalof(glift) |> isnothing
-@test globalof(lconviction) == gconviction
 @test globalof(gconviction) |> isnothing
-@test globalof(lleverage) == gleverage
 @test globalof(gleverage) |> isnothing
 
 @test lsupport(pq, SoleLogics.getinstance(X2, 1), fpgrowth_miner) == 0.0
+@test_nowarn lconfidence(arule3, SoleLogics.getinstance(X2, 1), fpgrowth_miner)
+@test_nowarn llift(arule3, SoleLogics.getinstance(X2, 1), fpgrowth_miner)
+@test_nowarn lconviction(arule3, SoleLogics.getinstance(X2, 1), fpgrowth_miner)
+@test_nowarn lleverage(arule3, SoleLogics.getinstance(X2, 1), fpgrowth_miner)
+
+@test_nowarn gsupport(pq, X2, 0.0, fpgrowth_miner) == 1.0
+@test_nowarn gconfidence(arule3, X2, 0.0, fpgrowth_miner)
+@test_nowarn glift(arule3, X2, 0.0, fpgrowth_miner)
+@test_nowarn gconviction(arule3, X2, 0.0, fpgrowth_miner)
+@test_nowarn gleverage(arule3, X2, 0.0, fpgrowth_miner)
 
 _temp_lsupport = lsupport(pq, SoleLogics.getinstance(X2, 7), fpgrowth_miner)
 @test _temp_lsupport >= 0.0 && _temp_lsupport <= 1.0
@@ -290,6 +264,19 @@ fpt_linked = FPTree()
 @test link!(fpt_c1, fpt_linked) == fpt_linked
 
 @test_nowarn repr("text/plain", fpt_c1)
+
+fpt2 = FPTree(pqr)
+grow!(fpt2, pqs; miner=fpgrowth_miner)
+
+@test_throws ArgumentError itemset_from_fplist(fpt2)
+@test_throws ArgumentError ModalAssociationRules.retrievebycontent(fpt2, manual_p)
+@test ModalAssociationRules.retrievebycontent(fpt, "z" |> Atom |> Item) |> isnothing
+
+@test_throws ArgumentError ModalAssociationRules.retrieveleaf(fpt2)
+
+# the following error is thrown if you try to link the tree to itself 2 times in a row
+ModalAssociationRules.link!(fpt2, fpt2)
+@test_throws ErrorException ModalAssociationRules.link!(fpt2, fpt2)
 
 # manual FPTree construction and antagonist functions;
 # to compute the construction, we use the previously trained miner `fpgrowth_miner`;
@@ -443,6 +430,9 @@ _genericMiner = genericMiner()
 @test_throws ErrorException info(_genericMiner)
 @test_throws ErrorException itemtype(_genericMiner)
 
+
+##### Creation of a custom Miner
+
 struct statefulMiner <: AbstractMiner
     miningstate::MiningState
 end
@@ -450,6 +440,8 @@ _statefulMiner = statefulMiner(MiningState())
 
 @test_nowarn miningstate!(_statefulMiner, :field, 2)
 @test_nowarn miningstate!(_statefulMiner, :field, Dict(:inner_field => 3))
+@test_nowarn miningstate!(_statefulMiner, :field, :inner_field, 3)
+
 @test_throws ErrorException miningstate(_statefulMiner)
 @test_throws ErrorException miningstate(_statefulMiner, :field, :inner_field)
 
@@ -475,4 +467,227 @@ _my_gsupport_logic = (itemset, X, threshold, miner) -> begin
 end
 
 @localmeasure my_lsupport _my_lsupport_logic
-@localmeasure my_gsupport _my_gsupport_logic
+@globalmeasure my_gsupport _my_gsupport_logic
+
+@linkmeas Main.my_gsupport Main.my_lsupport
+
+@test islocalof(my_lsupport, my_gsupport) == true
+@test isglobalof(my_gsupport, my_lsupport) == true
+
+@test localof(my_gsupport) == my_lsupport
+@test globalof(my_lsupport) == my_gsupport
+
+
+
+##### Mining policies edge cases
+
+_my_itemset = ["p", "q"] .|> Atom .|> Item |> Itemset
+@test_nowarn isanchored_itemset()(_my_itemset)
+@test_throws ArgumentError isanchored_itemset(npropositions=-1)(_my_itemset)
+
+_my_vd1 = VariableDistance(1, [[1,2,3,4,5]])
+_my_p = Atom(ScalarCondition(_my_vd1, <=, 1.5)) |> Item
+isdimensionally_coherent_itemset()(_my_p |> Itemset)
+
+_my_q = Atom(ScalarCondition(VariableMin(1), >=, 3)) |> Item
+_my_non_dimensionally_coherent_itemset = [_my_p, _my_q] |> Itemset
+
+# the following is false, since _my_q references a generic variable #1, while
+# _my_p is applied specifically to vectors having 5 components.
+@test isdimensionally_coherent_itemset()(_my_non_dimensionally_coherent_itemset) == false
+
+_my_vd2 = VariableDistance(1, [[5,6,7]])
+_my_r = Atom(ScalarCondition(_my_vd2, <=, 1.5)) |> Item
+_my_non_dimensionally_coherent_itemset2 = [_my_p, _my_r] |> Itemset
+
+# the following is false since _my_p references a vector having 5 components, while
+# _my_r, although being a VariableDistance, is designed to deal with 3-component vectors.
+@test isdimensionally_coherent_itemset()(_my_non_dimensionally_coherent_itemset2) == false
+
+
+# beware: the following are dimensionally coherent since they both wrap scalars!
+# for example, the first one wraps a cluster of five scalars.
+# This is because the "references" field inside a VariableDistance is designed to compare
+# possibly multiple tensors to a scalar!
+# For example, one could do "distance(element_in_cluster, target) < 1.0" and then check if
+# enough elements in a cluster honoured the condition.
+_my_dimensionally_itemset = Itemset([
+    ScalarCondition(VariableDistance(1, [1,2,3,4,5]), <=, 1.0) |> Atom |> Item,
+    ScalarCondition(VariableDistance(1, [1,2,3]), <=, 1.0) |> Atom |> Item
+])
+@test isdimensionally_coherent_itemset()(_my_dimensionally_itemset) == true
+
+_my_vd1 = VariableDistance(1, [[1,2,3,4,5], [1,2,3,4,5]])
+
+
+
+##### Dataset loaders
+
+@test_nowarn load_NATOPS()
+@test_nowarn load_hugadb()
+@test_nowarn load_libras()
+@test_nowarn load_epilepsy()
+
+@test_nowarn @eval X_hugadb = load_hugadb(["HuGaDB_v2_various_01_00.txt"]) |> first
+@test_nowarn @eval X_hugadb_filtered = filter_hugadb(X_hugadb, 5)
+
+@test X_hugadb[:,39][1] |> length == 3142
+@test X_hugadb_filtered[:,39][1] |> length == 1192
+
+
+##### AbstractMiner functionalities
+
+@test_nowarn localmemo!(fpgrowth_miner, (:lsupport, pq, 1), 0.56)
+@test localmemo(fpgrowth_miner, (:lsupport, pq, 1)) == 0.56
+
+@test_nowarn globalmemo!(fpgrowth_miner, (:gsupport, pq), 0.61)
+@test globalmemo(fpgrowth_miner, (:gsupport, pq)) == 0.61
+
+@test_nowarn miningstate!(fpgrowth_miner, :current_instance, 2)
+@test_nowarn miningstate!(fpgrowth_miner, :instance_item_toworlds, (1, pq), [0,0,0])
+@test miningstate(fpgrowth_miner, :instance_item_toworlds)[(1,pq)] == BitVector([0,0,0])
+
+@test_throws ErrorException generaterules([pq], genericMiner()) |> first
+@test_throws ErrorException generaterules!(genericMiner())
+@test_throws ErrorException arule_analysis(arule3, genericMiner())
+@test_throws MethodError all_arule_analysis(genericMiner())
+@test_throws ErrorException partial_deepcopy(genericMiner())
+@test_throws ErrorException SoleLogics.frame(genericMiner())
+
+filtered_miner = Miner(
+    X2,
+    fpgrowth,
+    manual_items,
+    _itemsetmeasures,
+    _rulemeasures;
+    worldfilter=SoleLogics.FunctionalWorldFilter(
+        interval -> (interval.y - interval.x,) == 5, SoleLogics.Interval{Int}
+    )
+)
+@test_nowarn SoleLogics.allworlds(filtered_miner)
+
+
+##### Bulldozer
+
+r1 = 1:10
+r2 = 11:20
+
+b1 = Bulldozer(fpgrowth_miner, r1; itemset_policies=itemset_policies(fpgrowth_miner))
+for x in r1
+    localmemo!(b1, (:lsupport, pq, x), 0.56)
+end
+
+b2 = Bulldozer(fpgrowth_miner, r2; itemset_policies=itemset_policies(fpgrowth_miner))
+for x in r2
+    localmemo!(b2, (:lsupport, pq, x), 0.56)
+end
+
+blmemo = miner_reduce!([b1,b2])
+@test length(blmemo) == 20
+
+@test datatype(b1) <: SupportedLogiset
+
+
+##### Checking that MultiLogiset is Miner wrapping a custom MultiLogiset
+
+# we artificially create a little frame
+X_df2 = deepcopy(X_df)
+_ninstances, _nvars = size(X_df2)
+
+for i in 1:_ninstances
+    for v in 1:_nvars
+        X_df2[i,v] = X_df2[i,v][1:5]
+    end
+end
+
+X_multi = SoleData.MultiLogiset([X1, scalarlogiset(X_df2)])
+@test_throws ArgumentError Miner(X_multi, apriori, manual_items, _itemsetmeasures, _rulemeasures)
+
+
+##### Utilities
+
+# fpgrowth contains a policy to filter out association rules that are "too long"
+long_itemset1 = [convert(Char,i) for i in 65:80] .|> Atom .|> Item |> Itemset
+long_itemset2 = [convert(Char,i) for i in 81:90] .|> Atom .|> Item |> Itemset
+
+# here, we try to apply such a policy to an arbitrary set of rules,
+# even if they are external to the miner itself.
+@test Base.filter!([ARule(long_itemset1, long_itemset2)], fpgrowth_miner) |> length == 0
+
+@test_nowarn partial_deepcopy(fpgrowth_miner)
+
+# dummy names to reference each item
+variablenames = [
+    "X[Hand tip l]", "Y[Hand tip l]", "Z[Hand tip l]",
+    "X[Hand tip r]", "Y[Hand tip r]", "Z[Hand tip r]",
+];
+
+@test_nowarn begin
+    redirect_stdout(devnull) do
+        all_arule_analysis(fpgrowth_miner, variablenames)
+    end
+end
+
+
+##### Policies
+
+@test_throws ArgumentError islimited_length_itemset(; maxlength=0)
+@test islimited_length_itemset(; maxlength=nothing)(long_itemset1) == true
+@test islimited_length_itemset(; maxlength=5)(long_itemset1) == false
+
+@test_throws ArgumentError islimited_length_arule(antecedent_maxlength=0)
+@test_throws ArgumentError isanchored_arule(npropositions=-1)
+
+@test_throws ArgumentError isheterogeneous_arule(antecedent_nrepetitions=0)
+@test_throws ArgumentError isheterogeneous_arule(consequent_nrepetitions=-1)
+
+@test ModalAssociationRules._lsupport_logic(
+    _my_dimensionally_itemset, X2, 1, fpgrowth_miner)[:measure] |> isnan
+
+
+##### Anchored semantics
+
+apriori_unanchored_miner = Miner(
+    X1,
+    apriori,
+    manual_items,
+    _itemsetmeasures,
+    _rulemeasures;
+    itemset_policies=Function[]
+)
+
+@test_throws AssertionError isanchored_miner(apriori_unanchored_miner)
+@test_throws AssertionError anchored_semantics(apriori_unanchored_miner)
+
+@test_throws ErrorException anchored_semantics(fpgrowth_miner)
+
+variables = [
+    VariableDistance(id, m)
+    for (id, m) in [(1,[[1,2,3]]), (2,[[4,5,6]]), (3,[[7,8,9]])]
+]
+
+propositionalatoms = [Atom(ScalarCondition(v, <=, 200.0)) for v in variables]
+
+_items = Vector{Item}(propositionalatoms)
+
+X3 = scalarlogiset(X_df, variables)
+for miningalgo in [apriori, fpgrowth]
+    anchored_miner = Miner(
+        X3,
+        miningalgo,
+        _items,
+        _itemsetmeasures,
+        _rulemeasures
+        )
+        @test_nowarn anchored_semantics(anchored_miner)
+        @test globalmemo(anchored_miner) |> length == 7
+    end
+
+anchored_apriori_miner = Miner(X3, apriori, _items, _itemsetmeasures, _rulemeasures)
+anchored_fpgrowth_miner = Miner(X3, fpgrowth, _items, _itemsetmeasures, _rulemeasures)
+
+@test_throws ArgumentError anchored_fpgrowth(anchored_apriori_miner)
+@test_throws ArgumentError anchored_apriori(anchored_fpgrowth_miner)
+
+@test_nowarn anchored_apriori(anchored_apriori_miner)
+@test_nowarn anchored_fpgrowth(anchored_fpgrowth_miner)
