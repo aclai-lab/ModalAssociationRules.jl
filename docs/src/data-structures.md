@@ -2,9 +2,6 @@
 CurrentModule = ModalAssociationRules
 ```
 
-```@contents
-Pages = ["data-structures.md"]
-```
 # [Built in data structures](@id data-structures)
 
 ## FPTree
@@ -32,8 +29,6 @@ link!(from::FPTree, to::FPTree)
 follow(fptree::FPTree)
 
 islist(fptree::FPTree)
-retrieveall(fptree::FPTree)
-prune!(fptree::FPTree, miner::Miner)
 ```
 
 ## HeaderTable

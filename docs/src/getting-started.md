@@ -2,10 +2,6 @@
 CurrentModule = ModalAssociationRules
 ```
 
-```@contents
-Pages = ["getting-started.md"]
-```
-
 # [Getting started](@id man-core)
 
 In this introductory section, you will learn about the main building blocks of ModalAssociationRules.jl. 

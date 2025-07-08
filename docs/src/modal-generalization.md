@@ -2,10 +2,6 @@
 CurrentModule = ModalAssociationRules
 ```
 
-```@contents
-Pages = ["modal-generalization.md"]
-```
-
 # [Association rule mining with modal logic](@id man-modal-generalization)
 
 ## New building blocks

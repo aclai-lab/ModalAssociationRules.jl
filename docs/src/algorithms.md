@@ -2,16 +2,12 @@
 CurrentModule = ModalAssociationRules
 ```
 
-```@contents
-Pages = ["algorithms.md"]
-```
-
 # [Available algorithms](@id algorithms)
 
 ## Candidate generation based
 
 ```@docs
-apriori(miner::Miner, X::AbstractDataset; verbose::Bool=false)
+apriori
 ```
 
 ## TreeProjection based
@@ -19,7 +15,7 @@ apriori(miner::Miner, X::AbstractDataset; verbose::Bool=false)
 ### FPGrowth
 
 ```@docs
-fpgrowth(miner::Miner, X::AbstractDataset; verbose::Bool=false)
+fpgrowth
 ```
 
 FPGrowth algorithm relies on two data structures, [`FPTree`](@ref) and [`HeaderTable`](@ref).
@@ -37,4 +33,12 @@ To add this functionality, we can define a new dispatch of [`initminingstate`](@
 
 ```@docs
 initminingstate(::typeof(fpgrowth), ::AbstractDataset)
+```
+
+## Anchored semantics
+
+```@docs
+anchored_semantics
+anchored_apriori
+anchored_fpgrowth
 ```

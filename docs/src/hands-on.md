@@ -2,17 +2,16 @@
 CurrentModule = ModalAssociationRules
 ```
 
-```@contents
-Pages = ["hands-on.md"]
-```
-
 # [Hands-on](@id hands-on)
 
 ## A real case usage scenario
-Write here a little lesson, maybe with a jupyter notebook like @giopaglia did.
+TODO - retrace the experiments for TIME 2025
 
 ## Implementing a new meaningfulness measure
-Local and global lift.
+TODO - implement a new measure, leveraging @localmemo and @globalmemo, and explaining what optimizations they introduce.
 
 ## Writing a new mining algorithm
-Write a new mining algorithm (eclat)
+TODO - Write a new mining algorithm (e.g., Eclat)
+
+## Write a new AbstractMiner
+TODO - E.g., to implement an heuristic approach such as NSGA-II.
