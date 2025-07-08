@@ -1318,7 +1318,9 @@ version = "1.11.0"
 
 [[deps.ModalAssociationRules]]
 deps = ["Accessors", "BenchmarkTools", "CategoricalArrays", "Clustering", "Combinatorics", "DataFrames", "DataStructures", "Dates", "Discretizers", "Distributed", "Distributions", "DynamicAxisWarping", "IterTools", "Lazy", "MLJ", "MatrixProfile", "MultiData", "PGFPlotsX", "Parameters", "Plots", "PrettyTables", "Random", "Reexport", "ResumableFunctions", "Revise", "SoleBase", "SoleData", "SoleLogics", "SoleModels", "StatProfilerHTML", "StatsBase", "ZipFile"]
-path = "/home/mauro/.julia/dev/ModalAssociationRules"
+git-tree-sha1 = "0170b925f082599b7045b219cdacfef9e5d6a8c7"
+repo-rev = "main"
+repo-url = "https://github.com/aclai-lab/ModalAssociationRules.jl"
 uuid = "fb95e5f7-b6b0-4744-a282-88ebeeae65a3"
 version = "0.2.1"
 
