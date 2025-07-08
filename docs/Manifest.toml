@@ -1328,7 +1328,9 @@ version = "2023.12.12"
 
 [[deps.MultiData]]
 deps = ["CSV", "Catch22", "DataFrames", "DataStructures", "Logging", "MLJModelInterface", "Random", "Reexport", "Revise", "ScientificTypes", "SoleBase", "Statistics", "StatsBase", "Tables"]
-path = "/home/mauro/.julia/dev/MultiData"
+git-tree-sha1 = "b5d5e83a964a28886b69fbd227028409dccd54f8"
+repo-rev = "main"
+repo-url = "https://github.com/aclai-lab/MultiData.jl"
 uuid = "8cc5100c-b3d1-4f82-90cb-0ea93d317aba"
 version = "0.1.4"
 
@@ -1836,25 +1838,33 @@ version = "1.11.0"
 
 [[deps.SoleBase]]
 deps = ["CategoricalArrays", "FillArrays", "IterTools", "Logging", "Random", "StatsBase"]
-path = "/home/mauro/.julia/dev/SoleBase"
+git-tree-sha1 = "adf2236c053b6370ed1dd332d67143ea772492a1"
+repo-rev = "main"
+repo-url = "https://github.com/aclai-lab/SoleBase.jl"
 uuid = "4475fa32-7023-44a0-aa70-4813b230e492"
 version = "0.13.1"
 
 [[deps.SoleData]]
 deps = ["BenchmarkTools", "CSV", "Catch22", "CategoricalArrays", "DataFrames", "DataStructures", "Discretizers", "Graphs", "HTTP", "IntervalSets", "Lazy", "LinearAlgebra", "Logging", "MLJModelInterface", "MultiData", "ProgressMeter", "Query", "Random", "Reexport", "Revise", "ScientificTypes", "SoleBase", "SoleLogics", "Statistics", "StatsBase", "Tables", "Test", "ThreadSafeDicts", "UniqueVectors", "ZipFile"]
-path = "/home/mauro/.julia/dev/SoleData"
+git-tree-sha1 = "13270a30c889e5cb8908d7797a41fec6bde19250"
+repo-rev = "dev"
+repo-url = "https://github.com/aclai-lab/SoleData.jl"
 uuid = "123f1ae1-6307-4526-ab5b-aab3a92a2b8c"
 version = "0.16.1"
 
 [[deps.SoleLogics]]
 deps = ["AbstractTrees", "DataStructures", "FunctionWrappers", "Graphs", "IterTools", "Lazy", "PrettyTables", "Random", "Reexport", "SoleBase", "StaticArrays", "StatsBase", "ThreadSafeDicts"]
-path = "/home/mauro/.julia/dev/SoleLogics"
+git-tree-sha1 = "dd6aec8fb7d61a483fbd6bf593ae490d2985c3c4"
+repo-rev = "dev"
+repo-url = "https://github.com/aclai-lab/SoleLogics.jl"
 uuid = "b002da8f-3cb3-4d91-bbe3-2953433912b5"
 version = "0.13.0"
 
 [[deps.SoleModels]]
 deps = ["AbstractTrees", "CategoricalArrays", "FillArrays", "FunctionWrappers", "IterTools", "Lazy", "PrettyTables", "Reexport", "SoleBase", "SoleData", "SoleLogics", "StatsBase", "ThreadSafeDicts"]
-path = "/home/mauro/.julia/dev/SoleModels"
+git-tree-sha1 = "b7aea97ff46b913b752d6793fcf30d38dedbd843"
+repo-rev = "main"
+repo-url = "https://github.com/aclai-lab/SoleModels.jl"
 uuid = "4249d9c7-3290-4ddd-961c-e1d3ec2467f8"
 version = "0.10.1"
 
