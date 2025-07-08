@@ -657,9 +657,9 @@ apriori_unanchored_miner = Miner(
 )
 
 @test_throws AssertionError isanchored_miner(apriori_unanchored_miner)
-@test_throws AssertionError anchored_semantics(apriori_unanchored_miner, apriori)
+@test_throws AssertionError anchored_semantics(apriori_unanchored_miner)
 
-@test_throws ErrorException anchored_semantics(fpgrowth_miner, fpgrowth)
+@test_throws ErrorException anchored_semantics(fpgrowth_miner)
 
 variables = [
     VariableDistance(id, m)

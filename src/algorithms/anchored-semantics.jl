@@ -151,7 +151,12 @@ See also [`AbstractMiner`](@ref), [`apriori`](@ref), [`isanchored_itemset`](@ref
 [`MineableData`](@ref).
 """
 function anchored_apriori(miner::M; kwargs...)::M where {M<:AbstractMiner}
-    return anchored_semantics(miner, apriori; grow_prune=anchored_grow_prune, kwargs...)
+    if algorithm(miner) != apriori
+        throw(ArgumentError("Miner is wrapping $(algorithm(miner)) algorithm instead of " *
+            "apriori."))
+    end
+
+    return anchored_semantics(miner; grow_prune=anchored_grow_prune, kwargs...)
 end
 
 """
@@ -166,18 +171,10 @@ More information about the implementation: <insert-link>
 See also [`AbstractMiner`](@ref), ['fpgrowth`](@ref), [`Item`](@ref).
 """
 function anchored_fpgrowth(miner::M; kwargs...)::M where {M<:AbstractMiner}
-    return anchored_semantics(miner, fpgrowth; kwargs...)
-end
+    if algorithm(miner) != fpgrowth
+        throw(ArgumentError("Miner is wrapping $(algorithm(miner)) algorithm instead of " *
+            "fpgrowth."))
+    end
 
-
-# forward from initminingstate(::typeof(fpgrowth))
-function initminingstate(
-    ::typeof(anchored_fpgrowth),
-    ::MineableData
-)::MiningState
-    return MiningState([
-        :instance_item_toworlds => Dict{Tuple{Int,Itemset},WorldMask}([]),
-        :current_items_frequency => DefaultDict{Item,Int}(0),
-        :current_instance => 1
-    ])
+    return anchored_semantics(miner; kwargs...)
 end
