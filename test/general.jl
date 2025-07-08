@@ -679,6 +679,6 @@ for miningalgo in [apriori, fpgrowth]
         _itemsetmeasures,
         _rulemeasures
     )
-    @test_nowarn anchored_semantics(anchored_miner, miningalgo)
+    @test_nowarn anchored_semantics(anchored_miner)
     @test globalmemo(anchored_miner) |> length == 7
 end

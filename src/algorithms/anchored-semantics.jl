@@ -29,22 +29,19 @@ function isanchored_miner(miner::AbstractMiner)
 end
 
 """
-    anchored_semantics(miner::M, miningalgo; kwargs...)::M where {M<:AbstractMiner}
+    anchored_semantics(miner::M; kwargs...)::M where {M<:AbstractMiner}
 
-Logic to be executed before `miningalgo` to make the latter coherent with Anchored.
-
-Keyword arguments are forwarded to `miningalgo`.
+Logic to be executed before the the algorithm wrapped within the `miner`;
+the goal is to make such an algorithm coherent with anchored semantics.
 """
-function anchored_semantics(
-    miner::M,
-    miningalgo::Function;
-    kwargs...
-)::M where {M<:AbstractMiner}
+function anchored_semantics(miner::M; kwargs...)::M where {M<:AbstractMiner}
     try
         isanchored_miner(miner)
     catch
         rethrow()
     end
+
+    miningalgo = algorithm(miner)
 
     # separate the propositional items (the anchors) from modal literals
     _items = items(miner)
