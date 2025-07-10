@@ -1,16 +1,32 @@
-name: Upload coverage reports to Codecov
-on: [push, pull_request]
-jobs:
-  run:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
+name: CI with Coverage
 
-      - name: Set up Julia 1.11.0
-        uses: julia-actions/setup-julia@v1
+on: [push, pull_request]
+
+jobs:
+  test:
+    name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    permissions:
+      actions: write
+      contents: read
+
+    strategy:
+      fail-fast: false
+      matrix:
+        version: ['1.11', 'lts']
+        os: [ubuntu-latest]
+        arch: [x64]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Julia
+        uses: julia-actions/setup-julia@v2
         with:
-          version: "1.11.0"
+          version: ${{ matrix.version }}
+          arch: ${{ matrix.arch }}
 
       - name: Add dependencies as in local environment
         run: |
@@ -24,13 +40,22 @@ jobs:
               PackageSpec(url="https://github.com/aclai-lab/SoleModels.jl", rev="main")
             ])'
 
-      - uses: julia-actions/julia-buildpkg@v1
+      - name: Restore cache
+        uses: julia-actions/cache@v2
 
-      - uses: julia-actions/julia-runtest@v1
+      - name: Build package
+        uses: julia-actions/julia-buildpkg@v1
 
-      - uses: julia-actions/julia-processcoverage@v1
+      - name: Run tests
+        uses: julia-actions/julia-runtest@v1
 
-      - uses: codecov/codecov-action@v5
+      - name: Process test coverage
+        uses: julia-actions/julia-processcoverage@v1
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           slug: aclai-lab/ModalAssociationRules.jl
+          files: lcov.info
+          fail_ci_if_error: false
