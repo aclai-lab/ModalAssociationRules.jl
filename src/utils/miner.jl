@@ -22,9 +22,9 @@ using Base.Threads
         localmemo::LmeasMemo            # local memoization structure
         globalmemo::GmeasMemo           # global memoization structure
 
-        worldfilter::Union{Nothing,WorldFilter}       # metarules about world filterings
-        itemset_policies::Vector{<:Function}   # metarules about itemsets mining
-        arule_policies::Vector{<:Function}     # metarules about arules mining
+        worldfilter::Union{Nothing,WorldFilter} # metarules about world filterings
+        itemset_policies::Vector{<:Function}    # metarules about itemsets mining
+        arule_policies::Vector{<:Function}      # metarules about arules mining
 
         miningstate::MiningState        # mining algorithm miningstate (see documentation)
 
@@ -126,9 +126,9 @@ struct Miner{
     localmemo::LmeasMemo            # local memoization structure
     globalmemo::GmeasMemo           # global memoization structure
 
-    worldfilter::Union{Nothing,WorldFilter}       # metarules about world filterings
-    itemset_policies::Vector{<:Function}   # metarules about itemsets mining
-    arule_policies::Vector{<:Function}     # metarules about arules mining
+    worldfilter::Union{Nothing,WorldFilter} # metarules about world filterings
+    itemset_policies::Vector{<:Function}    # metarules about itemsets mining
+    arule_policies::Vector{<:Function}      # metarules about arules mining
 
     miningstate::MiningState        # mining algorithm miningstate (see documentation)
 
