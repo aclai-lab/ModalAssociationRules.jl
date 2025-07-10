@@ -58,7 +58,7 @@ const ConditionalPatternBase = Vector{EnhancedItemset}
         parent::Union{Nothing,FPTree}       # parent node
         const children::Vector{FPTree}      # children nodes
 
-        count::Integer                        # number of equal Items this node represents
+        count::Integer                      # number of equal Items this node represents
 
         link::Union{Nothing,FPTree}         # link to another FPTree root
     end
