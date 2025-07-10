@@ -24,7 +24,7 @@ Base.count(fptree::FPTree)
 count!(fptree::FPTree, newcount::Integer)
 addcount!(fptree::FPTree, deltacount::Integer)
 
-grow!(fptree::FPTree, itemset::Itemset, ith_instance::Integer, miner::AbstractMiner)
+grow!(fptree::FPTree, itemset::IT) where {IT<:Itemset}
 
 link(fptree::FPTree)
 link!(from::FPTree, to::FPTree)
