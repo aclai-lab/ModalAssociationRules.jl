@@ -16,7 +16,7 @@ using ModalAssociationRules
 using SoleData
 
 # load a sample dataset (NATOPS)
-# and transform it in a scalar logiset.
+# and transform it into a scalar logiset.
 X_df, y = load_NATOPS()
 X = scalarlogiset(X_df[1:30, :])
 
@@ -36,7 +36,7 @@ items = Vector{Item}([p, q, r, lp, lq, lr])
 
 # define which measures to use to establish the interestingness
 # of both itemsets (groups of items) and association rules;
-# also define a minimum threshold that must be overpassed both 
+# also define a minimum threshold that must be surpassed both 
 # locally, inside an instance, and globally across all instances.
 
 # 0.1 is the local minsup, while 0.2 is the global minsup.
@@ -57,7 +57,7 @@ mined_itemsets = freqitems(miner)
 mined_arules = arules(miner)
 ```
 
-We can create more complex `Miner` objects by specifying three kind of policies, which defines the properties that must be satisfied by `X`'s worlds, the `Itemset`s collected during the mining, and the final `ARule`s.
+We can create more complex `Miner` objects by specifying three kinds of policies, which define the properties that must be satisfied by `X`'s worlds, the `Itemset`s collected during the mining, and the final `ARule`s.
 
 ```julia
 miner = Miner(
@@ -88,7 +88,7 @@ miner = Miner(
 
 This package heavily depends on the [Sole](https://github.com/aclai-lab/Sole.jl) ecosystem.
 
-To compile this package while referencing the `dev` branches of the other necessary Sole package, clone and instantiate them in a common folder, following the steps below.
+To compile this package while referencing the `dev` branches of the other necessary Sole packages, clone and instantiate them in a common folder, following the steps below.
 
     git clone https://github.com/aclai-lab/SoleBase.jl.git
     git clone https://github.com/aclai-lab/MultiData.jl.git
@@ -97,7 +97,7 @@ To compile this package while referencing the `dev` branches of the other necess
     git clone https://github.com/aclai-lab/SoleModels.jl.git
     git clone https://github.com/aclai-lab/ModalAssociationRules.jl.git
 
-For each folder, checkout on `dev` branch and open the Julia REPL to install the dpendencies associated:
+For each folder, checkout on `dev` branch and open the Julia REPL to install the dependencies associated:
 
     SoleBase              -> ]instantiate
     MultiData             -> ]dev SoleBase
