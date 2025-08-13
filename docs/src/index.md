@@ -16,11 +16,12 @@ using Pkg
 Pkg.add("ModalAssociationRules")
 ```
 
-## Feature Summary
+## [Feature Summary](@id feature-summary)
 
 * Define atomic facts, called *items*, that can be true or false with respect to some instance data; for example, given a collection of signals `I=[[1,2,3], [4,5,6], [7,8,9]]`, an item `p` could encode the fact that `sum(I[2]) < 16`.
 * Enhance the expressivity of each item and combine them in sets, called *itemsets*, leveraging more-than-propositional logical formalisms; considering the instance data `I` above, for example, an item `q` could encode the fact that `mean(I[3]) = 8` and `q and <A>p` encodes the fact that `q` is true for the i-th dimension of the instance and `p` is true at the same time on the (i+1)-th dimension.
 * Extract the *association rules* hidden in data; for example, the rule `p => q` encodes the fact that, if `p` is true, then `q` is true too. The extraction process is easily configurable via a [`Miner`](@ref) object, and can be executed with the parallel implementation of state-of-the-art algorithms.
+* Analyze and recap the extract rules in a succinct manner.
 
 ## Diagrams
 
@@ -28,7 +29,7 @@ What follows are the [system and container context diagrams](https://c4model.com
 
 ![system context diagram, relating the user to this package which, in turn, interfaces with SoleLogics.jl and SoleData.jl](..//diagrams/out/mas-system-context-diagram.png)
 
-As shown in the schema above, 
+As shown in the schema above, MAS interfaces with two main dependencies. In fact, while the main purpose of this package is to extract constrained co-occurrence relations from data, the representation layer of logical facts and data is almost entirely provided by two packages. [SoleLogics.jl](https://github.com/aclai-lab/SoleLogics.jl) provides both the syntactical and semantical aspects related to various logical formalisms; the `q and <A>p` example in the [`Feature Summary`](@feature-summary) section is not casual, and refers to [Halpern and Shoham's modal logic for time intervals](https://dl.acm.org/doi/abs/10.1145/115234.115351), which SoleLogics provide. [SoleData.jl](https://github.com/aclai-lab/SoleData.jl) is used to automatically create [Kripke structures](https://en.wikipedia.org/wiki/Kripke_structure_(model_checking)) from the given data, that is, expliciting the latter in the form of relational data.
 
 ![container context diagram, showing the main components of this package](..//diagrams/out/mas-container-context-diagram.png)
 
