@@ -41,7 +41,7 @@ ZipFile = "a5390f91-8eb1-5f08-bee0-b1d1ffed6cea"
 [compat]
 Accessors = "0.1"
 BenchmarkTools = "1"
-CategoricalArrays = "0.10"
+CategoricalArrays = "0.10, 1"
 Clustering = "0.15.8"
 Combinatorics = "1"
 DataFrames = "1"
