@@ -33,7 +33,7 @@ As shown in the schema above, MAS interfaces with two main dependencies. In fact
 
 ![container context diagram, showing the main components of this package](..//diagrams/out/mas-container-context-diagram.png)
 
-Each of the components above is explained exhaustively in the *Use cases* and *Contributing* sections. The first one is a complement to the *Getting started* section, while the second one is designed for developers that who are willing to contribute to this package.
+Each of the components above is explained exhaustively in the *Use cases*(TODO) and *Contributing*(TODO) sections. The first one is a complement to the [Getting started](@man-core) section, while the second one is designed for developers that who are willing to contribute to this package.
 
 ## Package potential at a glance
 
