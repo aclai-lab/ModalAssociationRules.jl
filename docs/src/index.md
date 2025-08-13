@@ -33,6 +33,8 @@ As shown in the schema above, MAS interfaces with two main dependencies. In fact
 
 ![container context diagram, showing the main components of this package](..//diagrams/out/mas-container-context-diagram.png)
 
+Each of the components above is explained exhaustively in the *Use cases* and *Contributing* sections. The first one is a complement to the *Getting started* section, while the second one is designed for developers that who are willing to contribute to this package.
+
 ## Package potential at a glance
 
 Consider a time series dataset obtained by recording the hand movements of an operator. Instead of working it through propositional logic, we decide to segment each time series in intervals, and we build relationships between intervals through a specific [modal logic](https://en.wikipedia.org/wiki/Modal_logic).
