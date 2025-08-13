@@ -27,7 +27,7 @@ In general, we can define new meaningfulness measures by leveraging the followin
 @linkmeas
 ```
 
-We already introduced [`lsupport`](@ref), [`gsupport`](@ref), [`lconfidence`](@ref) and [`gconfidence`](@ref) in the [`Getting started`](@man-core) section. Other measures that are already built into the package, are the following; note how they are always organized in both local and global versions.
+We already introduced [`lsupport`](@ref), [`gsupport`](@ref), [`lconfidence`](@ref) and [`gconfidence`](@ref) in the [`Getting started`](#man-core) section. Other measures that are already built into the package, are the following; note how they are always organized in both local and global versions.
 
 ```@docs
 llift

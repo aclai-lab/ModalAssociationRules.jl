@@ -2,7 +2,7 @@
 CurrentModule = ModalAssociationRules
 ```
 
-# [Getting started](@id man-core)
+# [Getting started](@id getting-started)
 
 In this introductory section, you will learn about the main building blocks of ModalAssociationRules.jl. 
 Also if a good picture about *association rule mining* (ARM, from now onwards) is given during the documentation, to make the most out of this guide we suggest reading the following articles:
