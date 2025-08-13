@@ -25,7 +25,7 @@ Pkg.add("ModalAssociationRules")
 
 ## Package potential at a glance
 
-Consider a time series dataset obtained by recording the hand movements of an operator. Instead of working it through propositional logic, we decide to segment each time series in intervals, and we build relationships between intervals through a certain modal logic.
+Consider a time series dataset obtained by recording the hand movements of an operator. Instead of working it through propositional logic, we decide to segment each time series in intervals, and we build relationships between intervals through a specific [modal logic](https://en.wikipedia.org/wiki/Modal_logic).
 
 In particular, we choose [HS Interval Logic](https://dl.acm.org/doi/pdf/10.1145/115234.115351) in order to establish relationships such as "interval X **OVERLAPS** with Y", or "interval Y comes **AFTER** X".
 
