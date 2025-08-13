@@ -6,11 +6,11 @@ CurrentModule = ModalAssociationRules
 
 ## Introduction
 
-Welcome to the documentation for [ModalAssociationRules](https://github.com/aclai-lab/ModalAssociationRules.jl), a Julia package for mining (modal) association rules in ModalAssociationRules.jl. 
+Welcome to the documentation for [ModalAssociationRules](https://github.com/aclai-lab/ModalAssociationRules.jl) (or MAS), a Julia package for mining (modal) association rules in ModalAssociationRules.jl. 
 
 ## Installation
 
-To install ModalAssociationRules.jl, use the Julia package manager:
+To install ModalAssociationRules.jl, simply launch:
 ```julia
 using Pkg
 Pkg.add("ModalAssociationRules")
@@ -18,10 +18,19 @@ Pkg.add("ModalAssociationRules")
 
 ## Feature Summary
 
-* Construct and manipulate conjunctions of facts (*items*) called *itemsets*, eventually supporting specific modal logic to suit your data (e.g., [Halpern Shoham Interval Logic](https://dl.acm.org/doi/pdf/10.1145/115234.115351) to work with time series).
-* Extract the *association rules* hidden in a dataset, starting from a set of items and a list of *meaningfulness measures*.
-* Define your own meaningfulness measures to work with both propositional and modal datasets, by simply calling the macros `localmeasure` and `globalmeasure`.
-* Configure an experiment by creating a `Miner` object, and start your mining by choosing an extraction algorithm. We provide the state-of-the-art algorithm `FP-Growth`, optimized to leverage parallelization, but you can easily write your own algorithm by following a simple interface. 
+* Define atomic facts, called *items*, that can be true or false with respect to some instance data; for example, given a collection of signals `I=[[1,2,3], [4,5,6], [7,8,9]]`, an item `p` could encode the fact that `sum(I[2]) < 16`.
+* Enhance the expressivity of each item and combine them in sets, called *itemsets*, leveraging more-than-propositional logical formalisms; considering the instance data `I` above, for example, an item `q` could encode the fact that `mean(I[3]) = 8` and `q and <A>p` encodes the fact that `q` is true for the i-th dimension of the instance and `p` is true at the same time on the (i+1)-th dimension.
+* Extract the *association rules* hidden in data; for example, the rule `p => q` encodes the fact that, if `p` is true, then `q` is true too. The extraction process is easily configurable via a [`Miner`](@ref) object, and can be executed with the parallel implementation of state-of-the-art algorithms.
+
+## Diagrams
+
+What follows are the [system and container context diagrams](https://c4model.com/), delineating the environment of this package and its main components from an high level perspective.
+
+![system context diagram, relating the user to this package which, in turn, interfaces with SoleLogics.jl and SoleData.jl](..//diagrams/out/mas-system-context-diagram.png)
+
+As shown in the schema above, 
+
+![container context diagram, showing the main components of this package](..//diagrams/out/mas-container-context-diagram.png)
 
 ## Package potential at a glance
 
