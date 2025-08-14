@@ -31,7 +31,7 @@ What follows are the [system and container context diagrams](https://c4model.com
 
 As shown in the schema above, MAS interfaces with two main dependencies. In fact, while the main purpose of this package is to extract constrained co-occurrence relations from data, the representation layer of logical facts and data is almost entirely provided by two packages. [SoleLogics.jl](https://github.com/aclai-lab/SoleLogics.jl) provides both the syntactical and semantical aspects related to various logical formalisms; the `q and after p` example in the [`Feature Summary`](#feature-summary) section is not casual, and refers to [Halpern and Shoham's modal logic for time intervals](https://dl.acm.org/doi/abs/10.1145/115234.115351), which SoleLogics provide. [SoleData.jl](https://github.com/aclai-lab/SoleData.jl) is used to automatically create [Kripke structures](https://en.wikipedia.org/wiki/Kripke_structure_(model_checking)) from the given data, that is, expliciting the latter in the form of relational data.
 
-![container context diagram, showing the main components of this package](assets/diagrams/out/mas-system-context-diagram.png)
+![container context diagram, showing the main components of this package](assets/diagrams/out/mas-container-context-diagram.png)
 
 Each of the components above is explained exhaustively in the *Use cases*(TODO) and *Contributing*(TODO) sections. The first one is a complement to the [Getting started](#man-core) section, while the second one is designed for developers that who are willing to contribute to this package.
 
