@@ -1,0 +1,35 @@
+@startuml mas-container-context-diagram
+!theme mono
+top to bottom direction
+
+skinparam MaxMessageSize 200
+
+title MAS - Container Diagram
+
+actor "User" as user
+
+rectangle "ModalAssociationRules.jl" as mas {
+    component "Alphabet" as alphabet
+    component "Miner" as miner
+    component "Algorithms & Data Structures" as algorithms
+    component "Policies" as policies
+    component "Measures" as measures
+}
+
+rectangle "SoleLogics.jl" as solelogics
+rectangle "SoleData.jl" as soledata
+
+user --> alphabet : Defines the set of facts from which rules will be created, using
+user --> miner : Extracts rules from data and filters them using
+
+miner --> solelogics : Gets the syntax and semantics of a specific logical formalism from
+mas --> soledata : Loads data using
+
+alphabet --> miner : Provides a set of facts from which to mine co-occurrences
+
+miner --> algorithms : Gets a mining strategy from
+algorithms --> policies : Constraints the mining using
+
+miner --> measures : Establishes which rules are meaningful using
+
+@enduml
