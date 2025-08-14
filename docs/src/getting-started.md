@@ -12,18 +12,21 @@ The above introduce two important algorithms, which are also built-in into this 
 
 Further on in the documentation, the potential of ModalAssociationRules.jl will emerge: this package's raison d'être is to generalize the already existing ARM algorithms to modal logics, which are more expressive than propositional ones (as it allows as to reason in terms of relational data) and computationally less expensive than first-order logic. If you are new to [Sole.jl](https://github.com/aclai-lab/Sole.jl) and you want to learn more about modal logic, please have a look at [SoleLogics.jl](https://github.com/aclai-lab/SoleLogics.jl) for a general overview on the topic, or follow this documentation and return to the link if needed.
 
-## Non-technical introduction
+## Fast introduction
 
 Consider a time series dataset. For example, let us consider the [NATOPS](https://github.com/yalesong/natops) dataset, obtained by recording the movement of different body parts of an operator. We are interested in extracting temporal considerations hidden in the data. To do so, we can highlight specific intervals in each time series (we assume every signal to have the same length). For example, consider the following time series encoding the vertical trajectory of the right hand of an operator.
 
+```@raw comment
 <!-- Figure code:
 plot(X[1][1,5], label="Right hand", linecolor=:orange, linewidth=2, size=(500,250)); xlabel!("Time"); ylabel!("Position on y axis") 
 -->
+```
 
 ![I have command movement, specifically the right hand y-axis of the operator](assets/figures/natops-y-hand-signal.png)
 
 At this point, we can highlight different intervals on the signal. For example, via windowing:
 
+```@raw comment
 <!-- Figure code:
 windows = [(s:s+9) for s in 1:10:41]
 for i in windows
@@ -39,6 +42,7 @@ for i in windows
     savefig(p, string <| i[1])
 end
 !-->
+```
 
 <div style="display: flex; justify-content: space-between">
     <img src="assets/figures/natops-y-hand-signal-split1.png" width="200"/>
@@ -48,11 +52,17 @@ end
     <img src="assets/figures/natops-y-hand-signal-split5.png" width="200"/>
 </div>
 
-Instead of working it through propositional logic, we decide to segment each time series in intervals, and we build relationships between intervals through a specific [modal logic](https://en.wikipedia.org/wiki/Modal_logic).
+At this point, we can define a set of logical facts ([`Item`](@ref)s in the jargon) to express a particular property of each interval. The point of this package is to extract possibly complex associations hidden in data. In this case, we need a logical formalism capable to capture temporal relations between different intervals.
+In particular, [HS Interval Logic](https://dl.acm.org/doi/pdf/10.1145/115234.115351) comes in handy to establish relations such as "the item p holds on the interval X, while the item q holds on the interval Y, and Y comes after X".
 
-In particular, we choose [HS Interval Logic](https://dl.acm.org/doi/pdf/10.1145/115234.115351) in order to establish relationships such as "interval X **OVERLAPS** with Y", or "interval Y comes **AFTER** X".
+What we want to do, in general, is to extend propositional logic with a specific [modal logic](https://en.wikipedia.org/wiki/Modal_logic) formalism (hence, the name of this package) that lets us reason in terms of dimensional relations in data while, at the same time, is not as computational expensive as [first order logic](https://en.wikipedia.org/wiki/First-order_logic).
 
-Now that the dataset is ready, we define some **itemset**. An itemset is a conjunction of facts (possibly, one fact, called **item** in the jargon). For example, we define the two following itemsets called $A$ and $B$:
+To give you a more concrete example, consider the following two items, called `p` and `q`. We define them as if we would do in the Julia REPL.
+
+```julia
+p = ScalarCondition(VariableMin(1), >, 0.5) |> Atom
+q = ScalarCondition(VariableMax(2), <=, 1.3) |> Atom
+```
 
 1) $A \coloneqq \text{max}[Δ\text{Y[Hand tip r and thumb r]}] ≤ 0.0$
 2) $B \coloneqq [\text{O}]\text{min}[\text{Y[Hand tip r]}] ≥ -0.5$

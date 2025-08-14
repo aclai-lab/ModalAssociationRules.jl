@@ -2,7 +2,7 @@
 CurrentModule = ModalAssociationRules
 ```
 
-# [Advanced usage](@id man-advanced)
+# [Advanced usage](@id advanced-usage)
 
 The following utilities often involve performing some combinatoric trick between [`Itemset`](@ref)s and [`ARule`](@ref)s, and might be useful to avoid reinventing the wheel.
 
