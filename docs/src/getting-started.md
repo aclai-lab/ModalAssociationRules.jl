@@ -44,15 +44,11 @@ end
 !-->
 ```
 
-```@raw html
-<div style="display: flex; justify-content: space-between">
-    <img src="assets/figures/natops-y-hand-signal-split1.png" width="200"/>
-    <img src="assets/figures/natops-y-hand-signal-split2.png" width="200"/>
-    <img src="assets/figures/natops-y-hand-signal-split3.png" width="200"/>
-    <img src="assets/figures/natops-y-hand-signal-split4.png" width="200"/>
-    <img src="assets/figures/natops-y-hand-signal-split5.png" width="200"/>
-</div>
-```
+![](assets/figures/natops-y-hand-signal-split1.png)
+![](assets/figures/natops-y-hand-signal-split2.png)
+![](assets/figures/natops-y-hand-signal-split3.png)
+![](assets/figures/natops-y-hand-signal-split4.png)
+![](assets/figures/natops-y-hand-signal-split5.png)
 
 At this point, we can define a set of logical facts ([`Item`](@ref)s in the jargon) to express a particular property of each interval. We are interested in extracting complex associations hidden in data. In this case, we need a logical formalism capable of capturing temporal relations between different intervals.
 In particular, [HS Interval Logic](https://dl.acm.org/doi/pdf/10.1145/115234.115351) comes in handy to establish relations such as "the item p holds on the interval X, while the item q holds on the interval Y, and Y comes after X".
