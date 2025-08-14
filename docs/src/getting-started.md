@@ -5,16 +5,16 @@ CurrentModule = ModalAssociationRules
 # [Getting started](@id getting-started)
 
 In this introductory section, you will learn about the main building blocks of ModalAssociationRules.jl. 
-Also if a good picture about *association rule mining* (ARM, from now onwards) is given during the documentation, to make the most out of this guide we suggest reading the following articles:
+Also, if a good picture about *association rule mining* (ARM, from now onwards) is given during the documentation, to make the most out of this guide, we suggest reading the following articles:
 - [Association rule mining introduction and Apriori algorithm](http://ictcs2024.di.unito.it/wp-content/uploads/2024/08/ICTCS_2024_paper_16.pdf)
 - [FPGrowth algorithm](https://www.cs.sfu.ca/~jpei/publications/sigmod00.pdf)
-The above introduce two important algorithms, which are also built-in into this package. Moreover, the latter one is the state-of-the-art in the field of ARM.
+The above introduces two important algorithms, which are also built into this package. Moreover, the latter one is the state-of-the-art in the field of ARM.
 
-Further on in the documentation, the potential of ModalAssociationRules.jl will emerge: this package's raison d'être is to generalize the already existing ARM algorithms to modal logics, which are more expressive than propositional ones (as it allows as to reason in terms of relational data) and computationally less expensive than first-order logic. If you are new to [Sole.jl](https://github.com/aclai-lab/Sole.jl) and you want to learn more about modal logic, please have a look at [SoleLogics.jl](https://github.com/aclai-lab/SoleLogics.jl) for a general overview on the topic, or follow this documentation and return to the link if needed.
+Further on in the documentation, the potential of ModalAssociationRules.jl will emerge: this package's raison d'être is to generalize the already existing ARM algorithms to modal logics, which are more expressive than propositional ones (as it allows to reason in terms of relational data) and computationally less expensive than first-order logic. If you are new to [Sole.jl](https://github.com/aclai-lab/Sole.jl) and you want to learn more about modal logic, please have a look at [SoleLogics.jl](https://github.com/aclai-lab/SoleLogics.jl) for a general overview on the topic, or follow this documentation and return to the link if needed.
 
 ## Fast introduction
 
-Consider a time series dataset. For example, let us consider the [NATOPS](https://github.com/yalesong/natops) dataset, obtained by recording the movement of different body parts of an operator. We are interested in extracting temporal considerations hidden in the data. To do so, we can highlight specific intervals in each time series (we assume every signal to have the same length). For example, consider the following time series encoding the vertical trajectory of the right hand of an operator.
+Consider a time series dataset. For example, let us consider the [NATOPS](https://github.com/yalesong/natops) dataset, obtained by recording the movement of different body parts of an operator. We are interested in extracting temporal considerations hidden in the data. To do so, we can highlight specific intervals in each time series (we assume every signal to have the same length). For example, consider the following time series encoding the vertical trajectory of the right-hand of an operator.
 
 ```@raw comment
 <!-- Figure code:
@@ -52,31 +52,48 @@ end
     <img src="assets/figures/natops-y-hand-signal-split5.png" width="200"/>
 </div>
 
-At this point, we can define a set of logical facts ([`Item`](@ref)s in the jargon) to express a particular property of each interval. The point of this package is to extract possibly complex associations hidden in data. In this case, we need a logical formalism capable to capture temporal relations between different intervals.
+At this point, we can define a set of logical facts ([`Item`](@ref)s in the jargon) to express a particular property of each interval. We are interested in extracting complex associations hidden in data. In this case, we need a logical formalism capable of capturing temporal relations between different intervals.
 In particular, [HS Interval Logic](https://dl.acm.org/doi/pdf/10.1145/115234.115351) comes in handy to establish relations such as "the item p holds on the interval X, while the item q holds on the interval Y, and Y comes after X".
 
 What we want to do, in general, is to extend propositional logic with a specific [modal logic](https://en.wikipedia.org/wiki/Modal_logic) formalism (hence, the name of this package) that lets us reason in terms of dimensional relations in data while, at the same time, is not as computational expensive as [first order logic](https://en.wikipedia.org/wiki/First-order_logic).
 
-To give you a more concrete example, consider the following two items, called `p` and `q`. We define them as if we would do in the Julia REPL.
+To give you a more concrete example, consider the following two items, called `p` and `q`. We define them as if we were in the Julia REPL.
 
 ```julia
-p = ScalarCondition(VariableMin(1), >, 0.5) |> Atom
-q = ScalarCondition(VariableMax(2), <=, 1.3) |> Atom
+# ScalarCondition is a "generic comparison strategy" defined in SoleData.jl; it says that the maximum in an object encoding a piece of the first variable (in the example above, the right hand vertical movement) must be greater than the threshold 0.5. 
+
+# Atom is a wrapper provided by SoleLogics.jl, to later establish the truth value of a structure.
+p = ScalarCondition(VariableMin(1), <, -1.0) |> Atom
+
+# This fact is true on the intervals [1:10] and [11:20] in the example above.
+q = ScalarCondition(VariableMax(1), >=, 0.0) |> Atom
+
+# IA_A is the After relation of Allen's interval algebra; "diamond" is one of two modalities (the other one is called "box"); we can ignore it for simplicity here.
+ap = diamond(IA_A)(p)
+
+alphabet = [p,q,ap]
 ```
 
-1) $A \coloneqq \text{max}[Δ\text{Y[Hand tip r and thumb r]}] ≤ 0.0$
-2) $B \coloneqq [\text{O}]\text{min}[\text{Y[Hand tip r]}] ≥ -0.5$
+Note that the example provided, although concrete, is still a toy example as each interval is completely flattened to just one scalar value. In practice, we would like to deal with more expressive kinds of `ScalarCondition`.
 
-The first one could be translated as *in the current interval, the right hand is oriented downward*. We could also read it as *the vertical distance between the right-hand middle finger tip and the right-hand thumb tip is negative*.
+Now that we have arranged an alphabet of items, we want to establish which items co-occur together by computing the relative frequency of every possible combination of items (this is the most naive mining strategy but, at the moment, let us forget about performance). Item combinations are called *itemsets*, and the relative frequency of how many times an itemset is true within the data is typically called *support*.
 
-In the second fact, the relation **OVERLAPS** must be considered universally because of the square brackets. It can be translated into the phrase *in all the intervals overlapping with the current one, the hand is located higher than $-0.5$*.
+| Itemset | [1:10] | [11:20] | [21:30] | [31:40] | [41:50] | Support
+|-------|-------|-------|-------|-------|-------|-------|
+| [p] | true | true | true |   | true | 4/5
+| [q] |   |   | true | true | true | 3/5
+| [ap] | true | true |  | true |  | 3/5
+| [p,ap] | true | true |  |  | | 2/5 
+| [q,ap] |  |  | true |  | true | 2/5
+| [p,q,ap] |  |  |  |  |  | 0/5
 
-Now that we have arranged two itemsets, we want to establish if they are interesting based of a frequentist approach. In particular, we want to compute the **support** of each itemset, that is, the relative frequency of how many times the itemset is true within the data. 
+Note that the relative frequency decreases as the itemset we consider gets bigger. Also, note how the *after* operator in `ap` shifts the truth values of `p` one space to the left in the table; in this sense, a temporal declination of a fact is simply a special mask of bits obtained by the fact itself. 
 
-By leveraging a mining algorithm, we can join frequent itemsets two by two, iterating until it is not possible to join itemsets anymore.
+Let us say that we want to consider the itemset `[p,ap]` to be frequent, that is, we consider its support to be high enough. The support for an itemset could be very high because it expresses a triviality, so we want to further process the itemset and better analyze it via statistical meaningfulness measures.
 
-Let us say that the itemset $\{A,B\}$ turns out to be frequent. At this point, we can generate two rules $A \Rightarrow B$ and $B \Rightarrow A$. Now, we can compute specific meaningfulness measures to determine whether a rule is an association rule or not.
+In particular, we could consider the two rules `[p] => [ap]` and `[ap] => [p]`. If they turn out to be *meaningful* to us, then we call such rules *association rules*. 
 
+The high-level pipeline we described should be useful to proceed with reading the rest of the documentation.
 
 ## Core definitions
 
