@@ -28,8 +28,21 @@ See also [`anchored_eclat`](@ref), [`Miner`](@ref).
 function eclat(miner::M)::M where {M<:AbstractMiner}
     _itemtype = itemtype(miner)
     X = data(miner)
+    Xvertical = Dict{Itemset{_itemtype}, Set{Integer}}()
 
+    # we want to obtain a vertical format from data:
+    # given an item i, we collect the instance IDs on which i holds;
+    # if the mining is constrained, we ensure the constraints are applied on 1-items.
+    candidates = Itemset{_itemtype}.(items(miner))
+    filter!(candidates, miner)
 
+    Threads.@threads for item in candidates
+
+        any(
+            gmeas_algo(item, X, lthreshold, miner) >= gthrehsold
+            for (gmeasure, lthreshold, gthreshold) in itemsetmeasures(miner)
+        ) && lock(frequent)
+    end
 
     return miner
 end

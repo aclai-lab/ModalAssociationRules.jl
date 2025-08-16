@@ -179,12 +179,14 @@ macro globalmeasure(measname, measlogic)
             # to know more, see `localmeasure` comments.
             globalmemo!(miner, memokey, measure)
 
-            # TODO - enable when an application is found
-            # for state in GLOBAL_MINING_STATES
-            #     if hasminingstate(miner, state) && haskey(response, state)
-            #         miningstate!(miner, state, (subject), response[state])
-            #     end
-            # end
+            for state in GLOBAL_MINING_STATES
+                # for example, consider the global measure "global support";
+                # let's suppose it returns a Dict with two keys, :measure and :instancemask;
+                # since :instancemask is part of GLOBAL_MINING_STATES, we keep track of it.
+                if hasminingstate(miner, state) && haskey(response, state)
+                    miningstate!(miner, state, (subject), response[state])
+                end
+            end
 
             return measure
         end
@@ -289,16 +291,16 @@ end
 
 # core logic of `gsupport`
 _gsupport_logic = (itemset, X, threshold, miner) -> begin
-    _measure = sum([
+    instancemask = InstanceMask[
         # for each instance, compute how many times the local support overpass the threshold
         lsupport(itemset, getinstance(X, ith_instance), miner) >= threshold
-
-        # NOTE: an instance filter could be provided by the user to avoid iterating
-        # every instance, depending on the needings.
         for ith_instance in 1:ninstances(X)
-    ]) / ninstances(X)
+    ]
 
-    return Dict(:measure => _measure)
+    return Dict(
+        :measure => sum(instancemask) / ninstances(X),
+        :instancemask => instancemask
+    )
 end
 
 
