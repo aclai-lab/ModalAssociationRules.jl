@@ -22,8 +22,6 @@ julia> _1_itemsetmeasures = [(gsupport, 0.1, 0.1)]
 julia> _1_rulemeasures = [(gconfidence, 0.2, 0.2)]
 
 julia> eclat_miner = Miner(X1, eclat, _1_items, _1_itemsetmeasures, _1_rulemeasures)
-julia> pq = Itemset([manual_p |> Item, manual_q |> Item])
-julia> x = gsupport(pq, X1, 0.1, eclat_miner)
 
 julia> mine!(eclat_miner)
 
@@ -61,35 +59,47 @@ function eclat(miner::M)::M where {M<:AbstractMiner}
     function _eclat!(
         miner::M,
         # AbstractVector since a view (SubArray) will be passe
-        rollingstates::AbstractVector{Pair{Itemset,InstanceMask}},
+        rollingstates::AbstractArray{Pair{IT,IM}},
         # e.g., I am proceeding the computation from [p,q] with InstanceMask [1,0,0,1,1]
-        prevstate::Pair{Itemset,InstanceMask},
+        prevstate::Pair{IT,IM},
         # all the itemsetmeasures global thresholds that must be respected
-        gthresholds::Vector{Threshold}
-    ) where {M<:AbstractMiner}
+        gthresholds::Vector{T}
+    ) where {M<:AbstractMiner, IT<:Itemset, IM<:BitVector, T<:Threshold}
         # every state is the pair in which [1] is the itemset and [2] is the instance mask
-        currentstate, futurestates = rollingstates |> first, @view(rollingstates[2:end])
+        currentstate = rollingstates |> first
+        futurestates = @view(rollingstates[2:end])
 
-        newstate = Pair{Itemset,InstanceMask}(
+        if length(futurestates) == 0
+            return
+        end
+
+        newstate = Pair{IT,IM}(
             union(currentstate[1], prevstate[1]), # the new candidate itemset
             currentstate[2] .& prevstate[2] # the instance mask encoding for global measures
         )
 
-        newmask_sum = newstate[2] |> sum
-        if all(threshold -> newmask_sum >= threhsold, gthresholds)
+        newstate_cumulative = (newstate[2] |> sum) / length(newstate[2])
+        if all(threshold -> newstate_cumulative >= threshold, gthresholds)
+            # TODO check if all the policies for itemsets are respected
             push!(freqitems(miner), newstate[1])
-            _eclat!(miner, futurestates, newmask, gthresholds)
+            _eclat!(miner, futurestates, newstate, gthresholds)
         end
+
+        # whether I can or cannot update my newstate, I know go for next permutations
+        _eclat!(miner, futurestates, currentstate, gthresholds)
     end
 
     # for each possible initial prefix, let's execute a DFS;
     # if my itemsets are A,B,C,D, then we need to explore B,C,D starting from A,
     # C,D starting from B, and D starting from C.
-    Threads.@threads for i in 2:(length(Xvertical_sorted)-1)
-        # the first argument is the entire list of pairs (itemset, instances);
-        # the second argument is the starting instance mask
+    # Threads.@threads
+    for i in 2:(length(Xvertical_sorted)-1)
         _eclat!(
-            miner, @view(Xvertical_sorted[i:end]), Xvertical_sorted[i-1], gthresholds)
+            miner,
+            @view(Xvertical_sorted[i:end]),
+            Xvertical_sorted[i-1],
+            gthresholds
+        )
     end
 
     return miner
