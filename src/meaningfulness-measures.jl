@@ -6,7 +6,7 @@ then it is filled when computing any local meaningfulness measure created using
 See also [`AbstractMiner`](@ref), [`@localmeasure`](@ref), [`miningstate`](@ref).
 """
 LOCAL_MINING_STATES = [
-    :instance_item_toworlds
+    :worldmask
 ]
 
 """
@@ -48,10 +48,10 @@ see the note below to know more about this.
             check(formula(itemset), X, ith_instance, w) for w in allworlds(X, ith_instance)]
 
         # return the result enriched with more informations, that will eventually will be
-        # used if miner's miningstate has specific fields (e.g., :instance_item_toworlds).
+        # used if miner's miningstate has specific fields (e.g., :worldmask).
         return Dict(
             :measure => count(wmask) / length(wmask),
-            :instance_item_toworlds => wmask,
+            :worldmask => wmask,
         )
     end
     ```
@@ -229,7 +229,7 @@ __lsupport_logic = (itemset, X, ith_instance, miner) -> begin
     # return the result, and eventually the information needed to support miningstate
     return Dict(
         :measure => count(wmask) / length(wmask),
-        :instance_item_toworlds => wmask,
+        :worldmask => wmask,
     )
 end
 
@@ -281,7 +281,7 @@ _lsupport_logic = (itemset, X, ith_instance, miner) -> begin
     # return the result, and eventually the information needed to support miningstate
     return Dict(
         :measure => count(wmask) / _fairworlds[],
-        :instance_item_toworlds => wmask,
+        :worldmask => wmask,
     )
 end
 

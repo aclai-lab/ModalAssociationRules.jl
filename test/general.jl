@@ -453,7 +453,7 @@ _my_lsupport_logic = (itemset, X, ith_instance, miner) -> begin
 
         return Dict(
         :measure => count(wmask) / nworlds(X, ith_instance),
-        :instance_item_toworlds => wmask,
+        :worldmask => wmask,
     )
 end
 
@@ -544,8 +544,8 @@ _my_vd1 = VariableDistance(1, [[1,2,3,4,5], [1,2,3,4,5]])
 @test globalmemo(fpgrowth_miner, (:gsupport, pq)) == 0.61
 
 @test_nowarn miningstate!(fpgrowth_miner, :current_instance, 2)
-@test_nowarn miningstate!(fpgrowth_miner, :instance_item_toworlds, (1, pq), [0,0,0])
-@test miningstate(fpgrowth_miner, :instance_item_toworlds)[(1,pq)] == BitVector([0,0,0])
+@test_nowarn miningstate!(fpgrowth_miner, :worldmask, (1, pq), [0,0,0])
+@test miningstate(fpgrowth_miner, :worldmask)[(1,pq)] == BitVector([0,0,0])
 
 @test_throws ErrorException generaterules([pq], genericMiner()) |> first
 @test_throws ErrorException generaterules!(genericMiner())
