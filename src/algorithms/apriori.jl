@@ -59,7 +59,7 @@ function grow_prune(
 end
 
 """
-    apriori(miner::Miner, X::MineableData; verbose::Bool=true)::Nothing
+    apriori(miner::Miner; verbose::Bool=true)::Nothing
 
 Apriori algorithm, [as described here](http://ictcs2024.di.unito.it/wp-content/uploads/2024/08/ICTCS_2024_paper_16.pdf) but generalized
 to also work with modal logic.

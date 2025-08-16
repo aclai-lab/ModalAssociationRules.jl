@@ -134,7 +134,7 @@ end
 
 
 """
-    fpgrowth(miner::AbstractMiner, X::MineableData; verbose::Bool=true)::Nothing
+    fpgrowth(miner::AbstractMiner; verbose::Bool=true)::Nothing
 
 (Modal) FP-Growth algorithm, [as described here](http://ictcs2024.di.unito.it/wp-content/uploads/2024/08/ICTCS_2024_paper_16.pdf).
 
