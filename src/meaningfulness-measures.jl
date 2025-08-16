@@ -291,11 +291,11 @@ end
 
 # core logic of `gsupport`
 _gsupport_logic = (itemset, X, threshold, miner) -> begin
-    instancemask = InstanceMask[
+    instancemask = InstanceMask([
         # for each instance, compute how many times the local support overpass the threshold
         lsupport(itemset, getinstance(X, ith_instance), miner) >= threshold
         for ith_instance in 1:ninstances(X)
-    ]
+    ])
 
     return Dict(
         :measure => sum(instancemask) / ninstances(X),
