@@ -185,7 +185,7 @@ Implementation of [`eclat`](@ref) with *anchored semantics*.
 
 See also [`AbstractMiner`](@ref), [`anchored_semantics`](@ref), [`eclat`](@ref).
 """
-function anchored_fpgrowth(miner::M; kwargs...)::M where {M<:AbstractMiner}
+function anchored_eclat(miner::M; kwargs...)::M where {M<:AbstractMiner}
     if algorithm(miner) != fpgrowth
         throw(ArgumentError("Miner is wrapping $(algorithm(miner)) algorithm instead of " *
             "fpgrowth."))
