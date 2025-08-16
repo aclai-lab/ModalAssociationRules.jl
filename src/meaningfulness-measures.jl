@@ -16,7 +16,9 @@ then it is filled when computing any local meaningfulness measure created using
 
 See also [`AbstractMiner`](@ref), [`@globalmeasure`](@ref), [`miningstate`](@ref).
 """
-GLOBAL_MINING_STATES = []
+GLOBAL_MINING_STATES = [
+    :instancemask
+]
 
 """
     macro localmeasure(measname, measlogic)
