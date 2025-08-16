@@ -1,3 +1,13 @@
+# Note for the developer that is studying modal association rule mining (MARM):
+# the general framework for MARM is composed of four pluggable parts:
+# - a modal logic formalism
+# - a definition/shape for each item
+# - an entity-relation based data representation (e.g., via Kripke models)
+# - a search bias (how support is computed)
+#
+# The purpose of anchored semantics is to ensure that two constraints are defined within
+# the miner object.
+
 """
     isanchored_miner(miner::AbstractMiner)
 
