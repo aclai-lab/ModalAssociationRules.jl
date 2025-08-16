@@ -71,7 +71,7 @@ to also work with modal logic.
 and the successive;
 - `verbose::Bool=false`: print informations about each iteration.
 
-See also [`grow_prune`](@ref), [`Miner`](@ref), [`SoleBase.MineableData`](@ref).
+See also [`grow_prune`](@ref), [`Miner`](@ref), [`MineableData`](@ref).
 """
 function apriori(
     miner::M;

@@ -56,8 +56,6 @@ export MiningState
 export Info
 export MineableData
 
-export MineableData
-
 include("types/miner.jl")
 
 export AbstractMiner
