@@ -8,6 +8,7 @@ CurrentModule = ModalAssociationRules
 
 ```@docs
 WorldMask
+InstanceMask
 EnhancedItemset
 ConditionalPatternBase
 ```
