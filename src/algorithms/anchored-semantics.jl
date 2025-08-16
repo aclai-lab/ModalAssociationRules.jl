@@ -139,7 +139,7 @@ function anchored_grow_prune(
 end
 
 """
-    anchored_apriori(miner::AbstractMiner, X::MineableData; kwargs...)::Nothing
+    anchored_apriori(miner::AbstractMiner; kwargs...)::Nothing
 
 Anchored version of [`apriori`](@ref) algorithm, that is exactly `apriori` but assuring
 that `miner` possess atleast [`isanchored_itemset`](@ref) policy, with `ignoreuntillength`
@@ -147,8 +147,7 @@ parameter set to 1 or higher.
 
 TODO - insert a reference to TIME2025 article.
 
-See also [`AbstractMiner`](@ref), [`apriori`](@ref), [`isanchored_itemset`](@ref),
-[`MineableData`](@ref).
+See also [`AbstractMiner`](@ref), [`anchored_semantics`](@ref), [`apriori`](@ref).
 """
 function anchored_apriori(miner::M; kwargs...)::M where {M<:AbstractMiner}
     if algorithm(miner) != apriori
@@ -168,7 +167,23 @@ Essentially, [`Item`](@ref)s are `SoleData.VariableDistance`s wrapping motifs.
 More information about motifs: <insert-link>
 More information about the implementation: <insert-link>
 
-See also [`AbstractMiner`](@ref), ['fpgrowth`](@ref), [`Item`](@ref).
+See also [`AbstractMiner`](@ref), [`anchored_semantics`](@ref), ['fpgrowth`](@ref).
+"""
+function anchored_fpgrowth(miner::M; kwargs...)::M where {M<:AbstractMiner}
+    if algorithm(miner) != fpgrowth
+        throw(ArgumentError("Miner is wrapping $(algorithm(miner)) algorithm instead of " *
+            "fpgrowth."))
+    end
+
+    return anchored_semantics(miner; kwargs...)
+end
+
+"""
+    function anchored_eclat(miner::M; kwargs...)::M where {M<:AbstractMiner}
+
+Implementation of [`eclat`](@ref) with *anchored semantics*.
+
+See also [`AbstractMiner`](@ref), [`anchored_semantics`](@ref), [`eclat`](@ref).
 """
 function anchored_fpgrowth(miner::M; kwargs...)::M where {M<:AbstractMiner}
     if algorithm(miner) != fpgrowth
