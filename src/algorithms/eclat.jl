@@ -39,23 +39,20 @@ function eclat(miner::M)::M where {M<:AbstractMiner}
     filter!(candidates, miner)
 
     Threads.@threads for candidate in candidates
-        # if the candidate global support is enough ...
-        [
-            # see comment (1) at the end.
-            gmeas_algo(candidate, X, lthreshold, miner) >= gthreshold
-            for (gmeas_algo, lthreshold, gthreshold) in itemsetmeasures(miner)
-        ]
-        # ... we keep track of the instances on which it holds
-        Xvertical[candidate] = miningstate(miner, :instancemask, candidate)
-
-        push!(freqitems(miner), candidate)
+        # we keep track of the instances for which a candidate has enough global support;
+        # m is a MeaningfulnessMeasure;
+        # see comment (1) at the end
+        if all(m -> m[1](candidate, X, m[2], miner) >= m[3], itemsetmeasures(miner))
+            Xvertical[candidate] = miningstate(miner, :instancemask, candidate)
+            push!(freqitems(miner), candidate)
+        end
     end
 
     # this is of type Vector{Pair{Itemset,InstanceMask}}
     Xvertical_sorted = collect(Xvertical)
     Xvertical_sorted = sort!(Xvertical_sorted, by=kv->sum(kv[2]), rev=true)
 
-    # see comment (1) at the end.
+    # see comment (1) at the end
     gthresholds = Threshold[gthreshold for (_, _, gthreshold) in itemsetmeasures(miner)]
 
     function _eclat!(
@@ -84,7 +81,7 @@ function eclat(miner::M)::M where {M<:AbstractMiner}
             # the new candidate state should have enough global support, and respect all the
             # policies related to itemsets
             newstate_gsupport = (newstate[2] |> sum) / length(newstate[2])
-            if all(threshold -> newstate_gsupport >= threshold, gthresholds) && \
+            if all(threshold -> newstate_gsupport >= threshold, gthresholds) &&
                 all(policy -> policy(newstate[1]), itemset_policies(miner))
 
                 # at this point, we recur on ([C], [1,1,...]) pinpointing ([A,B], [1,0,...])
