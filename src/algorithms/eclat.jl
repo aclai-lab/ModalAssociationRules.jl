@@ -74,7 +74,7 @@ function eclat(miner::M)::M where {M<:AbstractMiner}
         for currentstate in futurestates
             # the new candidate state could be ([A,B], [1,0,...])
             newstate = Pair{IT,IM}(
-                union(currentstate[1], prevstate[1]), # the new candidate itemset
+                union(currentstate[1], prevstate[1]) |> sort!, # the new candidate itemset
                 currentstate[2] .& prevstate[2] # the instance mask encoding for global measures
             )
 
@@ -86,6 +86,7 @@ function eclat(miner::M)::M where {M<:AbstractMiner}
 
                 # at this point, we recur on ([C], [1,1,...]) pinpointing ([A,B], [1,0,...])
                 push!(freqitems(miner), newstate[1])
+                globalmemo!(miner, GmeasMemoKey((:gsupport, newstate[1])), newstate_gsupport)
                 _eclat!(miner, @view(futurestates[2:end]), newstate, gthresholds)
             end
 
