@@ -43,8 +43,10 @@ _1_rulemeasures = [(gconfidence, 0.2, 0.2)]
 
 apriori_miner = Miner(X1, apriori, _1_items, _1_itemsetmeasures, _1_rulemeasures)
 fpgrowth_miner = Miner(X2, fpgrowth, _1_items, _1_itemsetmeasures, _1_rulemeasures)
+eclat_miner = Miner(X3, eclat, _1_items, _1_itemsetmeasures, _1_rulemeasures)
 
 compare(apriori_miner, fpgrowth_miner)
+compare(apriori_miner, eclat_miner)
 
 # checking for re-mining block
 @test apply!(apriori_miner, data(apriori_miner)) |> collect |> length == 0
