@@ -47,6 +47,8 @@ function eclat(miner::M)::M where {M<:AbstractMiner}
         ]
         # ... we keep track of the instances on which it holds
         Xvertical[candidate] = miningstate(miner, :instancemask, candidate)
+
+        push!(freqitems(miner), candidate)
     end
 
     # this is of type Vector{Pair{Itemset,InstanceMask}}
@@ -59,41 +61,44 @@ function eclat(miner::M)::M where {M<:AbstractMiner}
     function _eclat!(
         miner::M,
         # AbstractVector since a view (SubArray) will be passe
-        rollingstates::AbstractArray{Pair{IT,IM}},
+        futurestates::AbstractArray{Pair{IT,IM}},
         # e.g., I am proceeding the computation from [p,q] with InstanceMask [1,0,0,1,1]
         prevstate::Pair{IT,IM},
         # all the itemsetmeasures global thresholds that must be respected
         gthresholds::Vector{T}
     ) where {M<:AbstractMiner, IT<:Itemset, IM<:BitVector, T<:Threshold}
-        # every state is the pair in which [1] is the itemset and [2] is the instance mask
-        currentstate = rollingstates |> first
-        futurestates = @view(rollingstates[2:end])
-
+        # base case of the DFS
         if length(futurestates) == 0
             return
         end
 
-        newstate = Pair{IT,IM}(
-            union(currentstate[1], prevstate[1]), # the new candidate itemset
-            currentstate[2] .& prevstate[2] # the instance mask encoding for global measures
-        )
+        # let us say that prevstate is ([A], [1,0,...])
+        # and currentstate is ([B], [1,1,...])
+        for currentstate in futurestates
+            # the new candidate state could be ([A,B], [1,0,...])
+            newstate = Pair{IT,IM}(
+                union(currentstate[1], prevstate[1]), # the new candidate itemset
+                currentstate[2] .& prevstate[2] # the instance mask encoding for global measures
+            )
 
-        newstate_cumulative = (newstate[2] |> sum) / length(newstate[2])
-        if all(threshold -> newstate_cumulative >= threshold, gthresholds)
-            # TODO check if all the policies for itemsets are respected
-            push!(freqitems(miner), newstate[1])
-            _eclat!(miner, futurestates, newstate, gthresholds)
+            newstate_gsupport = (newstate[2] |> sum) / length(newstate[2])
+            if all(threshold -> newstate_gsupport >= threshold, gthresholds)
+                # TODO check if all the policies for itemsets are respected
+
+                # at this point, we recur on ([C], [1,1,...]) pinpointing ([A,B], [1,0,...])
+                push!(freqitems(miner), newstate[1])
+                _eclat!(miner, @view(futurestates[2:end]), newstate, gthresholds)
+            end
+
+            # in any case, the for loop goes on and we try merging [D] with [A,B]
         end
-
-        # whether I can or cannot update my newstate, I know go for next permutations
-        _eclat!(miner, futurestates, currentstate, gthresholds)
     end
 
     # for each possible initial prefix, let's execute a DFS;
     # if my itemsets are A,B,C,D, then we need to explore B,C,D starting from A,
     # C,D starting from B, and D starting from C.
     # Threads.@threads
-    for i in 2:(length(Xvertical_sorted)-1)
+    for i in 2:length(Xvertical_sorted)
         _eclat!(
             miner,
             @view(Xvertical_sorted[i:end]),
