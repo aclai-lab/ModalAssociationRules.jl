@@ -96,7 +96,6 @@ function apriori(
                 for (gmeas_algo, lthreshold, gthreshold) in itemsetmeasures(miner)
             ) && lock(frequents_lock) do
                 push!(frequents, candidate)
-
                 push!(freqitems(miner), candidate)
             end
         end
