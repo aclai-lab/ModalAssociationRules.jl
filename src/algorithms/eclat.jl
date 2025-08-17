@@ -81,9 +81,11 @@ function eclat(miner::M)::M where {M<:AbstractMiner}
                 currentstate[2] .& prevstate[2] # the instance mask encoding for global measures
             )
 
+            # the new candidate state should have enough global support, and respect all the
+            # policies related to itemsets
             newstate_gsupport = (newstate[2] |> sum) / length(newstate[2])
-            if all(threshold -> newstate_gsupport >= threshold, gthresholds)
-                # TODO check if all the policies for itemsets are respected
+            if all(threshold -> newstate_gsupport >= threshold, gthresholds) && \
+                all(policy -> policy(newstate[1]), itemset_policies(miner))
 
                 # at this point, we recur on ([C], [1,1,...]) pinpointing ([A,B], [1,0,...])
                 push!(freqitems(miner), newstate[1])
