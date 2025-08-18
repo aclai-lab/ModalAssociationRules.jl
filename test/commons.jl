@@ -4,7 +4,7 @@ using ModalAssociationRules
 using Test
 
 # check if global support coincides for each frequent itemset
-function isequal_gsupp(miner1::Miner, miner2::Miner)
+function isequal_gsupp(miner1::AbstractMiner, miner2::AbstractMiner)
     for itemset in freqitems(miner1)
         @test miner1.globalmemo[
             (:gsupport, itemset)] == miner2.globalmemo[(:gsupport, itemset)]
@@ -12,7 +12,7 @@ function isequal_gsupp(miner1::Miner, miner2::Miner)
 end
 
 # check if local support coincides for each frequent itemset
-function isequal_lsupp(miner1::Miner, miner2::Miner)
+function isequal_lsupp(miner1::AbstractMiner, miner2::AbstractMiner)
     for itemset in freqitems(miner1)
         for ninstance in 1:(miner1 |> data |> ninstances)
             miner1_lsupp = get(miner1.localmemo, (:lsupport, itemset, ninstance), -1.0)
@@ -38,7 +38,7 @@ function isequal_lsupp(miner1::Miner, miner2::Miner)
 end
 
 # check if frequent itemsets are the same, as well as their local and global supports
-function compare_freqitems(miner1::Miner, miner2::Miner)
+function compare_freqitems(miner1::AbstractMiner, miner2::AbstractMiner)
     if !info(miner1, :istrained)
         mine!(miner1)
     end
@@ -63,7 +63,7 @@ end
 
 # utility to compare arules between miners;
 # see compare_arules
-function _compare_arules(miner1::Miner, miner2::Miner, rule::ARule)
+function _compare_arules(miner1::AbstractMiner, miner2::AbstractMiner, rule::ARule)
     # global confidence comparison;
     # here it is implied that rules are already generated using generaterules!
     @test miner1.globalmemo[(:gconfidence, rule)] == miner2.globalmemo[(:gconfidence, rule)]
@@ -79,9 +79,12 @@ function _compare_arules(miner1::Miner, miner2::Miner, rule::ARule)
 end
 
 # driver to compare arules between miners
-function compare_arules(miner1::Miner, miner2::Miner)
-    generaterules!(miner1) |> collect
-    generaterules!(miner2) |> collect
+function compare_arules(miner1::AbstractMiner, miner2::AbstractMiner)
+    for miner in [miner1, miner2]
+        if miner |> arules |> isempty
+            generaterules!(miner) |> collect
+        end
+    end
 
     @test length(arules(miner1)) == length(arules(miner2))
 
@@ -92,9 +95,23 @@ function compare_arules(miner1::Miner, miner2::Miner)
 end
 
 # perform comparison
-function compare(miner1::Miner, miner2::Miner)
+function compare(miner1::AbstractMiner, miner2::AbstractMiner)
     compare_freqitems(miner1, miner2)
     compare_arules(miner1, miner2)
+end
+
+function compare(miners::Vector{<:AbstractMiner}; verbose::Bool=false)
+    mainminer = first(miners)
+
+    for targetminer in miners[2:end]
+        verbose && printstyled(
+            "\t$(mainminer |> algorithm |> string) vs " *
+            "$(targetminer |> algorithm |> string)\n",
+            color=:green
+        )
+    end
+
+    map(targetminer -> compare(mainminer, targetminer), miners[2:end])
 end
 
 export isequal_gsupp, isequal_lsupp

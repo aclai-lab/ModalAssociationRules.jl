@@ -6,7 +6,7 @@ then it is filled when computing any local meaningfulness measure created using
 See also [`AbstractMiner`](@ref), [`@localmeasure`](@ref), [`miningstate`](@ref).
 """
 LOCAL_MINING_STATES = [
-    :instance_item_toworlds
+    :worldmask
 ]
 
 """
@@ -16,7 +16,8 @@ then it is filled when computing any local meaningfulness measure created using
 
 See also [`AbstractMiner`](@ref), [`@globalmeasure`](@ref), [`miningstate`](@ref).
 """
-GLOBAL_MINING_STATES = []
+GLOBAL_MINING_STATES = [
+]
 
 """
     macro localmeasure(measname, measlogic)
@@ -48,10 +49,10 @@ see the note below to know more about this.
             check(formula(itemset), X, ith_instance, w) for w in allworlds(X, ith_instance)]
 
         # return the result enriched with more informations, that will eventually will be
-        # used if miner's miningstate has specific fields (e.g., :instance_item_toworlds).
+        # used if miner's miningstate has specific fields (e.g., :worldmask).
         return Dict(
             :measure => count(wmask) / length(wmask),
-            :instance_item_toworlds => wmask,
+            :worldmask => wmask,
         )
     end
     ```
@@ -177,12 +178,11 @@ macro globalmeasure(measname, measlogic)
             # to know more, see `localmeasure` comments.
             globalmemo!(miner, memokey, measure)
 
-            # TODO - enable when an application is found
-            # for state in GLOBAL_MINING_STATES
-            #     if hasminingstate(miner, state) && haskey(response, state)
-            #         miningstate!(miner, state, (subject), response[state])
-            #     end
-            # end
+            ## for state in GLOBAL_MINING_STATES
+            ##     if hasminingstate(miner, state) && haskey(response, state)
+            ##         miningstate!(miner, state, (subject), response[state])
+            ##     end
+            ## end
 
             return measure
         end
@@ -229,7 +229,7 @@ __lsupport_logic = (itemset, X, ith_instance, miner) -> begin
     # return the result, and eventually the information needed to support miningstate
     return Dict(
         :measure => count(wmask) / length(wmask),
-        :instance_item_toworlds => wmask,
+        :worldmask => wmask,
     )
 end
 
@@ -281,22 +281,19 @@ _lsupport_logic = (itemset, X, ith_instance, miner) -> begin
     # return the result, and eventually the information needed to support miningstate
     return Dict(
         :measure => count(wmask) / _fairworlds[],
-        :instance_item_toworlds => wmask,
+        :worldmask => wmask,
     )
 end
 
 # core logic of `gsupport`
 _gsupport_logic = (itemset, X, threshold, miner) -> begin
-    _measure = sum([
-        # for each instance, compute how many times the local support overpass the threshold
-        lsupport(itemset, getinstance(X, ith_instance), miner) >= threshold
-
-        # NOTE: an instance filter could be provided by the user to avoid iterating
-        # every instance, depending on the needings.
-        for ith_instance in 1:ninstances(X)
-    ]) / ninstances(X)
-
-    return Dict(:measure => _measure)
+    return Dict(
+        :measure => (
+            # ∀ instance, compute how many times the local support overpass the threshold
+            lsupport(itemset, getinstance(X, ith_instance), miner) >= threshold
+            for ith_instance in 1:ninstances(X)
+        ) |> mean
+    )
 end
 
 

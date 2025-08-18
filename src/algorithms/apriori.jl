@@ -59,7 +59,7 @@ function grow_prune(
 end
 
 """
-    apriori(miner::Miner, X::MineableData; verbose::Bool=true)::Nothing
+    apriori(miner::Miner; verbose::Bool=true)::Nothing
 
 Apriori algorithm, [as described here](http://ictcs2024.di.unito.it/wp-content/uploads/2024/08/ICTCS_2024_paper_16.pdf) but generalized
 to also work with modal logic.
@@ -71,7 +71,7 @@ to also work with modal logic.
 and the successive;
 - `verbose::Bool=false`: print informations about each iteration.
 
-See also [`grow_prune`](@ref), [`Miner`](@ref), [`SoleBase.MineableData`](@ref).
+See also [`grow_prune`](@ref), [`Miner`](@ref), [`MineableData`](@ref).
 """
 function apriori(
     miner::M;
@@ -91,12 +91,11 @@ function apriori(
 
         # get the frequent itemsets from the first candidates set
         Threads.@threads for candidate in candidates
-            any(
+            all(
                 gmeas_algo(candidate, X, lthreshold, miner) >= gthreshold
                 for (gmeas_algo, lthreshold, gthreshold) in itemsetmeasures(miner)
             ) && lock(frequents_lock) do
                 push!(frequents, candidate)
-
                 push!(freqitems(miner), candidate)
             end
         end

@@ -56,8 +56,6 @@ export MiningState
 export Info
 export MineableData
 
-export MineableData
-
 include("types/miner.jl")
 
 export AbstractMiner
@@ -134,6 +132,10 @@ include("algorithms/fpgrowth.jl")
 
 export patternbase, bounce!, projection
 export fpgrowth
+
+include("algorithms/eclat.jl")
+
+export eclat
 
 include("algorithms/anchored-semantics.jl")
 

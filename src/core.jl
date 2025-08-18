@@ -401,22 +401,15 @@ globalof(::Function) = nothing
 """
     const WorldMask = BitVector
 
-Vector whose i-th position stores how many times a certain [`MeaningfulnessMeasure`](@ref)
-applied on a specific [`Itemset`](@ref)s is true on the i-th world of multiple instances.
+Bitmask whose i-th position stores whether a certain (local) [`MeaningfulnessMeasure`](@ref)
+applied on a specific [`Itemset`](@ref)s is true on the i-th world of a data instance.
 
-If a single instance is considered, then this acts as a bit mask.
-
-For example, if we consider 5 Kripke structures of a modal dataset, each of which containing 3
-worlds, then the [`WorldMask`](@ref) of an itemset could be [5,2,0], meaning that the
-itemset is always true on the first world of every instance. In the second world, the same
-itemset is true on it only for two instances. Considering the third world, then the itemset
-is never true.
+The term "world" comes from the fact that a data instance is expressed as an entity-relation
+object, such as a `SoleLogics.KripkeStructure`.
 
 See also [`Itemset`](@ref), [`MeaningfulnessMeasure`](@ref).
 """
- const WorldMask = BitVector
-
-
+const WorldMask = BitVector
 
 # utility structures
 

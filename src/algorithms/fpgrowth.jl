@@ -134,7 +134,7 @@ end
 
 
 """
-    fpgrowth(miner::AbstractMiner, X::MineableData; verbose::Bool=true)::Nothing
+    fpgrowth(miner::AbstractMiner; verbose::Bool=true)::Nothing
 
 (Modal) FP-Growth algorithm, [as described here](http://ictcs2024.di.unito.it/wp-content/uploads/2024/08/ICTCS_2024_paper_16.pdf).
 
@@ -270,7 +270,7 @@ function _fpgrowth(miner::Bulldozer{D,I}) where {D<:MineableData,I<:Item}
                 for itemset in frequents
                 if miningstate(
                     miner,
-                    :instance_item_toworlds
+                    :worldmask
                 )[(instanceprojection(miner, ith_instance), itemset)][nworld] > 0
             ]
 
@@ -446,7 +446,7 @@ function initminingstate(
         # a numerical value is obtained, but the exact worlds in which the truth relation
         # holds is not kept in memory. We save them in thanks to this field.
         # See also `lsupport` implementation.
-        :instance_item_toworlds => Dict{Tuple{Int,Itemset},WorldMask}([]),
+        :worldmask => Dict{Tuple{Int,Itemset},WorldMask}([]),
 
         # when modal fpgrowth calls propositional fpgrowth multiple times, each call
         # has to know its specific 1-length itemsets ordering (that is, one Item);
