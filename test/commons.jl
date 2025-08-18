@@ -97,8 +97,14 @@ function compare(miner1::AbstractMiner, miner2::AbstractMiner)
     compare_arules(miner1, miner2)
 end
 
-function compare(miners::Vector{<:AbstractMiner})
+function compare(miners::Vector{<:AbstractMiner}; verbose::Bool=false)
     mainminer = first(miners)
+
+    for targetminer in miners[2:end]
+        verbose && printstyled(
+            "\t$(string(mainminer)) vs $(string(targetminer))", color=:green)
+    end
+
     map(targetminer -> compare(mainminer, targetminer), miners[2:end])
 end
 
