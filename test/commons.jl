@@ -102,7 +102,10 @@ function compare(miners::Vector{<:AbstractMiner}; verbose::Bool=false)
 
     for targetminer in miners[2:end]
         verbose && printstyled(
-            "\t$(string(mainminer)) vs $(string(targetminer))", color=:green)
+            "\t$(mainminer |> algorithm |> string) vs " *
+            "$(targetminer |> algorithm |> string)\n",
+            color=:green
+        )
     end
 
     map(targetminer -> compare(mainminer, targetminer), miners[2:end])
