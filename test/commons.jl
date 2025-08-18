@@ -97,7 +97,7 @@ function compare(miner1::AbstractMiner, miner2::AbstractMiner)
     compare_arules(miner1, miner2)
 end
 
-function compare(miners::Vector{AbstractMiner})
+function compare(miners::Vector{<:AbstractMiner})
     mainminer = first(miners)
     map(targetminer -> compare(mainminer, targetminer), miners[2:end])
 end
