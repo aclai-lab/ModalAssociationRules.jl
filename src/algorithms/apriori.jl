@@ -91,7 +91,7 @@ function apriori(
 
         # get the frequent itemsets from the first candidates set
         Threads.@threads for candidate in candidates
-            any(
+            all(
                 gmeas_algo(candidate, X, lthreshold, miner) >= gthreshold
                 for (gmeas_algo, lthreshold, gthreshold) in itemsetmeasures(miner)
             ) && lock(frequents_lock) do
