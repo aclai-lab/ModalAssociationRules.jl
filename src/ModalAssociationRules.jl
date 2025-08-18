@@ -47,7 +47,7 @@ export MeaningfulnessMeasure
 export islocalof, isglobalof
 export localof, globalof
 
-export WorldMask, InstanceMask
+export WorldMask
 
 export LmeasMemoKey, LmeasMemo
 export GmeasMemoKey, GmeasMemo

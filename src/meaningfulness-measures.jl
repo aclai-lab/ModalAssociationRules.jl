@@ -17,7 +17,6 @@ then it is filled when computing any local meaningfulness measure created using
 See also [`AbstractMiner`](@ref), [`@globalmeasure`](@ref), [`miningstate`](@ref).
 """
 GLOBAL_MINING_STATES = [
-    :instancemask
 ]
 
 """
@@ -179,14 +178,11 @@ macro globalmeasure(measname, measlogic)
             # to know more, see `localmeasure` comments.
             globalmemo!(miner, memokey, measure)
 
-            for state in GLOBAL_MINING_STATES
-                # for example, consider the global measure "global support";
-                # let's suppose it returns a Dict with two keys, :measure and :instancemask;
-                # since :instancemask is part of GLOBAL_MINING_STATES, we keep track of it.
-                if hasminingstate(miner, state) && haskey(response, state)
-                    miningstate!(miner, state, (subject), response[state])
-                end
-            end
+            ## for state in GLOBAL_MINING_STATES
+            ##     if hasminingstate(miner, state) && haskey(response, state)
+            ##         miningstate!(miner, state, (subject), response[state])
+            ##     end
+            ## end
 
             return measure
         end
@@ -291,15 +287,12 @@ end
 
 # core logic of `gsupport`
 _gsupport_logic = (itemset, X, threshold, miner) -> begin
-    instancemask = InstanceMask([
-        # for each instance, compute how many times the local support overpass the threshold
-        lsupport(itemset, getinstance(X, ith_instance), miner) >= threshold
-        for ith_instance in 1:ninstances(X)
-    ])
-
     return Dict(
-        :measure => sum(instancemask) / ninstances(X),
-        :instancemask => instancemask
+        :measure => (
+            # ∀ instance, compute how many times the local support overpass the threshold
+            lsupport(itemset, getinstance(X, ith_instance), miner) >= threshold
+            for ith_instance in 1:ninstances(X)
+        ) |> mean
     )
 end
 

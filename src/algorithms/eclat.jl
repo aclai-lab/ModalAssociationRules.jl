@@ -127,6 +127,6 @@ function initminingstate(
     ::MineableData
 )::MiningState
     return MiningState([
-        :instancemask => Dict{Itemset,InstanceMask}(),
+        :worldmask => Dict{Tuple{Int,Itemset},WorldMask}([])
     ])
 end
