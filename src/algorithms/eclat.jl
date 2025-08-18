@@ -83,7 +83,7 @@ function eclat(miner::M)::M where {M<:AbstractMiner}
         end
 
         # the DFS possibly recurs on each children node
-        for currentstate in futurestates
+        for (i,currentstate) in enumerate(futurestates)
             # merge the current itemset, with the item of the DFS' children
             _newstate_itemset = union(currentstate[1], prevstate[1]) |> sort!
 
@@ -116,14 +116,14 @@ function eclat(miner::M)::M where {M<:AbstractMiner}
             end
 
             # apply all policies, update the globalmemo and continue the recursion
-            if newstate_gsupport > gthreshold &&
+            if newstate_gsupport >= gthreshold &&
                 all(policy -> policy(newstate[1]), itemset_policies(miner))
 
                 push!(freqitems(miner), newstate[1])
                 globalmemo!(
                     miner, GmeasMemoKey((:gsupport, newstate[1])), newstate_gsupport)
 
-                _eclat!(miner, @view(futurestates[2:end]), newstate, lthreshold, gthreshold)
+                _eclat!(miner, @view(futurestates[(i+1):end]), newstate, lthreshold, gthreshold)
             end
 
         end
