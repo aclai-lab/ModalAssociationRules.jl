@@ -80,8 +80,11 @@ end
 
 # driver to compare arules between miners
 function compare_arules(miner1::AbstractMiner, miner2::AbstractMiner)
-    generaterules!(miner1) |> collect
-    generaterules!(miner2) |> collect
+    for miner in [miner1, miner2]
+        if miner |> arules |> isempty
+            generaterules!(miner) |> collect
+        end
+    end
 
     @test length(arules(miner1)) == length(arules(miner2))
 
