@@ -30,7 +30,6 @@ See also [`anchored_eclat`](@ref), [`Miner`](@ref).
 function eclat(miner::M)::M where {M<:AbstractMiner}
     _itemtype = itemtype(miner)
     X = data(miner)
-    Xvertical = Dict{Itemset{_itemtype}, Vector{<:WorldMask}}()
 
     # we want to obtain a vertical format from data:
     # given an item c, we collect the instance IDs on which c holds;
@@ -38,10 +37,17 @@ function eclat(miner::M)::M where {M<:AbstractMiner}
     candidates = Itemset{_itemtype}.(items(miner))
     filter!(candidates, miner)
 
+    # actually, the (modal) vertical format associates a more complex structure:
+    # itemset => [
+    #   [truth values on worlds of the first instance],
+    #   [truth values on the worlds of the second instance],
+    #   ...
+    # ]
+    Xvertical = Dict{Itemset{_itemtype}, Vector{<:WorldMask}}()
+
     Threads.@threads for candidate in candidates
         # we keep track of the instances for which a candidate has enough global support;
-        # m is a MeaningfulnessMeasure;
-        # see comment (1) at the end
+        # m is a MeaningfulnessMeasure (tuple (measure, local threshold, global threshold));
         if all(m -> m[1](candidate, X, m[2], miner) >= m[3], itemsetmeasures(miner))
             push!(freqitems(miner), candidate)
 
@@ -52,7 +58,7 @@ function eclat(miner::M)::M where {M<:AbstractMiner}
         end
     end
 
-    # this is of type Vector{Pair{Itemset,BitMatrix}}
+    # we rearrange the vertical format in a standard format via sorting by globalmemo
     Xvertical_sorted = collect(Xvertical)
     Xvertical_sorted = sort!(
         Xvertical_sorted,
@@ -60,13 +66,14 @@ function eclat(miner::M)::M where {M<:AbstractMiner}
         rev=true
     )
 
+    # think of this method as a DFS, visiting the candidate extensions of an itemset
     function _eclat!(
         miner::M,
-        # AbstractVector since a view (SubArray) will be passe
+        # the future states to visit
         futurestates::AbstractArray{Pair{IT,IM}},
-        # e.g., I am proceeding the computation from [p,q] with BitMatrix [1,0,0,1,1]
+        # last state of the DFS (an itemset and all the truth values metadata associated)
         prevstate::Pair{IT,IM},
-        # all the itemsetmeasures global thresholds that must be respected
+        # local and global threhsolds for support
         lthreshold::T,
         gthreshold::T
     ) where {M<:AbstractMiner, IT<:Itemset, IM<:Vector{<:WorldMask}, T<:Threshold}
@@ -75,8 +82,12 @@ function eclat(miner::M)::M where {M<:AbstractMiner}
             return
         end
 
+        # the DFS possibly recurs on each children node
         for currentstate in futurestates
+            # merge the current itemset, with the item of the DFS' children
             _newstate_itemset = union(currentstate[1], prevstate[1]) |> sort!
+
+            # update the truth values of each world of each instance
             _newstate_worldmasks = map(
                 s -> s[1] .& s[2], zip(currentstate[2], prevstate[2])
             )
@@ -104,24 +115,22 @@ function eclat(miner::M)::M where {M<:AbstractMiner}
                 )
             end
 
+            # apply all policies, update the globalmemo and continue the recursion
             if newstate_gsupport > gthreshold &&
                 all(policy -> policy(newstate[1]), itemset_policies(miner))
 
                 push!(freqitems(miner), newstate[1])
                 globalmemo!(
                     miner, GmeasMemoKey((:gsupport, newstate[1])), newstate_gsupport)
+
                 _eclat!(miner, @view(futurestates[2:end]), newstate, lthreshold, gthreshold)
             end
 
         end
     end
 
-    # for each possible initial prefix, let's execute a DFS;
-    # if my itemsets are A,B,C,D, then we need to explore B,C,D starting from A,
-    # C,D starting from B, and D starting from C.
-    # Threads.@threads # TODO
     ((_, lthreshold, gthreshold),) = itemsetmeasures(miner)
-    for i in 2:length(Xvertical_sorted)
+    Threads.@threads for i in 2:length(Xvertical_sorted)
         _eclat!(
             miner,
             @view(Xvertical_sorted[i:end]),
