@@ -98,7 +98,8 @@ function compare(miner1::AbstractMiner, miner2::AbstractMiner)
 end
 
 function compare(miners::Vector{AbstractMiner})
-
+    mainminer = first(miners)
+    map(targetminer -> compare(mainminer, targetminer), miners[2:end])
 end
 
 export isequal_gsupp, isequal_lsupp
