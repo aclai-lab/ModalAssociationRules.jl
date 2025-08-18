@@ -409,17 +409,16 @@ object, such as a `SoleLogics.KripkeStructure`.
 
 See also [`Itemset`](@ref), [`MeaningfulnessMeasure`](@ref).
 """
- const WorldMask = BitVector
+const WorldMask = BitVector
 
 """
-    const InstanceMask = BitVector
+    const InstanceMask = BitMatrix
 
-Bitmask whose i-th position stores for which instances a (local)
-[`MeaningfulnessMeasure`](@ref) overpasses a minimum local threshold.
+A collection of [`WorldMask`](@ref)s.
 
-See also [`MeaningfulnessMeasure`](@ref).
+See also [`MeaningfulnessMeasure`](@ref), [`WorldMask`](@ref).
 """
-const InstanceMask = BitVector
+const InstanceMask = BitMatrix
 
 # utility structures
 
