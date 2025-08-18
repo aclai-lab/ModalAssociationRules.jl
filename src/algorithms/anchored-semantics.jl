@@ -203,3 +203,6 @@ function anchored_eclat(miner::M; kwargs...)::M where {M<:AbstractMiner}
 
     return anchored_semantics(miner; kwargs...)
 end
+
+# TODO - instead of defining all those "anchored" methods, we could just define a new
+# mine! dispatch with a Symbol field.
