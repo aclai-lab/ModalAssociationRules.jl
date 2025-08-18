@@ -30,7 +30,7 @@ See also [`anchored_eclat`](@ref), [`Miner`](@ref).
 function eclat(miner::M)::M where {M<:AbstractMiner}
     _itemtype = itemtype(miner)
     X = data(miner)
-    Xvertical = Dict{Itemset{_itemtype}, InstanceMask}()
+    Xvertical = Dict{Itemset{_itemtype}, Vector{<:WorldMask}}()
 
     # we want to obtain a vertical format from data:
     # given an item c, we collect the instance IDs on which c holds;
@@ -43,75 +43,95 @@ function eclat(miner::M)::M where {M<:AbstractMiner}
         # m is a MeaningfulnessMeasure;
         # see comment (1) at the end
         if all(m -> m[1](candidate, X, m[2], miner) >= m[3], itemsetmeasures(miner))
-            Xvertical[candidate] = miningstate(miner, :instancemask, candidate)
             push!(freqitems(miner), candidate)
+
+            Xvertical[candidate] = (
+                miningstate(miner, :worldmask)[(ith_instance, candidate)]
+                for ith_instance in 1:ninstances(X)
+            ) |> collect
         end
     end
 
-    # this is of type Vector{Pair{Itemset,InstanceMask}}
+    # this is of type Vector{Pair{Itemset,BitMatrix}}
     Xvertical_sorted = collect(Xvertical)
-    Xvertical_sorted = sort!(Xvertical_sorted, by=kv->sum(kv[2]), rev=true)
-
-    # see comment (1) at the end
-    gthresholds = Threshold[gthreshold for (_, _, gthreshold) in itemsetmeasures(miner)]
+    Xvertical_sorted = sort!(
+        Xvertical_sorted,
+        by=kv->globalmemo(miner, (:gsupport, kv[1])),
+        rev=true
+    )
 
     function _eclat!(
         miner::M,
         # AbstractVector since a view (SubArray) will be passe
         futurestates::AbstractArray{Pair{IT,IM}},
-        # e.g., I am proceeding the computation from [p,q] with InstanceMask [1,0,0,1,1]
+        # e.g., I am proceeding the computation from [p,q] with BitMatrix [1,0,0,1,1]
         prevstate::Pair{IT,IM},
         # all the itemsetmeasures global thresholds that must be respected
-        gthresholds::Vector{T}
-    ) where {M<:AbstractMiner, IT<:Itemset, IM<:BitVector, T<:Threshold}
+        lthreshold::T,
+        gthreshold::T
+    ) where {M<:AbstractMiner, IT<:Itemset, IM<:Vector{<:WorldMask}, T<:Threshold}
         # base case of the DFS
         if length(futurestates) == 0
             return
         end
 
-        # let us say that prevstate is ([A], [1,0,...])
-        # and currentstate is ([B], [1,1,...])
         for currentstate in futurestates
-            # the new candidate state could be ([A,B], [1,0,...])
+            _newstate_itemset = union(currentstate[1], prevstate[1]) |> sort!
+            _newstate_worldmasks = map(
+                s -> s[1] .& s[2], zip(currentstate[2], prevstate[2])
+            )
+
             newstate = Pair{IT,IM}(
-                union(currentstate[1], prevstate[1]) |> sort!, # the new candidate itemset
-                currentstate[2] .& prevstate[2] # the instance mask encoding for global measures
+                _newstate_itemset,
+                _newstate_worldmasks
             )
 
             # the new candidate state should have enough global support, and respect all the
             # policies related to itemsets
-            newstate_gsupport = (newstate[2] |> sum) / length(newstate[2])
-            if all(threshold -> newstate_gsupport >= threshold, gthresholds) &&
-                all(policy -> policy(newstate[1]), itemset_policies(miner))
+            newstate_gsupport = mean(
+                mask -> mean(mask) >= lthreshold,
+                newstate[2]
+            )
 
-                # at this point, we recur on ([C], [1,1,...]) pinpointing ([A,B], [1,0,...])
-                push!(freqitems(miner), newstate[1])
-                globalmemo!(miner, GmeasMemoKey((:gsupport, newstate[1])), newstate_gsupport)
-                _eclat!(miner, @view(futurestates[2:end]), newstate, gthresholds)
+            # WARNING: the user could want to save space and do not save all the metadata
+            # related to the local support of each itemset;
+            # moreover, mean computation is redundant here.
+            for ith_instance in 1:ninstances(X)
+                localmemo!(
+                    miner,
+                    (:lsupport, newstate[1], ith_instance),
+                    mean(newstate[2][ith_instance])
+                )
             end
 
-            # in any case, the for loop goes on and we try merging [D] with [A,B]
+            if newstate_gsupport > gthreshold &&
+                all(policy -> policy(newstate[1]), itemset_policies(miner))
+
+                push!(freqitems(miner), newstate[1])
+                globalmemo!(
+                    miner, GmeasMemoKey((:gsupport, newstate[1])), newstate_gsupport)
+                _eclat!(miner, @view(futurestates[2:end]), newstate, lthreshold, gthreshold)
+            end
+
         end
     end
 
     # for each possible initial prefix, let's execute a DFS;
     # if my itemsets are A,B,C,D, then we need to explore B,C,D starting from A,
     # C,D starting from B, and D starting from C.
-    # Threads.@threads
+    # Threads.@threads # TODO
+    ((_, lthreshold, gthreshold),) = itemsetmeasures(miner)
     for i in 2:length(Xvertical_sorted)
         _eclat!(
             miner,
             @view(Xvertical_sorted[i:end]),
             Xvertical_sorted[i-1],
-            gthresholds
+            lthreshold,
+            gthreshold
         )
     end
 
     return miner
-
-    # notes:
-    # (1)   actually we could just consider gsupport...
-    #       the point is that, in the future, more itemsetmeasures may be considered.
 end
 
 
@@ -127,6 +147,6 @@ function initminingstate(
     ::MineableData
 )::MiningState
     return MiningState([
-        :worldmask => Dict{Tuple{Int,Itemset},WorldMask}([])
+        :worldmask => Dict{Tuple{Int,Itemset},WorldMask}()
     ])
 end
