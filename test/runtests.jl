@@ -24,6 +24,7 @@ test_suites = [
 ]
 
 @testset "ModalAssociationRules.jl" begin
+    # include(test/commons.jl) if running from the REPL
     include("commons.jl")
     using .Commons
 
