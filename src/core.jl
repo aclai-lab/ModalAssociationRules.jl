@@ -411,15 +411,6 @@ See also [`Itemset`](@ref), [`MeaningfulnessMeasure`](@ref).
 """
 const WorldMask = BitVector
 
-"""
-    const InstanceMask = BitMatrix
-
-A collection of [`WorldMask`](@ref)s.
-
-See also [`MeaningfulnessMeasure`](@ref), [`WorldMask`](@ref).
-"""
-const InstanceMask = BitMatrix
-
 # utility structures
 
 """
