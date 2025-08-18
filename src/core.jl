@@ -78,10 +78,11 @@ Semantically, [`Itemset`](@ref)s represent [`Item`](@ref)s (that is, formulas) c
     Itemsets are implemented as a vector for two reasons:
 
     1. [lookup is faster](https://www.juliabloggers.com/set-vs-vector-lookup-in-julia-a-closer-look/)
-    when the collection is small (an itemset is unlikely to consist of more than 100 items);
+        when the collection is small (an itemset is unlikely to consist of more than 100
+        items);
 
     2. most of the time, we want to keep an ordering between items while searching for
-    interesting itemsets.
+        interesting itemsets.
 
 # Examples
 ```julia
