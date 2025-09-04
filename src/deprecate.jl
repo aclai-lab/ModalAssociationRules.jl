@@ -23,7 +23,7 @@ include("loaders/hugadb-loader.jl")
 using SoleData.Artifacts: load
 using SoleData.Artifacts: EpilepsyLoader, HuGaDBLoader, LibrasLoader, NatopsLoader
 
-@deprecate load_epilepsy(::String, ::String) = load(EpilepsyLoader())
-@deprecate load_hugadb(::String, ::String) = load(HuGaDBLoader())
-@deprecate load_libras(::String, ::String) = load(LibrasLoader())
-@deprecate load_NATOPS(::String, ::String) = load(NatopsLoader())
+@deprecate load_epilepsy(::String, ::String) load(EpilepsyLoader())
+@deprecate load_hugadb(::String, ::String) load(HuGaDBLoader())
+@deprecate load_libras(::String, ::String) load(LibrasLoader())
+@deprecate load_NATOPS(::String, ::String) load(NatopsLoader())
