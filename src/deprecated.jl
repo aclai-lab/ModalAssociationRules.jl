@@ -12,3 +12,13 @@
 #
 # @deprecate _lconfidence_logic _dimensionalwise_lconfidence_logic
 # @deprecate _gconfidence_logic _dimensionalwise_gconfidence_logic
+
+
+# Old dataset loaders, which now lives in SoleData
+include("loaders/natops-loader.jl")
+include("loaders/libras-loader.jl")
+include("loaders/epilepsy-loader.jl")
+include("loaders/hugadb-loader.jl")
+
+export load_NATOPS, load_libras, load_epilepsy
+export load_hugadb, filter_hugadb

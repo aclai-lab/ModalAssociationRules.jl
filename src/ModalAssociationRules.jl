@@ -148,13 +148,6 @@ export anchored_fpgrowth
 # include("alphabet-proposal.jl")
 # export motifsalphabet
 
-include("loaders/natops-loader.jl")
-include("loaders/libras-loader.jl")
-include("loaders/epilepsy-loader.jl")
-include("loaders/hugadb-loader.jl")
-export load_NATOPS, load_libras, load_epilepsy
-export load_hugadb, filter_hugadb
-
 include("deprecated.jl")
 
 end

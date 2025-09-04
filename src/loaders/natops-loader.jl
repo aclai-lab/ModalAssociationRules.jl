@@ -43,8 +43,8 @@ end
 function _load_NATOPS(dirpath::String, fileprefix::String)
     (X_train, y_train), (X_test, y_test) =
         (
-            read("$(dirpath)/$(fileprefix)_TEST.arff", String) |> SoleData.parseARFF,
-            read("$(dirpath)/$(fileprefix)_TRAIN.arff", String) |> SoleData.parseARFF,
+            read("$(dirpath)/$(fileprefix)_TEST.arff", String) |> parseARFF,
+            read("$(dirpath)/$(fileprefix)_TRAIN.arff", String) |> parseARFF,
         )
 
     variablenames = [
@@ -74,8 +74,8 @@ function _load_NATOPS(dirpath::String, fileprefix::String)
         "Z[Thumb r]",
     ]
 
-    X_train  = SoleData.fix_dataframe(X_train, variablenames)
-    X_test   = SoleData.fix_dataframe(X_test, variablenames)
+    X_train  = fix_dataframe(X_train, variablenames)
+    X_test   = fix_dataframe(X_test, variablenames)
 
     class_names = [
         "I have command",
