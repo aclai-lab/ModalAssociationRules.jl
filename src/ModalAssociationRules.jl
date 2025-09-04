@@ -148,6 +148,6 @@ export anchored_fpgrowth
 # include("alphabet-proposal.jl")
 # export motifsalphabet
 
-include("deprecated.jl")
+include("deprecate.jl")
 
 end
