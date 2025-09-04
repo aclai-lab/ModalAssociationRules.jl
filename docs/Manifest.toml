@@ -471,12 +471,6 @@ git-tree-sha1 = "9e2f36d3c96a820c678f2f1f1782582fcf685bae"
 uuid = "8bb1440f-4735-579b-a4ab-409b98df4dab"
 version = "1.9.1"
 
-[[deps.Dictionaries]]
-deps = ["Indexing", "Random", "Serialization"]
-git-tree-sha1 = "a86af9c4c4f33e16a2b2ff43c2113b2f390081fa"
-uuid = "85a47980-9c8c-11e8-2b9f-f7ca1fa99fb4"
-version = "0.4.5"
-
 [[deps.DimensionalData]]
 deps = ["Adapt", "ArrayInterface", "ConstructionBase", "DataAPI", "Dates", "Extents", "Interfaces", "IntervalSets", "InvertedIndices", "IteratorInterfaceExtensions", "LinearAlgebra", "OrderedCollections", "PrecompileTools", "Random", "RecipesBase", "Statistics", "TableTraits", "Tables"]
 git-tree-sha1 = "611a26d31e6739dd7b6cf71f2a086d11f820ffdb"
@@ -834,11 +828,6 @@ version = "0.2.5"
 git-tree-sha1 = "debdd00ffef04665ccbb3e150747a77560e8fad1"
 uuid = "615f187c-cbe4-4ef1-ba3b-2fcf58d6d173"
 version = "0.1.1"
-
-[[deps.Indexing]]
-git-tree-sha1 = "ce1566720fd6b19ff3411404d4b977acd4814f9f"
-uuid = "313cdc1a-70c2-5d6a-ae34-0150d3930a38"
-version = "1.1.1"
 
 [[deps.IndirectArrays]]
 git-tree-sha1 = "012e604e1c7458645cb8b436f8fba789a51b257f"
@@ -1340,9 +1329,7 @@ version = "1.11.0"
 
 [[deps.ModalAssociationRules]]
 deps = ["Accessors", "BenchmarkTools", "CategoricalArrays", "Clustering", "Combinatorics", "DataFrames", "DataStructures", "Dates", "Discretizers", "Distributed", "Distributions", "DynamicAxisWarping", "IterTools", "Lazy", "MLJ", "MatrixProfile", "MultiData", "PGFPlotsX", "Parameters", "Plots", "PrettyTables", "Random", "Reexport", "ResumableFunctions", "Revise", "SoleBase", "SoleData", "SoleLogics", "SoleModels", "StatProfilerHTML", "StatsBase", "ZipFile"]
-git-tree-sha1 = "46bef866dc96e09e45ccbc6b0e91e3bce747325e"
-repo-rev = "main"
-repo-url = ".."
+path = "/home/mauro/.julia/dev/ModalAssociationRules"
 uuid = "fb95e5f7-b6b0-4744-a282-88ebeeae65a3"
 version = "0.2.1"
 
@@ -1352,7 +1339,9 @@ version = "2023.12.12"
 
 [[deps.MultiData]]
 deps = ["CSV", "Catch22", "DataFrames", "DataStructures", "Logging", "MLJModelInterface", "Random", "Reexport", "Revise", "ScientificTypes", "SoleBase", "Statistics", "StatsBase", "Tables"]
-git-tree-sha1 = "f10b2197c010852a313ae91d2d8b891829f51553"
+git-tree-sha1 = "b5d5e83a964a28886b69fbd227028409dccd54f8"
+repo-rev = "main"
+repo-url = "https://github.com/aclai-lab/MultiData.jl.git"
 uuid = "8cc5100c-b3d1-4f82-90cb-0ea93d317aba"
 version = "0.1.4"
 
@@ -1860,27 +1849,35 @@ version = "1.11.0"
 
 [[deps.SoleBase]]
 deps = ["CategoricalArrays", "FillArrays", "IterTools", "Logging", "Random", "StatsBase"]
-git-tree-sha1 = "7a00a8d06cee046ad5ea3ace8eaf789543fe1df6"
+git-tree-sha1 = "cbd185f4d1d6334c15a5753b0f2a848b2294df35"
+repo-rev = "main"
+repo-url = "https://github.com/aclai-lab/SoleBase.jl.git"
 uuid = "4475fa32-7023-44a0-aa70-4813b230e492"
-version = "0.13.2"
+version = "0.13.1"
 
 [[deps.SoleData]]
-deps = ["CategoricalArrays", "DataFrames", "DataStructures", "HTTP", "IntervalSets", "Lazy", "LinearAlgebra", "Logging", "MLJModelInterface", "MultiData", "ProgressMeter", "Query", "Random", "Reexport", "ScientificTypes", "SoleBase", "SoleLogics", "StatsBase", "Tables", "ThreadSafeDicts", "UniqueVectors", "ZipFile"]
-git-tree-sha1 = "a50ed4870d07431a259b77d286ac102b04d8ddb7"
+deps = ["BenchmarkTools", "CSV", "Catch22", "CategoricalArrays", "DataFrames", "DataStructures", "Discretizers", "Graphs", "HTTP", "IntervalSets", "Lazy", "LinearAlgebra", "Logging", "MLJModelInterface", "MultiData", "ProgressMeter", "Query", "Random", "Reexport", "Revise", "ScientificTypes", "SoleBase", "SoleLogics", "Statistics", "StatsBase", "Tables", "Test", "ThreadSafeDicts", "UniqueVectors", "ZipFile"]
+git-tree-sha1 = "13270a30c889e5cb8908d7797a41fec6bde19250"
+repo-rev = "dev"
+repo-url = "https://github.com/aclai-lab/SoleData.jl.git"
 uuid = "123f1ae1-6307-4526-ab5b-aab3a92a2b8c"
-version = "0.16.3"
+version = "0.16.1"
 
 [[deps.SoleLogics]]
-deps = ["AbstractTrees", "DataStructures", "Dictionaries", "FunctionWrappers", "Graphs", "IterTools", "Lazy", "PrettyTables", "Random", "Reexport", "SoleBase", "StaticArrays", "StatsBase", "ThreadSafeDicts"]
-git-tree-sha1 = "224b4303c1b7bcff39128a86bcccd5890bbbf4d9"
+deps = ["AbstractTrees", "DataStructures", "FunctionWrappers", "Graphs", "IterTools", "Lazy", "PrettyTables", "Random", "Reexport", "SoleBase", "StaticArrays", "StatsBase", "ThreadSafeDicts"]
+git-tree-sha1 = "dd6aec8fb7d61a483fbd6bf593ae490d2985c3c4"
+repo-rev = "dev"
+repo-url = "https://github.com/aclai-lab/SoleLogics.jl.git"
 uuid = "b002da8f-3cb3-4d91-bbe3-2953433912b5"
-version = "0.13.2"
+version = "0.13.0"
 
 [[deps.SoleModels]]
 deps = ["AbstractTrees", "CategoricalArrays", "FillArrays", "FunctionWrappers", "IterTools", "Lazy", "PrettyTables", "Reexport", "SoleBase", "SoleData", "SoleLogics", "StatsBase", "ThreadSafeDicts"]
-git-tree-sha1 = "20ed9ee7bb67a2048a0c08dddc3713c028064cc6"
+git-tree-sha1 = "b7aea97ff46b913b752d6793fcf30d38dedbd843"
+repo-rev = "main"
+repo-url = "https://github.com/aclai-lab/SoleModels.jl.git"
 uuid = "4249d9c7-3290-4ddd-961c-e1d3ec2467f8"
-version = "0.10.2"
+version = "0.10.1"
 
     [deps.SoleModels.extensions]
     DecisionTreeExt = "DecisionTree"
