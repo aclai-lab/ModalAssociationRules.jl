@@ -20,5 +20,10 @@ include("loaders/libras-loader.jl")
 include("loaders/epilepsy-loader.jl")
 include("loaders/hugadb-loader.jl")
 
-export load_NATOPS, load_libras, load_epilepsy
-export load_hugadb, filter_hugadb
+using SoleData.Artifacts: load
+using SoleData.Artifacts: EpilepsyLoader, HuGaDBLoader, LibrasLoader, NatopsLoader
+
+@deprecate load_epilepsy(::String, ::String) = load(EpilepsyLoader())
+@deprecate load_hugadb(::String, ::String) = load(HuGaDBLoader())
+@deprecate load_libras(::String, ::String) = load(LibrasLoader())
+@deprecate load_NATOPS(::String, ::String) = load(NatopsLoader())
