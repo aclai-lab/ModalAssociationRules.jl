@@ -14,18 +14,20 @@
 # @deprecate _gconfidence_logic _dimensionalwise_gconfidence_logic
 
 
-# Old dataset loaders, which now lives in SoleData
-# include("loaders/natops-loader.jl")
-# include("loaders/libras-loader.jl")
-# include("loaders/epilepsy-loader.jl")
-# include("loaders/hugadb-loader.jl")
-
+# Old dataset loader exports, which now lives in SoleData
 export load_epilepsy, load_hugadb, load_libras, load_NATOPS
 
 using SoleData.Artifacts: load
 using SoleData.Artifacts: EpilepsyLoader, HuGaDBLoader, LibrasLoader, NatopsLoader
 
+@deprecate load_epilepsy() load(EpilepsyLoader())
 @deprecate load_epilepsy(::String, ::String) load(EpilepsyLoader())
+
+@deprecate load_hugadb() load(HuGaDBLoader())
 @deprecate load_hugadb(::String, ::String) load(HuGaDBLoader())
+
+@deprecate load_libras() load(LibrasLoader())
 @deprecate load_libras(::String, ::String) load(LibrasLoader())
+
+@deprecate load_NATOPS() load(NatopsLoader())
 @deprecate load_NATOPS(::String, ::String) load(NatopsLoader())
