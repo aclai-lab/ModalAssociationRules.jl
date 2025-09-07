@@ -15,10 +15,12 @@
 
 
 # Old dataset loaders, which now lives in SoleData
-include("loaders/natops-loader.jl")
-include("loaders/libras-loader.jl")
-include("loaders/epilepsy-loader.jl")
-include("loaders/hugadb-loader.jl")
+# include("loaders/natops-loader.jl")
+# include("loaders/libras-loader.jl")
+# include("loaders/epilepsy-loader.jl")
+# include("loaders/hugadb-loader.jl")
+
+export load_epilepsy, load_hugadb, load_libras, load_NATOPS
 
 using SoleData.Artifacts: load
 using SoleData.Artifacts: EpilepsyLoader, HuGaDBLoader, LibrasLoader, NatopsLoader
