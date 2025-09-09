@@ -431,6 +431,7 @@ _genericMiner = genericMiner()
 @test_throws ErrorException itemtype(_genericMiner)
 
 
+
 ##### Creation of a custom Miner
 
 struct statefulMiner <: AbstractMiner
