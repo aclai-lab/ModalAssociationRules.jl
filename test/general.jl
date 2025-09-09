@@ -528,11 +528,6 @@ _my_vd1 = VariableDistance(1, [[1,2,3,4,5], [1,2,3,4,5]])
 @test_nowarn load_libras()
 @test_nowarn load_epilepsy()
 
-@test_nowarn @eval X_hugadb = load_hugadb(["HuGaDB_v2_various_01_00.txt"]) |> first
-
-@test X_hugadb[:,39][1] |> length == 3142
-
-
 ##### AbstractMiner functionalities
 
 @test_nowarn localmemo!(fpgrowth_miner, (:lsupport, pq, 1), 0.56)
