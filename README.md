@@ -106,5 +106,5 @@ For each folder, checkout on `dev` branch and open the Julia REPL to install the
     SoleModels            -> ]dev SoleBase MultiData SoleLogics SoleData
     ModalAssociationRules -> ]dev SoleBase MultiData SoleLogics SoleData SoleModels
 
-When not specified (every time but in SoleBase), also execute ```]instantiate```. 
+When not specified (every time but in SoleBase), also execute ```]instantiate```.
 
