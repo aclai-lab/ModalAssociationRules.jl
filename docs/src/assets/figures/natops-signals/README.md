@@ -37,7 +37,8 @@ for i in windows
         yticks=false,           # remove y-axis ticks
         xlabel="",              # remove x label
         ylabel="",              # remove y label
-        framestyle=:none        # remove frame/axes completely
+        framestyle=:none,       # remove frame/axes completely
+        background_color=:transparent
     )
 
     _first = i |> first
