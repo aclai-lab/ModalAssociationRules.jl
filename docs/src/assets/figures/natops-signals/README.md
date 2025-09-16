@@ -20,7 +20,7 @@ windows = [
     [(s:s+19) for s in 1:10:31]...,  
     [(s:s+29) for s in 1:10:21]...,  
     [(s:s+39) for s in 1:10:11]...,  
-    [(s:s+49) for s in 1:10:1]...,  
+    [(s:s+49) for s in 1:10:1]..., 
 ]
 
 for i in windows
