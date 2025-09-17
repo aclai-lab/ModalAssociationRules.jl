@@ -187,11 +187,9 @@ function initialize_experiment(
     atoms = reduce(vcat, [
         propositionalatoms,
         diamond(IA_A).(propositionalatoms),
-        # diamond(IA_L).(propositionalatoms)
         diamond(IA_B).(propositionalatoms),
         diamond(IA_E).(propositionalatoms),
         diamond(IA_D).(propositionalatoms),
-        # diamond(IA_O).(propositionalatoms),
     ])
 
     _items = Vector{Item}(atoms)
