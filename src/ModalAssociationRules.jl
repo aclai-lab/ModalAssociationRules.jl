@@ -82,14 +82,12 @@ include("utils/miner.jl")
 
 export Miner
 export itemtype, datatype
-export frame, allworlds, nworlds
 export arule_analysis, all_arule_analysis
 
 include("utils/bulldozer.jl")
 
 export Bulldozer
 export datalock, memolock, miningstatelock
-export frame
 
 include("meaningfulness-measures.jl")
 
