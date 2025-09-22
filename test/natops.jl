@@ -169,7 +169,7 @@ arule = fpgrowth_miner |> arules |> first
 
 @test frame(fpgrowth_miner) isa SoleLogics.FullDimensionalFrame
 @test allworlds(fpgrowth_miner) |> first isa SoleLogics.Interval
-@test SoleLogics.frame(fpgrowth_miner) |> nworlds == 1326
+@test SoleLogics.frame(fpgrowth_miner) |> SoleLogics.nworlds == 1326
 
 @test haskey(ModalAssociationRules._lconfidence_logic(
     arule, data(fpgrowth_miner), 1, fpgrowth_miner), :measure)
