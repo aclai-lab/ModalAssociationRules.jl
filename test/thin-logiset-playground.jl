@@ -24,4 +24,4 @@ edges = [
     for j in world_ids
 ]
 
-myframe = SoleLogics.ExplicitCrispUniModalFrame(worlds, edges |> SimpleGraph)
+myframe = SoleLogics.ExplicitCrispUniModalFrame(worlds, SimpleGraph(edges))
