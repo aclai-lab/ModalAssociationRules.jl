@@ -14,7 +14,7 @@ Further on in the documentation, the potential of ModalAssociationRules.jl will 
 
 ## Fast introduction
 
-Consider a time series dataset. For example, let us consider the [NATOPS](https://github.com/yalesong/natops) dataset, obtained by recording the movement of different body parts of an operator. We are interested in extracting temporal considerations hidden in the data. To do so, we can highlight specific intervals in each time series (we assume every signal to have the same length). For example, consider the following time series encoding the vertical trajectory of the right-hand of an operator.
+Consider a time series dataset. For example, let us consider the [NATOPS](https://github.com/yalesong/natops) dataset, obtained by recording the movement of different body parts of an operator. We are interested in extracting temporal considerations hidden in the data. To do so, we can highlight specific intervals in each time series (we assume every signal to have the same length). For example, consider the following time series encoding the vertical trajectory of the right hand of an operator.
 
 ```@raw comment
 <!-- Figure code:
@@ -24,7 +24,7 @@ plot(X[1][1,5], label="Right hand", linecolor=:orange, linewidth=2, size=(500,25
 
 ![I have command movement, specifically the right hand y-axis of the operator](assets/figures/natops-signals/structured/natops-y-hand-signal.png)
 
-At this point, we can highlight different intervals on the signal. For example, via windowing:
+Now, we can highlight different intervals on the signal. For example, via windowing:
 
 ```@raw comment
 <!-- Figure code:
@@ -88,9 +88,9 @@ end
 At this point, we can define a set of logical facts ([`Item`](@ref)s in the jargon) to express a particular property of each interval. We are interested in extracting complex associations hidden in data. In this case, we need a logical formalism capable of capturing temporal relations between different intervals.
 In particular, [HS Interval Logic](https://dl.acm.org/doi/pdf/10.1145/115234.115351) comes in handy to establish relations such as "the item p holds on the interval X, while the item q holds on the interval Y, and Y comes after X".
 
-What we want to do, in general, is to extend propositional logic with a specific [modal logic](https://en.wikipedia.org/wiki/Modal_logic) formalism (hence, the name of this package) that lets us reason in terms of dimensional relations in data while, at the same time, is not as computational expensive as [first order logic](https://en.wikipedia.org/wiki/First-order_logic).
+What we want to do, in general, is to extend propositional logic with a specific [modal logic](https://en.wikipedia.org/wiki/Modal_logic) formalism (hence, the name of this package) that lets us reason in terms of dimensional relations in data while, at the same time, is not as computationally expensive as [first order logic](https://en.wikipedia.org/wiki/First-order_logic).
 
-To give you a more concrete example, consider the following two items, called `p` and `q`. We define them as if we were in the Julia REPL.
+To provide you with a more concrete example, consider the following two items, called `p` and `q`. We define them as if we were in the Julia REPL.
 
 ```julia
 # ScalarCondition is a "generic comparison strategy" defined in SoleData.jl; it says that the maximum in an object encoding a piece of the first variable (in the example above, the right hand vertical movement) must be greater than the threshold 0.5. 
@@ -109,7 +109,7 @@ alphabet = [p,q,ap]
 
 Note that the example provided, although concrete, is still a toy example as each interval is completely flattened to just one scalar value. In practice, we would like to deal with more expressive kinds of `ScalarCondition`.
 
-Now that we have arranged an alphabet of items, we want to establish which items co-occur together by computing the relative frequency of every possible combination of items (this is the most naive mining strategy but, at the moment, let us forget about performance). Item combinations are called *itemsets*, and the relative frequency of how many times an itemset is true within the data is typically called *support*.
+Now that we have arranged an alphabet of items, we want to establish which items co-occur together by computing the relative frequency of every possible combination of items (this is the most naive mining strategy, but, at the moment, let us forget about performance). Item combinations are called *itemsets*, and the relative frequency of how many times an itemset is true within the data is typically called *support*.
 
 | Itemset | [1:10] | [11:20] | [21:30] | [31:40] | [41:50] | Support
 |-------|-------|-------|-------|-------|-------|-------|
@@ -122,7 +122,7 @@ Now that we have arranged an alphabet of items, we want to establish which items
 
 Note that the relative frequency decreases as the itemset we consider gets bigger. Also, note how the *after* operator in `ap` shifts the truth values of `p` one space to the left in the table; in this sense, a temporal declination of a fact is simply a special mask of bits obtained by the fact itself. 
 
-Let us say that we want to consider the itemset `[p,ap]` to be frequent, that is, we consider its support to be high enough. The support for an itemset could be very high because it expresses a triviality, so we want to further process the itemset and better analyze it via statistical meaningfulness measures.
+Let us say that we want to consider the itemset `[p,ap]` to be frequent, that is, we consider its support to be high enough. The support for an itemset could be very high because it expresses a triviality, so we want to further process the itemset and better analyze it via specific *meaningfulness measures*.
 
 In particular, we could consider the two rules `[p] => [ap]` and `[ap] => [p]`. If they turn out to be *meaningful* to us, then we call such rules *association rules*. 
 
@@ -137,12 +137,12 @@ Item
 Itemset
 ```
 
-Notice that one [`Itemset`](@ref) could be a set, but actually it is a vector: this is because, often, ARM algorithms need to establish an order between items in itemsets to work efficiently. To convert an [`Itemset`](@ref) in its [conjunctive normal form](https://en.wikipedia.org/wiki/Conjunctive_normal_form) we simply call [`formula`](@ref).
+Notice that one [`Itemset`](@ref) could be a set, but actually it is a vector: this is because keeping an ordering between items is always computationally beneficial to ARM algorithms. To convert an [`Itemset`](@ref) in its [conjunctive normal form](https://en.wikipedia.org/wiki/Conjunctive_normal_form) we simply call [`formula`](@ref).
 ```@docs
 formula
 ```
 
-In general, an [`Itemset`](@ref) behaves exactly like you would expect a `Vector{Item}` would do. At the end of the day, the only difference is that manipulating an [`Itemset`](@ref), for example through `push!` or `union`, guarantees the wrapped items always keep the same sorting.
+In general, an [`Itemset`](@ref) behaves exactly like you would expect a `Vector{Item}` would do. At the end of the day, the only difference is that manipulating an [`Itemset`](@ref), for example, through `push!` or `union`, guarantees the wrapped items always keep the same sorting.
 
 Enough about [`Itemset`](@ref)s. Our final goal is to produce *association rules*. 
 
@@ -153,12 +153,12 @@ antecedent(rule::ARule)
 consequent(rule::ARule)
 ```
 
-To print an [`ARule`](@ref) enriched with more informations (at the moment, this is everything we need to know), we can use the following.
+A rich print for [`ARule`](@ref) is provided by the following utility:
 ```@docs
 arule_analysis(arule::ARule, miner::Miner; io::IO=stdout)
 ```
 
-Sometimes we could be interested in writing a function that consider a generic entity obtained through an association rule mining algorithm (*frequent itemsets* and, of course, *association rules*). Think about a dictionary mapping some extracted pattern to metadata. We call that generic entity "an ARM subject", and the following union type comes in help.
+Sometimes we could be interested in writing a function that considers a generic entity obtained through an association rule mining algorithm (*frequent itemsets* and, of course, *association rules*). Think about a dictionary mapping some extracted pattern to metadata. We call that generic entity "an ARM subject", and the following union type comes in handy.
 ```@docs
 ARMSubject
 ```
@@ -177,17 +177,7 @@ isglobalof(::Function, ::Function)
 globalof(::Function)
 ```
 
-The following are little data structures which will return useful later, when you will read about how a dataset is mined, looking for [`ARMSubject`](@ref)s.
-```@docs
-LmeasMemoKey
-LmeasMemo
-GmeasMemoKey
-GmeasMemo
-```
-
-What follows is a list of the already built-in meaningfulness measures.
-In the [`Hands on`](@hands-on) section you will learn how to implement your own measure.
-More information are available in the [`Modal generalization`](@man-modal-generalization) section.
+What follows is a list of the already built-in meaningfulness measures. In the [`Hands on`](@hands-on) section you will learn how to implement your own measure leveraging [memoization optimization](https://en.wikipedia.org/wiki/Memoization) via a simple macro.
 
 ```@docs
 lsupport
@@ -196,15 +186,27 @@ lconfidence
 gconfidence
 ```
 
+The measures above are explained in more detail in the [`Modal generalization`](@man-modal-generalization) section, together with more sophisticated ones. For now, all you need to understand is that [`lsupport`](@ref) and [`gsupport`](@ref) compute how many times an itemset is true, while the "confidence" counterpart measures how many times an itemset is true, given the fact that another one is currently true.
+
+Measures are stored in ad-hoc shaped data structures.
+
+```@docs
+LmeasMemoKey
+LmeasMemo
+GmeasMemoKey
+GmeasMemo
+```
+
 ## Mining structures
 
-Finally, we are ready to start mining. To do so, we can create a custom [`AbstractMiner`](@ref) type.
+Finally, we are ready to start mining. To do so, we must implement an [`AbstractMiner`](@ref).
 
 ```@docs
 AbstractMiner
 ```
 
-The main implementation of such an interface is embodied by the [`Miner`](@ref) object.
+The main implementation of an [`AbstractMiner`](@ref)'s an interface is embodied by the [`Miner`](@ref) structure. At the moment of writing, all the experiments written with this package are implemented using the latter.
+
 To mine using a Miner, we just need to specify which dataset we are working with, together with a mining function, a vector of initial [`Item`](@ref)s, and the [`MeaningfulnessMeasure`](@ref)s to establish [`ARMSubject`](@ref) interestingness.
 
 ```@docs
@@ -238,13 +240,14 @@ To start the mining algorithm, simply call the following:
 mine!(miner::Miner)
 ```
 
-The mining call returns an [`ARule`](@ref) generator. Since the extracted rules could be several, it's up to you to collect all the rules in a step or arule_analysis them lazily, collecting them one at a time. You can also call the mining function ignoring it's return value, and then generate the rules later by calling the following.
+The mining call returns an [`ARule`](@ref) generator. Since the extracted rules could be an exponential number, the rule generation phase is separated from the mining itself (for example, you might be interested in serializing the miner object and continuing the rules enumeration later).
+
 
 ```@docs
 generaterules!(miner::Miner)
 ```
 
-During both the mining and the rules generation phases, the values returned by [`MeaningfulnessMeasure`](@ref) applied on a certain [`ARMSubject`](@ref) are saved (memoized) inside the [`Miner`](@ref). Thanks to the methods hereafter, a [`Miner`](@ref) can avoid useless recomputations.
+During both the mining and the rules generation phases, the values returned by [`MeaningfulnessMeasure`](@ref) applied on a certain [`ARMSubject`](@ref) are saved inside the [`Miner`](@ref). Thanks to the methods hereafter, a [`Miner`](@ref) can avoid useless recomputations.
 
 ```@docs
 localmemo(miner::Miner)
