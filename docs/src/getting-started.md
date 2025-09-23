@@ -22,7 +22,7 @@ plot(X[1][1,5], label="Right hand", linecolor=:orange, linewidth=2, size=(500,25
 -->
 ```
 
-![I have command movement, specifically the right hand y-axis of the operator](assets/figures/structured/natops-y-hand-signal.png)
+![I have command movement, specifically the right hand y-axis of the operator](assets/figures/natops-signals/structured/natops-y-hand-signal.png)
 
 At this point, we can highlight different intervals on the signal. For example, via windowing:
 
@@ -79,11 +79,11 @@ end
 !-->
 ```
 
-![1st window of the signal above.](assets/figures/structured/natops-y-hand-signal-split1.png)
-![2nd window of the signal above.](assets/figures/structured/natops-y-hand-signal-split2.png)
-![3rd window of the signal above.](assets/figures/structured/natops-y-hand-signal-split3.png)
-![4th window of the signal above.](assets/figures/structured/natops-y-hand-signal-split4.png)
-![5th window of the signal above.](assets/figures/structured/natops-y-hand-signal-split5.png)
+![1st window of the signal above.](assets/figures/natops-signals/structured/natops-y-hand-signal-split1.png)
+![2nd window of the signal above.](assets/figures/natops-signals/structured/natops-y-hand-signal-split2.png)
+![3rd window of the signal above.](assets/figures/natops-signals/structured/natops-y-hand-signal-split3.png)
+![4th window of the signal above.](assets/figures/natops-signals/structured/natops-y-hand-signal-split4.png)
+![5th window of the signal above.](assets/figures/natops-signals/structured/natops-y-hand-signal-split5.png)
 
 At this point, we can define a set of logical facts ([`Item`](@ref)s in the jargon) to express a particular property of each interval. We are interested in extracting complex associations hidden in data. In this case, we need a logical formalism capable of capturing temporal relations between different intervals.
 In particular, [HS Interval Logic](https://dl.acm.org/doi/pdf/10.1145/115234.115351) comes in handy to establish relations such as "the item p holds on the interval X, while the item q holds on the interval Y, and Y comes after X".
