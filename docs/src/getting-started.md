@@ -186,7 +186,7 @@ lconfidence
 gconfidence
 ```
 
-The measures above are explained in more detail in the [`Modal generalization`](@man-modal-generalization) section, together with more sophisticated ones. For now, all you need to understand is that [`lsupport`](@ref) and [`gsupport`](@ref) compute how many times an itemset is true, while the "confidence" counterpart measures how many times an itemset is true, given the fact that another one is currently true.
+The measures above are explained in more detail in the [`Modal generalization`](@ref modal-generalization) section, together with more sophisticated ones. For now, all you need to understand is that [`lsupport`](@ref) and [`gsupport`](@ref) compute how many times an itemset is true, while the "confidence" counterpart measures how many times an itemset is true, given the fact that another one is currently true.
 
 Measures are stored in ad-hoc shaped data structures.
 
