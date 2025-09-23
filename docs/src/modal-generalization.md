@@ -2,6 +2,8 @@
 CurrentModule = ModalAssociationRules
 ```
 
+# [Association rule mining with modal logic](@id man-modal-generalization)
+
 Symbolic modal learning is a branch of machine learning which deals with training classical symbolic machine learning models (e.g., list and set of rules, decision trees, random forests, association rules, etc.) but substituting propositional logic with a more expressive logical formalism (yet, computationally more affordable than first order logic), that is, a specific kind of modal logic.
 
 In the context of this package, modal logic helps us highlight complex relations hidden in data, especially in *unstructured data*, consisting of graph-like relational data, time series, spatial databases, text, etc. For more information about the modal symbolic learning, we suggest reading the main page of [`Sole.jl` framework](https://github.com/aclai-lab/Sole.jl) and [`SoleLogics.jl`](https://github.com/aclai-lab/SoleLogics.jl).
@@ -42,30 +44,11 @@ Every relation $R$ can be declined in an *existential* or a *universal* way. In 
 myitem = ScalarCondition(VariableDistance(1, [1,2,3]), <=, 1.0) |> diamond(IA_L)
 ```
 
-# [Association rule mining with modal logic](@id man-modal-generalization)
-
-```@docs
-WorldMask
-EnhancedItemset
-ConditionalPatternBase
-```
-
-## Modal logic in action
-```@docs
-initminingstate(::typeof(fpgrowth), ::MineableData)
-```
-
 ## Meaningfulness measures 
 
-In general, we can define new meaningfulness measures by leveraging the following macros.
+We already introduced [`lsupport`](@ref), [`gsupport`](@ref), [`lconfidence`](@ref) and [`gconfidence`](@ref) in the [`Getting started`](#man-core) section. Other measures that are already built into the package, are the following; note how they are always organized in both *local* and *global* versions.
 
-```@docs
-@localmeasure
-@globalmeasure
-@linkmeas
-```
-
-We already introduced [`lsupport`](@ref), [`gsupport`](@ref), [`lconfidence`](@ref) and [`gconfidence`](@ref) in the [`Getting started`](#man-core) section. Other measures that are already built into the package, are the following; note how they are always organized in both local and global versions.
+Local means that a measure is designed to be applied within a modal instance (a Kripke model), while global keywords denotes the fact that the computation is performed across instances.
 
 ```@docs
 llift
@@ -74,4 +57,44 @@ lconviction
 gconviction
 lleverage
 gleverage
+```
+
+In general, we can define new meaningfulness measures by leveraging the following macros, ensuring to avoid solving repeated subproblems when computing the measure.
+
+```@docs
+@localmeasure
+@globalmeasure
+```
+
+You can identify which is the local (global) counterpart of a global (local) meaningfulness measure with the following utility dispatches.
+
+```@docs
+islocalof(::Function, ::Function)
+localof(::Function)
+
+isglobalof(::Function, ::Function)
+globalof(::Function)
+```
+
+Of course, you can even link your custom measures.
+
+```@docs
+@linkmeas
+```
+
+## Other utilities
+
+Every algorithm implemented in this package is designed for the modal symbolic learning context.
+The are three common types appearing in such algorithms.
+
+```@docs
+WorldMask
+EnhancedItemset
+ConditionalPatternBase
+```
+
+We can enrich the [`MiningState`](@ref) of an [`AbstractMiner`](@ref) by using the following trait, depending on the specific algorithm and the kind of data we want to handle.
+
+```@docs
+initminingstate(::typeof(fpgrowth), ::MineableData)
 ```
