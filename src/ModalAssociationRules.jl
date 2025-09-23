@@ -21,7 +21,6 @@ using Reexport
 @reexport using SoleLogics
 @reexport using MultiData
 @reexport using SoleData
-@reexport using SoleModels
 
 using SoleLogics: AbstractInterpretation, getinstance, LogicalInstance
 using SoleLogics: nworlds, frame, allworlds, nworlds
