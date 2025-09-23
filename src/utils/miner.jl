@@ -391,7 +391,7 @@ function Base.filter!(
 end
 
 """
-    Base.filter!(itemsets::Vector{Itemset}, miner::Miner) = filter!(
+    Base.filter!(itemsets::Vector{Itemset}, miner::Miner)
 
 `filter!` the [`Itemset`](@ref)s wrapped in `miner`.
 

@@ -13,11 +13,6 @@ combine_items
 grow_prune
 ```
 
-## Association rules
-```@docs
-generaterules(itemsets::Vector{Itemset}, miner::Miner)
-```
-
 ## Mining Policies
 
 It is possible to limit the action of the mining, to force an [`AbstractMiner`](@ref) to only consider a subset of the available data.
