@@ -169,12 +169,6 @@ To establish when an [`ARMSubject`](@ref) is interesting, we need *meaningfulnes
 ```@docs
 Threshold
 MeaningfulnessMeasure
-
-islocalof(::Function, ::Function)
-localof(::Function)
-
-isglobalof(::Function, ::Function)
-globalof(::Function)
 ```
 
 What follows is a list of the already built-in meaningfulness measures. In the [`Hands on`](@hands-on) section you will learn how to implement your own measure leveraging [memoization optimization](https://en.wikipedia.org/wiki/Memoization) via a simple macro.
