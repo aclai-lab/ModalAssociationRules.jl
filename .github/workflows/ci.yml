@@ -35,7 +35,7 @@ jobs:
             Pkg.add([
               PackageSpec(url="https://github.com/aclai-lab/SoleBase.jl", rev="main"),
               PackageSpec(url="https://github.com/aclai-lab/MultiData.jl", rev="main"),
-              PackageSpec(url="https://github.com/aclai-lab/SoleLogics.jl", rev="dev"),
+              PackageSpec(url="https://github.com/aclai-lab/SoleLogics.jl", rev="main"),
               PackageSpec(url="https://github.com/aclai-lab/SoleData.jl", rev="main"),
               PackageSpec(url="https://github.com/aclai-lab/SoleModels.jl", rev="main")
             ])'
