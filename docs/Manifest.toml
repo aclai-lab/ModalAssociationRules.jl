@@ -1348,7 +1348,9 @@ version = "1.11.0"
 
 [[deps.ModalAssociationRules]]
 deps = ["Accessors", "BenchmarkTools", "CategoricalArrays", "Clustering", "Combinatorics", "DataFrames", "DataStructures", "Dates", "Discretizers", "Distributed", "Distributions", "DynamicAxisWarping", "IterTools", "Lazy", "MLJ", "MatrixProfile", "MultiData", "PGFPlotsX", "Parameters", "Plots", "PrettyTables", "Random", "Reexport", "ResumableFunctions", "Revise", "SoleBase", "SoleData", "SoleLogics", "StatProfilerHTML", "StatsBase", "ZipFile"]
-path = "/home/mauro/.julia/dev/ModalAssociationRules"
+git-tree-sha1 = "3e6e428b88aafb1c11d009f03bce816878c14fc1"
+repo-rev = "main"
+repo-url = "https://github.com/aclai-lab/ModalAssociationRules.jl"
 uuid = "fb95e5f7-b6b0-4744-a282-88ebeeae65a3"
 version = "0.2.1"
 
@@ -1358,9 +1360,7 @@ version = "2023.12.12"
 
 [[deps.MultiData]]
 deps = ["CSV", "Catch22", "DataFrames", "DataStructures", "Logging", "MLJModelInterface", "Random", "Reexport", "Revise", "ScientificTypes", "SoleBase", "Statistics", "StatsBase", "Tables"]
-git-tree-sha1 = "b5d5e83a964a28886b69fbd227028409dccd54f8"
-repo-rev = "main"
-repo-url = "https://github.com/aclai-lab/MultiData.jl"
+git-tree-sha1 = "f10b2197c010852a313ae91d2d8b891829f51553"
 uuid = "8cc5100c-b3d1-4f82-90cb-0ea93d317aba"
 version = "0.1.4"
 
@@ -1790,6 +1790,11 @@ git-tree-sha1 = "456f610ca2fbd1c14f5fcf31c6bfadc55e7d66e0"
 uuid = "476501e8-09a2-5ece-8869-fb82de89a1fa"
 version = "0.6.43"
 
+[[deps.SciMLPublic]]
+git-tree-sha1 = "ed647f161e8b3f2973f24979ec074e8d084f1bee"
+uuid = "431bcebd-1456-4ced-9d72-93c2757fff0b"
+version = "1.0.0"
+
 [[deps.ScientificTypes]]
 deps = ["CategoricalArrays", "ColorTypes", "Dates", "Distributions", "PrettyTables", "Reexport", "ScientificTypesBase", "StatisticalTraits", "Tables"]
 git-tree-sha1 = "3ad7f09ae97806e86b3ef28cd50c52ca18bd2d80"
@@ -1868,25 +1873,19 @@ version = "1.11.0"
 
 [[deps.SoleBase]]
 deps = ["CategoricalArrays", "FillArrays", "IterTools", "Logging", "Random", "StatsBase"]
-git-tree-sha1 = "f200083d212985c6ce3eac49070d5464784dfc55"
-repo-rev = "main"
-repo-url = "https://github.com/aclai-lab/SoleBase.jl"
+git-tree-sha1 = "7125239f46cb1fdfe8b0988140a1511345856a1c"
 uuid = "4475fa32-7023-44a0-aa70-4813b230e492"
 version = "0.13.3"
 
 [[deps.SoleData]]
-deps = ["CategoricalArrays", "CodecZlib", "DataFrames", "DataStructures", "Discretizers", "Downloads", "Graphs", "HTTP", "InteractiveUtils", "IntervalSets", "Lazy", "LazyArtifacts", "LinearAlgebra", "Logging", "MLJModelInterface", "MultiData", "Pkg", "ProgressMeter", "Query", "Random", "Reexport", "SHA", "ScientificTypes", "SoleBase", "SoleLogics", "StatsBase", "TOML", "Tables", "Tar", "ThreadSafeDicts", "UniqueVectors", "ZipFile"]
-git-tree-sha1 = "08d2f19cc25ca4d86acf50bb54110a5ca46b25bd"
-repo-rev = "main"
-repo-url = "https://github.com/aclai-lab/SoleData.jl"
+deps = ["CategoricalArrays", "DataFrames", "DataStructures", "HTTP", "IntervalSets", "Lazy", "LinearAlgebra", "Logging", "MLJModelInterface", "MultiData", "ProgressMeter", "Query", "Random", "Reexport", "ScientificTypes", "SoleBase", "SoleLogics", "StatsBase", "Tables", "ThreadSafeDicts", "UniqueVectors", "ZipFile"]
+git-tree-sha1 = "a50ed4870d07431a259b77d286ac102b04d8ddb7"
 uuid = "123f1ae1-6307-4526-ab5b-aab3a92a2b8c"
 version = "0.16.3"
 
 [[deps.SoleLogics]]
 deps = ["AbstractTrees", "DataStructures", "Dictionaries", "FunctionWrappers", "Graphs", "IterTools", "Lazy", "PrettyTables", "Random", "Reexport", "SoleBase", "StaticArrays", "StatsBase", "ThreadSafeDicts"]
-git-tree-sha1 = "d08b806c86dd3c7e458574838aa090769e4416de"
-repo-rev = "main"
-repo-url = "https://github.com/aclai-lab/SoleLogics.jl"
+git-tree-sha1 = "224b4303c1b7bcff39128a86bcccd5890bbbf4d9"
 uuid = "b002da8f-3cb3-4d91-bbe3-2953433912b5"
 version = "0.13.2"
 
@@ -1930,10 +1929,10 @@ uuid = "a8a75453-ed82-57c9-9e16-4cd1196ecbf5"
 version = "1.6.0"
 
 [[deps.Static]]
-deps = ["CommonWorldInvalidations", "IfElse", "PrecompileTools"]
-git-tree-sha1 = "f737d444cb0ad07e61b3c1bef8eb91203c321eff"
+deps = ["CommonWorldInvalidations", "IfElse", "PrecompileTools", "SciMLPublic"]
+git-tree-sha1 = "1e44e7b1dbb5249876d84c32466f8988a6b41bbb"
 uuid = "aedffcd0-7271-4cad-89d0-dc628f76c6d3"
-version = "1.2.0"
+version = "1.3.0"
 
 [[deps.StaticArrayInterface]]
 deps = ["ArrayInterface", "Compat", "IfElse", "LinearAlgebra", "PrecompileTools", "Static"]
