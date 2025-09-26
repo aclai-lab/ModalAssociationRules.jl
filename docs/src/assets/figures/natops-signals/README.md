@@ -8,6 +8,9 @@ Both `raw` and `structured` signals are generated starting with this julia pream
 using Plots
 using ModalAssociationRules
 
+# for save .tex plots instead of .png
+pgfplotsx()
+
 X_df, y = load_NATOPS();
 X = X_df[1:30, :]
 ```
@@ -44,7 +47,7 @@ for i in windows
     _first = i |> first
     _last = i |> last
     
-    savefig(p,  "$(_first)-to-$(_last).png")
+    savefig(p,  "$(_first)-to-$(_last).tex")
 end
 ```
 
