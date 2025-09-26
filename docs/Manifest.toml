@@ -1138,9 +1138,9 @@ version = "2.41.1+0"
 
 [[deps.Libtiff_jll]]
 deps = ["Artifacts", "JLLWrappers", "JpegTurbo_jll", "LERC_jll", "Libdl", "XZ_jll", "Zlib_jll", "Zstd_jll"]
-git-tree-sha1 = "4ab7581296671007fc33f07a721631b8855f4b1d"
+git-tree-sha1 = "f04133fe05eff1667d2054c53d59f9122383fe05"
 uuid = "89763e89-9b03-5906-acba-b20f662cd828"
-version = "4.7.1+0"
+version = "4.7.2+0"
 
 [[deps.Libuuid_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
@@ -1348,7 +1348,7 @@ version = "1.11.0"
 
 [[deps.ModalAssociationRules]]
 deps = ["Accessors", "BenchmarkTools", "CategoricalArrays", "Clustering", "Combinatorics", "DataFrames", "DataStructures", "Dates", "Discretizers", "Distributed", "Distributions", "DynamicAxisWarping", "IterTools", "Lazy", "MLJ", "MatrixProfile", "MultiData", "PGFPlotsX", "Parameters", "Plots", "PrettyTables", "Random", "Reexport", "ResumableFunctions", "Revise", "SoleBase", "SoleData", "SoleLogics", "StatProfilerHTML", "StatsBase", "ZipFile"]
-git-tree-sha1 = "3e6e428b88aafb1c11d009f03bce816878c14fc1"
+git-tree-sha1 = "9b040f1e0b32e0e0f5cadfe08ca35d0f3484fb37"
 repo-rev = "main"
 repo-url = "https://github.com/aclai-lab/ModalAssociationRules.jl"
 uuid = "fb95e5f7-b6b0-4744-a282-88ebeeae65a3"
@@ -1878,10 +1878,10 @@ uuid = "4475fa32-7023-44a0-aa70-4813b230e492"
 version = "0.13.3"
 
 [[deps.SoleData]]
-deps = ["CategoricalArrays", "DataFrames", "DataStructures", "HTTP", "IntervalSets", "Lazy", "LinearAlgebra", "Logging", "MLJModelInterface", "MultiData", "ProgressMeter", "Query", "Random", "Reexport", "ScientificTypes", "SoleBase", "SoleLogics", "StatsBase", "Tables", "ThreadSafeDicts", "UniqueVectors", "ZipFile"]
-git-tree-sha1 = "a50ed4870d07431a259b77d286ac102b04d8ddb7"
+deps = ["CategoricalArrays", "CodecZlib", "DataFrames", "DataStructures", "Discretizers", "Downloads", "Graphs", "HTTP", "InteractiveUtils", "IntervalSets", "Lazy", "LazyArtifacts", "LinearAlgebra", "Logging", "MLJModelInterface", "MultiData", "Pkg", "ProgressMeter", "Query", "Random", "Reexport", "SHA", "ScientificTypes", "SoleBase", "SoleLogics", "StatsBase", "TOML", "Tables", "Tar", "ThreadSafeDicts", "UniqueVectors", "ZipFile"]
+git-tree-sha1 = "39ce2ba611da783ed7286585af2314264ee31002"
 uuid = "123f1ae1-6307-4526-ab5b-aab3a92a2b8c"
-version = "0.16.3"
+version = "0.16.4"
 
 [[deps.SoleLogics]]
 deps = ["AbstractTrees", "DataStructures", "Dictionaries", "FunctionWrappers", "Graphs", "IterTools", "Lazy", "PrettyTables", "Random", "Reexport", "SoleBase", "StaticArrays", "StatsBase", "ThreadSafeDicts"]
