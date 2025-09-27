@@ -10,7 +10,74 @@ Here, we retrace the experiments implemented [in this article](assets/articles/t
 
 They are related to body tracking; in particular, we want to describe the movement of [NATOPS dataset](https://timeseriesclassification.com/description.php?Dataset=NATOPS).
 
-TODO - retrace the experiments for TIME 2025
+```julia
+using ModalAssociationRules
+using SoleData
+
+# load a sample dataset (NATOPS)
+# and transform it into a scalar logiset.
+X_df, y = load_NATOPS()
+X = scalarlogiset(X_df[1:30, :])
+
+# focus on just the first three variables;
+# define a collection of Items, that is, 
+# an alphabet of propositional letters (propositions)
+# and modal literals. 
+p = Atom(ScalarCondition(VariableMin(1), >, -0.5))
+q = Atom(ScalarCondition(VariableMin(2), <=, -2.2))
+r = Atom(ScalarCondition(VariableMin(3), >, -3.6))
+
+lp = box(IA_L)(p)
+lq = diamond(IA_L)(q)
+lr = box(IA_L)(r)
+
+items = Vector{Item}([p, q, r, lp, lq, lr])
+
+# define which measures to use to establish the interestingness
+# of both itemsets (groups of items) and association rules;
+# also define a minimum threshold that must be surpassed both 
+# locally, inside an instance, and globally across all instances.
+
+# 0.1 is the local minsup, while 0.2 is the global minsup.
+itemsetmeasures = [(gsupport, 0.1, 0.2)]
+# 0.3 is the local minconfidence, while 0.5 is the global one.
+arulemeasures = [(gconfidence, 0.3, 0.5)]
+
+# choose an association rule mining algorithm, like fpgrowth;
+# we can finally define a Miner machine.
+miner = Miner(X, fpgrowth, items, itemsetmeasures, arulemeasures)
+
+# we execute the miner and retrieve the resulting rules
+mine!(miner)
+myrules = arules(miner)
+```
+
+We can create more complex Miner objects by specifying three kinds of policies, which define the properties that must be satisfied by X's worlds, the Itemsets collected during the mining, and the final ARules.
+
+```julia
+miner = Miner(
+    X
+    fpgrowth,
+    items,
+    itemsetmeasures,
+    arulemeasures,
+
+    # we specify a condition that the worlds of the logiset X must honor
+    worldfilter=SoleLogics.FunctionalWorldFilter(
+        x -> length(x) <= 10, Interval{Int}
+    ),
+
+    # an itemset is considered meaningful if it also honors specific condiitons
+    itemset_policies=[islimited_length_itemset(; maxlength=5)],
+
+    # similarly, for the association rules extracted
+    arule_policies=[
+        islimited_length_arule(; antecedent_maxlength=5),
+        isanchored_arule(; npropositions=1),
+        isheterogeneous_arule(; antecedent_nrepetitions=1, consequent_nrepetitions=0),
+    ],
+)
+```
 
 ## Implementing a new meaningfulness measure
 TODO - implement a new measure, leveraging @localmemo and @globalmemo, and explaining what optimizations they introduce.
