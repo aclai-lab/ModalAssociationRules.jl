@@ -23,7 +23,7 @@ makedocs(;
         # "Dataset loaders" => "data-loaders.md",
         "Advanced usage" => "advanced.md",
         "Hands on" => "hands-on.md",
-        "Contributing" => "contributing.md"
+        # "Contributing" => "contributing.md"
     ],
     # NOTE: warning
     warnonly = :true,

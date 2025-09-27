@@ -4,7 +4,12 @@ CurrentModule = ModalAssociationRules
 
 # [Hands-on](@id hands-on)
 
-## A real case usage scenario
+## Step-by-step Experiment
+
+Here, we retrace the experiments implemented [in this article](assets/articles/time2025.pdf).
+
+They are related to body tracking; in particular, we want to describe the movement of [NATOPS dataset](https://timeseriesclassification.com/description.php?Dataset=NATOPS).
+
 TODO - retrace the experiments for TIME 2025
 
 ## Implementing a new meaningfulness measure
