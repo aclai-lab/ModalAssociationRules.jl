@@ -156,7 +156,7 @@ macro globalmeasure(measname, measlogic)
         # wrap the given `measlogic` to leverage memoization
         Core.@__doc__ function $(esc(fname))(
             subject::ARMSubject,
-            X::SupportedLogiset,
+            X::MineableData,
             threshold::Threshold,
             miner::AbstractMiner
         )
@@ -247,6 +247,14 @@ _lsupport_logic = (itemset, X, ith_instance, miner) -> begin
 
     # because of isdimensionally_coherent_itemset, we know the itemset is well-formed;
     # we just need to find the size of the structure wrapped within any anchor item.
+
+    # check if there is at least one element wrapping a "strange" type, that is not a
+    # condition of SoleData, such as the string "p" |> Atom |> Item.
+    if any(
+        it -> !(it isa SoleData.AbstractCondition), itemset .|> formula .|> SoleData.value)
+        return __lsupport_logic(itemset, X, ith_instance, miner)
+    end
+
     _features = feature.(itemset)
     _anchor_feature_idx = findfirst(
         # it must be dimensionally constraind
@@ -261,6 +269,7 @@ _lsupport_logic = (itemset, X, ith_instance, miner) -> begin
         return __lsupport_logic(itemset, X, ith_instance, miner)
     end
 
+    # otherwise, proceed applying anchored support
     _repr = _features[_anchor_feature_idx]
     _repr_size = _repr |> refsize
 
