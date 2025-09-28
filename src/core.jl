@@ -484,7 +484,7 @@ See also [`info`](@ref), [`info!`](@ref), [`hasinfo`](@ref), [`Miner`](@ref).
 const Info = Dict{Symbol,Any}
 
 """
-    const MineableData = MineableData
+    const MineableData = AbstractDataset
 
 Any type on which mining can be performed.
 
