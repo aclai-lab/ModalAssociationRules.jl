@@ -21,9 +21,9 @@ alphrange = 97:1:(97+25)
 alphabet = Iterators.product(alphrange, alphrange) |> collect |> vec .|>
     x -> x .|> Char |> join .|> Atom
 
-# SoleLogics does not provide a simple Logiset structure;
-# we create this little wrapper, treating a vector as if it were an AbstractDataset (which is a MineableData type)
-struct Logiset <: AbstractDataset
+# SoleLogics/SoleData does not provide a simple Logiset structure;
+# we create this little wrapper, treating a vector as if it were an AbstractDataset
+struct Logiset <: SoleData.AbstractLogiset
     instances::Vector{KripkeStructure}
 end
 
@@ -35,7 +35,10 @@ function ModalAssociationRules.ninstances(logiset::Logiset)
     return logiset |> instances |> length
 end
 
-function ModalAssociationRules.getinstance(logiset::Logiset, i::Int64)::SoleLogics.LogicalInstance
+function ModalAssociationRules.getinstance(
+    logiset::Logiset,
+    i::Int64
+)::SoleLogics.LogicalInstance
     return SoleLogics.LogicalInstance(
         SoleLogics.InterpretationVector(logiset |> instances), i)
 end
