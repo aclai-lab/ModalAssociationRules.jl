@@ -146,7 +146,7 @@ for (nth,exp) in enumerate(EXPERIMENTS)
     ]
 
     printstyled("Running experiment $(nth)\n", color=:green)
-    compare(miners; verbose=true)
+    Commons.compare(miners; verbose=true)
 end
 
 ############################################################################################
