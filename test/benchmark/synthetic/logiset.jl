@@ -5,15 +5,15 @@ struct Logiset <: SoleData.AbstractLogiset
     instances::Vector{KripkeStructure}
 end
 
-function instances(logiset::Logiset)
+function ModalAssociationRules.instances(logiset::Logiset)
     return logiset.instances
 end
 
-function ninstances(logiset::Logiset)
+function ModalAssociationRules.ninstances(logiset::Logiset)
     return logiset |> instances |> length
 end
 
-function getinstance(
+function ModalAssociationRules.getinstance(
     logiset::Logiset,
     i::Int64
 )::SoleLogics.LogicalInstance
@@ -21,7 +21,7 @@ function getinstance(
         SoleLogics.InterpretationVector(logiset |> instances), i)
 end
 
-function frame(logiset::Logiset, i::Int64)
+function ModalAssociationRules.frame(logiset::Logiset, i::Int64)
     instances(logiset)[i] |> frame
 end
 
@@ -29,6 +29,6 @@ function Base.show(io::IO, logiset::Logiset)
     print(io, "Logiset with $(logiset.instances |> length) instances.")
 end
 
-function getinstance(logiset::Logiset, i::Integer)
+function ModalAssociationRules.getinstance(logiset::Logiset, i::Integer)
     return logiset.instances[i]
 end
