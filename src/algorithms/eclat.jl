@@ -119,7 +119,10 @@ function eclat(miner::M)::M where {M<:AbstractMiner}
             if newstate_gsupport >= gthreshold &&
                 all(policy -> policy(newstate[1]), itemset_policies(miner))
 
-                push!(freqitems(miner), newstate[1])
+                lock(miningstatelock(miner)) do
+                    push!(freqitems(miner), newstate[1])
+                end
+
                 globalmemo!(
                     miner, GmeasMemoKey((:gsupport, newstate[1])), newstate_gsupport)
 
