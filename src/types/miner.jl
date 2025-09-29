@@ -399,8 +399,12 @@ function apply!(
     # if miner is already trained, do not perform mining and return the arules generator
     if haskey(_info, :istrained) && !forcemining
         if _info[:istrained] == true
-            @warn "The miner has already been trained. " *
-            "To force mining, please set `forcemining=true`."
+            @warn "The miner has already been trained; to force mining, please set " *
+            "`forcemining=true`. If you are performing some benchmarks, you probably " *
+            "want to clear the memoization structures (`lmemo` and `gmemo`) with " *
+            "`empty!` before proceeding further. " *
+            "Now, rules generation is going to be called." *
+
             return generaterules(freqitems(miner), miner)
         end
     end
