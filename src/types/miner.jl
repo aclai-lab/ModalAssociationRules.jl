@@ -381,15 +381,17 @@ All the kwargs are forwarded to the mining algorithm within `miner`.
 # Keyword Arguments
 - `forcemining::Bool=false`: force mining process to be repeated; could be useful for
 benchmarking the impact of memoization strategies;
-- `generaterules::Bool=true`: establish whether [`generaterules`](@ref) must be executed
-at the end of the mining, enumerating all the association rules from the frequent patterns.
+- `fpeonly::Bool=false`: establish whether the mining process stops with frequent patterns
+extraction, or should default to association rule mining, returning a call to
+[`generaterules`](@ref).
 
-See also [`ARule`](@ref), [`data`](@ref), [`freqitems`](@ref), [`Itemset`](@ref).
+See also [`ARule`](@ref), [`data`](@ref), [`freqitems`](@ref), [`generaterules`](@ref),
+[`Itemset`](@ref).
 """
 function apply!(
     miner::AbstractMiner;
     forcemining::Bool=false,
-    generaterules::Bool=true,
+    fpeonly::Bool=false,
     kwargs...
 )
     _info = info(miner)
@@ -415,8 +417,13 @@ function apply!(
         info!(miner, :size, Base.summarysize(miner))
     end
 
-    # return an association rule generator
-    return generaterules(freqitems(miner), miner)
+    # stop the mining process with frequent patterns extraction,
+    if fpeonly
+        return miner
+    else
+        # or go ahead an return a generator for association rules
+        return generaterules(freqitems(miner), miner)
+    end
 end
 
 
