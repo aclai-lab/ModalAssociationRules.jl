@@ -5,6 +5,7 @@ using ModalAssociationRules
 using SoleData
 using SoleLogics
 
+using BenchmarkTools
 using Graphs
 using Random
 
@@ -17,7 +18,7 @@ include((TESTFOLDER, "generation.jl") |> joinpath)
 
 rng = Xoshiro(7)
 
-_ninstances = 100
+_ninstances = 20
 
 # structural variables, related to Kripke frames
 # https://math.stackexchange.com/questions/1526372/what-is-the-definition-of-the-density-of-a-graph
@@ -44,15 +45,19 @@ modaldataset = Vector{KripkeStructure}([
 ]) |> Logiset;
 
 items = Item.(alphabet[1:_ninstances])
-_itemmeasures = [(gsupport, 0.0, 0.5)]
+_itemmeasures = [(gsupport, 0.01, 0.8)]
 _rulemeasures = [(gconfidence, 0.8, 0.8)]
 
-aprioriminer = Miner(modaldataset, fpgrowth, items, _itemmeasures, _rulemeasures;
+aprioriminer = Miner(modaldataset, apriori, items, _itemmeasures, _rulemeasures;
     itemset_policies=Function[],
     arule_policies=Function[]
 )
 
-mine!(aprioriminer; verbose=true)
+@benchmark mine!(aprioriminer; fpeonly=true) setup=(
+    aprioriminer = Miner(modaldataset, apriori, items, _itemmeasures, _rulemeasures;
+    itemset_policies=Function[],
+    arule_policies=Function[]
+))
 
 
 ## Benchmark
