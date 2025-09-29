@@ -682,5 +682,5 @@ Getter for the frame wrapped within `miner`'s data field.
 See also [`data`](@ref), [`Miner`](@ref).
 """
 function SoleLogics.frame(miner::Miner; ith_instance::Integer=1)
-    return SoleLogics.frame(data(miner), ith_instance)
+    return frame(data(miner), ith_instance)
 end
