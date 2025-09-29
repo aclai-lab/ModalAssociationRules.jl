@@ -7,6 +7,7 @@ using SoleLogics
 
 using BenchmarkTools
 using Graphs
+using ProgressBars
 using Random
 
 TESTFOLDER = joinpath(@__DIR__, "test", "benchmark", "synthetic")
@@ -18,7 +19,7 @@ include((TESTFOLDER, "generation.jl") |> joinpath)
 
 rng = Xoshiro(7)
 
-_ninstances = 40
+MAXINSTANCES = 50
 
 # structural variables, related to Kripke frames
 # https://math.stackexchange.com/questions/1526372/what-is-the-definition-of-the-density-of-a-graph
@@ -38,37 +39,51 @@ alphabet = Iterators.product(alphrange, alphrange) |> collect |> vec .|>
 # https://juliaci.github.io/BenchmarkTools.jl/dev/manual/#Miscellaneous-tips-and-info
 # "f the function you study mutates its input, it is probably a good idea to set evals=1.
 BenchmarkTools.DEFAULT_PARAMETERS.evals = 1
-BenchmarkTools.DEFAULT_PARAMETERS.samples = 100
+BenchmarkTools.DEFAULT_PARAMETERS.samples = 5
 BenchmarkTools.DEFAULT_PARAMETERS.gctrial = true
 
-modaldataset = Vector{KripkeStructure}([
-    generate(
-        randframe(rng, nworlds, nedges),
-        alphabet[1:i],
-        SoleLogics.inittruthvalues(BooleanAlgebra());
-        fulltransfer=true,
-    )
-    for i in 1:_ninstances
-]) |> Logiset;
 
-items = Item.(alphabet[1:_ninstances])
-_itemmeasures = [(gsupport, 0.01, 0.8)]
-_rulemeasures = [(gconfidence, 0.8, 0.8)]
+times = []
+memory = []
 
-aprioriminer = Miner(modaldataset, apriori, items, _itemmeasures, _rulemeasures;
-    itemset_policies=Function[],
-    arule_policies=Function[]
-)
+# for each algorithm
+for algorithm in [apriori, fpgrowth, eclat]
 
-# unfortunately, even by creating the miner at BenchmarkTools' setup phase, the miner stays
-# the same during the same evaluation batch!
-# https://juliaci.github.io/BenchmarkTools.jl/dev/manual/#Setup-and-teardown-phases
+    _times = []
+    _memory = []
 
-@benchmark mine!(aprioriminer) setup = begin
-    aprioriminer = Miner(modaldataset, apriori, items, _itemmeasures, _rulemeasures;
-        itemset_policies=Function[],
-        arule_policies=Function[]
-    );
+    # measure time and memory across different instance and alphabet cardinalities
+    for _ninstances in ProgressBar(1:1:50)
+        items = Item.(alphabet[1:_ninstances])
+        _itemmeasures = [(gsupport, 0.01, 0.5)]
+        _rulemeasures = [(gconfidence, 0.8, 0.8)]
+
+        modaldataset = Vector{KripkeStructure}([
+            generate(
+                randframe(rng, nworlds, nedges),
+                alphabet[1:i],
+                SoleLogics.inittruthvalues(BooleanAlgebra());
+                fulltransfer=true,
+            )
+            for i in 1:_ninstances
+        ]) |> Logiset;
+
+        miner = Miner(modaldataset, algorithm, items, _itemmeasures, _rulemeasures;
+            itemset_policies=Function[],
+            arule_policies=Function[]
+        );
+
+        newtrial = @benchmark mine!($miner; forcemining=true) teardown = begin
+            localmemo($miner) |> empty!
+            globalmemo($miner) |> empty!
+        end
+
+        push!(_times, newtrial |> time)
+        push!(_memory, newtrial |> memory)
+    end
+
+    push!(times, _times)
+    push!(memory, _memory)
 end
 
 ## Benchmark
