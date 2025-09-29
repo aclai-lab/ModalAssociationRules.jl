@@ -391,5 +391,5 @@ function SoleLogics.frame(bulldozer::Bulldozer; kwargs...)
     ith_instance = miningstate(bulldozer, :current_instance)
     instance = data(bulldozer, ith_instance)
 
-    SoleLogics.frame(instance.s, ith_instance)
+    frame(instance.s, ith_instance)
 end
