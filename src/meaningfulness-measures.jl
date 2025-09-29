@@ -250,8 +250,11 @@ _lsupport_logic = (itemset, X, ith_instance, miner) -> begin
 
     # check if there is at least one element wrapping a "strange" type, that is not a
     # condition of SoleData, such as the string "p" |> Atom |> Item.
-    if any(
-        it -> !(it isa SoleData.AbstractCondition), itemset .|> formula .|> SoleData.value)
+    _extractatom = x -> x isa SyntaxBranch ? _extractatom(SoleData.children(x)[1]) : x
+
+    if any(it -> !(it isa SoleData.AbstractCondition),
+        itemset .|> formula .|> _extractatom .|> SoleData.value
+    )
         return __lsupport_logic(itemset, X, ith_instance, miner)
     end
 
