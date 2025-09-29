@@ -375,9 +375,23 @@ Return a generator of interesting [`ARule`](@ref)s.
 !!! note
 All the kwargs are forwarded to the mining algorithm within `miner`.
 
+# Arguments
+- `miner::AbstractMiner`: the main miner object, wrapping everything that is needed.
+
+# Keyword Arguments
+- `forcemining::Bool=false`: force mining process to be repeated; could be useful for
+benchmarking the impact of memoization strategies;
+- `generaterules::Bool=true`: establish whether [`generaterules`](@ref) must be executed
+at the end of the mining, enumerating all the association rules from the frequent patterns.
+
 See also [`ARule`](@ref), [`data`](@ref), [`freqitems`](@ref), [`Itemset`](@ref).
 """
-function apply!(miner::AbstractMiner; forcemining::Bool=false, kwargs...)
+function apply!(
+    miner::AbstractMiner;
+    forcemining::Bool=false,
+    generaterules::Bool=true,
+    kwargs...
+)
     _info = info(miner)
 
     # if miner is already trained, do not perform mining and return the arules generator
