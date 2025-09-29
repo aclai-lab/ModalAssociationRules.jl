@@ -18,7 +18,7 @@ include((TESTFOLDER, "generation.jl") |> joinpath)
 
 rng = Xoshiro(7)
 
-_ninstances = 20
+_ninstances = 40
 
 # structural variables, related to Kripke frames
 # https://math.stackexchange.com/questions/1526372/what-is-the-definition-of-the-density-of-a-graph
@@ -33,6 +33,12 @@ alphabet = Iterators.product(alphrange, alphrange) |> collect |> vec .|>
 
 ## CASE 1 - Every instance only has 1 world (it is a propositional instance), and the
 ##  number of facts being true within each instance increase incrementally (of 1).
+
+# this ensures a fair benchmarking, without considering memoization
+# https://juliaci.github.io/BenchmarkTools.jl/dev/manual/#Miscellaneous-tips-and-info
+# "f the function you study mutates its input, it is probably a good idea to set evals=1.
+BenchmarkTools.DEFAULT_PARAMETERS.evals = 1
+BenchmarkTools.gctrial = true
 
 modaldataset = Vector{KripkeStructure}([
     generate(
@@ -53,11 +59,21 @@ aprioriminer = Miner(modaldataset, apriori, items, _itemmeasures, _rulemeasures;
     arule_policies=Function[]
 )
 
-@benchmark mine!(aprioriminer; fpeonly=true) setup=(
-    aprioriminer = Miner(modaldataset, apriori, items, _itemmeasures, _rulemeasures;
+# unfortunately, even by creating the miner at BenchmarkTools' setup phase, the miner stays
+# the same during the same evaluation batch!
+# https://juliaci.github.io/BenchmarkTools.jl/dev/manual/#Setup-and-teardown-phases
+@benchmark mine!(
+    Miner(modaldataset, apriori, items, _itemmeasures, _rulemeasures;
+        itemset_policies=Function[],
+        arule_policies=Function[]
+    );
+    fpeonly=true
+)
+
+aprioriminer = Miner(modaldataset, apriori, items, _itemmeasures, _rulemeasures;
     itemset_policies=Function[],
     arule_policies=Function[]
-))
-
+);
+@benchmark mine!(aprioriminer)
 
 ## Benchmark
