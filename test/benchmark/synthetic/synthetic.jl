@@ -30,27 +30,29 @@ alphrange = 97:1:(97+25)
 alphabet = Iterators.product(alphrange, alphrange) |> collect |> vec .|>
     x -> x .|> Char |> join .|> Atom
 
-## Generation
+## CASE 1 - Every instance only has 1 world (it is a propositional instance), and the
+##  number of facts being true within each instance increase incrementally (of 1).
 
 modaldataset = Vector{KripkeStructure}([
     generate(
         randframe(rng, nworlds, nedges),
-        alphabet,
+        alphabet[1:i],
         SoleLogics.inittruthvalues(BooleanAlgebra());
         fulltransfer=true,
     )
-    for _ in 1:_ninstances
+    for i in 1:_ninstances
 ]) |> Logiset;
 
-items = Item.(alphabet)
-_itemmeasures = [(gsupport, 0.8, 0.8)]
+items = Item.(alphabet[1:_ninstances])
+_itemmeasures = [(gsupport, 0.0, 0.5)]
 _rulemeasures = [(gconfidence, 0.8, 0.8)]
 
-aprioriminer = Miner(modaldataset, apriori, items, _itemmeasures, _rulemeasures;
-    itemset_policies=Function[]
+aprioriminer = Miner(modaldataset, fpgrowth, items, _itemmeasures, _rulemeasures;
+    itemset_policies=Function[],
+    arule_policies=Function[]
 )
 
-mine!(aprioriminer)
+mine!(aprioriminer; verbose=true)
 
 
 ## Benchmark
