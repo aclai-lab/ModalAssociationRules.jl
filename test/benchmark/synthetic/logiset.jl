@@ -22,7 +22,14 @@ function ModalAssociationRules.getinstance(
 end
 
 function ModalAssociationRules.frame(logiset::Logiset, i::Int64)
-    instances(logiset)[i] |> frame
+    return instances(logiset)[i] |> frame
+end
+
+function ModalAssociationRules.frame(
+    interpvec::SoleLogics.InterpretationVector{KripkeStructure},
+    i::Int64
+)
+    return interpvec.instances[1].frame
 end
 
 function Base.show(io::IO, logiset::Logiset)
@@ -31,4 +38,11 @@ end
 
 function ModalAssociationRules.getinstance(logiset::Logiset, i::Integer)
     return logiset.instances[i]
+end
+
+function ModalAssociationRules.slicedataset(
+    logiset::Logiset,
+    instancerange::UnitRange{<:Integer}
+)
+    return instances(logiset)[instancerange] |> Logiset
 end
