@@ -73,7 +73,7 @@ for algorithm in [apriori, fpgrowth, eclat]
             arule_policies=Function[]
         );
 
-        newtrial = @benchmark mine!($miner; forcemining=true) teardown = begin
+        newtrial = @benchmark mine!($miner; forcemining=true, fpeonly=true) teardown = begin
             localmemo($miner) |> empty!
             globalmemo($miner) |> empty!
         end
@@ -86,4 +86,26 @@ for algorithm in [apriori, fpgrowth, eclat]
     push!(memory, _memory)
 end
 
-## Benchmark
+
+### example of driver code, detached from the benchmarking loop
+### _ninstances = 12
+### _items = Item.(alphabet[1:_ninstances])
+### _itemmeasures = [(gsupport, 0.01, 0.9)]
+### _rulemeasures = [(gconfidence, 0.8, 0.8)]
+###
+### modaldataset = Vector{KripkeStructure}([
+###     generate(
+###         randframe(rng, _ninstances, 0),
+###         alphabet[1:_ninstances],
+###         SoleLogics.inittruthvalues(BooleanAlgebra());
+###         fulltransfer=true
+###     )
+###     for i in 1:_ninstances
+### ]) |> Logiset
+###
+### miner = Miner(modaldataset, eclat, _items, _itemmeasures, _rulemeasures;
+###     itemset_policies=Function[],
+###     arule_policies=Function[]
+### );
+###
+### mine!(miner; fpeonly=true)
