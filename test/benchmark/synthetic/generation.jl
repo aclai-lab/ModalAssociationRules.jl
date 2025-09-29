@@ -2,23 +2,6 @@
 # these dispatches may already exist in SoleLogics or SoleData, but I need an experimental
 # version of them.
 
-function randmodel(
-    rng::Union{Integer,AbstractRNG},
-    nworlds::Integer,
-    nedges::Integer,
-    facts::Vector{<:SyntaxLeaf},
-    truthvalues::Union{SoleLogics.AbstractAlgebra,AbstractVector{<:Truth}}
-)
-    truthvalues = inittruthvalues(truthvalues)
-    fr = randframe(rng, nworlds, nedges)
-
-    valuation = Dict(
-        [w => TruthDict([f => rand(truthvalues) for f in facts]) for w in fr.worlds]
-    )
-
-    return KripkeStructure(fr, valuation)
-end
-
 """
     function generate(
         fr::SoleLogics.AbstractFrame{W},

@@ -38,7 +38,8 @@ alphabet = Iterators.product(alphrange, alphrange) |> collect |> vec .|>
 # https://juliaci.github.io/BenchmarkTools.jl/dev/manual/#Miscellaneous-tips-and-info
 # "f the function you study mutates its input, it is probably a good idea to set evals=1.
 BenchmarkTools.DEFAULT_PARAMETERS.evals = 1
-BenchmarkTools.gctrial = true
+BenchmarkTools.DEFAULT_PARAMETERS.samples = 100
+BenchmarkTools.DEFAULT_PARAMETERS.gctrial = true
 
 modaldataset = Vector{KripkeStructure}([
     generate(
@@ -62,18 +63,12 @@ aprioriminer = Miner(modaldataset, apriori, items, _itemmeasures, _rulemeasures;
 # unfortunately, even by creating the miner at BenchmarkTools' setup phase, the miner stays
 # the same during the same evaluation batch!
 # https://juliaci.github.io/BenchmarkTools.jl/dev/manual/#Setup-and-teardown-phases
-@benchmark mine!(
-    Miner(modaldataset, apriori, items, _itemmeasures, _rulemeasures;
+
+@benchmark mine!(aprioriminer) setup = begin
+    aprioriminer = Miner(modaldataset, apriori, items, _itemmeasures, _rulemeasures;
         itemset_policies=Function[],
         arule_policies=Function[]
     );
-    fpeonly=true
-)
-
-aprioriminer = Miner(modaldataset, apriori, items, _itemmeasures, _rulemeasures;
-    itemset_policies=Function[],
-    arule_policies=Function[]
-);
-@benchmark mine!(aprioriminer)
+end
 
 ## Benchmark
