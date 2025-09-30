@@ -49,12 +49,14 @@ function eclat(miner::M)::M where {M<:AbstractMiner}
         # we keep track of the instances for which a candidate has enough global support;
         # m is a MeaningfulnessMeasure (tuple (measure, local threshold, global threshold));
         if all(m -> m[1](candidate, X, m[2], miner) >= m[3], itemsetmeasures(miner))
-            push!(freqitems(miner), candidate)
+            lock(miningstatelock(miner)) do
+                push!(freqitems(miner), candidate)
 
-            Xvertical[candidate] = (
-                miningstate(miner, :worldmask)[(ith_instance, candidate)]
-                for ith_instance in 1:ninstances(X)
-            ) |> collect
+                Xvertical[candidate] = (
+                    miningstate(miner, :worldmask)[(ith_instance, candidate)]
+                    for ith_instance in 1:ninstances(X)
+                ) |> collect
+            end
         end
     end
 
