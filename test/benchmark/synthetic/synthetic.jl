@@ -7,6 +7,7 @@ using SoleLogics
 
 using BenchmarkTools
 using Graphs
+using Plots
 using ProgressBars
 using Random
 
@@ -15,11 +16,14 @@ TESTFOLDER = joinpath(@__DIR__, "test", "benchmark", "synthetic")
 include((TESTFOLDER, "logiset.jl") |> joinpath)
 include((TESTFOLDER, "generation.jl") |> joinpath)
 
-## Preamble
-
 rng = Xoshiro(7)
 
-MAXINSTANCES = 50
+# this BenchmarkTools' parameterization ensures a fair benchmarking, with no memoization
+# https://juliaci.github.io/BenchmarkTools.jl/dev/manual/#Miscellaneous-tips-and-info
+# "f the function you study mutates its input, it is probably a good idea to set evals=1.
+EVALS = 1
+SAMPLES = 10
+GCTRIAL = true
 
 # structural variables, related to Kripke frames
 # https://math.stackexchange.com/questions/1526372/what-is-the-definition-of-the-density-of-a-graph
@@ -35,14 +39,6 @@ alphabet = Iterators.product(alphrange, alphrange) |> collect |> vec .|>
 ## CASE 1 - Every instance only has 1 world (it is a propositional instance), and the
 ##  number of facts being true within each instance increase incrementally (of 1).
 
-# this ensures a fair benchmarking, without considering memoization
-# https://juliaci.github.io/BenchmarkTools.jl/dev/manual/#Miscellaneous-tips-and-info
-# "f the function you study mutates its input, it is probably a good idea to set evals=1.
-BenchmarkTools.DEFAULT_PARAMETERS.evals = 1
-BenchmarkTools.DEFAULT_PARAMETERS.samples = 5
-BenchmarkTools.DEFAULT_PARAMETERS.gctrial = true
-
-
 times = []
 memory = []
 
@@ -53,9 +49,9 @@ for algorithm in [apriori, fpgrowth, eclat]
     _memory = []
 
     # measure time and memory across different instance and alphabet cardinalities
-    for _ninstances in ProgressBar(1:1:50)
+    for _ninstances in ProgressBar(10:1:10)
         items = Item.(alphabet[1:_ninstances])
-        _itemmeasures = [(gsupport, 0.01, 0.5)]
+        _itemmeasures = [(gsupport, 0.01, 0.9)]
         _rulemeasures = [(gconfidence, 0.8, 0.8)]
 
         modaldataset = Vector{KripkeStructure}([
@@ -76,10 +72,10 @@ for algorithm in [apriori, fpgrowth, eclat]
         newtrial = @benchmark mine!($miner; forcemining=true, fpeonly=true) teardown = begin
             localmemo($miner) |> empty!
             globalmemo($miner) |> empty!
-        end
+        end evals=EVALS samples=SAMPLES gctrial=GCTRIAL
 
         push!(_times, newtrial |> time)
-        push!(_memory, newtrial |> memory)
+        push!(_memory, newtrial.memory)
     end
 
     push!(times, _times)
