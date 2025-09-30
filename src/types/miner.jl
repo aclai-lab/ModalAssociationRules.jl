@@ -363,6 +363,16 @@ function getglobalthreshold(miner::AbstractMiner, meas::Function)::Threshold
 end
 
 
+# TODO: add another kwarg "freqonly::Bool=true" which specifies that frequent patterns are
+# considered interesting if and only if they are frequent;
+# by setting freqonly to false, you force the evaluation of local meaningfulness measures
+# for each candidate pattern.
+#
+# TODO: add another kwarg for letting the user regulate the tradeoff between memoization
+# and memory usage when computing a meaningfulness measures.
+#
+# TODO: think about when it makes sense to leverage the info field of a Miner, rather than
+# the kwargs of this method, and fix properly.
 """
 apply!(miner::AbstractMiner; forcemining::Bool=false, kwargs...)
 
