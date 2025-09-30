@@ -21,7 +21,7 @@ makedocs(;
         # "Available algorithms" => "algorithms.md",
         # "Built-in data structures" => "data-structures.md",
         # "Dataset loaders" => "data-loaders.md",
-        "Advanced usage" => "advanced.md",
+        # "Advanced usage" => "advanced.md",
         "Hands on" => "hands-on.md",
         # "Contributing" => "contributing.md"
     ],
