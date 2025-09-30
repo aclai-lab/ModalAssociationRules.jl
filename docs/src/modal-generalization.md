@@ -46,7 +46,7 @@ myitem = ScalarCondition(VariableDistance(1, [1,2,3]), <=, 1.0) |> diamond(IA_L)
 
 ## Meaningfulness measures 
 
-We already introduced [`lsupport`](@ref), [`gsupport`](@ref), [`lconfidence`](@ref) and [`gconfidence`](@ref) in the [`Getting started`](#man-core) section. Other measures that are already built into the package, are the following; note how they are always organized in both *local* and *global* versions.
+We already introduced [`lsupport`](@ref), [`gsupport`](@ref), [`lconfidence`](@ref) and [`gconfidence`](@ref) in the [`Getting started`](#man-core) section. Other measures that are already built into the package, are the following; note how their definition always depends on the notion of [`lsupport`](@ref), and they are always organized in both *local* and *global* versions.
 
 Local means that a measure is designed to be applied within a modal instance (a Kripke model), while global keywords denotes the fact that the computation is performed across instances.
 
