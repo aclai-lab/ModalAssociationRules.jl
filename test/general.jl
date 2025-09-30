@@ -650,8 +650,15 @@ end
 @test_throws ArgumentError isheterogeneous_arule(antecedent_nrepetitions=0)
 @test_throws ArgumentError isheterogeneous_arule(consequent_nrepetitions=-1)
 
+# here, the error is thrown because the scalar logiset X2 does not know what are the
+# variables; at the moment of writing, they are defaulted with VariableMax/Min, but here
+# we are dealing with VariableDistance type.
+@test_throws Exception ModalAssociationRules._lsupport_logic(
+    _my_dimensionally_itemset, X2, 1, fpgrowth_miner)[:measure]
+
+X4 = scalarlogiset(X_df, _my_dimensionally_itemset .|> feature)
 @test ModalAssociationRules._lsupport_logic(
-    _my_dimensionally_itemset, X2, 1, fpgrowth_miner)[:measure] |> isnan
+    _my_dimensionally_itemset, X4, 1, fpgrowth_miner)[:measure] == 0.0
 
 
 ##### Anchored semantics
