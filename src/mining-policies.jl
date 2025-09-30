@@ -107,7 +107,13 @@ function isdimensionally_coherent_itemset(;)::Function
         end
 
         # also, all their references must be of the same size (e.g., 5-length intervals)
-        _referencesize = vardistance -> feature(vardistance) |> refsize
+        # after https://github.com/aclai-lab/SoleData.jl/pull/62, the definition of refsize
+        # is broken, and will be fixed in SoleData > 0.16.5
+        # _referencesize = vardistance -> feature(vardistance) |> refsize
+
+        # this is an hotfix
+        _referencesize = vardistance -> feature(vardistance) |> references |> first |> size
+
         _anchorsize = _referencesize(anchors[1])
 
         return all(anchor -> _referencesize(anchor) == _anchorsize, anchors)

@@ -518,6 +518,14 @@ _my_dimensionally_itemset = Itemset([
 ])
 @test isdimensionally_coherent_itemset()(_my_dimensionally_itemset) == true
 
+
+# these, instead, are two items wrapping 1 vector of 5 elements and 1 vector of 3 elements
+_my_dimensionally_itemset = Itemset([
+    ScalarCondition(VariableDistance(1, [[1,2,3,4,5]]), <=, 1.0) |> Atom |> Item,
+    ScalarCondition(VariableDistance(1, [[1,2,3]]), <=, 1.0) |> Atom |> Item
+])
+@test isdimensionally_coherent_itemset()(_my_dimensionally_itemset) == false
+
 _my_vd1 = VariableDistance(1, [[1,2,3,4,5], [1,2,3,4,5]])
 
 
