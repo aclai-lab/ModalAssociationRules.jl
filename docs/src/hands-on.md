@@ -80,10 +80,61 @@ miner = Miner(
 ```
 
 ## Implementing a new meaningfulness measure
-TODO - implement a new measure, leveraging @localmemo and @globalmemo, and explaining what optimizations they introduce.
+
+At the moment of writing, [`lsupport`](@ref) and [`gsupport`](@ref) must always be leveraged when extracting frequent itemsets, while the global fragment of the other [`MeaningfulnessMeasures`](@ref) is exploited by [`generaterules`](@ref) to generate the final list of [`ARule`](@ref)s.
+
+Although still not used, the local counterpart of meaningfulness measures for association rules could be an idea for further costraining the generation. In general, we suggest to always implement a local and a global part for you meaningfulness measures.
+
+Every local measure must adhere to the following interface:
+
+```julia
+(s::ARMSubject, X::MineableData, ith_instance::Int64, miner::AbstractMiner)
+```
+
+and it can defined with the macro below.
+
+```julia
+@localmeasure mylocalmeasure _mylocalmeasure_logic
+```
+
+Every global measure must adhere this interface instead:
+
+```julia
+(s::ARMSubject, X::MineableData, threshold::Float64, miner::AbstractMiner)
+```
+
+and it can be defined using [`@globalmeasure`](ref).
+
+Remember you can link your implementations using [`@linkeas`](@ref), and retrieve each counterpart (local-to-global and vinceversa) using [`findmeasure`](@ref).
+
+We could play by implementing one of the many meaningfulness measures proposed [in this paper](https://link.springer.com/chapter/10.1007/978-3-540-44918-8_3). For example, we could implement `lift` as follows:
+
+```julia
+# local measure, based on local support
+_llift_logic = (rule, X, ith_instance, miner) -> begin
+    _instance = getinstance(X, ith_instance)
+
+    num = lconfidence(rule, _instance, miner)
+    den = lsupport(consequent(rule), _instance, miner)
+
+    return Dict(:measure => num/den)
+end
+
+# global measure, based on global support
+_glift_logic = (rule, X, threshold, miner) -> begin
+    num = gconfidence(rule, X, threshold, miner)
+    den = gsupport(consequent(rule), X, threshold, miner)
+
+    return Dict(:measure => num/den)
+end
+
+@localmeasure llift _llift_logic
+@globalmeasure glift _glift_logic
+@linkmeas glift llift
+```
 
 ## Writing a new mining algorithm
-TODO - Write a new mining algorithm (e.g., Eclat)
 
-## Write a new AbstractMiner
-TODO - E.g., to implement an heuristic approach such as NSGA-II.
+While the logic for enumerating the association rules from a set of frequent itemsets is quite straightforward, you can implement your custom frequent itemset extraction process by simplying accepting an [`AbstractMiner`](@ref) as the only argument (this is what [`apply!`](@ref) driver function expects).
+
+For adapting an already existing kind of [`AbstractMiner`](@ref) to your needings, you can leverage [`initminingstate`](@ref) trait. This is particularly useful when you don't want to define a whole new miner structure, but just want to consider some auxiliary data structures during the mining.
