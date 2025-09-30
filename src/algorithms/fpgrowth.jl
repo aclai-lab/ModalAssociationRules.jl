@@ -171,7 +171,10 @@ function fpgrowth(miner::M)::M where {M<:AbstractMiner}
     _ninstances = ninstances(X)
     local_results = Vector{Bulldozer}(undef, _ninstances)
 
-    chunks = Iterators.partition(1:_ninstances, div(_ninstances, Threads.nthreads()))
+    chunks = Iterators.partition(
+        1:_ninstances,
+        max(1, div(_ninstances, Threads.nthreads()))
+    )
     tasks = map(chunks) do chunk
         Threads.@spawn _fpgrowth(
             Bulldozer(miner, chunk; itemset_policies=itemset_policies(miner)))
