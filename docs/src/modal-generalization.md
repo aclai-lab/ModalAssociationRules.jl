@@ -82,6 +82,22 @@ Of course, you can even link your custom measures.
 @linkmeas
 ```
 
+## Mining Algorithms
+
+The core of every association rule mining workflow consists of extracting the frequent patterns from data. To explore the search space of all such patterns, we can use a "level-wise" approach, based on breadth-first search algorithm, called [`apriori`](@ref), or a "vertical data format" approach, based on a depth-first search, called [`eclat`](@ref).
+
+```@docs
+apriori
+eclat
+```
+
+We suggest to run [`fpgrowth`](@ref), as it is the most performant algorithm among those implemented at the moment of writing. It is based on a compression strategy, based on iteratively "projecting" the initial dataset; projections are particular slicings of the initial dataset, keeping only the information needed for continuining the mining process.
+
+```@docs
+fpgrowth
+FPTree
+```
+
 ## Mining Policies
 
 It is possible to limit the action of the mining, to force an [`AbstractMiner`](@ref) to only consider a subset of the available data.
@@ -120,6 +136,8 @@ Base.filter!(targets::Vector{Union{ARule,Itemset}}, policies_pool::Vector{Functi
 ## Anchored semantics
 
 To ensure the mining process is *fair* when dealing with modal operators, we must ensure that the miner is compliant with *anchored semantics constraints*.
+
+To understand why the fairness of the frequent pattern extraction process is not guaranteed in the modal scenario, we suggest reading [this short paper](assets/articles/time2025.pdf).
 
 ```@docs
 isanchored_miner
