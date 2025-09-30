@@ -76,7 +76,7 @@ isglobalof(::Function, ::Function)
 globalof(::Function)
 ```
 
-Of course, you can even link your custom measures.
+Of course, you can even link your measures local-to-global and viceversa. See also [`findmeasure`](@ref).
 
 ```@docs
 @linkmeas
