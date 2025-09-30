@@ -609,7 +609,8 @@ for i in 1:_ninstances
 end
 
 X_multi = SoleData.MultiLogiset([X1, scalarlogiset(X_df2)])
-@test_throws ArgumentError Miner(X_multi, apriori, manual_items, _itemsetmeasures, _rulemeasures)
+@test_throws ArgumentError Miner(
+    X_multi, apriori, manual_items, _itemsetmeasures, _rulemeasures)
 
 
 ##### Utilities
