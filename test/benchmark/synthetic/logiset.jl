@@ -22,7 +22,7 @@ function ModalAssociationRules.getinstance(
 end
 
 function ModalAssociationRules.frame(logiset::Logiset, i::Int64)
-    return instances(logiset)[i] |> frame
+    return instances(logiset)[i] |> SoleData.frame
 end
 
 function ModalAssociationRules.frame(
