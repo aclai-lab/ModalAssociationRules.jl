@@ -410,12 +410,16 @@ function apply!(
     if haskey(_info, :istrained) && !forcemining
         if _info[:istrained] == true
             @warn "The miner has already been trained; to force mining, please set " *
-            "`forcemining=true`. If you are performing some benchmarks, you probably " *
-            "want to clear the memoization structures (`lmemo` and `gmemo`) with " *
-            "`empty!` before proceeding further. " *
-            "Now, rules generation is going to be called." *
+                "`forcemining=true`. If you are performing some benchmarks, you probably " *
+                "want to clear the memoization structures (`lmemo` and `gmemo`) with " *
+                "`empty!` before proceeding further. "
 
-            return generaterules(freqitems(miner), miner)
+            if !fpeonly
+                @warn "Association rules are going to be generated." *
+                return generaterules(freqitems(miner), miner)
+            else
+                @warn "Since `fpeonly=true`, maybe you just wanted to call freqitems?"
+            end
         end
     end
 
@@ -433,6 +437,7 @@ function apply!(
 
     # stop the mining process with frequent patterns extraction,
     if fpeonly
+        println("Returning without rules generation")
         return miner
     else
         # or go ahead an return a generator for association rules
