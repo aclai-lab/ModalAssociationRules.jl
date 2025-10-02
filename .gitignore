@@ -17,3 +17,5 @@
 *.zip
 
 TODO
+
+.vscode/settings.json
