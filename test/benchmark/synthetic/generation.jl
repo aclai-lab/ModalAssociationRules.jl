@@ -29,23 +29,23 @@ you can generate the latter using `randframe(rng, nworlds, nedges)`.
 SoleLogics.BooleanAlgebra() |> inittruthvalues).
 
 # Keyword Arguments
-`fulltransfer::Bool=true`: set all the `facts` to be `truthvalues[1]` on every world;
-this is useful if you are generating a degenerate, propositional dataset.
+`random::Bool=true`: set a truth value for each fact on every world, and choose its value
+randomly; this is the intended default behaviour;
+`rng::AbstractRNG=false`: required by `random=true`;
+`fulltransfer::Bool=false`: set all the `facts` to be `truthvalues[1]` on every world;
+this is useful if you are generating a degenerate, propositional dataset,
 `incremental::Bool=false`: set the `facts[1]` to be true on the first world,
 `facts[1:2]` to be true on the second world, ..., `facts[1:nworlds]` to be true on the last
-world;
-`random::Bool=false`: set a truth value for each fact on every world, and choose its value
-randomly;
-`rng::AbstractRNG=false`: required by `random=true`.
+world.
 """
 function generate(
     fr::SoleLogics.AbstractFrame{W},
     facts::Vector{S},
     truthvalues::Vector{T};
-    fulltransfer::Bool=true,
-    incremental::Bool=false,
-    random::Bool=false,
+    random::Bool=true,
     rng::AbstractRNG,
+    fulltransfer::Bool=false,
+    incremental::Bool=false,
 )::KripkeStructure where {
     W<:AbstractWorld,
     S<:SyntaxLeaf,
