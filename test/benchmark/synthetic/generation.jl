@@ -51,10 +51,19 @@ function generate(
     S<:SyntaxLeaf,
     T<:Truth
 }
+    defaulttruth = truthvalues |> first    # default truth value for later assignments
 
     if fulltransfer
-        valuation = Dict(
-            [w => TruthDict([f => truthvalues |> first for f in facts]) for w in fr.worlds])
+        # everything is true on every world
+        valuation = Dict([
+            w => TruthDict([f => defaulttruth for f in facts]) for w in fr.worlds
+        ])
+    elseif incremental
+        # facts[1:i] are all true on the worlds from the first to the ith.
+        valuation = Dict([
+            w => TruthDict([f => defaulttruth for f in facts[1:i]])
+            for (i,w) in enumerate(fr.worlds)
+        ])
     else
         throw(ArgumentError("The requested functionality is still not implemented."))
     end
