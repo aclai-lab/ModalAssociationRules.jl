@@ -60,6 +60,46 @@ function feature(item::Item)
     return _intermediate |> SoleData.value |> SoleData.metacond |> SoleData.feature
 end
 
+############################################################################################
+
+"""
+# Examples
+```julia
+
+using ModalAssociationRules
+using SmallCollections
+using StaticArrays
+
+p = Atom(ScalarCondition(VariableMin(1), >, -0.5))
+q = Atom(ScalarCondition(VariableMin(2), <=, -2.2))
+myitems = SVector{2,Item}([p,q])
+
+it1 = MyItemset(SmallBitSet([1,2]), Ref(myitems))
+it2 = MyItemset(SmallBitSet([1,2]), Ref(myitems))
+```
+"""
+struct MyItemset{U<:Integer, N, I<:Any}
+    mask::SmallBitSet{U}
+    items::Ref{SVector{N, I}}
+end
+
+mask(itemset::MyItemset) = itemset.mask
+items(itemset::MyItemset) = view(itemset.items[], mask(itemset))
+Base.length(itemset::MyItemset) = length(mask(itemset))
+
+targetfxs = [Base.intersect, Base.union, Base.isequal, Base.:(==)]
+for f in targetfxs
+    fname = Symbol(f)
+    @eval import Base: $fname
+    @eval begin
+        function ($fname)(it1::MyItemset, it2::MyItemset)
+            ($f)(it1 |> mask, it2 |> mask)
+        end
+    end
+end
+
+############################################################################################
+
 """
     const Itemset{I<:Item} = Vector{I}
 
@@ -115,6 +155,7 @@ See also [`ARule`](@ref), [`formula`](@ref), [`gsupport`](@ref), [`Item`](@ref),
 """
 const Itemset{I<:Item} = Vector{I}
 
+Itemset() = Itemset{Item}()
 Itemset{I}() where {I<:Item} = I[]
 Itemset{I}(item::Item) where {I<:Item} = I[item]
 
