@@ -11,7 +11,6 @@ using DataStructures
 using Distributed
 using IterTools
 using MatrixProfile
-using Lazy: @forward
 using Parameters
 using Random
 using ResumableFunctions
@@ -37,7 +36,7 @@ include("core.jl")
 
 export Item, formula, feature
 export Itemset
-export MyItemset
+export MyItemset, mask
 
 export ARule
 export content, antecedent, consequent
