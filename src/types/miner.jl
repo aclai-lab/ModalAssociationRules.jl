@@ -419,6 +419,7 @@ function apply!(
                 return generaterules(freqitems(miner), miner)
             else
                 @warn "Since `fpeonly=true`, maybe you just wanted to call freqitems?"
+                return miner
             end
         end
     end
