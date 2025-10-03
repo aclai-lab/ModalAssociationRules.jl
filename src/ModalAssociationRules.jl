@@ -15,6 +15,8 @@ using Lazy: @forward
 using Parameters
 using Random
 using ResumableFunctions
+using SmallCollections
+using StaticArrays
 
 using Reexport
 @reexport using SoleBase
@@ -35,6 +37,7 @@ include("core.jl")
 
 export Item, formula, feature
 export Itemset
+export MyItemset
 
 export ARule
 export content, antecedent, consequent
