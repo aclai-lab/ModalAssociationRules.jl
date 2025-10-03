@@ -85,8 +85,10 @@ end
 
 mask(itemset::MyItemset) = itemset.mask
 items(itemset::MyItemset) = view(itemset.items[], mask(itemset))
+
 Base.length(itemset::MyItemset) = length(mask(itemset))
 
+# define `targetfxs` functions to handle the Itemsets
 targetfxs = [Base.intersect, Base.union, Base.isequal, Base.:(==)]
 for f in targetfxs
     fname = Symbol(f)
