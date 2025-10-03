@@ -45,7 +45,7 @@ function generate(
     fulltransfer::Bool=true,
     incremental::Bool=false,
     random::Bool=false,
-    rng::Bool=true,
+    rng::AbstractRNG,
 )::KripkeStructure where {
     W<:AbstractWorld,
     S<:SyntaxLeaf,
@@ -64,6 +64,17 @@ function generate(
             w => TruthDict([f => defaulttruth for f in facts[1:i]])
             for (i,w) in enumerate(fr.worlds)
         ])
+    elseif random
+        try
+            valuation = Dict([
+                w => TruthDict([f => rand(rng, truthvalues) for f in facts])
+                for w in fr.worlds
+            ])
+        catch e
+            if isa(e, UndefVarError)
+                throw(UndefVarError("Please provide a rng::AbstractRNG."))
+            end
+        end
     else
         throw(ArgumentError("The requested functionality is still not implemented."))
     end
