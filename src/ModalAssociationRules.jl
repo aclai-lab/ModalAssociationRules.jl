@@ -14,7 +14,6 @@ using MatrixProfile
 using Parameters
 using Random
 using ResumableFunctions
-using SmallCollections
 using StaticArrays
 
 using Reexport
@@ -34,7 +33,7 @@ using StatsBase
 
 include("core.jl")
 
-export AbstractItem, Item, formula, feature
+export AbstractItem, Item, ItemCollection, formula, feature
 export AbstractItemset, SmallItemset
 export Itemset
 export MyItemset, mask
