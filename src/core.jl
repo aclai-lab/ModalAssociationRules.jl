@@ -1,4 +1,13 @@
 """
+    abstract type AbstractItem end
+
+Generic encoding for a fact.
+
+See also [`Item`](@ref).
+"""
+abstract type AbstractItem end
+
+"""
     struct Item{F<:SoleLogics.Formula}
         formula::F
     end
@@ -14,7 +23,7 @@ model. To know more about logical formulas, see
 See also [`ARule`](@ref), [`gconfidence`](@ref), [`Itemset`](@ref),
 [`MeaningfulnessMeasure`](@ref), [SoleLogics.Formula](https://aclai-lab.github.io/SoleLogics.jl/stable/getting-started/#SoleLogics.Formula).
 """
-struct Item{F<:SoleLogics.Formula}
+struct Item{F<:SoleLogics.Formula} <: AbstractItem
     formula::F
 
     function Item(formula::F) where {F<:SoleLogics.Formula}
@@ -63,6 +72,15 @@ end
 ############################################################################################
 
 """
+    abstract type AbstractItemset end
+
+Generic encoding for a set of facts.
+
+See also [`Itemset`](@ref).
+"""
+abstract type AbstractItemset end
+
+"""
 # Examples
 ```julia
 
@@ -75,12 +93,12 @@ q = Atom(ScalarCondition(VariableMin(2), <=, -2.2))
 myitems = SVector{2,Item}([p,q])
 
 it1 = MyItemset(SmallBitSet([1,2]), Ref(myitems))
-it2 = MyItemset(SmallBitSet([1,2]), Ref(myitems))
+it2 = MyItemset(SmallBitSet([1,3]), Ref(myitems))
 ```
 """
-struct MyItemset{U<:Integer, N, I<:Any}
+struct MyItemset{U<:Integer,N,I<:AbstractItem} <: AbstractItemset
     mask::SmallBitSet{U}
-    items::Ref{SVector{N, I}}
+    items::Ref{SVector{N,I}}
 end
 
 mask(itemset::MyItemset) = itemset.mask
