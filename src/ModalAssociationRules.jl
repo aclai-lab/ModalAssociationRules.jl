@@ -34,7 +34,8 @@ using StatsBase
 
 include("core.jl")
 
-export Item, formula, feature
+export AbstractItem, Item, formula, feature
+export AbstractItemset, SmallItemset
 export Itemset
 export MyItemset, mask
 

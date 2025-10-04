@@ -69,6 +69,8 @@ function feature(item::Item)
     return _intermediate |> SoleData.value |> SoleData.metacond |> SoleData.feature
 end
 
+const ItemCollection = SVector{N,I} where {N,I<:AbstractItem}
+
 ############################################################################################
 
 """
@@ -81,9 +83,55 @@ See also [`Itemset`](@ref).
 abstract type AbstractItemset end
 
 """
+
+Suppose U isa UInt64; then, mask[1] encodes is a bit mask over the first 64 elements of
+an [`Item`](@ref) collection; mask[2] encodes the range [65,128] and so on.
+"""
+struct SmallItemset{N,U<:Unsigned} <: AbstractItemset
+    mask::SVector{N,U}
+
+    function SmallItemset(mask::U) where {U}
+        new{1,U}(SVector{1,U}(mask))
+    end
+end
+
+mask(si::SmallItemset) = si.mask
+
+Base.length(si::SmallItemset) = begin
+    si |> mask .|> Base.count_ones |> sum
+end
+
+targetfxs = [Base.intersect, Base.union, Base.isequal, Base.:(==)]
+for f in targetfxs
+    fname = Symbol(f)
+    @eval import Base: $fname
+    @eval begin
+        function ($fname)(
+            it1::SmallItemset{N,U},
+            it2::SmallItemset{N,U}
+        ) where {N,U<:Unsigned}
+            zip(it1 |> mask, it2 |> mask) .|> ($f)
+        end
+    end
+    @eval export $fname
+end
+
+"""
+Split the item collection into chunks, depending on the size of U.
+Then, for each chunk, mask the corresponding items.
+"""
+function applymask(
+    si::SmallItemset{N,U},
+    ic::ItemCollection{M,I}
+) where {N,M,U<:Unsigned,I<:AbstractItem}
+    _chunksize = UInt64(1 << sizeof(U))
+    map(i -> view(ic, i:(i+chunksize)) , 1:chunksize:length(ic))
+end
+
+
+"""
 # Examples
 ```julia
-
 using ModalAssociationRules
 using SmallCollections
 using StaticArrays
@@ -92,8 +140,8 @@ p = Atom(ScalarCondition(VariableMin(1), >, -0.5))
 q = Atom(ScalarCondition(VariableMin(2), <=, -2.2))
 myitems = SVector{2,Item}([p,q])
 
-it1 = MyItemset(SmallBitSet([1,2]), Ref(myitems))
-it2 = MyItemset(SmallBitSet([1,3]), Ref(myitems))
+it1 = MyItemset(SmallBitSet([1,2]))
+it2 = MyItemset(SmallBitSet([1,3]))
 ```
 """
 struct MyItemset{U<:Integer,N,I<:AbstractItem} <: AbstractItemset
