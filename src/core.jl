@@ -69,7 +69,7 @@ function feature(item::Item)
     return _intermediate |> SoleData.value |> SoleData.metacond |> SoleData.feature
 end
 
-const ItemCollection = SVector{N,I} where {N,I<:AbstractItem}
+const ItemCollection{N,I} = Ref{SVector{N,I}} where {N,I<:AbstractItem}
 
 ############################################################################################
 
@@ -92,6 +92,10 @@ struct SmallItemset{N,U<:Unsigned} <: AbstractItemset
 
     function SmallItemset(mask::U) where {U}
         new{1,U}(SVector{1,U}(mask))
+    end
+
+    function SmallItemset(svec::SVector{N,U}) where {N,U<:Unsigned}
+        new{N,U}(svec)
     end
 end
 
@@ -119,54 +123,48 @@ end
 """
 Split the item collection into chunks, depending on the size of U.
 Then, for each chunk, mask the corresponding items.
+
+# Examples
+```julia
+julia> myitemset = SmallItemset(SVector{2}([UInt64(5), UInt64(1)]) )
+julia> myitemcollection = ItemCollection{300,Item}(Item[
+    Atom(ScalarCondition(VariableMin(i), >, -1.0))
+    for i in 1:300
+])
+julia> applymask(myitemset, myitemcollection)
+```
 """
 function applymask(
     si::SmallItemset{N,U},
     ic::ItemCollection{M,I}
 ) where {N,M,U<:Unsigned,I<:AbstractItem}
-    _chunksize = UInt64(1 << sizeof(U))
-    map(i -> view(ic, i:(i+chunksize)) , 1:chunksize:length(ic))
-end
+    masks = mask(si)
 
+    # the item collection can be divided into chunks, possibly encoding U binary masks
+    chunksize = U(1 << sizeof(U))
+    chunks = Iterators.partition(ic[], chunksize)
 
-"""
-# Examples
-```julia
-using ModalAssociationRules
-using SmallCollections
-using StaticArrays
+    # precompute total items to allocate output
+    totitems = sum(count_ones.(masks))
+    # unfortunately, totitems is unknown at compile time
+    result = Vector{Item}(undef, totitems)
+    pos = 1
 
-p = Atom(ScalarCondition(VariableMin(1), >, -0.5))
-q = Atom(ScalarCondition(VariableMin(2), <=, -2.2))
-myitems = SVector{2,Item}([p,q])
+    @inbounds for (ithmask, chunk) in zip(masks, chunks)
+        copymask = ithmask
 
-it1 = MyItemset(SmallBitSet([1,2]))
-it2 = MyItemset(SmallBitSet([1,3]))
-```
-"""
-struct MyItemset{U<:Integer,N,I<:AbstractItem} <: AbstractItemset
-    mask::SmallBitSet{U}
-    items::Ref{SVector{N,I}}
-end
+        while copymask != 0
+            j = trailing_zeros(copymask) + 1
 
-mask(itemset::MyItemset) = itemset.mask
-items(itemset::MyItemset) = view(itemset.items[], mask(itemset))
+            result[pos] = chunk[j]
+            pos += 1
 
-Base.length(itemset::MyItemset) = length(mask(itemset))
-
-# define `targetfxs` functions to handle the Itemsets
-targetfxs = [Base.intersect, Base.union, Base.isequal, Base.:(==)]
-for f in targetfxs
-    fname = Symbol(f)
-    @eval import Base: $fname
-    @eval begin
-        function ($fname)(it1::MyItemset, it2::MyItemset)
-            ($f)(it1 |> mask, it2 |> mask)
+            copymask &= copymask-1
         end
     end
-end
 
-############################################################################################
+    return result
+end
 
 """
     const Itemset{I<:Item} = Vector{I}
