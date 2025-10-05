@@ -7,7 +7,6 @@ using SoleData.Artifacts
 using StatsBase
 
 import ModalAssociationRules.children
-ALGORITHMS = [apriori, fpgrowth, eclat]
 
 ############################################################################################
 # Toy data to parametrize experiments
@@ -44,11 +43,14 @@ manual_v2_modal = vcat(
     (manual_v2)[1] |> diamond(IA_L)
 ) |> Vector{Item}
 
+
+myitems = manual_items
+
 m = Miner(
     X1,
     x -> x,
-    UInt64,
     Vector{Item}([manual_p, manual_q, manual_lp, manual_lq]),
+    UInt64,
     [(gsupport, 0.1, 0.1)],
     [(gconfidence, 0.0, 0.0)],
 )
