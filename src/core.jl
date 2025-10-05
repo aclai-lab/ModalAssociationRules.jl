@@ -137,8 +137,24 @@ struct SmallItemset{N,U<:Unsigned} <: AbstractItemset
         new{1,U}(SVector{1,U}(mask))
     end
 
+    function SmallItemset(v::Vector{T}) where {T}
+        lv = length(v)
+        new{lv,T}(SVector{lv,T}(v))
+    end
+
     function SmallItemset(svec::SVector{N,U}) where {N,U<:Unsigned}
         new{N,U}(svec)
+    end
+
+    # make a SmallItemset embodying enough bits to cover the items within miner
+    function SmallItemset(miner::AbstractMiner; prec::Type{<:Unsigned}=UInt64)
+        itemslength = miner |> items |> length
+
+        # number of integers to be wrapped within the constructed SmallItemset
+        sveclength = (itemslength/(sizeof(prec)*8)) |> ceil |> Int64
+
+        # each mask in the constructed SmallItemset is going to be empty
+        new{sveclength, prec}(SVector{sveclength, prec}(repeat([prec(0)], prec)))
     end
 end
 
@@ -215,6 +231,40 @@ applymask(
     itemset::SmallItemset{N,U},
     miner::A
 ) where {N,U,A<:AbstractMiner} = applymask(itemset, items(miner))
+
+"""
+TODO: refine docstring
+
+Generate a [`SmallItemset`](@ref) for each item in `miner`. If the items are 3, for example,
+then the masks of the 3 result SmallItemset are 001, 010, 100.
+"""
+function itemsetpopulation(miner::AbstractMiner; prec::Type{<:Unsigned}=UInt64)
+    itemslength = miner |> items |> length
+    bitsinmask = sizeof(prec)*8 # how many bits are there in a mask
+    sveclength = (itemslength/bitsinmask) |> ceil |> Int64
+
+    result = SVector{sveclength,prec}[]
+
+    # each item in miner is represented by a binary number, with all 0 but one
+    _selector = 1 # which chunk of a SVector should contain the only 1?
+    _values = zeros(prec, sveclength)
+    for i in 1:itemslength
+
+        if i % bitsinmask == 0
+            _selector += 1
+            val = prec(1)
+        else
+            val = prec(1) << ((i-1) - (_selector-1)*bitsinmask) # avoid recomputing modulo
+        end
+
+        # update, push and reset the values buffer
+        _values[_selector] = val
+        push!(result, SVector{sveclength,prec}(_values))
+        _values[_selector] = prec(0)
+    end
+
+    return result
+end
 
 """
     const Itemset{I<:Item} = Vector{I}
