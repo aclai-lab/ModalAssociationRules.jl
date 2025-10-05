@@ -1,41 +1,4 @@
 """
-Any entity capable of perform association rule mining.
-
-# Interface
-
-Each new concrete miner structure must define the following getters and setters.
-Actually, depending on its purposes, a structure may partially implement these dispatches.
-For example, [`Miner`](@ref) does completely implement the interface while
-[`Bulldozer`](@ref) does not.
-
-- data(miner::AbstractMiner)
-- items(miner::AbstractMiner)
-- algorithm(miner::AbstractMiner)
-
-- freqitems(miner::AbstractMiner)
-- arules(miner::AbstractMiner)
-
-- itemsetmeasures(miner::AbstractMiner)
-- arulemeasures(miner::AbstractMiner)
-
-- localmemo(miner::AbstractMiner)
-- localmemo!(miner::AbstractMiner)
-- globalmemo(miner::AbstractMiner)
-- globalmemo!(miner::AbstractMiner)
-
-- worldfilter(miner::AbstractMiner)
-- itemset_policies(miner::AbstractMiner)
-- arule_policies(miner::AbstractMiner)
-
-- miningstate(miner::AbstractMiner)
-- miningstate!(miner::AbstractMiner)
-- info(miner::AbstractMiner)
-
-See also [`Miner`](@ref), [`Bulldozer`](@ref).
-"""
-abstract type AbstractMiner end
-
-"""
     data(miner::AbstractMiner)
 
 Getter for the data to mine, loaded inside `miner`.
