@@ -108,6 +108,7 @@ See also  [`ARule`](@ref), [`Bulldozer`](@ref), [`MeaningfulnessMeasure`](@ref),
 """
 struct Miner{
     D<:MineableData,
+    N<:Unsigned,
     I<:AbstractItem,
     IT<:AbstractItemset
 } <: AbstractMiner
@@ -115,7 +116,7 @@ struct Miner{
 
     algorithm::Function             # algorithm used to perform extraction
 
-    items::Vector{I}                # alphabet
+    items::SVector{N,I}             # alphabet
 
     # meaningfulness measures
     itemset_constrained_measures::Vector{<:MeaningfulnessMeasure}
@@ -191,10 +192,11 @@ struct Miner{
         miningstate = initminingstate(algorithm, X)
 
         # number of binary masks needed to retrieve an entire itemset from an ItemCollection
-        nmasks = ceil(length(items)/sizeof(itemsetprecision)*8) |> Int64
+        _nitems = length(items)
+        nmasks = ceil(_nitems / sizeof(itemsetprecision)*8) |> Int64
         itemsettype = SmallItemset{nmasks, itemsetprecision}
 
-        new{D,I,itemsettype}(X, algorithm, unique(items),
+        new{D,N,I,itemsettype}(X, algorithm, unique(items),
             itemset_constrained_measures, arule_constrained_measures,
             Vector{itemsettype}(),
             Vector{ARule}([]),
