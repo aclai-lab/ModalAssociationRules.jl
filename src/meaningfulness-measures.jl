@@ -220,7 +220,7 @@ end
 __lsupport_logic = (itemset, X, ith_instance, miner) -> begin
     wmask = WorldMask([
         # for each world, compute on which worlds the model checking algorithm returns true
-        check(formula(itemset), X, ith_instance, w)
+        check(applymask(itemset, miner), X, ith_instance, w)
 
         # NOTE: the `worldfilter` wrapped within `miner` is levereaged, if given
         for w in allworlds(miner; ith_instance=ith_instance)
@@ -253,7 +253,7 @@ _lsupport_logic = (itemset, X, ith_instance, miner) -> begin
     _extractatom = x -> x isa SyntaxBranch ? _extractatom(SoleData.children(x)[1]) : x
 
     if any(it -> !(it isa SoleData.AbstractCondition),
-        itemset .|> formula .|> _extractatom .|> SoleData.value
+        applymask(itemset, miner) .|> formula .|> _extractatom .|> SoleData.value
     )
         return __lsupport_logic(itemset, X, ith_instance, miner)
     end
@@ -285,7 +285,7 @@ _lsupport_logic = (itemset, X, ith_instance, miner) -> begin
     _fairworlds = Ref(0) # keeps track of the number of worlds in which itemset can be true
     wmask = WorldMask([
         _worldsize(w) == _repr_size ?
-            (_fairworlds[] += 1; check(formula(itemset), X, ith_instance, w)) : 0
+            (_fairworlds[] += 1; check(applymask(itemset, miner), X, ith_instance, w)) : 0
 
         for w in allworlds(miner; ith_instance=ith_instance)
     ])
