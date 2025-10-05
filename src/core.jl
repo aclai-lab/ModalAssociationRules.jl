@@ -1,4 +1,41 @@
 """
+Any entity capable of perform association rule mining.
+
+# Interface
+
+Each new concrete miner structure must define the following getters and setters.
+Actually, depending on its purposes, a structure may partially implement these dispatches.
+For example, [`Miner`](@ref) does completely implement the interface while
+[`Bulldozer`](@ref) does not.
+
+- data(miner::AbstractMiner)
+- items(miner::AbstractMiner)
+- algorithm(miner::AbstractMiner)
+
+- freqitems(miner::AbstractMiner)
+- arules(miner::AbstractMiner)
+
+- itemsetmeasures(miner::AbstractMiner)
+- arulemeasures(miner::AbstractMiner)
+
+- localmemo(miner::AbstractMiner)
+- localmemo!(miner::AbstractMiner)
+- globalmemo(miner::AbstractMiner)
+- globalmemo!(miner::AbstractMiner)
+
+- worldfilter(miner::AbstractMiner)
+- itemset_policies(miner::AbstractMiner)
+- arule_policies(miner::AbstractMiner)
+
+- miningstate(miner::AbstractMiner)
+- miningstate!(miner::AbstractMiner)
+- info(miner::AbstractMiner)
+
+See also [`Miner`](@ref), [`Bulldozer`](@ref).
+"""
+abstract type AbstractMiner end
+
+"""
     abstract type AbstractItem end
 
 Generic encoding for a fact.
@@ -173,6 +210,11 @@ function applymask(
 
     return result
 end
+
+applymask(
+    itemset::SmallItemset{N,U},
+    miner::A
+) where {N,U,A<:AbstractMiner} = applymask(itemset, items(miner))
 
 """
     const Itemset{I<:Item} = Vector{I}
@@ -379,6 +421,18 @@ function Base.convert(::Type{Itemset}, arule::ARule)::Itemset
     return Itemset(vcat(antecedent(arule), consequent(arule)))
 end
 
+"""
+    function Base.convert(::Type{SmallItemset}, arule::ARule)::Itemset
+
+Convert an [`ARule`](@ref) to a [`SmallItemset`](@ref) by merging its [`antecedent`](@ref)
+and consequent [`consequent`](@ref).
+
+See also [`antecedent`](@ref), [`ARule`](@ref), [`consequent`](@ref), [`Itemset`](@ref).
+"""
+function Base.convert(::Type{SmallItemset}, arule::ARule)::Itemset
+    return union(antecedent(arule), consequent(arule))
+end
+
 function Base.hash(arule::ARule, h::UInt)
     _antecedent = sort(arule |> antecedent)
     _consequent = sort(arule |> consequent)
@@ -405,9 +459,7 @@ Each entity mined through an association rule mining algorithm.
 See also [`ARule`](@ref), [`GmeasMemo`](@ref), [`GmeasMemoKey`](@ref), [`Itemset`](@ref),
 [`LmeasMemo`](@ref), [`LmeasMemoKey`](@ref).
 """
-const ARMSubject = Union{ARule,Itemset}
-
-
+const ARMSubject = Union{ARule,SmallItemset}
 
 """
     const Threshold = Float64
