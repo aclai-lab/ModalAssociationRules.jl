@@ -88,7 +88,7 @@ export isanchored_miner
 include("utils/miner.jl")
 
 export Miner
-export itemtype, datatype
+export itemtype, nitems, datatype, itemsettype
 export arule_analysis, all_arule_analysis
 
 include("utils/bulldozer.jl") # TODO: replace Itemset with the new type
