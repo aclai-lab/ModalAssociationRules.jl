@@ -215,14 +215,28 @@ end
 
 Retrieve the type of [`MineableData`](@ref) wrapped within the [`Miner`](@ref).
 """
-datatype(::Miner{D,I}) where {D<:MineableData,I<:Item} = D
+datatype(::Miner{D,N,I,IT}) where {D<:MineableData,N,I<:Item,IT<:AbstractItemset} = D
+
+"""
+Just a synonym for length(items(miner)).
+
+!!! note
+    By knowing the length at construction time, a `SVector` is created, instead of a
+    dynamic structure.
+"""
+nitems(::Miner{D,N,I,IT}) where {D<:MineableData,N,I<:Item,IT<:AbstractItemset} = N
 
 """
     itemtype(::Miner{D,I}) where {D<:MineableData,I<:Item} = I
 
 Retrieve the most general type of [`Item`](@ref) wrapped within the [`Miner`](@ref).
 """
-itemtype(::Miner{D,I}) where {D<:MineableData,I<:Item} = I
+itemtype(::Miner{D,N,I,IT}) where {D<:MineableData,N,I<:Item,IT<:AbstractItemset} = I
+
+"""
+Retrieve the type of the itemsets wrapped within the miner.
+"""
+itemsettype(::Miner{D,N,I,IT}) where {D<:MineableData,N,I<:Item,IT<:AbstractItemset} = IT
 
 """
     data(miner::Miner)::MineableData
