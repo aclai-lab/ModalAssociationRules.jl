@@ -69,11 +69,16 @@ function feature(item::Item)
     return _intermediate |> SoleData.value |> SoleData.metacond |> SoleData.feature
 end
 
+"""
+TODO: refine docstring
+"""
 const ItemCollection{N,I} = Ref{SVector{N,I}} where {N,I<:AbstractItem}
 
 ############################################################################################
 
 """
+TODO: refine docstring
+
     abstract type AbstractItemset end
 
 Generic encoding for a set of facts.
@@ -83,6 +88,7 @@ See also [`Itemset`](@ref).
 abstract type AbstractItemset end
 
 """
+TODO: refine docstring
 
 Suppose U isa UInt64; then, mask[1] encodes is a bit mask over the first 64 elements of
 an [`Item`](@ref) collection; mask[2] encodes the range [65,128] and so on.
@@ -121,6 +127,8 @@ for f in targetfxs
 end
 
 """
+TODO: refine docstring
+
 Split the item collection into chunks, depending on the size of U.
 Then, for each chunk, mask the corresponding items.
 
