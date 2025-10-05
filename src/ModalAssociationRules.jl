@@ -34,9 +34,9 @@ using StatsBase
 include("core.jl")
 
 export AbstractItem, Item, ItemCollection, formula, feature
-export AbstractItemset, SmallItemset
+export AbstractItemset
+export SmallItemset, mask, applymask, itemsetpopulation
 export Itemset
-export MyItemset, mask
 
 export ARule
 export content, antecedent, consequent
