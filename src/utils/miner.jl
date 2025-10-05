@@ -108,7 +108,8 @@ See also  [`ARule`](@ref), [`Bulldozer`](@ref), [`MeaningfulnessMeasure`](@ref),
 """
 struct Miner{
     D<:MineableData,
-    I<:Item
+    I<:AbstractItem,
+    IT<:AbstractItemset
 } <: AbstractMiner
     X::D                            # target dataset
 
@@ -120,7 +121,7 @@ struct Miner{
     itemset_constrained_measures::Vector{<:MeaningfulnessMeasure}
     arule_constrained_measures::Vector{<:MeaningfulnessMeasure}
 
-    freqitems::Vector{Itemset}      # collected frequent itemsets
+    freqitems::Vector{IT}           # collected frequent itemsets
     arules::Vector{ARule}           # collected association rules
 
     localmemo::LmeasMemo            # local memoization structure
@@ -144,6 +145,8 @@ struct Miner{
         algorithm::Function,
         items::Vector{I},
 
+        itemsetprecision::Type{<:Unsigned}=UInt64,
+
         itemset_constrained_measures::Vector{<:MeaningfulnessMeasure}=[
             (gsupport, 0.1, 0.1)
         ],
@@ -153,20 +156,19 @@ struct Miner{
 
         worldfilter::Union{Nothing,WorldFilter}=nothing,
         itemset_policies::Vector{<:Function}=Vector{Function}([
-            isanchored_itemset(), # to ensure one proposition is the point-of-reference
-            isdimensionally_coherent_itemset() # to ensure no different anchors coexist
-
+#### TODO            isanchored_itemset(), # to ensure one proposition is the point-of-reference
+#### TODO            isdimensionally_coherent_itemset() # to ensure no different anchors coexist
         ]),
         arule_policies::Vector{<:Function}=Vector{Function}([
-            islimited_length_arule(),
-            isanchored_arule(),
-            isheterogeneous_arule(),
+#### TODO            islimited_length_arule(),
+#### TODO            isanchored_arule(),
+#### TODO            isheterogeneous_arule(),
         ]),
 
         info::Info=Info(:istrained => false, :size => nothing)
     ) where {
         D<:MineableData,
-        I<:Item,
+        I<:AbstractItem
     }
         # dataset frames must be equal
         # TODO - support MultiLogiset mining
@@ -188,9 +190,14 @@ struct Miner{
 
         miningstate = initminingstate(algorithm, X)
 
-        new{D,I}(X, algorithm, unique(items),
+        # number of binary masks needed to retrieve an entire itemset from an ItemCollection
+        nmasks = ceil(length(items)/sizeof(itemsetprecision)*8) |> Int64
+        itemsettype = SmallItemset{nmasks, itemsetprecision}
+
+        new{D,I,itemsettype}(X, algorithm, unique(items),
             itemset_constrained_measures, arule_constrained_measures,
-            Vector{Itemset}([]), Vector{ARule}([]),
+            Vector{itemsettype}(),
+            Vector{ARule}([]),
             LmeasMemo(), GmeasMemo(),
             worldfilter, itemset_policies, arule_policies,
             miningstate, info,
@@ -384,9 +391,9 @@ See also [`ARule`](@ref), [`Base.filter!(::Vector{Itemset}, ::Miner)`](@ref),
 [`Itemset`](@ref), [`Base.filter!(::Vector{ARule}, ::Miner)`](@ref), [`Miner`](@ref).
 """
 function Base.filter!(
-    targets::Union{<:Vector{<:ARule},Vector{<:Itemset}},
+    targets::Union{<:Vector{<:ARule},Vector{IT}},
     policies_pool::Vector{<:Function}
-)
+) where {IT<:AbstractItemset}
     filter!(target -> all(policy -> policy(target), policies_pool), targets)
 end
 
@@ -398,7 +405,7 @@ end
 See also [`Base.filter!(::Vector{ARule}, ::Miner)`](@ref), [`Itemset`](@ref),
 [`itemset_policies`](@ref), [`Miner`](@ref).
 """
-Base.filter!(itemsets::Vector{<:Itemset}, miner::Miner) = filter!(
+Base.filter!(itemsets::Vector{IT}, miner::Miner) where {IT<:AbstractItemset} = filter!(
     itemsets, itemset_policies(miner)
 )
 
@@ -544,9 +551,9 @@ itemsets in `itemsets`, using the mining state saved within the `miner` structur
 See [`Itemset`](@ref), [`Miner`](@ref).
 """
 function generaterules(
-    itemsets::AbstractVector{Itemset},
+    itemsets::AbstractVector{IT},
     miner::Miner
-)
+) where {IT<:AbstractItemset}
     arule_lock = ReentrantLock()
 
     @threads for itemset in filter(x -> length(x) >= 2, itemsets)
@@ -557,9 +564,9 @@ function generaterules(
             # hence, since we want the antecedent to be longer initially,
             # the first subset values corresponds to (see comment below)
             # (l-a)
-            _consequent = subset == Any[] ? Itemset{Item}() : subset
+            _consequent = subset == Any[] ? Itemset{Item}() : subset # TODO rewrite this
             # a
-            _antecedent = symdiff(itemset, _consequent) |> Itemset
+            _antecedent = symdiff(itemset, _consequent) |> Itemset # TODO rewrite this
 
             # degenerate case
             if length(_antecedent) < 1 || length(_consequent) < 1
