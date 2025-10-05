@@ -471,7 +471,10 @@ constraints specified in `arulemeasures(miner)`, and yields the rule if so.
 See also [`AbstractMiner`](@ref), [`ARule`](@ref), [`Itemset`](@ref),
 [`arulemeasures`](@ref).
 """
-@resumable function generaterules(::AbstractVector{<:Itemset}, ::AbstractMiner)
+@resumable function generaterules(
+    ::AbstractVector{IT},
+    ::AbstractMiner
+) where {IT<:AbstractItemset}
     error("Not implemented")
 end
 
