@@ -4,6 +4,7 @@ using Test
 using ModalAssociationRules
 using SoleData
 using SoleData: VariableMin, VariableMax
+using SoleData.Artifacts
 using StatsBase
 
 import ModalAssociationRules.children
@@ -21,7 +22,7 @@ printstyled("Testing: $([a |> string for a in ALGORITHMS])", color=:green)
 # Toy data to parametrize experiments
 
 # load NATOPS dataset and convert it to a Logiset
-X_df, y = load_NATOPS();
+X_df, y = load(NatopsLoader());
 X_df_1_have_command = X_df[1:30, :]
 X_df_short = ((x)->x[1:4]).(X_df)
 X1 = scalarlogiset(X_df_short)
