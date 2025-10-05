@@ -108,7 +108,7 @@ See also  [`ARule`](@ref), [`Bulldozer`](@ref), [`MeaningfulnessMeasure`](@ref),
 """
 struct Miner{
     D<:MineableData,
-    N<:Unsigned,
+    N,
     I<:AbstractItem,
     IT<:AbstractItemset
 } <: AbstractMiner
@@ -171,6 +171,8 @@ struct Miner{
         D<:MineableData,
         I<:AbstractItem
     }
+        items = unique(items)
+
         # dataset frames must be equal
         # TODO - support MultiLogiset mining
         if X isa SoleData.MultiLogiset
@@ -192,11 +194,11 @@ struct Miner{
         miningstate = initminingstate(algorithm, X)
 
         # number of binary masks needed to retrieve an entire itemset from an ItemCollection
-        _nitems = length(items)
-        nmasks = ceil(_nitems / sizeof(itemsetprecision)*8) |> Int64
+        nitems = length(items)
+        nmasks = ceil(nitems / sizeof(itemsetprecision)*8) |> Int64
         itemsettype = SmallItemset{nmasks, itemsetprecision}
 
-        new{D,N,I,itemsettype}(X, algorithm, unique(items),
+        new{D,nitems,I,itemsettype}(X, algorithm, SVector{nitems,I}(items),
             itemset_constrained_measures, arule_constrained_measures,
             Vector{itemsettype}(),
             Vector{ARule}([]),
