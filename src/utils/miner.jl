@@ -195,11 +195,20 @@ struct Miner{
 
         # number of binary masks needed to retrieve an entire itemset from an ItemCollection
         nitems = length(items)
-        nmasks = ceil(nitems / sizeof(itemsetprecision)*8) |> Int64
+        nmasks = ceil(nitems / (sizeof(itemsetprecision)*8)) |> Int64
         itemsettype = SmallItemset{nmasks, itemsetprecision}
 
-        new{D,nitems,I,itemsettype}(X, algorithm, SVector{nitems,I}(items),
-            itemset_constrained_measures, arule_constrained_measures,
+        println(itemsettype)
+        println("Thew number of items is $nitems")
+        println("The number of masks is $nmasks")
+        println("In particular $nitems / $(sizeof(itemsetprecision)*8)")
+
+        new{D,nitems,I,itemsettype}(
+            X,
+            algorithm,
+            SVector{nitems,I}(items),
+            itemset_constrained_measures,
+            arule_constrained_measures,
             Vector{itemsettype}(),
             Vector{ARule}([]),
             LmeasMemo(), GmeasMemo(),
