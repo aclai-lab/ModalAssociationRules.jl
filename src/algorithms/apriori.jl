@@ -6,7 +6,10 @@ length `newlength` by taking all combinations of two itemsets and joining them.
 
 See also [`Itemset`](@ref).
 """
-function combine_items(itemsets::AbstractVector{<:Itemset}, newlength::Integer)
+function combine_items(
+    itemsets::AbstractVector{IT},
+    newlength::Integer
+) where {IT<:AbstractItemset}
     return Iterators.filter(
         combo -> length(combo) == newlength,
         Iterators.map(
@@ -24,7 +27,10 @@ in `variable` and prepend them to `fixed` vector.
 
 See also [`Item`](@ref), [`Itemset`](@ref).
 """
-function combine_items(variable::AbstractVector{<:Item}, fixed::AbstractVector{<:Item})
+function combine_items(
+    variable::AbstractVector{I},
+    fixed::AbstractVector{I}
+) where {I<:Item}
     # TODO - this may be deprecated
     return (Itemset(union(combo, fixed)) for combo in combinations(variable))
 end
@@ -61,11 +67,10 @@ end
 """
     apriori(miner::Miner; verbose::Bool=true)::Nothing
 
-Apriori algorithm, [as described here](http://ictcs2024.di.unito.it/wp-content/uploads/2024/08/ICTCS_2024_paper_16.pdf) but generalized
-to also work with modal logic.
+Apriori algorithm, [as described here](http://ictcs2024.di.unito.it/wp-content/uploads/2024/08/ICTCS_2024_paper_16.pdf)
+but generalized to also work with modal logic.
 
 # Arguments
-
 - `miner::M`: miner containing the data and the extraction parameterization;
 - `prune_strategy::Function=grow_prune`: strategy to prune candidates between one iteration
 and the successive;
