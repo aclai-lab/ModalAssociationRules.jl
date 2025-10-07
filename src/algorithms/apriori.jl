@@ -10,6 +10,7 @@ function combine_items(
     itemsets::AbstractVector{IT},
     newlength::Integer
 ) where {IT<:AbstractItemset}
+
     return Iterators.filter(
         combo -> length(combo) == newlength,
         Iterators.map(
@@ -48,10 +49,10 @@ is in `frequents`.
 See also [`Itemset`](@ref).
 """
 function grow_prune(
-    candidates::AbstractVector{Itemset{I}},
-    frequents::AbstractVector{Itemset{I}},
+    candidates::AbstractVector{IT},
+    frequents::AbstractVector{IT},
     k::Integer
-) where {I<:Item}
+) where {IT<:AbstractItemset}
     # if the frequents set does not contain the subset of a certain candidate,
     # that candidate is pruned out.
     return Iterators.filter(
@@ -87,11 +88,15 @@ function apriori(
     X = data(miner)
 
     # candidates of length 1 are all the letters in our items
-    candidates = Itemset{_itemtype}.(items(miner))
+    # TODO: this should not assume UInt64 precision! use "; prec=precision(miner)"
+    candidates = itemsetpopulation(miner)
+    # candidates = Itemset{_itemtype}.(items(miner))
 
-    filter!(candidates, miner)  # apply filtering policies
+    # filter!(candidates, miner)  # apply filtering policies
+    # TODO policies are disabled while replacing the old Itemset type with the new one
+
     while !isempty(candidates)
-        frequents = Itemset{_itemtype}[]
+        frequents = itemsettype(miner)[]
         frequents_lock = ReentrantLock()
 
         # get the frequent itemsets from the first candidates set
@@ -100,6 +105,7 @@ function apriori(
                 gmeas_algo(candidate, X, lthreshold, miner) >= gthreshold
                 for (gmeas_algo, lthreshold, gthreshold) in itemsetmeasures(miner)
             ) && lock(frequents_lock) do
+
                 push!(frequents, candidate)
                 push!(freqitems(miner), candidate)
             end
@@ -108,12 +114,16 @@ function apriori(
         # retrieve the new generation of candidates by doing some combinatorics trick;
         # we do not want duplicates ([p,q,r] and [q,r,p] are considered duplicates).
         k = (candidates |> first |> length) + 1
+
+        println(prune_strategy(candidates, frequents, k) |> collect)
+
         candidates = sort.(prune_strategy(candidates, frequents, k) |> collect) |> unique
 
         verbose && printstyled("Starting new computational loop with " *
             "$(length(candidates)) candidates (of length $(k))...\n", color=:green)
 
-        filter!(candidates, miner)  # apply filtering policies
+        # TODO: policies are disabled while replacing the old Itemset type with the new one
+        # filter!(candidates, miner)  # apply filtering policies
     end
 
     return miner
