@@ -1,3 +1,5 @@
+import Base.==, Base.hash
+
 """
 Any entity capable of perform association rule mining.
 
@@ -168,7 +170,7 @@ Base.length(si::SmallItemset) = begin
     si |> mask .|> Base.count_ones |> sum
 end
 
-targetfxs = [Base.intersect, Base.union, Base.isequal, Base.:(==)]
+targetfxs = [Base.intersect, Base.union]
 for f in targetfxs
     fname = Symbol(f)
     @eval import Base: $fname
@@ -181,6 +183,26 @@ for f in targetfxs
         end
     end
     @eval export $fname
+end
+
+# unfortunately, this can't be done with the macro above;
+# the error is tricky but makes sense for how the .|> operator works,
+# which is .== in the case of == and isequal functions.
+# TypeError: non-boolean (StaticArraysCore.MVector{2, Base.Fix2{typeof(isequal),
+#   Tuple{UInt64, UInt64}}}) used in boolean context
+function Base.isequal(s1::SmallItemset{N,U}, s2::SmallItemset{N,U}) where {N,U}
+    return s1 == s2
+end
+function ==(s1::SmallItemset{N,U}, s2::SmallItemset{N,U}) where {N,U}
+    m1 = mask(s1)
+    m2 = mask(s2)
+    acc = zero(eltype(m1))
+
+    @inbounds for i in eachindex(m1)
+        acc |= m1[i] ⊻ m2[i]
+    end
+
+    return acc == 0
 end
 
 """
