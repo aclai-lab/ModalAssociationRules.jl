@@ -218,9 +218,13 @@ end
 
 # core logic of `lsupport`, as a lambda function
 __lsupport_logic = (itemset, X, ith_instance, miner) -> begin
+    # since this is a fallback of _lsupport_logic, we expect itemset to
+    # already be a SmallItemset instead of an Itemset
+    # itemset = applymask(itemset, miner)
+
     wmask = WorldMask([
         # for each world, compute on which worlds the model checking algorithm returns true
-        check(applymask(itemset, miner), X, ith_instance, w)
+        check(itemset |> formula, X, ith_instance, w)
 
         # NOTE: the `worldfilter` wrapped within `miner` is levereaged, if given
         for w in allworlds(miner; ith_instance=ith_instance)
@@ -236,6 +240,8 @@ end
 
 # lsupport with anchored semantics, supporting modal operators
 _lsupport_logic = (itemset, X, ith_instance, miner) -> begin
+    itemset = applymask(itemset, miner)
+
     # this method assumes that the mining is taking place on geometric type worlds,
     # such as Intervals or Interval2Ds, but not OneWorld!
     # also, it is assumed that `isdimensionally_coherent_itemset` policy is being applied.
@@ -253,7 +259,7 @@ _lsupport_logic = (itemset, X, ith_instance, miner) -> begin
     _extractatom = x -> x isa SyntaxBranch ? _extractatom(SoleData.children(x)[1]) : x
 
     if any(it -> !(it isa SoleData.AbstractCondition),
-        applymask(itemset, miner) .|> formula .|> _extractatom .|> SoleData.value
+        itemset .|> formula .|> _extractatom .|> SoleData.value
     )
         return __lsupport_logic(itemset, X, ith_instance, miner)
     end
@@ -285,7 +291,7 @@ _lsupport_logic = (itemset, X, ith_instance, miner) -> begin
     _fairworlds = Ref(0) # keeps track of the number of worlds in which itemset can be true
     wmask = WorldMask([
         _worldsize(w) == _repr_size ?
-            (_fairworlds[] += 1; check(applymask(itemset, miner), X, ith_instance, w)) : 0
+            (_fairworlds[] += 1; check(itemset |> formula, X, ith_instance, w)) : 0
 
         for w in allworlds(miner; ith_instance=ith_instance)
     ])
