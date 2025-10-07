@@ -170,29 +170,18 @@ Base.length(si::SmallItemset) = begin
     si |> mask .|> Base.count_ones |> sum
 end
 
-targetfxs = [Base.intersect, Base.union]
-for f in targetfxs
-    fname = Symbol(f)
-    @eval import Base: $fname
-    @eval begin
-        function ($fname)(
-            it1::SmallItemset{N,U},
-            it2::SmallItemset{N,U}
-        ) where {N,U<:Unsigned}
-            zip(it1 |> mask, it2 |> mask) .|> ($f)
-        end
-    end
-    @eval export $fname
+function Base.intersect(s1::SmallItemset{N,U}, s2::SmallItemset{N,U}) where {N,U}
+    return SmallItemset(mask(s1) .& mask(s2))
 end
 
-# unfortunately, this can't be done with the macro above;
-# the error is tricky but makes sense for how the .|> operator works,
-# which is .== in the case of == and isequal functions.
-# TypeError: non-boolean (StaticArraysCore.MVector{2, Base.Fix2{typeof(isequal),
-#   Tuple{UInt64, UInt64}}}) used in boolean context
+function Base.union(s1::SmallItemset{N,U}, s2::SmallItemset{N,U}) where {N,U}
+    return SmallItemset(mask(s1) .⊻ mask(s2))
+end
+
 function Base.isequal(s1::SmallItemset{N,U}, s2::SmallItemset{N,U}) where {N,U}
     return s1 == s2
 end
+
 function ==(s1::SmallItemset{N,U}, s2::SmallItemset{N,U}) where {N,U}
     m1 = mask(s1)
     m2 = mask(s2)
