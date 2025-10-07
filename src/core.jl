@@ -142,6 +142,10 @@ struct SmallItemset{N,U<:Unsigned} <: AbstractItemset
         new{lv,T}(SVector{lv,T}(v))
     end
 
+    function SmallItemset{N,U}(args...) where {N,U}
+        new{N,U}(args...)
+    end
+
     function SmallItemset(svec::SVector{N,U}) where {N,U<:Unsigned}
         new{N,U}(svec)
     end
@@ -230,7 +234,7 @@ end
 applymask(
     itemset::SmallItemset{N,U},
     miner::A
-) where {N,U,A<:AbstractMiner} = applymask(itemset, items(miner))
+) where {N,U,A<:AbstractMiner} = applymask(itemset, items(miner) |> Ref)
 
 """
 TODO: refine docstring
@@ -249,12 +253,12 @@ function itemsetpopulation(miner::AbstractMiner; prec::Type{<:Unsigned}=UInt64)
     _selector = 1 # which chunk of a SVector should contain the only 1?
     _values = zeros(prec, sveclength)
     for i in 1:itemslength
+        val = prec(1)
 
-        if i % bitsinmask == 0
+        if i % (bitsinmask+1) == 0
             _selector += 1
-            val = prec(1)
         else
-            val = prec(1) << ((i-1) - (_selector-1)*bitsinmask) # avoid recomputing modulo
+            val <<= ((i-1) - (_selector-1)*bitsinmask) # avoid recomputing modulo
         end
 
         # update, push and reset the values buffer
@@ -263,7 +267,7 @@ function itemsetpopulation(miner::AbstractMiner; prec::Type{<:Unsigned}=UInt64)
         _values[_selector] = prec(0)
     end
 
-    return result
+    return SmallItemset.(result)
 end
 
 """
