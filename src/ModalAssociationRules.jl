@@ -105,11 +105,10 @@ export llift, glift
 export lconviction, gconviction
 export lleverage, gleverage
 
-####
-#### include("algorithms/apriori.jl")
-####
-#### export combine_items, grow_prune
-#### export apriori
+include("algorithms/apriori.jl")
+
+export combine_items, grow_prune
+export apriori
 ####
 #### include("data-structures.jl")
 ####
