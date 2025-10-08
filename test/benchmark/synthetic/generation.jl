@@ -45,7 +45,7 @@ function generate(
     fulltransfer::Bool=true,
     incremental::Bool=false,
     random::Bool=false,
-    rng::AbstractRNG,
+    rng::Union{AbstractRNG,Nothing}=nothing,
 )::KripkeStructure where {
     W<:AbstractWorld,
     S<:SyntaxLeaf,
@@ -71,8 +71,8 @@ function generate(
                 for w in fr.worlds
             ])
         catch e
-            if isa(e, UndefVarError)
-                throw(UndefVarError("Please provide a rng::AbstractRNG."))
+            if isa(e, UndefKeywordError)
+                throw(UndefKeywordError("Please provide a rng::AbstractRNG."))
             end
         end
     else
