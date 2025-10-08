@@ -37,7 +37,7 @@ function combine_items(
 end
 
 """
-    grow_prune(
+    growprune(
         candidates::AbstractVector{Itemset},
         frequents::AbstractVector{Itemset},
         k::Integer
@@ -48,20 +48,29 @@ is in `frequents`.
 
 See also [`Itemset`](@ref).
 """
-function grow_prune(
+function growprune(
     candidates::AbstractVector{IT},
-    frequents::AbstractVector{IT},
-    k::Integer
+    frequents::AbstractSet{IT},
+    k::Integer,
+    miner::AbstractMiner
 ) where {IT<:AbstractItemset}
     # if the frequents set does not contain the subset of a certain candidate,
-    # that candidate is pruned out.
+    # that candidate is pruned out;
+    #
+    # TODO this method would probably a lot faster in the case where the computation of
+    # combinations is performed directly on the bit masks; unfortunately, it is quite
+    # tricky to implement since we do not assume to be working with just one mask
+    # (e.g., one UInt64) but many bits concatenated in different words.
+
     return Iterators.filter(
         # the iterator yields only itemsets for which every combo is in frequents;
         # note: why first(combo)? Because combinations(itemset, k-1) returns vectors,
         # each one wrapping one Itemset, but we just need that exact itemset.
         itemset -> all(
-                combo -> Itemset{I}(combo) in frequents, combinations(itemset, k-1)),
-        combine_items(candidates, k) |> unique
+            combo -> applymask(combo, miner) in frequents,
+            combinations(mask(itemset), k-1)
+        ),
+        combine_items(candidates, k) |> unique # I think this could simply be a collect
     )
 end
 
@@ -73,41 +82,47 @@ but generalized to also work with modal logic.
 
 # Arguments
 - `miner::M`: miner containing the data and the extraction parameterization;
-- `prune_strategy::Function=grow_prune`: strategy to prune candidates between one iteration
+- `prune_strategy::Function=growprune`: strategy to prune candidates between one iteration
 and the successive;
 - `verbose::Bool=false`: print informations about each iteration.
 
-See also [`grow_prune`](@ref), [`Miner`](@ref), [`MineableData`](@ref).
+See also [`growprune`](@ref), [`Miner`](@ref), [`MineableData`](@ref).
 """
 function apriori(
     miner::M;
-    prune_strategy::Function=grow_prune,
+    prune_strategy::Function=growprune,
     verbose::Bool=false
 )::M where {M<:AbstractMiner}
-    _itemtype = itemtype(miner)
     X = data(miner)
 
-    # candidates of length 1 are all the letters in our items
     # TODO: this should not assume UInt64 precision! use "; prec=precision(miner)"
     candidates = itemsetpopulation(miner)
-    # candidates = Itemset{_itemtype}.(items(miner))
 
     # filter!(candidates, miner)  # apply filtering policies
     # TODO policies are disabled while replacing the old Itemset type with the new one
 
+    # this is a buffer containing ONLY the frequent itemsets of length k-1
+    # TODO: probably, is better to use some other Set definition
+    _itemsettype = itemsettype(miner)
+    _previousfreq = Set{_itemsettype}()
+
     while !isempty(candidates)
-        frequents = itemsettype(miner)[]
         frequents_lock = ReentrantLock()
 
         # get the frequent itemsets from the first candidates set
         Threads.@threads for candidate in candidates
+            # check if global support and other custom global measures are high enough
             all(
                 gmeas_algo(candidate, X, lthreshold, miner) >= gthreshold
                 for (gmeas_algo, lthreshold, gthreshold) in itemsetmeasures(miner)
             ) && lock(frequents_lock) do
-
-                push!(frequents, candidate)
+                # we store the new frequent itemset within the miner object
                 push!(freqitems(miner), candidate)
+
+                # we also keep track of it on the temporary buffer, which is needed later
+                # to prune out the candidates of length k for which no k-1 subset appears
+                # here
+                push!(_previousfreq, candidate)
             end
         end
 
@@ -115,9 +130,8 @@ function apriori(
         # we do not want duplicates ([p,q,r] and [q,r,p] are considered duplicates).
         k = (candidates |> first |> length) + 1
 
-        println(prune_strategy(candidates, frequents, k) |> collect)
-
-        candidates = sort.(prune_strategy(candidates, frequents, k) |> collect) |> unique
+        candidates = prune_strategy(candidates, _previousfreq, k) |> collect
+        empty!(_previousfreq)
 
         verbose && printstyled("Starting new computational loop with " *
             "$(length(candidates)) candidates (of length $(k))...\n", color=:green)

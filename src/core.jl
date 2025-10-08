@@ -281,6 +281,8 @@ function itemsetpopulation(miner::AbstractMiner; prec::Type{<:Unsigned}=UInt64)
     return SmallItemset.(result)
 end
 
+##### Itemset definition ###################################################################
+
 """
     const Itemset{I<:Item} = Vector{I}
 

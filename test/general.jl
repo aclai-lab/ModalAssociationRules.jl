@@ -218,7 +218,7 @@ lsupport(Itemset(manual_lr), SoleLogics.getinstance(X2, 7), fpgrowth_miner)
     collect |> first == Itemset([manual_p, manual_r])
 
 # Deprecated test
-# @test grow_prune([pq,qr,pr], [pq,qr,pr], 3) |> collect |> unique == pqr
+# @test growprune([pq,qr,pr], [pq,qr,pr], 3) |> collect |> unique == pqr
 # @test generaterules(freqitems(fpgrowth_miner), fpgrowth_miner) |> first isa ARule
 
 _rulemeasures_just_for_test = [(ModalAssociationRules.gconfidence, 1.1, 1.1)]

@@ -114,7 +114,7 @@ end
 
 
 """
-    anchored_grow_prune(
+    anchored_growprune(
         candidates::AbstractVector{Itemset},
         frequents::AbstractVector{Itemset},
         k::Integer
@@ -123,15 +123,15 @@ end
 Return a generator, which yields only the `candidates` for which every (k-1)-length subset
 is in `frequents`.
 
-Differently from [`grow_prune`](@ref), this method supports anchored semantics.
+Differently from [`growprune`](@ref), this method supports anchored semantics.
 This means that, for example, the following [`Itemset`](@ref)s are not pruned
 `[[L]min[V1] > -0.5, min[V3] > -3.6]`, `[min[V3] > -3.6, [L]min[V3] > -3.6]` and can be
 merged in `[[L]min[V1] > -0.5, min[V3] > -3.6, [L]min[V3] > -3.6]`, since it would be
 impossible to generate `[[L]min[V1] > -0.5, [L]min[V3] > -3.6]`.
 
-See also [`grow_prune`](@ref), [`Itemset`](@ref).
+See also [`growprune`](@ref), [`Itemset`](@ref).
 """
-function anchored_grow_prune(
+function anchored_growprune(
     candidates::AbstractVector{Itemset{I}},
     frequents::AbstractVector{Itemset{I}},
     k::Integer
@@ -165,7 +165,7 @@ function anchored_apriori(miner::M; kwargs...)::M where {M<:AbstractMiner}
             "apriori."))
     end
 
-    return anchored_semantics(miner; prune_strategy=anchored_grow_prune, kwargs...)
+    return anchored_semantics(miner; prune_strategy=anchored_growprune, kwargs...)
 end
 
 """

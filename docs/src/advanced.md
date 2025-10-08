@@ -60,6 +60,6 @@ The following utilities often involve performing some combinatoric trick between
 
 ```@docs
 combine_items
-grow_prune
-anchored_grow_prune
+growprune
+anchored_growprune
 ```

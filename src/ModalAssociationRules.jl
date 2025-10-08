@@ -38,7 +38,6 @@ export AbstractItemset
 
 export SmallItemset
 export mask, applymask, itemsetpopulation
-export bitindexes, indexestomask, masksubsets
 
 export Itemset
 
@@ -111,7 +110,7 @@ export lleverage, gleverage
 
 include("algorithms/apriori.jl")
 
-export combine_items, grow_prune
+export combine_items, growprune
 export apriori
 ####
 #### include("data-structures.jl")
@@ -143,7 +142,7 @@ export apriori
 #### include("algorithms/anchored-semantics.jl")
 ####
 #### export anchored_semantics
-#### export anchored_grow_prune, anchored_apriori
+#### export anchored_growprune, anchored_apriori
 #### export anchored_fpgrowth
 ####
 #### # utilities to help an user generate an alphabet graphically;
