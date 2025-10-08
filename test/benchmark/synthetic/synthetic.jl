@@ -43,15 +43,16 @@ times = []
 memory = []
 
 # for each algorithm
-for algorithm in [apriori, fpgrowth, eclat]
+m = nothing
+for algorithm in [apriori]
 
     _times = []
     _memory = []
 
     # measure time and memory across different instance and alphabet cardinalities
-    for _ninstances in ProgressBar(10:1:10)
+    for _ninstances in ProgressBar(12:1:12)
         items = Item.(alphabet[1:_ninstances])
-        _itemmeasures = [(gsupport, 0.01, 0.9)]
+        _itemmeasures = [(gsupport, 0.01, 0.01)]
         _rulemeasures = [(gconfidence, 0.8, 0.8)]
 
         modaldataset = Vector{KripkeStructure}([
@@ -59,12 +60,12 @@ for algorithm in [apriori, fpgrowth, eclat]
                 randframe(rng, nworlds, nedges),
                 alphabet[1:i],
                 SoleLogics.inittruthvalues(BooleanAlgebra());
-                fulltransfer=true,
+                incremental=true
             )
             for i in 1:_ninstances
         ]) |> Logiset;
 
-        miner = Miner(modaldataset, algorithm, items, _itemmeasures, _rulemeasures;
+        miner = Miner(modaldataset, algorithm, items, UInt64, _itemmeasures, _rulemeasures;
             itemset_policies=Function[],
             arule_policies=Function[]
         );
@@ -73,6 +74,8 @@ for algorithm in [apriori, fpgrowth, eclat]
             localmemo($miner) |> empty!
             globalmemo($miner) |> empty!
         end evals=EVALS samples=SAMPLES gctrial=GCTRIAL
+
+        m = miner
 
         push!(_times, newtrial |> time)
         push!(_memory, newtrial.memory)
