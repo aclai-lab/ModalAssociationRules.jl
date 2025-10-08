@@ -198,11 +198,6 @@ struct Miner{
         nmasks = ceil(nitems / (sizeof(itemsetprecision)*8)) |> Int64
         itemsettype = SmallItemset{nmasks, itemsetprecision}
 
-        println(itemsettype)
-        println("Thew number of items is $nitems")
-        println("The number of masks is $nmasks")
-        println("In particular $nitems / $(sizeof(itemsetprecision)*8)")
-
         new{D,nitems,I,itemsettype}(
             X,
             algorithm,
@@ -584,16 +579,28 @@ function generaterules(
     arule_lock = ReentrantLock()
 
     @threads for itemset in filter(x -> length(x) >= 2, itemsets)
-        subsets = powerset(itemset)
+        # TODO - we could directly work on the bit representation of the itemset,
+        # without converting it from SmallItemset to Itemset.
 
+        # subsets = powerset(itemset)
+
+        subsets = bitpowerset(itemset)
         for subset in subsets
+
+            subset = SmallItemset(SVector(subset...))
+
+            if count_ones(subset) == 0
+                continue
+            end
+
             # subsets are built already sorted incrementally;
             # hence, since we want the antecedent to be longer initially,
             # the first subset values corresponds to (see comment below)
             # (l-a)
-            _consequent = subset == Any[] ? Itemset{Item}() : subset # TODO rewrite this
+            _consequent = subset
+
             # a
-            _antecedent = symdiff(itemset, _consequent) |> Itemset # TODO rewrite this
+            _antecedent = diff(itemset, _consequent)
 
             # degenerate case
             if length(_antecedent) < 1 || length(_consequent) < 1
