@@ -31,9 +31,15 @@ using SoleData: VariableMin, VariableMax, VariableDistance
 
 using StatsBase
 
+include("types/item.jl")
+export AbstractItem
+export Item, formula, feature
+export ItemCollection
+
 include("core.jl")
 
-export AbstractItem, Item, ItemCollection, formula, feature
+export AbstractMiner
+
 export AbstractItemset
 
 export SmallItemset
@@ -62,7 +68,6 @@ export MineableData
 
 include("types/miner.jl")
 
-export AbstractMiner
 export data, algorithm
 export items, freqitems, arules
 export itemsetmeasures, arulemeasures
