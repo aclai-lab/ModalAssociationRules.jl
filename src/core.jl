@@ -175,6 +175,10 @@ function Base.intersect(s1::SmallItemset{N,U}, s2::SmallItemset{N,U}) where {N,U
 end
 
 function Base.union(s1::SmallItemset{N,U}, s2::SmallItemset{N,U}) where {N,U}
+    return SmallItemset(mask(s1) .| mask(s2))
+end
+
+function diff(s1::SmallItemset{N,U}, s2::SmallItemset{N,U}) where {N,U}
     return SmallItemset(mask(s1) .⊻ mask(s2))
 end
 
@@ -192,6 +196,13 @@ function ==(s1::SmallItemset{N,U}, s2::SmallItemset{N,U}) where {N,U}
     end
 
     return acc == 0
+end
+
+"""
+Broadcast `Base.count_ones` on all the masks wrapped by a [`SmallItemset`](@ref).
+"""
+function Base.count_ones(si::SmallItemset{N,U}) where {N,U}
+    return si |> mask .|> count_ones |> sum
 end
 
 """
@@ -241,7 +252,6 @@ function applymask(
 
     return result
 end
-
 applymask(
     itemset::SmallItemset{N,U},
     miner::A
@@ -279,6 +289,43 @@ function itemsetpopulation(miner::AbstractMiner; prec::Type{<:Unsigned}=UInt64)
     end
 
     return SmallItemset.(result)
+end
+
+"""
+Compute the powerset of one (or many) unsigned integers, encoding a bitmask (or bitmasks
+embodying multiple words).
+
+# Examples
+julia> bitpowerset(UInt64(7))
+8-element SVector{8, UInt64} with indices SOneTo(8):
+ 0x0000000000000000
+ 0x0000000000000001
+ 0x0000000000000002
+ 0x0000000000000003
+ 0x0000000000000004
+ 0x0000000000000005
+ 0x0000000000000006
+ 0x0000000000000007
+"""
+function bitpowerset(si::SmallItemset{N,U}) where {N,U<:Unsigned}
+    return Iterators.product((si |> mask .|> bitpowerset)...)
+end
+function bitpowerset(x::U) where {U<:Unsigned}
+    n = count_ones(x)
+    indices = findall(b -> b == 1, digits(x, base=2))
+    result = U[]
+
+    for _mask in 0:(U(1) << n)-1
+        subset = U(0)
+        for i in 1:n
+            if (_mask >> (i-1)) & 1 == 1
+                subset |= U(1) << (indices[i]-1)
+            end
+        end
+        push!(result, subset)
+    end
+
+    return SVector{length(result),U}(result)
 end
 
 ##### Itemset definition ###################################################################
@@ -408,11 +455,11 @@ called [`antecedent`](@ref) and [`consequent`](@ref).
 See also [`antecedent`](@ref), [`consequent`](@ref), [`gconfidence`](@ref),
 [`Itemset`](@ref), [`lconfidence`](@ref), [`MeaningfulnessMeasure`](@ref).
 """
-struct ARule
-    antecedent::Itemset
-    consequent::Itemset
+struct ARule{IT<:AbstractItemset}
+    antecedent::IT
+    consequent::IT
 
-    function ARule(antecedent::Itemset, consequent::Itemset)
+    function ARule(antecedent::IT, consequent::IT) where {IT<:AbstractItemset}
         intersection = intersect(antecedent, consequent)
         if !(intersection |> length == 0)
             throw(ArgumentError("Invalid rule. " *
@@ -420,14 +467,25 @@ struct ARule
             ))
         end
 
-        new(antecedent, consequent)
+        new{IT}(antecedent, consequent)
     end
 
-    function ARule(doublet::Tuple{Itemset,Itemset})
+    function ARule(doublet::Tuple{IT,IT}) where {IT<:AbstractItemset}
         ARule(first(doublet), last(doublet))
     end
 end
 
+function applymask(rule::ARule, miner::AbstractMiner)
+    _antecedent = antecedent(rule)
+    _consequent = consequent(rule)
+
+    return Itemset(
+        applymask(_antecedent |> mask, miner),
+        applymask(_consequent |> mask, miner)
+    )
+end
+
+SmallItemset(rule::ARule) = convert(SmallItemset, rule)
 Itemset(rule::ARule) = convert(Itemset, rule)
 
 """
@@ -447,7 +505,7 @@ Getter for `rule`'s antecedent.
 
 See also [`antecedent`](@ref), [`ARule`](@ref), [`Itemset`](@ref).
 """
-antecedent(rule::ARule)::Itemset = rule.antecedent
+antecedent(rule::ARule{IT}) where {IT} = rule.antecedent
 
 """
     consequent(rule::ARule)::Itemset
@@ -456,7 +514,7 @@ Getter for `rule`'s consequent.
 
 See also [`consequent`](@ref), [`ARule`](@ref), [`Itemset`](@ref).
 """
-consequent(rule::ARule)::Itemset = rule.consequent
+consequent(rule::ARule{IT}) where {IT} = rule.consequent
 
 """
     function Base.:(==)(rule1::ARule, rule2::ARule)
@@ -467,13 +525,17 @@ Antecedent (consequent) [`Item`](@ref)s ordering could be different between the 
 See also [`antecedent`](@ref), [`ARule`](@ref), [`consequent`](@ref).
 """
 function Base.:(==)(rule1::ARule, rule2::ARule)
+    _antecedent1 = antecedent(rule1)
+    _consequent1 = consequent(rule1)
+
+    _antecedent2 = antecedent(rule2)
+    _consequent2 = consequent(rule2)
+
     # first antecedent must be included in the second one,
     # same when considering the consequent;
     # if this is true and lengths are the same, then the two parts coincides.
-    return length(antecedent(rule1)) == length(antecedent(rule2)) &&
-        length(consequent(rule1)) == length(consequent(rule2)) &&
-        antecedent(rule1) in antecedent(rule2) &&
-        consequent(rule1) in consequent(rule2)
+    return intersect(_antecedent1, _antecedent2) == _antecedent1 &&
+        intersect(_consequent1, _consequent2) == _consequent1
 end
 
 """
@@ -496,26 +558,30 @@ and consequent [`consequent`](@ref).
 
 See also [`antecedent`](@ref), [`ARule`](@ref), [`consequent`](@ref), [`Itemset`](@ref).
 """
-function Base.convert(::Type{SmallItemset}, arule::ARule)::Itemset
+function Base.convert(::Type{SmallItemset}, arule::ARule)::SmallItemset
     return union(antecedent(arule), consequent(arule))
 end
 
 function Base.hash(arule::ARule, h::UInt)
-    _antecedent = sort(arule |> antecedent)
-    _consequent = sort(arule |> consequent)
+    # the previous version was sort(arule |> antecedent)
+    # but sort is already guaranteed from insertion
+    _antecedent = arule |> antecedent
+    _consequent = arule |> consequent
     return hash(vcat(_antecedent, _consequent), h)
 end
 
-function Base.show(
-    io::IO,
-    arule::ARule;
-    variablenames::Union{Nothing,Vector{String}}=nothing
-)
-    _antecedent = arule |> antecedent |> formula
-    _consequent = arule |> consequent |> formula
+function Base.show(io::IO, arule::ARule{IT}) where {IT}
+    _antecedent = arule |> antecedent |> mask
+    _consequent = arule |> consequent |> mask
 
-    print(io, "$(syntaxstring(_antecedent, variable_names_map=variablenames)) => " *
-        "$(syntaxstring(_consequent, variable_names_map=variablenames))")
+    print(io, "$(_antecedent) => $(_consequent)")
+end
+
+function Base.show(io::IO, arule::ARule{IT}, miner::AbstractMiner) where {IT}
+    _antecedentstr = applymask(arule |> antecedent, miner) |> syntaxstring
+    _consequentstr = applymask(arule |> consequent, miner) |> syntaxstring
+
+    print(io, "$(_antecedentstr) => $(_consequentstr)");
 end
 
 """
@@ -526,7 +592,7 @@ Each entity mined through an association rule mining algorithm.
 See also [`ARule`](@ref), [`GmeasMemo`](@ref), [`GmeasMemoKey`](@ref), [`Itemset`](@ref),
 [`LmeasMemo`](@ref), [`LmeasMemoKey`](@ref).
 """
-const ARMSubject = Union{ARule,SmallItemset}
+const ARMSubject = Union{ARule,SmallItemset,Itemset}
 
 """
     const Threshold = Float64
