@@ -82,7 +82,7 @@ but generalized to also work with modal logic.
 
 # Arguments
 - `miner::M`: miner containing the data and the extraction parameterization;
-- `prune_strategy::Function=growprune`: strategy to prune candidates between one iteration
+- `prunestrategy::Function=growprune`: strategy to prune candidates between one iteration
 and the successive;
 - `verbose::Bool=false`: print informations about each iteration.
 
@@ -90,7 +90,7 @@ See also [`growprune`](@ref), [`Miner`](@ref), [`MineableData`](@ref).
 """
 function apriori(
     miner::M;
-    prune_strategy::Function=growprune,
+    prunestrategy::Function=growprune,
     verbose::Bool=false
 )::M where {M<:AbstractMiner}
     X = data(miner)
@@ -130,7 +130,7 @@ function apriori(
         # we do not want duplicates ([p,q,r] and [q,r,p] are considered duplicates).
         k = (candidates |> first |> length) + 1
 
-        candidates = prune_strategy(candidates, _previousfreq, k) |> collect
+        candidates = prunestrategy(candidates, _previousfreq, k) |> collect
         empty!(_previousfreq)
 
         verbose && printstyled("Starting new computational loop with " *

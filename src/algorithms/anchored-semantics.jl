@@ -165,7 +165,7 @@ function anchored_apriori(miner::M; kwargs...)::M where {M<:AbstractMiner}
             "apriori."))
     end
 
-    return anchored_semantics(miner; prune_strategy=anchored_growprune, kwargs...)
+    return anchored_semantics(miner; prunestrategy=anchored_growprune, kwargs...)
 end
 
 """
