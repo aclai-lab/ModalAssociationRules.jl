@@ -35,7 +35,11 @@ include("core.jl")
 
 export AbstractItem, Item, ItemCollection, formula, feature
 export AbstractItemset
-export SmallItemset, mask, applymask, itemsetpopulation
+
+export SmallItemset
+export mask, applymask, itemsetpopulation
+export bitindexes, indexestomask, masksubsets
+
 export Itemset
 
 export ARule
