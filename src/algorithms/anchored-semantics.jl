@@ -144,7 +144,7 @@ function anchored_growprune(
                 combo -> (Itemset{I}(combo) in frequents) || !(isanchored_itemset()(combo)),
                 combinations(itemset, k-1)
             ),
-        combine_items(candidates, k) |> unique
+        combineitems(candidates, k) |> unique
     )
 end
 

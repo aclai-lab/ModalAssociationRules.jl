@@ -403,7 +403,7 @@ function _fpgrowth_count_phase(
     # which also do honor the `itemset_policies`
     for combo in Iterators.filter(
             _combo -> all(__policy -> __policy(_combo), itemset_policies(miner)),
-            combine_items(survivor_itemset, leftout_itemset)
+            combineitems(survivor_itemset, leftout_itemset)
         )
 
         # each combo must be reshaped, following a certain order specified

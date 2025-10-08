@@ -110,7 +110,7 @@ export lleverage, gleverage
 
 include("algorithms/apriori.jl")
 
-export combine_items, growprune
+export combineitems, growprune
 export apriori
 ####
 #### include("data-structures.jl")

@@ -59,7 +59,7 @@ anchored_semantics
 The following utilities often involve performing some combinatoric trick between [`Itemset`](@ref)s and [`ARule`](@ref)s, and might be useful to avoid reinventing the wheel.
 
 ```@docs
-combine_items
+combineitems
 growprune
 anchored_growprune
 ```

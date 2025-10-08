@@ -1,12 +1,12 @@
 """
-    combine_items(itemsets::AbstractVector{<:Itemset}, newlength::Integer)
+    combineitems(itemsets::AbstractVector{<:Itemset}, newlength::Integer)
 
 Return a generator which combines [`Itemset`](@ref)s from `itemsets` into new itemsets of
 length `newlength` by taking all combinations of two itemsets and joining them.
 
 See also [`Itemset`](@ref).
 """
-function combine_items(
+function combineitems(
     itemsets::AbstractVector{IT},
     newlength::Integer
 ) where {IT<:AbstractItemset}
@@ -21,14 +21,14 @@ function combine_items(
 end
 
 """
-    combine_items(variable::AbstractVector{<:Item}, fixed::AbstractVector{<:Item})
+    combineitems(variable::AbstractVector{<:Item}, fixed::AbstractVector{<:Item})
 
 Return a generator of [`Itemset`](@ref), which iterates the combinations of [`Item`](@ref)s
 in `variable` and prepend them to `fixed` vector.
 
 See also [`Item`](@ref), [`Itemset`](@ref).
 """
-function combine_items(
+function combineitems(
     variable::AbstractVector{I},
     fixed::AbstractVector{I}
 ) where {I<:Item}
@@ -70,7 +70,7 @@ function growprune(
             combo -> applymask(combo, miner) in frequents,
             combinations(mask(itemset), k-1)
         ),
-        combine_items(candidates, k) |> unique # I think this could simply be a collect
+        combineitems(candidates, k) |> unique # I think this could simply be a collect
     )
 end
 

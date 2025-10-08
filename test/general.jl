@@ -212,9 +212,9 @@ lsupport(Itemset(manual_lr), SoleLogics.getinstance(X2, 7), fpgrowth_miner)
 @test ModalAssociationRules.initminingstate(apriori, data(apriori_miner)) == MiningState()
 
 # "rulemining-utils.jl"
-@test combine_items([pq, qr], 3) |> first == pqr
-@test combine_items([manual_p, manual_q], [manual_r]) |> collect |> length == 3
-@test combine_items([manual_p, manual_q], [manual_r]) |>
+@test combineitems([pq, qr], 3) |> first == pqr
+@test combineitems([manual_p, manual_q], [manual_r]) |> collect |> length == 3
+@test combineitems([manual_p, manual_q], [manual_r]) |>
     collect |> first == Itemset([manual_p, manual_r])
 
 # Deprecated test
