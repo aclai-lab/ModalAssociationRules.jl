@@ -50,14 +50,14 @@ See also [`Itemset`](@ref).
 """
 function growprune(
     candidates::AbstractVector{IT},
-    frequents::AbstractSet{IT},
+    frequents::AbstractSet{Itemset},
     k::Integer,
     miner::AbstractMiner
 ) where {IT<:AbstractItemset}
     # if the frequents set does not contain the subset of a certain candidate,
     # that candidate is pruned out;
     #
-    # TODO this method would probably a lot faster in the case where the computation of
+    # * TODO this method would probably a lot faster in the case where the computation of
     # combinations is performed directly on the bit masks; unfortunately, it is quite
     # tricky to implement since we do not assume to be working with just one mask
     # (e.g., one UInt64) but many bits concatenated in different words.
@@ -67,8 +67,8 @@ function growprune(
         # note: why first(combo)? Because combinations(itemset, k-1) returns vectors,
         # each one wrapping one Itemset, but we just need that exact itemset.
         itemset -> all(
-            combo -> applymask(combo, miner) in frequents,
-            combinations(mask(itemset), k-1)
+            combo -> combo in frequents,
+            combinations(applymask(itemset, miner), k-1) # *
         ),
         combineitems(candidates, k) |> unique # I think this could simply be a collect
     )
@@ -103,8 +103,7 @@ function apriori(
 
     # this is a buffer containing ONLY the frequent itemsets of length k-1
     # TODO: probably, is better to use some other Set definition
-    _itemsettype = itemsettype(miner)
-    _previousfreq = Set{_itemsettype}()
+    _previousfreq = Set{Itemset}()
 
     while !isempty(candidates)
         frequents_lock = ReentrantLock()
@@ -122,7 +121,7 @@ function apriori(
                 # we also keep track of it on the temporary buffer, which is needed later
                 # to prune out the candidates of length k for which no k-1 subset appears
                 # here
-                push!(_previousfreq, candidate)
+                push!(_previousfreq, applymask(candidate, miner))
             end
         end
 
@@ -130,7 +129,7 @@ function apriori(
         # we do not want duplicates ([p,q,r] and [q,r,p] are considered duplicates).
         k = (candidates |> first |> length) + 1
 
-        candidates = prunestrategy(candidates, _previousfreq, k) |> collect
+        candidates = prunestrategy(candidates, _previousfreq, k, miner) |> collect
         empty!(_previousfreq)
 
         verbose && printstyled("Starting new computational loop with " *
