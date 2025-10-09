@@ -315,8 +315,7 @@ function isheterogeneous_arule(;
                 count(cons_item ->
                     ishomogeneous(ant_item, cons_item), _consequent
                 ) <= consequent_nrepetitions,
-
-            antecedent(rule)
+            _antecedent
         )
     end
 
