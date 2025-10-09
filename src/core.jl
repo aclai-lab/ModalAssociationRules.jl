@@ -72,13 +72,14 @@ See also [`itemsetpolicies`](@ref).
 """
 function applypolicies!(
     itemsets::Vector{IT},
-    miner::Miner
-) where {IT<:AbstractItemset}
-    filter!(target -> all(policy -> policy(target, miner), policies_pool), itemsets)
+    miner::M
+) where {IT<:AbstractItemset, M<:AbstractMiner}
+    filter!(target -> all(
+        policy -> policy(target, miner), itemsetpolicies(policies_pool)), itemsets)
 end
 function applypolicies!(
     arules::Vector{ARule},
-    miner::Miner
-)
-    filter!(target -> all(policy -> policy(target, miner), policies_pool), arules)
+    miner::M
+) where {M<:AbstractMiner}
+    filter!(target -> all(policy -> policy(target, miner), arulepolicies(miner)), arules)
 end
