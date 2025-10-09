@@ -146,8 +146,6 @@ struct Miner{
         algorithm::Function,
         items::Vector{I},
 
-        itemsetprecision::Type{<:Unsigned}=UInt64,
-
         itemset_constrained_measures::Vector{<:MeaningfulnessMeasure}=[
             (gsupport, 0.1, 0.1)
         ],
@@ -166,7 +164,8 @@ struct Miner{
 #### TODO            isheterogeneous_arule(),
         ]),
 
-        info::Info=Info(:istrained => false, :size => nothing)
+        info::Info=Info(:istrained => false, :size => nothing);
+        itemsetprecision::Type{<:Unsigned}=UInt64,
     ) where {
         D<:MineableData,
         I<:AbstractItem
