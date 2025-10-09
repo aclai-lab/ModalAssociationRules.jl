@@ -114,7 +114,7 @@ For what regards itemsets, the following dispatches are available:
 ```@docs
 itemsetpolicies
 islimited_length_itemset
-isanchored_itemset
+isanchoreditemset
 isdimensionally_coherent_itemset
 ```
 

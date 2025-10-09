@@ -483,8 +483,8 @@ end
 ##### Mining policies edge cases
 
 _my_itemset = ["p", "q"] .|> Atom .|> Item |> Itemset
-@test_nowarn isanchored_itemset()(_my_itemset)
-@test_throws ArgumentError isanchored_itemset(npropositions=-1)(_my_itemset)
+@test_nowarn isanchoreditemset()(_my_itemset)
+@test_throws ArgumentError isanchoreditemset(npropositions=-1)(_my_itemset)
 
 _my_vd1 = VariableDistance(1, [[1,2,3,4,5]])
 _my_p = Atom(ScalarCondition(_my_vd1, <=, 1.5)) |> Item

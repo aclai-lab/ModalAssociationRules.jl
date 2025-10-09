@@ -201,7 +201,7 @@ function initialize_experiment(
         worldfilter=_worldfilter,
         itemsetpolicies=Function[
             # put ignoreuntillength=2 to reproduce the experiments in TIME2025
-            isanchored_itemset(ignoreuntillength=1), # isanchored_itemset(ignoreuntillength=2),
+            isanchoreditemset(ignoreuntillength=1), # isanchoreditemset(ignoreuntillength=2),
             isdimensionally_coherent_itemset()
         ],
         arule_policies=Function[

@@ -37,7 +37,7 @@ end
 
 
 """
-    function isanchored_itemset(;
+    function isanchoreditemset(;
         npropositions::Integer=1,
         ignoreuntillength::Integer=1
     )::Function
@@ -56,7 +56,7 @@ Closure returning a boolean function `F` with one argument `rule::Itemset`.
 See [`Item`](@ref), [`Itemset`](@ref), [`itemsetpolicies`](@ref),
 [`isanchored_arule`](@ref).
 """
-function isanchored_itemset(; npropositions::Integer=1, ignoreuntillength::Integer=1)::Function
+function isanchoreditemset(; npropositions::Integer=1, ignoreuntillength::Integer=1)::Function
     # atleast `npropositions` items in the antecedent are not modal
 
     if npropositions < 0 || ignoreuntillength < 0
@@ -69,7 +69,7 @@ function isanchored_itemset(; npropositions::Integer=1, ignoreuntillength::Integ
     # there is no way to join it with an anchored one such as
     # "⟨A⟩Up[V2] ≤ 1.0 ∧ Down[V2] ≤ 1.0";
 
-    return function _isanchored_itemset(itemset::Itemset)
+    return function _isanchoreditemset(itemset::Itemset)
         return length(itemset) <= ignoreuntillength ||
             count(it -> formula(it) isa Atom, itemset) >= npropositions
     end
@@ -194,7 +194,7 @@ function isanchored_arule(; npropositions::Integer=1)::Function
     end
 
     return function _isanchored_arule(rule::ARule)
-        return isanchored_itemset(;
+        return isanchoreditemset(;
             npropositions=npropositions, ignoreuntillength=0)(antecedent(rule))
     end
 end

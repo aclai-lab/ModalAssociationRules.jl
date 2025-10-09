@@ -155,7 +155,7 @@ struct Miner{
 
         worldfilter::Union{Nothing,WorldFilter}=nothing,
         itemsetpolicies::Vector{<:Function}=Vector{Function}([
-#### TODO            isanchored_itemset(), # to ensure one proposition is the point-of-reference
+#### TODO            isanchoreditemset(), # to ensure one proposition is the point-of-reference
 #### TODO            isdimensionally_coherent_itemset() # to ensure no different anchors coexist
         ]),
         arule_policies::Vector{<:Function}=Vector{Function}([

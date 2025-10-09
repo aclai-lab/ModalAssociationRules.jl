@@ -12,17 +12,17 @@
     isanchored_miner(miner::AbstractMiner)
 
 Check if `miner` is provided of both `isdimensionally_coherent_itemset` and
-`isanchored_itemset` policy and, in particular, if `ignoreuntillength` parameter is set to 1
+`isanchoreditemset` policy and, in particular, if `ignoreuntillength` parameter is set to 1
 or above in the latter.
 
-See also [`AbstractMiner`](@ref), [`isanchored_itemset`](@ref),
+See also [`AbstractMiner`](@ref), [`isanchoreditemset`](@ref),
 [`isdimensionally_coherent_itemset`](@ref).
 """
 function isanchored_miner(miner::AbstractMiner)
     _itemsetpolicies = itemsetpolicies(miner)
 
     _isanchored_index = findfirst(
-        policy -> policy |> Symbol == :_isanchored_itemset, _itemsetpolicies)
+        policy -> policy |> Symbol == :_isanchoreditemset, _itemsetpolicies)
 
     _isdimensionally_coherent = findfirst(
         policy -> policy |> Symbol == :_isdimensionally_coherent_itemset, _itemsetpolicies)
@@ -141,7 +141,7 @@ function anchored_growprune(
                 # if combo does not contain an ancor, just ignore it;
                 # this utility is not the most convenient place to apply itemset policies
                 # related to anchoredness (e.g., during anchored apriori).
-                combo -> (Itemset{I}(combo) in frequents) || !(isanchored_itemset()(combo)),
+                combo -> (Itemset{I}(combo) in frequents) || !(isanchoreditemset()(combo)),
                 combinations(itemset, k-1)
             ),
         combineitems(candidates, k) |> unique
@@ -152,7 +152,7 @@ end
     anchored_apriori(miner::AbstractMiner; kwargs...)::Nothing
 
 Anchored version of [`apriori`](@ref) algorithm, that is exactly `apriori` but assuring
-that `miner` possess atleast [`isanchored_itemset`](@ref) policy, with `ignoreuntillength`
+that `miner` possess atleast [`isanchoreditemset`](@ref) policy, with `ignoreuntillength`
 parameter set to 1 or higher.
 
 TODO - insert a reference to TIME2025 article.
