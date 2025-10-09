@@ -206,7 +206,7 @@ function initialize_experiment(
         ],
         arule_policies=Function[
             islimited_length_arule(consequent_maxlength=3),
-            isanchored_arule()
+            isanchoredarule()
         ]
     )
 end

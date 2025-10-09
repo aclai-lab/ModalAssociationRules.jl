@@ -89,7 +89,7 @@ export partial_deepcopy, miner_reduce!
 include("mining-policies.jl")
 
 export islimited_length_itemset, isanchoreditemset, isdimensionally_coherent_itemset
-export islimited_length_arule, isanchored_arule, isheterogeneous_arule
+export islimited_length_arule, isanchoredarule, isheterogeneous_arule
 export isanchored_miner
 
 include("utils/miner.jl")

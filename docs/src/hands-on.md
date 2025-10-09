@@ -73,7 +73,7 @@ miner = Miner(
     # similarly, for the association rules extracted
     arule_policies=[
         islimited_length_arule(; antecedent_maxlength=5),
-        isanchored_arule(; npropositions=1),
+        isanchoredarule(; npropositions=1),
         isheterogeneous_arule(; antecedent_nrepetitions=1, consequent_nrepetitions=0),
     ],
 )

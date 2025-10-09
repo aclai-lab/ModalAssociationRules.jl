@@ -54,7 +54,7 @@ Closure returning a boolean function `F` with one argument `rule::Itemset`.
     [`Itemset`](@ref) short enough.
 
 See [`Item`](@ref), [`Itemset`](@ref), [`itemsetpolicies`](@ref),
-[`isanchored_arule`](@ref).
+[`isanchoredarule`](@ref).
 """
 function isanchoreditemset(; npropositions::Integer=1, ignoreuntillength::Integer=1)::Function
     # atleast `npropositions` items in the antecedent are not modal
@@ -171,7 +171,7 @@ function islimited_length_arule(;
 end
 
 """
-    function isanchored_arule(; npropositions::Integer=1)::Function
+    function isanchoredarule(; npropositions::Integer=1)::Function
 
 Closure returning a boolean function `F` with one argument `rule::ARule`.
 
@@ -185,7 +185,7 @@ Closure returning a boolean function `F` with one argument `rule::ARule`.
 See [`antecedent`](@ref), [`ARule`](@ref), [`arule_policies`](@ref),
 [`generaterules`](@ref), [`Item`](@ref), [`Miner`](@ref).
 """
-function isanchored_arule(; npropositions::Integer=1)::Function
+function isanchoredarule(; npropositions::Integer=1)::Function
     # atleast `npropositions` items in the antecedent are not modal
 
     if npropositions < 0
@@ -193,7 +193,7 @@ function isanchored_arule(; npropositions::Integer=1)::Function
             ArgumentError("npropositions must be >= 0 (given value is $(npropositions))"))
     end
 
-    return function _isanchored_arule(rule::ARule)
+    return function _isanchoredarule(rule::ARule)
         return isanchoreditemset(;
             npropositions=npropositions, ignoreuntillength=0)(antecedent(rule))
     end

@@ -79,7 +79,7 @@ julia> my_itemsetpolicies = [islimited_length_itemset()]
 # (optional) Establish a policy to further restrict rules that can be considered
 # association rules
 julia> my_arule_policies = [
-        islimited_length_arule(), isanchored_arule(), isheterogeneous_arule()
+        islimited_length_arule(), isanchoredarule(), isheterogeneous_arule()
     ]
 
 # Create an association rule miner wrapping `fpgrowth` algorithm - see [`fpgrowth`](@ref);
@@ -101,7 +101,7 @@ end
 ```
 
 See also  [`ARule`](@ref), [`Bulldozer`](@ref), [`MeaningfulnessMeasure`](@ref),
-[`Info`](@ref), [`isanchored_arule`](@ref), [`isheterogeneous_arule`](@ref),
+[`Info`](@ref), [`isanchoredarule`](@ref), [`isheterogeneous_arule`](@ref),
 [`islimited_length_arule()`](@ref), [`islimited_length_itemset()`](@ref),
 [`Item`](@ref), [`Itemset`](@ref), [`GmeasMemo`](@ref), [`LmeasMemo`](@ref),
 [`MiningState`](@ref), `SoleLogics.WorldFilter`.
@@ -160,7 +160,7 @@ struct Miner{
         ]),
         arule_policies::Vector{<:Function}=Vector{Function}([
 #### TODO            islimited_length_arule(),
-#### TODO            isanchored_arule(),
+#### TODO            isanchoredarule(),
 #### TODO            isheterogeneous_arule(),
         ]),
 

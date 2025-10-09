@@ -27,7 +27,7 @@ The following are referred to association rules:
 ```@docs
 arule_policies
 islimited_length_arule
-isanchored_arule
+isanchoredarule
 isheterogeneous_arule
 ```
 
