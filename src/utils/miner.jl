@@ -537,14 +537,9 @@ function generaterules(
     arule_lock = ReentrantLock()
 
     @threads for itemset in filter(x -> length(x) >= 2, itemsets)
-        # TODO - we could directly work on the bit representation of the itemset,
-        # without converting it from SmallItemset to Itemset.
-
-        # subsets = powerset(itemset)
-
         subsets = bitpowerset(itemset)
-        for subset in subsets
 
+        for subset in subsets
             subset = SmallItemset(SVector(subset...))
 
             if count_ones(subset) == 0
@@ -570,7 +565,7 @@ function generaterules(
             # apply generation policies to remove unwanted rules
             unwanted = false
             for policy in arulepolicies(miner)
-                if !policy(currentrule)
+                if !policy(currentrule, miner)
                     unwanted = true
                     break
                 end
