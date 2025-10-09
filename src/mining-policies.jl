@@ -171,7 +171,7 @@ not exceed the given thresholds.
 
     In this case, it can be ignored.
 
-See also [`antecedent`](@ref), [`ARule`](@ref), [`arule_policies`](@ref),
+See also [`antecedent`](@ref), [`ARule`](@ref), [`arulepolicies`](@ref),
 [`consequent`](@ref).
 """
 function islimited_length_arule(;
@@ -213,7 +213,7 @@ Closure returning a boolean function `F` with one argument `rule::ARule` and an
 - `npropositions::Integer=1`: minimum number of propositional anchors (propositions with
     no modal operators) in the antecedent of the given rule.
 
-See [`antecedent`](@ref), [`ARule`](@ref), [`arule_policies`](@ref),
+See [`antecedent`](@ref), [`ARule`](@ref), [`arulepolicies`](@ref),
 [`generaterules`](@ref), [`Item`](@ref), [`Miner`](@ref).
 """
 function isanchoredarule(; npropositions::Integer=1)::Function

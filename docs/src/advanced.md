@@ -25,7 +25,7 @@ isdimensionally_coherent_itemset
 The following are referred to association rules:
 
 ```@docs
-arule_policies
+arulepolicies
 islimited_length_arule
 isanchoredarule
 isheterogeneous_arule

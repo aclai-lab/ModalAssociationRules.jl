@@ -69,7 +69,7 @@ for algorithm in [apriori]
 
         miner = Miner(modaldataset, algorithm, items, _itemmeasures, _rulemeasures;
             itemsetpolicies=Function[],
-            arule_policies=Function[]
+            arulepolicies=Function[]
         );
 
         newtrial = @benchmark mine!($miner; forcemining=true, fpeonly=true) teardown = begin
@@ -104,7 +104,7 @@ end
 ###
 ### miner = Miner(modaldataset, eclat, _items, _itemmeasures, _rulemeasures;
 ###     itemsetpolicies=Function[],
-###     arule_policies=Function[]
+###     arulepolicies=Function[]
 ### );
 ###
 ### mine!(miner; fpeonly=true)

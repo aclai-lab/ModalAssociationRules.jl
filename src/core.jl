@@ -27,7 +27,7 @@ For example, [`Miner`](@ref) does completely implement the interface while
 
 - worldfilter(miner::AbstractMiner)
 - itemsetpolicies(miner::AbstractMiner)
-- arule_policies(miner::AbstractMiner)
+- arulepolicies(miner::AbstractMiner)
 
 - miningstate(miner::AbstractMiner)
 - miningstate!(miner::AbstractMiner)

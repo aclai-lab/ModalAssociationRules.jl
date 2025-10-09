@@ -71,7 +71,7 @@ miner = Miner(
     itemsetpolicies=[islimited_length_itemset(; maxlength=5)],
 
     # similarly, for the association rules extracted
-    arule_policies=[
+    arulepolicies=[
         islimited_length_arule(; antecedent_maxlength=5),
         isanchoredarule(; npropositions=1),
         isheterogeneous_arule(; antecedent_nrepetitions=1, consequent_nrepetitions=0),

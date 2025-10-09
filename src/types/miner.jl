@@ -150,12 +150,12 @@ during the mining phase and which are discarded.
     generation policies are applied before saving an itemset inside the miner:
     thus, they reduce the waste of memory, but not necessarily of computational time.
 
-See also [`AbstractMiner`](@ref), [`generaterules`](@ref), [`arule_policies`](@ref).
+See also [`AbstractMiner`](@ref), [`generaterules`](@ref), [`arulepolicies`](@ref).
 """
 itemsetpolicies(::AbstractMiner) = error("Not implemented.")
 
 """
-    arule_policies(::AbstractMiner)
+    arulepolicies(::AbstractMiner)
 
 Return the association rules generation policies vector wrapped within an
 [`AbstractMiner`](@ref).
@@ -165,7 +165,7 @@ during the generation algorithm and which are discarded.
 See also [`AbstractMiner`](@ref), [`generaterules`](@ref),
 [`itemsetpolicies`](@ref).
 """
-arule_policies(::AbstractMiner) = error("Not implemented").
+arulepolicies(::AbstractMiner) = error("Not implemented").
 
 
 

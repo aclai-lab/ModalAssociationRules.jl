@@ -204,7 +204,7 @@ function initialize_experiment(
             isanchoreditemset(ignoreuntillength=1), # isanchoreditemset(ignoreuntillength=2),
             isdimensionally_coherent_itemset()
         ],
-        arule_policies=Function[
+        arulepolicies=Function[
             islimited_length_arule(consequent_maxlength=3),
             isanchoredarule()
         ]
