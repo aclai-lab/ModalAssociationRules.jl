@@ -298,7 +298,7 @@ localmemo(bulldozer::Bulldozer)
 
 worldfilter(bulldozer::Bulldozer)
 
-itemset_policies(bulldozer::Bulldozer)
+itemsetpolicies(bulldozer::Bulldozer)
 
 miningstate(bulldozer::Bulldozer)
 miningstate!(bulldozer::Bulldozer, key::Symbol, val)

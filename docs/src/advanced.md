@@ -16,7 +16,7 @@ We can also constrain the generation of new itemsets and rules, by defining a ve
 For what regards itemsets, the following dispatches are available:
 
 ```@docs
-itemset_policies
+itemsetpolicies
 islimited_length_itemset
 isanchored_itemset
 isdimensionally_coherent_itemset

@@ -19,16 +19,16 @@ See also [`AbstractMiner`](@ref), [`isanchored_itemset`](@ref),
 [`isdimensionally_coherent_itemset`](@ref).
 """
 function isanchored_miner(miner::AbstractMiner)
-    _itemset_policies = itemset_policies(miner)
+    _itemsetpolicies = itemsetpolicies(miner)
 
     _isanchored_index = findfirst(
-        policy -> policy |> Symbol == :_isanchored_itemset, _itemset_policies)
+        policy -> policy |> Symbol == :_isanchored_itemset, _itemsetpolicies)
 
     _isdimensionally_coherent = findfirst(
-        policy -> policy |> Symbol == :_isdimensionally_coherent_itemset, _itemset_policies)
+        policy -> policy |> Symbol == :_isdimensionally_coherent_itemset, _itemsetpolicies)
 
     if isnothing(_isanchored_index) || isnothing(_isdimensionally_coherent) || getfield(
-        _itemset_policies[_isanchored_index], :ignoreuntillength) == 0
+        _itemsetpolicies[_isanchored_index], :ignoreuntillength) == 0
 
         throw(
             AssertionError("The miner must possess both isdimensionally_coherent_itemset " *

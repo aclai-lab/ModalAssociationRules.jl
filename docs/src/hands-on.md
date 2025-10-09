@@ -68,7 +68,7 @@ miner = Miner(
     ),
 
     # an itemset is considered meaningful if it also honors specific condiitons
-    itemset_policies=[islimited_length_itemset(; maxlength=5)],
+    itemsetpolicies=[islimited_length_itemset(; maxlength=5)],
 
     # similarly, for the association rules extracted
     arule_policies=[

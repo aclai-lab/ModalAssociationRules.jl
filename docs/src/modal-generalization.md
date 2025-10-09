@@ -112,7 +112,7 @@ Every policy is a closure returning a custom parameterized checker for a certain
 For what regards itemsets, the following dispatches are available:
 
 ```@docs
-itemset_policies
+itemsetpolicies
 islimited_length_itemset
 isanchored_itemset
 isdimensionally_coherent_itemset

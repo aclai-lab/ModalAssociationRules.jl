@@ -424,7 +424,7 @@ _genericMiner = genericMiner()
 @test_throws ErrorException localmemo(_genericMiner)
 @test_throws ErrorException globalmemo(_genericMiner)
 @test_throws ErrorException worldfilter(_genericMiner)
-@test_throws ErrorException itemset_policies(_genericMiner)
+@test_throws ErrorException itemsetpolicies(_genericMiner)
 @test_throws ErrorException arule_policies(_genericMiner)
 @test_throws ErrorException miningstate(_genericMiner)
 @test_throws ErrorException info(_genericMiner)
@@ -580,12 +580,12 @@ filtered_miner = Miner(
 r1 = 1:10
 r2 = 11:20
 
-b1 = Bulldozer(fpgrowth_miner, r1; itemset_policies=itemset_policies(fpgrowth_miner))
+b1 = Bulldozer(fpgrowth_miner, r1; itemsetpolicies=itemsetpolicies(fpgrowth_miner))
 for x in r1
     localmemo!(b1, (:lsupport, pq, x), 0.56)
 end
 
-b2 = Bulldozer(fpgrowth_miner, r2; itemset_policies=itemset_policies(fpgrowth_miner))
+b2 = Bulldozer(fpgrowth_miner, r2; itemsetpolicies=itemsetpolicies(fpgrowth_miner))
 for x in r2
     localmemo!(b2, (:lsupport, pq, x), 0.56)
 end
@@ -669,7 +669,7 @@ apriori_unanchored_miner = Miner(
     manual_items,
     _itemsetmeasures,
     _rulemeasures;
-    itemset_policies=Function[]
+    itemsetpolicies=Function[]
 )
 
 @test_throws AssertionError isanchored_miner(apriori_unanchored_miner)

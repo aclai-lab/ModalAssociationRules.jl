@@ -3,13 +3,15 @@
 
 using SoleData: VariableDistance
 
-# policies related to frequent itemsets mining
+
+##### policies for itemsets ################################################################
 
 
 """
     function islimited_length_itemset(; maxlength::Union{Nothing,Integer}=nothing)::Function
 
-Closure returning a boolean function `F` with one argument `itemset::Itemset`.
+Closure returning a boolean function `F` having one argument `itemset`, subtype of
+[`AbstractItemset`](@ref).
 
 `F` is true if the length of the given `itemset` does not exceed the given thresholds.
 
@@ -17,7 +19,7 @@ Closure returning a boolean function `F` with one argument `itemset::Itemset`.
 - `maxlength::Union{Nothing,Integer}=nothing`: maximum `itemset`'s length; when `nothing`,
     defaults to `typemax(Int16)`.
 
-See also [`Itemset`](@ref), [`itemset_policies`](@ref).
+See also [`AbstractItemset`](@ref), [`itemsetpolicies`](@ref).
 """
 function islimited_length_itemset(; maxlength::Union{Nothing,Integer}=nothing)::Function
     if isnothing(maxlength)
@@ -28,7 +30,7 @@ function islimited_length_itemset(; maxlength::Union{Nothing,Integer}=nothing)::
         throw(ArgumentError("maxlength must be > 0 (given value is $(maxlength))"))
     end
 
-    return function _islimited_length_itemset(itemset::Itemset)
+    return function _islimited_length_itemset(itemset::IT) where {IT<:AbstractItemset}
         return length(itemset) <= maxlength
     end
 end
@@ -51,7 +53,7 @@ Closure returning a boolean function `F` with one argument `rule::Itemset`.
 - `ignoreuntillength::Integer=1`: avoid applying the policy to isolated [`Item`](@ref)s, or
     [`Itemset`](@ref) short enough.
 
-See [`Item`](@ref), [`Itemset`](@ref), [`itemset_policies`](@ref),
+See [`Item`](@ref), [`Itemset`](@ref), [`itemsetpolicies`](@ref),
 [`isanchored_arule`](@ref).
 """
 function isanchored_itemset(; npropositions::Integer=1, ignoreuntillength::Integer=1)::Function
@@ -83,7 +85,7 @@ This is needed to ensure the Itemset is coherent with the dimensional definition
 support. All the propositions (or anchors) in an itemset must be `VariableDistance`s
 wrapping references of the same size.
 
-See also [`Itemset`](@ref), [`itemset_policies`](@ref), `SoleData.VariableDistance`.
+See also [`Itemset`](@ref), [`itemsetpolicies`](@ref), `SoleData.VariableDistance`.
 """
 function isdimensionally_coherent_itemset(;)::Function
     # since we have no arguments, this closure seems useless;
@@ -121,7 +123,8 @@ function isdimensionally_coherent_itemset(;)::Function
 end
 
 
-# policies related to association rule generation
+
+##### policies for rules ###################################################################
 
 
 """

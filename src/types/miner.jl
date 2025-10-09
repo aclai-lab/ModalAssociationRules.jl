@@ -132,7 +132,7 @@ See also [`AbstractMiner`](@ref), [`data(::AbstractMiner)`](@ref), `SoleLogics.W
 worldfilter(::AbstractMiner) = error("Not implemented.")
 
 """
-    function itemset_policies(::AbstractMiner)
+    function itemsetpolicies(::AbstractMiner)
 
 Return the mining policies vector wrapped within an [`AbstractMiner`](@ref).
 Each mining policies is a meta-rule describing which [`Itemset`](@ref) are accepted
@@ -152,7 +152,7 @@ during the mining phase and which are discarded.
 
 See also [`AbstractMiner`](@ref), [`generaterules`](@ref), [`arule_policies`](@ref).
 """
-itemset_policies(::AbstractMiner) = error("Not implemented.")
+itemsetpolicies(::AbstractMiner) = error("Not implemented.")
 
 """
     arule_policies(::AbstractMiner)
@@ -163,7 +163,7 @@ Each generation policies is a meta-rule describing which [`ARule`](@ref) are acc
 during the generation algorithm and which are discarded.
 
 See also [`AbstractMiner`](@ref), [`generaterules`](@ref),
-[`itemset_policies`](@ref).
+[`itemsetpolicies`](@ref).
 """
 arule_policies(::AbstractMiner) = error("Not implemented").
 
@@ -519,7 +519,7 @@ and [`globalmemo`](@ref) [`MeaningfulnessMeasure`](@ref)s.
 !!! note
     Be careful, only information between items, and local and global meaningfulness measures
     are reduced together. The assumption is that everything else can virtually be ignored
-    (e.g., [`info`](@ref), [`worldfilter`], [`itemset_policies`](@ref), etc.)
+    (e.g., [`info`](@ref), [`worldfilter`], [`itemsetpolicies`](@ref), etc.)
 
 # Arguments
 - `miners::AbstractVector{M}`: the list of miners to be reduced together.

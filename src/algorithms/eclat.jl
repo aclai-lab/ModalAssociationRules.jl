@@ -119,7 +119,7 @@ function eclat(miner::M)::M where {M<:AbstractMiner}
 
             # apply all policies, update the globalmemo and continue the recursion
             if newstate_gsupport >= gthreshold &&
-                all(policy -> policy(newstate[1]), itemset_policies(miner))
+                all(policy -> policy(newstate[1]), itemsetpolicies(miner))
 
                 lock(miningstatelock(miner)) do
                     push!(freqitems(miner), newstate[1])

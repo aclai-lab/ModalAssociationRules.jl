@@ -95,7 +95,7 @@ EXPERIMENTVALUES = (
         Vector{Item}([manual_q, manual_r, manual_lp, manual_lr]),
         [(gsupport, 0.4, 0.4)],
         [(gconfidence, 0.7, 0.7)],
-        Dict(:itemset_policies => Function[])
+        Dict(:itemsetpolicies => Function[])
     ),
 
     (

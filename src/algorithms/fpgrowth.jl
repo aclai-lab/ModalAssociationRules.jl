@@ -177,7 +177,7 @@ function fpgrowth(miner::M)::M where {M<:AbstractMiner}
     )
     tasks = map(chunks) do chunk
         Threads.@spawn _fpgrowth(
-            Bulldozer(miner, chunk; itemset_policies=itemset_policies(miner)))
+            Bulldozer(miner, chunk; itemsetpolicies=itemsetpolicies(miner)))
     end
     local_results = fetch.(tasks)
 
@@ -194,7 +194,7 @@ function fpgrowth(miner::M)::M where {M<:AbstractMiner}
         # apply frequent items mining policies here
         # NOTE - policies are already checked in _fpgrowth_count_phase, where itemsets
         # are generated and also tested against local meaningfulness measures
-        # for policy in itemset_policies(miner)
+        # for policy in itemsetpolicies(miner)
         #     if !policy(itemset)
         #         saveflag = false
         #         break
@@ -400,9 +400,9 @@ function _fpgrowth_count_phase(
     miner::Bulldozer
 )
     # we consider each combination of items (where the itemset `survivor_itemset` is fixed)
-    # which also do honor the `itemset_policies`
+    # which also do honor the `itemsetpolicies`
     for combo in Iterators.filter(
-            _combo -> all(__policy -> __policy(_combo), itemset_policies(miner)),
+            _combo -> all(__policy -> __policy(_combo), itemsetpolicies(miner)),
             combineitems(survivor_itemset, leftout_itemset)
         )
 

@@ -199,7 +199,7 @@ function initialize_experiment(
     return _logiset, Miner(
         _logiset, miningalgo, _items, _itemsetmeasures, _rulemeasures;
         worldfilter=_worldfilter,
-        itemset_policies=Function[
+        itemsetpolicies=Function[
             # put ignoreuntillength=2 to reproduce the experiments in TIME2025
             isanchored_itemset(ignoreuntillength=1), # isanchored_itemset(ignoreuntillength=2),
             isdimensionally_coherent_itemset()

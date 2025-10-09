@@ -68,7 +68,7 @@ for algorithm in [apriori]
         ]) |> Logiset;
 
         miner = Miner(modaldataset, algorithm, items, _itemmeasures, _rulemeasures;
-            itemset_policies=Function[],
+            itemsetpolicies=Function[],
             arule_policies=Function[]
         );
 
@@ -103,7 +103,7 @@ end
 ### ]) |> Logiset
 ###
 ### miner = Miner(modaldataset, eclat, _items, _itemmeasures, _rulemeasures;
-###     itemset_policies=Function[],
+###     itemsetpolicies=Function[],
 ###     arule_policies=Function[]
 ### );
 ###

@@ -23,7 +23,7 @@ using Base.Threads
         globalmemo::GmeasMemo           # global memoization structure
 
         worldfilter::Union{Nothing,WorldFilter} # metarules about world filterings
-        itemset_policies::Vector{<:Function}    # metarules about itemsets mining
+        itemsetpolicies::Vector{<:Function}    # metarules about itemsets mining
         arule_policies::Vector{<:Function}      # metarules about arules mining
 
         miningstate::MiningState        # mining algorithm miningstate (see documentation)
@@ -74,7 +74,7 @@ julia> my_worldfilter = SoleLogics.FunctionalWorldFilter(
     )
 
 # (optional) Establish a policy to further restrict itemsets that can be considered frequent
-julia> my_itemset_policies = [islimited_length_itemset()]
+julia> my_itemsetpolicies = [islimited_length_itemset()]
 
 # (optional) Establish a policy to further restrict rules that can be considered
 # association rules
@@ -86,7 +86,7 @@ julia> my_arule_policies = [
 julia> miner = Miner(X, fpgrowth, my_alphabet,
         my_itemsetmeasures, my_rulemeasures,
         worldfilter=my_worldfilter,
-        itemset_policies=my_itemset_policies,
+        itemsetpolicies=my_itemsetpolicies,
         arule_policies=my_arule_policies
     )
 
@@ -129,7 +129,7 @@ struct Miner{
     globalmemo::GmeasMemo           # global memoization structure
 
     worldfilter::Union{Nothing,WorldFilter} # metarules about world filterings
-    itemset_policies::Vector{<:Function}    # metarules about itemsets mining
+    itemsetpolicies::Vector{<:Function}    # metarules about itemsets mining
     arule_policies::Vector{<:Function}      # metarules about arules mining
 
     miningstate::MiningState        # mining algorithm miningstate (see documentation)
@@ -154,7 +154,7 @@ struct Miner{
         ];
 
         worldfilter::Union{Nothing,WorldFilter}=nothing,
-        itemset_policies::Vector{<:Function}=Vector{Function}([
+        itemsetpolicies::Vector{<:Function}=Vector{Function}([
 #### TODO            isanchored_itemset(), # to ensure one proposition is the point-of-reference
 #### TODO            isdimensionally_coherent_itemset() # to ensure no different anchors coexist
         ]),
@@ -206,7 +206,7 @@ struct Miner{
             Vector{itemsettype}(),
             Vector{ARule}([]),
             LmeasMemo(), GmeasMemo(),
-            worldfilter, itemset_policies, arule_policies,
+            worldfilter, itemsetpolicies, arule_policies,
             miningstate, info,
             ReentrantLock(), ReentrantLock(), ReentrantLock()
         )
@@ -368,16 +368,16 @@ See also [`worldfilter(::AbstractMiner)`](@ref).
 worldfilter(miner::Miner) = miner.worldfilter
 
 """
-    function itemset_policies(miner::Miner)
+    function itemsetpolicies(miner::Miner)
 
-See [`itemset_policies(::AbstractMiner)`](@ref).
+See [`itemsetpolicies(::AbstractMiner)`](@ref).
 """
-itemset_policies(miner::Miner) = miner.itemset_policies
+itemsetpolicies(miner::Miner) = miner.itemsetpolicies
 
 """
     arule_policies(miner::Miner)
 
-See [`itemset_policies(::AbstractMiner)`](@ref).
+See [`itemsetpolicies(::AbstractMiner)`](@ref).
 """
 arule_policies(miner::Miner) = miner.arule_policies
 
@@ -424,10 +424,10 @@ end
 `filter!` the [`Itemset`](@ref)s wrapped in `miner`.
 
 See also [`Base.filter!(::Vector{ARule}, ::Miner)`](@ref), [`Itemset`](@ref),
-[`itemset_policies`](@ref), [`Miner`](@ref).
+[`itemsetpolicies`](@ref), [`Miner`](@ref).
 """
 Base.filter!(itemsets::Vector{IT}, miner::Miner) where {IT<:AbstractItemset} = filter!(
-    itemsets, itemset_policies(miner)
+    itemsets, itemsetpolicies(miner)
 )
 
 """
@@ -669,20 +669,20 @@ common reference to the same [`MineableData`](@ref).
 - `new_items::Union{Nothing,Vector{I}}=nothing`: overwrites [`items`](@ref) collection;
 - `new_worldfilter::Union{Nothing,WorldFilter}=nothing`: overwrites
 [`worldfilter`](@ref);
-- `new_itemset_policies`::Union{Nothing,Vector{<:Function}}=nothing`: overwrites
-[`itemset_policies`](@ref);
+- `new_itemsetpolicies`::Union{Nothing,Vector{<:Function}}=nothing`: overwrites
+[`itemsetpolicies`](@ref);
 - `new_arule_policies`::Union{Nothing,Vector{<:Function}}=nothing`: overwrites
 [`arule_policies`](@ref).
 
 See also [`anchored_fpgrowth`](@ref), [`arule_policies`](@ref), [`items`](@ref),
-[`Itemset`](@ref), [`itemset_policies`](@ref), [`MineableData`](@ref), [`Miner`](@ref),
+[`Itemset`](@ref), [`itemsetpolicies`](@ref), [`MineableData`](@ref), [`Miner`](@ref),
 [`worldfilter`](@ref).
 """
 function partial_deepcopy(
     original::Miner;
     new_items::Union{Nothing,Vector{I}}=nothing,
     new_worldfilter::Union{Nothing,WorldFilter}=nothing,
-    new_itemset_policies::Union{Nothing,Vector{<:Function}}=nothing,
+    new_itemsetpolicies::Union{Nothing,Vector{<:Function}}=nothing,
     new_arule_policies::Union{Nothing,Vector{<:Function}}=nothing
 ) where {I<:Item}
     if isnothing(new_items)
@@ -691,8 +691,8 @@ function partial_deepcopy(
     if isnothing(new_worldfilter)
         new_worldfilter = deepcopy(original |> worldfilter)
     end
-    if isnothing(new_itemset_policies)
-        new_itemset_policies = deepcopy(original |> itemset_policies)
+    if isnothing(new_itemsetpolicies)
+        new_itemsetpolicies = deepcopy(original |> itemsetpolicies)
     end
     if isnothing(new_arule_policies)
         new_arule_policies = deepcopy(original |> arule_policies)
@@ -705,7 +705,7 @@ function partial_deepcopy(
         deepcopy(original |> itemsetmeasures),
         deepcopy(original |> arulemeasures);
         worldfilter = new_worldfilter,
-        itemset_policies = new_itemset_policies,
+        itemsetpolicies = new_itemsetpolicies,
         arule_policies = new_arule_policies,
         info = deepcopy(original |> info)
     )
