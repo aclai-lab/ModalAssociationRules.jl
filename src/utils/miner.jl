@@ -163,8 +163,9 @@ struct Miner{
             isheterogeneous_arule(),
         ]),
 
-        info::Info=Info(:istrained => false, :size => nothing);
-        itemsetprecision::Type{<:Unsigned}=UInt64,
+        info::Info=Info(:istrained => false, :size => nothing),
+
+        itemsetprecision::Type{<:Unsigned}=UInt64
     ) where {
         D<:MineableData,
         I<:AbstractItem
