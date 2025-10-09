@@ -1,20 +1,39 @@
 
 """
-TODO: refine docstring
-
     abstract type AbstractItemset end
 
-Generic encoding for a set of facts.
+Generic type for itemsets.
 
-See also [`Itemset`](@ref).
+See also [`Item`](@ref), [`SmallItemset`](@ref), [`Itemset`](@ref).
 """
 abstract type AbstractItemset end
 
-"""
-TODO: refine docstring
 
-Suppose U isa UInt64; then, mask[1] encodes is a bit mask over the first 64 elements of
-an [`Item`](@ref) collection; mask[2] encodes the range [65,128] and so on.
+
+##### SmallItemset definition ##############################################################
+
+"""
+    struct SmallItemset{N,U<:Unsigned} <: AbstractItemset
+
+Efficient itemset, encoding a set of items as a multiword mask over a
+[`ItemCollection`](@ref).
+
+Support `U` is a `UInt64` and we want to represent a specific itemset from a collection of
+128 items. Then, we only need two U values for encoding any combination of items.
+
+# Interface
+
+- mask(si::SmallItemset)
+- Base.length(si::SmallItemset)
+- Base.intersect(si::SmallItemset, si::SmallItemset)
+- Base.union(si::SmallItemset, si::SmallItemset)
+- diff(si::SmallItemset, si::SmallItemset)
+- Base.isequal(si::SmallItemset) and Base.(:==)(si::SmallItemset)
+- applymask(si::SmallItemset, ic::ItemCollection)
+- Base.count_ones(si::SmallItemset)
+- bitpowerset(si::SmallItemset{N,U}) where {N,U<:Unsigned}
+
+See also [`applymask`](@ref), [`diff`](@ref), [`mask`](@ref).
 """
 struct SmallItemset{N,U<:Unsigned} <: AbstractItemset
     mask::SVector{N,U}
@@ -48,6 +67,14 @@ struct SmallItemset{N,U<:Unsigned} <: AbstractItemset
     end
 end
 
+"""
+    mask(si::SmallItemset)
+
+Return the `SVector` wrapped within `si`, that is, the static array of unsigned integers
+encoding a bitmask (that you can use to select specific items from a collection).
+
+See also [`applymask`](@ref), [`SmallItemset`](@ref).
+"""
 mask(si::SmallItemset) = si.mask
 
 Base.length(si::SmallItemset) = begin
@@ -62,6 +89,13 @@ function Base.union(s1::SmallItemset{N,U}, s2::SmallItemset{N,U}) where {N,U}
     return SmallItemset(mask(s1) .| mask(s2))
 end
 
+"""
+    diff(s1::SmallItemset{N,U}, s2::SmallItemset{N,U}) where {N,U}
+
+Return a new `SmallItemset` wrapping the broadcasted xor between `mask(s1)` and `mask(s2)`.
+
+See also [`mask`](@ref), [`SmallItemset`](@ref).
+"""
 function diff(s1::SmallItemset{N,U}, s2::SmallItemset{N,U}) where {N,U}
     return SmallItemset(mask(s1) .⊻ mask(s2))
 end
@@ -83,17 +117,24 @@ function ==(s1::SmallItemset{N,U}, s2::SmallItemset{N,U}) where {N,U}
 end
 
 """
+    Base.count_ones(si::SmallItemset{N,U}) where {N,U}
+
 Broadcast `Base.count_ones` on all the masks wrapped by a [`SmallItemset`](@ref).
+
+See also [`SmallItemset`](@ref).
 """
 function Base.count_ones(si::SmallItemset{N,U}) where {N,U}
     return si |> mask .|> count_ones |> sum
 end
 
 """
-TODO: refine docstring
+    function applymask(
+        si::SmallItemset{N,U},
+        ic::ItemCollection{M,I}
+    ) where {N,M,U<:Unsigned,I<:AbstractItem}
 
-Split the item collection into chunks, depending on the size of U.
-Then, for each chunk, mask the corresponding items.
+Split `ic` into chunks, depending on the size of U.
+Then, for each chunk, apply the correct mask wrapped within `si`.
 
 # Examples
 ```julia
@@ -104,6 +145,8 @@ julia> myitemcollection = ItemCollection{300,Item}(Item[
 ])
 julia> applymask(myitemset, myitemcollection)
 ```
+
+See also [`ItemCollection`](@ref), [`SmallItemset`](@ref).
 """
 function applymask(
     si::SmallItemset{N,U},
@@ -142,10 +185,17 @@ applymask(
 ) where {N,U,A<:AbstractMiner} = applymask(itemset, items(miner) |> Ref)
 
 """
-TODO: refine docstring
+    itemsetpopulation(miner::AbstractMiner; prec::Type{<:Unsigned}=UInt64)
 
 Generate a [`SmallItemset`](@ref) for each item in `miner`. If the items are 3, for example,
 then the masks of the 3 result SmallItemset are 001, 010, 100.
+
+The number of unsigned wrapped within each resulting itemset depends on the choosen
+precision `prec` and the number of items within `miner`. For example, if the miner contains
+100 items and `prec` is set to be UInt32, then each [`SmallItemset`](@ref) returned from
+this call will contain 4 UInt32 (3 would be capable to only encode the first 94 items).
+
+See also [`AbstractMiner`](@ref), [`mask`](@ref), [`SmallItemset`](@ref).
 """
 function itemsetpopulation(miner::AbstractMiner; prec::Type{<:Unsigned}=UInt64)
     itemslength = miner |> items |> length
@@ -176,6 +226,8 @@ function itemsetpopulation(miner::AbstractMiner; prec::Type{<:Unsigned}=UInt64)
 end
 
 """
+    bitpowerset(si::SmallItemset{N,U}) where {N,U<:Unsigned}
+
 Compute the powerset of one (or many) unsigned integers, encoding a bitmask (or bitmasks
 embodying multiple words).
 
@@ -212,10 +264,16 @@ function bitpowerset(x::U) where {U<:Unsigned}
     return SVector{length(result),U}(result)
 end
 
+
+
 ##### Itemset definition ###################################################################
 
 """
     const Itemset{I<:Item} = Vector{I}
+
+!!! warning
+    This is deprecated and should be used only when you explicitly want to keep your items
+    in memory, instead of compactly embodying them into [`SmallItemset`](@ref)s.
 
 Vector collecting multiple [`Item`](@ref)s.
 
