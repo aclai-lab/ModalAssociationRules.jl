@@ -31,14 +31,13 @@ using SoleData: VariableMin, VariableMax, VariableDistance
 
 using StatsBase
 
-include("types/item.jl")
-export AbstractItem
-export Item, formula, feature
-export ItemCollection
-
 include("core.jl")
 
 export AbstractMiner
+
+export AbstractItem
+export Item, formula, feature
+export ItemCollection
 
 export AbstractItemset
 
