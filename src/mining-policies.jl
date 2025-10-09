@@ -19,6 +19,12 @@ Closure returning a boolean function `F` having one argument `itemset`, subtype 
 - `maxlength::Union{Nothing,Integer}=nothing`: maximum `itemset`'s length; when `nothing`,
     defaults to `typemax(Int16)`.
 
+!!! note
+    The returned function adheres to the common interface of itemset's policies and,
+    actually, also accepts a second [`AbstractMiner`](@ref) argument.
+
+    In this case, it can be ignored.
+
 See also [`AbstractItemset`](@ref), [`itemsetpolicies`](@ref).
 """
 function islimited_length_itemset(; maxlength::Union{Nothing,Integer}=nothing)::Function
@@ -30,7 +36,10 @@ function islimited_length_itemset(; maxlength::Union{Nothing,Integer}=nothing)::
         throw(ArgumentError("maxlength must be > 0 (given value is $(maxlength))"))
     end
 
-    return function _islimited_length_itemset(itemset::IT) where {IT<:AbstractItemset}
+    return function _islimited_length_itemset(
+        itemset::IT,
+        _::M # to adhere to the common interface
+    ) where {IT<:AbstractItemset, M<:AbstractMiner}
         return length(itemset) <= maxlength
     end
 end
@@ -53,7 +62,7 @@ Closure returning a boolean function `F` with one argument `rule::Itemset`.
 - `ignoreuntillength::Integer=1`: avoid applying the policy to isolated [`Item`](@ref)s, or
     [`Itemset`](@ref) short enough.
 
-See [`Item`](@ref), [`Itemset`](@ref), [`itemsetpolicies`](@ref),
+See [`AbstractItemset`](@ref), [`Item`](@ref), [`itemsetpolicies`](@ref),
 [`isanchoredarule`](@ref).
 """
 function isanchoreditemset(; npropositions::Integer=1, ignoreuntillength::Integer=1)::Function
@@ -69,9 +78,14 @@ function isanchoreditemset(; npropositions::Integer=1, ignoreuntillength::Intege
     # there is no way to join it with an anchored one such as
     # "⟨A⟩Up[V2] ≤ 1.0 ∧ Down[V2] ≤ 1.0";
 
-    return function _isanchoreditemset(itemset::Itemset)
-        return length(itemset) <= ignoreuntillength ||
-            count(it -> formula(it) isa Atom, itemset) >= npropositions
+    return function _isanchoreditemset(
+        itemset::IT,
+        miner::M
+    ) where {IT<:AbstractItemset, M<:AbstractMiner}
+        _itemset = applymask(itemset, miner)
+
+        return length(_itemset) <= ignoreuntillength ||
+            count(it -> formula(it) isa Atom, _itemset) >= npropositions
     end
 end
 
@@ -79,19 +93,25 @@ end
 """
     function isdimensionally_coherent_itemset(;)::Function
 
-Closure returning a boolean function `F` with one argument `itemset::Itemset`.
+Closure returning a boolean function `F` with one argument `itemset`, which is a subtype
+of [`AbstractItemset`](@ref).
 
 This is needed to ensure the Itemset is coherent with the dimensional definition of local
 support. All the propositions (or anchors) in an itemset must be `VariableDistance`s
 wrapping references of the same size.
 
-See also [`Itemset`](@ref), [`itemsetpolicies`](@ref), `SoleData.VariableDistance`.
+See also [`AbstractItemset`](@ref), [`itemsetpolicies`](@ref), `SoleData.VariableDistance`.
 """
 function isdimensionally_coherent_itemset(;)::Function
     # since we have no arguments, this closure seems useless;
     # however, we stick to the same pattern.
 
-    return function _isdimensionally_coherent_itemset(itemset::Itemset)
+    return function _isdimensionally_coherent_itemset(
+        itemset::IT,
+        miner::M
+    ) where {IT<:AbstractItemset, M<:AbstractMiner}
+        itemset = applymask(itemset, miner)
+
         # a generic Itemset contains Atoms and SyntaxTrees:
         # the former are always propositions, while the latter are modal literals;
         # we want to keep only the propositions, since they are the anchor of our itemset.
@@ -138,11 +158,18 @@ Closure returning a boolean function `F` with one argument `rule::ARule`.
 `F` is true if the length of `rule`'s [`antecedent`](@ref) (and [`consequent`](@ref)) does
 not exceed the given thresholds.
 
+
 # Arguments
 - `antecedent_maxlength::Union{Nothing,Integer}=nothing`: maximum antecedent length of
     the given rule; when `nothing`, defaults to `typemax(Int16)`;
 - `consequent_maxlength::Union{Nothing,Integer}=1`: maximum consequent length of the given
     rule; when `nothing`, defaults to `typemax(Int16)`.
+
+!!! note
+    The returned function adheres to the common interface of itemset's policies and,
+    actually, also accepts a second [`AbstractMiner`](@ref) argument.
+
+    In this case, it can be ignored.
 
 See also [`antecedent`](@ref), [`ARule`](@ref), [`arule_policies`](@ref),
 [`consequent`](@ref).
@@ -164,7 +191,10 @@ function islimited_length_arule(;
     antecedent_maxlength = _check(antecedent_maxlength)
     consequent_maxlength = _check(consequent_maxlength)
 
-    return function _islimited_length_arule(rule::ARule)::Bool
+    return function _islimited_length_arule(
+        rule::ARule,
+        _::M
+    )::Bool where {M<:AbstractMiner}
         return length(rule |> antecedent) <= antecedent_maxlength &&
             length(rule |> consequent) <= consequent_maxlength
     end
@@ -173,7 +203,8 @@ end
 """
     function isanchoredarule(; npropositions::Integer=1)::Function
 
-Closure returning a boolean function `F` with one argument `rule::ARule`.
+Closure returning a boolean function `F` with one argument `rule::ARule` and an
+[`AbstractMiner`](@ref).
 
 `F` is true if the given `rule` contains atleast `npropositions` *propositional anchors*
 (that is, propositions without modal operators).
@@ -193,9 +224,11 @@ function isanchoredarule(; npropositions::Integer=1)::Function
             ArgumentError("npropositions must be >= 0 (given value is $(npropositions))"))
     end
 
-    return function _isanchoredarule(rule::ARule)
+    return function _isanchoredarule(rule::ARule, miner::M) where {M<:AbstractMiner}
+        _itemset = antecedent(rule)
+
         return isanchoreditemset(;
-            npropositions=npropositions, ignoreuntillength=0)(antecedent(rule))
+            npropositions=npropositions, ignoreuntillength=0)(_itemset, miner)
     end
 end
 
@@ -228,7 +261,6 @@ function isheterogeneous_arule(;
     consequent_nrepetitions::Integer=0,
     consider_thresholds::Bool=false
 )::Function
-
     if antecedent_nrepetitions < 1
         throw(
             ArgumentError("antecedent_nrepetitions must be >= 1 " *
@@ -266,19 +298,22 @@ function isheterogeneous_arule(;
             (!consider_thresholds || _extract_threshold(item1) == _extract_threshold(item2))
     end
 
-    return function _isheterogeneous_arule(rule::ARule)
+    return function _isheterogeneous_arule(rule::ARule, miner::M) where {M<:AbstractMiner}
+        _antecedent = applymask(antecedent(rule), miner)
+        _consequent = applymask(consequent(rule), miner)
+
         return all(
             # for each antecedent item
             ant_item ->
                 # no other items in antecedent shares (too much) the same variable
                 count(__ant_item ->
-                    ishomogeneous(ant_item, __ant_item), antecedent(rule)
+                    ishomogeneous(ant_item, __ant_item), _antecedent
                 ) <= antecedent_nrepetitions &&
 
                 # every consequent item does not shares (too much) the same variable
                 # with the fixed antecedent
                 count(cons_item ->
-                    ishomogeneous(ant_item, cons_item), consequent(rule)
+                    ishomogeneous(ant_item, cons_item), _consequent
                 ) <= consequent_nrepetitions,
 
             antecedent(rule)

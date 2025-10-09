@@ -155,13 +155,13 @@ struct Miner{
 
         worldfilter::Union{Nothing,WorldFilter}=nothing,
         itemsetpolicies::Vector{<:Function}=Vector{Function}([
-#### TODO            isanchoreditemset(), # to ensure one proposition is the point-of-reference
-#### TODO            isdimensionally_coherent_itemset() # to ensure no different anchors coexist
+            isanchoreditemset(), # to ensure one proposition is the point-of-reference
+            isdimensionally_coherent_itemset() # to ensure no different anchors coexist
         ]),
         arule_policies::Vector{<:Function}=Vector{Function}([
-#### TODO            islimited_length_arule(),
-#### TODO            isanchoredarule(),
-#### TODO            isheterogeneous_arule(),
+            islimited_length_arule(),
+            isanchoredarule(),
+            isheterogeneous_arule(),
         ]),
 
         info::Info=Info(:istrained => false, :size => nothing);
