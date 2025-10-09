@@ -6,6 +6,18 @@ An association rule represents a *frequent* and *meaningful* co-occurrence relat
 the form "X ⇒ Y", between two [`Itemset`](@ref)s X and Y, where X ∩ Y = ∅, respectively
 called [`antecedent`](@ref) and [`consequent`](@ref).
 
+# Interface
+- applymask(rule::ARule, miner::AbstractMiner)
+- SmallItemset(rule::ARule)
+- Itemset(rule::ARule)
+- content(rule::ARule)
+- antecedent(rule::ARule{IT}) where {IT}
+- consequent(rule::ARule{IT}) where {IT}
+- Base.:(==)(rule1::ARule, rule2::ARule)
+- Base.convert(::Type{Itemset}, arule::ARule)
+- Base.convert(::Type{SmallItemset}, arule::ARule)
+- Base.hash(arule::ARule, h::UInt)
+
 !!! note
     Extracting all the [`ARule`](@ref) "hidden" in the data is the main purpose of
     association rule mining (ARM).
