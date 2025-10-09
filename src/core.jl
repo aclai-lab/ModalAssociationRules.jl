@@ -75,7 +75,7 @@ function applypolicies!(
     miner::M
 ) where {IT<:AbstractItemset, M<:AbstractMiner}
     filter!(target -> all(
-        policy -> policy(target, miner), itemsetpolicies(policies_pool)), itemsets)
+        policy -> policy(target, miner), itemsetpolicies(miner)), itemsets)
 end
 function applypolicies!(
     arules::Vector{ARule},
