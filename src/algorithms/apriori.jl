@@ -98,8 +98,7 @@ function apriori(
     # TODO: this should not assume UInt64 precision! use "; prec=precision(miner)"
     candidates = itemsetpopulation(miner)
 
-    # applypolicies!(candidates, miner)  # apply filtering policies
-    # TODO policies are disabled while replacing the old Itemset type with the new one
+    applypolicies!(candidates, miner)  # apply filtering policies
 
     # this is a buffer containing ONLY the frequent itemsets of length k-1
     # TODO: probably, is better to use some other Set definition
@@ -135,8 +134,7 @@ function apriori(
         verbose && printstyled("Starting new computational loop with " *
             "$(length(candidates)) candidates (of length $(k))...\n", color=:green)
 
-        # TODO: policies are disabled while replacing the old Itemset type with the new one
-        # applypolicies!(candidates, miner)  # apply filtering policies
+        applypolicies!(candidates, miner)  # apply filtering policies
     end
 
     return miner
