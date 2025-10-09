@@ -40,7 +40,9 @@ end
 """
     formula(item::Item{F}) where {F}
 
-See also [`Item`](@ref), [SoleLogics.Formula](https://aclai-lab.github.io/SoleLogics.jl/stable/getting-started/#SoleLogics.Formula).
+Return the `SoleLogics.Formula` wrapped within `item`.
+
+See also [`Item`](@ref).
 """
 formula(item::Item{F}) where {F<:SoleLogics.Formula} = item.formula
 
@@ -74,7 +76,7 @@ end
 """
     const ItemCollection{N,I} = Ref{SVector{N,I}} where {N,I<:AbstractItem}
 
-`Ref`erence to a collection of [`Item`](@ref)s.
+Reference to a collection of [`Item`](@ref)s.
 
 See also [`AbstractItem`](@ref), [`Item`](@ref).
 """
