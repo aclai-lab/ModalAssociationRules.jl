@@ -1,4 +1,3 @@
-import Base.filter!
 using Base.Threads
 
 """
@@ -398,47 +397,6 @@ miningstate!(miner::Miner, key::Symbol, inner_key, val) = begin
     end
 end
 
-# TODO - this should be moved to core
-"""
-    Base.filter!(
-        targets::Vector{Union{ARule,Itemset}},
-        policies_pool::Vector{Function}
-    )
-
-Apply `Base.filter!` on an [`ARule`](@ref)s or [`Itemset`](@ref)s collection,
-w.r.t. the family of policies `policies_pool`.
-
-See also [`ARule`](@ref), [`Base.filter!(::Vector{Itemset}, ::Miner)`](@ref),
-[`Itemset`](@ref), [`Base.filter!(::Vector{ARule}, ::Miner)`](@ref), [`Miner`](@ref).
-"""
-function Base.filter!(
-    targets::Union{<:Vector{<:ARule},Vector{IT}},
-    policies_pool::Vector{<:Function}
-) where {IT<:AbstractItemset}
-    filter!(target -> all(policy -> policy(target), policies_pool), targets)
-end
-
-"""
-    Base.filter!(itemsets::Vector{Itemset}, miner::Miner)
-
-`filter!` the [`Itemset`](@ref)s wrapped in `miner`.
-
-See also [`Base.filter!(::Vector{ARule}, ::Miner)`](@ref), [`Itemset`](@ref),
-[`itemsetpolicies`](@ref), [`Miner`](@ref).
-"""
-Base.filter!(itemsets::Vector{IT}, miner::Miner) where {IT<:AbstractItemset} = filter!(
-    itemsets, itemsetpolicies(miner)
-)
-
-"""
-    Base.filter!(arules::Vector{ARule}, miner::Miner)
-
-See also [`ARule`](@ref), [`arule_policies`](@ref),
-[`Base.filter!(::Vector{Itemset}, ::Miner)`](@ref), [`Itemset`](@ref), [`Miner`](@ref).
-"""
-Base.filter!(arules::Vector{ARule}, miner::Miner) = filter!(
-    arules, arule_policies(miner)
-)
 
 """
 miningstate(miner::Miner)

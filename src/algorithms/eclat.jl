@@ -35,7 +35,7 @@ function eclat(miner::M)::M where {M<:AbstractMiner}
     # given an item c, we collect the instance IDs on which c holds;
     # if the mining is constrained, we ensure the constraints are applied on 1-itemsets.
     candidates = Itemset{_itemtype}.(items(miner))
-    filter!(candidates, miner)
+    applypolicies!(candidates, miner)
 
     # actually, the (modal) vertical format associates a more complex structure:
     # itemset => [

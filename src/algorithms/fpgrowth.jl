@@ -64,7 +64,7 @@ function patternbase(
     end
 
     # assert pattern base does not contain dirty leftovers
-    filter!(x -> !isempty(first(x)), _patternbase)
+    applypolicies!(x -> !isempty(first(x)), _patternbase)
 
     return _patternbase, leftout_count
 end
@@ -97,14 +97,14 @@ function bounce!(pbase::ConditionalPatternBase, miner::AbstractMiner)
     end
 
     for enhanceditemset in pbase
-        filter!(_item ->
+        applypolicies!(_item ->
             count_accumulator[_item] / _nworlds >= _lsupport_threshold,
             enhanceditemset |> itemset
         )
     end
 
     # assert pattern base does not contain dirty leftovers
-    filter!(x -> !isempty(first(x)), pbase)
+    applypolicies!(x -> !isempty(first(x)), pbase)
 end
 
 """

@@ -34,7 +34,7 @@ isheterogeneous_arule
 To apply the policies, simply call the following.
 
 ```@docs
-Base.filter!(targets::Vector{Union{ARule,Itemset}}, policies_pool::Vector{Function})
+applypolicies!(targets::Vector{Union{ARule,Itemset}}, policies_pool::Vector{Function})
 ```
 
 ## Anchored semantics

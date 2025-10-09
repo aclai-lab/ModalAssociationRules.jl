@@ -60,3 +60,25 @@ See ealso [`hasminingstate`](@ref), [`AbstractMiner`](@ref), [`MiningState`](@re
 [`miningstate`](@ref).
 """
 initminingstate(::Function, ::MineableData)::MiningState = MiningState()
+
+"""
+    applypolicies!(itemsets::Vector{IT}, miner::Miner) where {IT<:AbstractItemset}
+    applypolicies!(arules::Vector{ARule}, miner::Miner)
+
+Apply the policies wrapped within `miner` to the first argument, which can either be
+a collection of [`AbstractItemset`](@ref) or of [`ARule`](@ref).
+
+See also [`itemsetpolicies`](@ref).
+"""
+function applypolicies!(
+    itemsets::Vector{IT},
+    miner::Miner
+) where {IT<:AbstractItemset}
+    filter!(target -> all(policy -> policy(target, miner), policies_pool), itemsets)
+end
+function applypolicies!(
+    arules::Vector{ARule},
+    miner::Miner
+)
+    filter!(target -> all(policy -> policy(target, miner), policies_pool), arules)
+end

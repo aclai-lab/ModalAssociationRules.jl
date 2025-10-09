@@ -621,7 +621,7 @@ long_itemset2 = [convert(Char,i) for i in 81:90] .|> Atom .|> Item |> Itemset
 
 # here, we try to apply such a policy to an arbitrary set of rules,
 # even if they are external to the miner itself.
-@test Base.filter!([ARule(long_itemset1, long_itemset2)], fpgrowth_miner) |> length == 0
+@test applypolicies!([ARule(long_itemset1, long_itemset2)], fpgrowth_miner) |> length == 0
 
 @test_nowarn partial_deepcopy(fpgrowth_miner)
 
