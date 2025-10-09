@@ -59,3 +59,5 @@ m = Miner(
     [(gsupport, 0.1, 0.1)],
     [(gconfidence, 0.0, 0.0)],
 )
+
+mine!(m)
