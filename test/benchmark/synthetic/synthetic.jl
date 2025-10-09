@@ -43,7 +43,6 @@ times = []
 memory = []
 
 # for each algorithm
-m = nothing
 for algorithm in [apriori]
 
     _times = []
@@ -51,7 +50,10 @@ for algorithm in [apriori]
 
     # measure time and memory across different instance and alphabet cardinalities
     for _ninstances in ProgressBar(12:1:12)
-        items = Item.(alphabet[1:_ninstances])
+        items = vcat(
+            Item.(alphabet[1:_ninstances]),
+            Item.(diamond().(alphabet[1:6]))
+        )
         _itemmeasures = [(gsupport, 0.01, 0.01)]
         _rulemeasures = [(gconfidence, 0.8, 0.8)]
 
@@ -65,7 +67,7 @@ for algorithm in [apriori]
             for i in 1:_ninstances
         ]) |> Logiset;
 
-        miner = Miner(modaldataset, algorithm, items, UInt64, _itemmeasures, _rulemeasures;
+        miner = Miner(modaldataset, algorithm, items, _itemmeasures, _rulemeasures;
             itemset_policies=Function[],
             arule_policies=Function[]
         );
@@ -74,8 +76,6 @@ for algorithm in [apriori]
             localmemo($miner) |> empty!
             globalmemo($miner) |> empty!
         end evals=EVALS samples=SAMPLES gctrial=GCTRIAL
-
-        m = miner
 
         push!(_times, newtrial |> time)
         push!(_memory, newtrial.memory)
