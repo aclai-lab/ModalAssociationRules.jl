@@ -71,14 +71,14 @@ SmallItemset(rule::ARule) = convert(SmallItemset, rule)
 Itemset(rule::ARule) = convert(Itemset, rule)
 
 """
-    content(rule::ARule)::Tuple{Itemset,Itemset}
+    content(rule::ARule)
 
 Getter for the content of an [`ARule`](@ref), that is, both its [`antecedent`](@ref) and
 its [`consequent`](@ref).
 
 See also [`antecedent`](@ref), [`ARule`](@ref), [`consequent`](@ref), [`Itemset`](@ref).
 """
-content(rule::ARule)::Tuple{Itemset,Itemset} = (rule.antecedent, rule.consequent)
+content(rule::ARule) = (rule.antecedent, rule.consequent)
 
 """
     antecedent(rule::ARule)::Itemset
