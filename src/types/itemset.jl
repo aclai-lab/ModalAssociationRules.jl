@@ -42,6 +42,10 @@ struct SmallItemset{N,U<:Unsigned} <: AbstractItemset
         new{1,U}(SVector{1,U}(mask))
     end
 
+    function SmallItemset{N,U}(mask::U) where {N,U}
+        new{N,U}(SVector{N,U}(mask))
+    end
+
     function SmallItemset(v::Vector{T}) where {T}
         lv = length(v)
         new{lv,T}(SVector{lv,T}(v))
@@ -370,3 +374,19 @@ See also [`Item`](@ref), [`Itemset`](@ref),
 formula(itemset::Itemset)::SoleLogics.LeftmostConjunctiveForm = begin
     formula.(itemset) |> LeftmostConjunctiveForm
 end
+
+"""
+    applymask(itemset::Itemset, _::A) where {A<:AbstractMiner}
+
+Do nothing, and return `itemset`.
+
+!!! warning
+    This is a patch to let [`Itemset`](@ref) adhere to [`AbstractItemset`](@ref) interface,
+    and only serves the purpose to forcibly use Itemset type during mining without breaking
+    the code.
+
+    During [`fpgrowth`](@ref), an items ordering must be tracked, but the current
+    implementations of [`AbstractItemset`](@ref)s, such as [`SmallItemset`](@ref), do not
+    allow for this.
+"""
+applymask(itemset::Itemset, _::A) where {A<:AbstractMiner} = itemset
