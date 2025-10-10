@@ -1,34 +1,34 @@
 """
-    const EnhancedItemset = Tuple{IT,Int64} where {IT<:AbstractItemset}
+    const EnhancedItemset = Tuple{Itemset,Int64}
 
-Compressed representation of many, identical [`AbstractItemset`](@ref)s.
+Compressed representation of many, identical [`Itemset`](@ref)s.
 
-See also [`AbstractItemset`](@ref).
+See also [`Itemset`](@ref).
 """
-const EnhancedItemset{IT} = Tuple{IT,Int64} where {IT<:AbstractItemset}
+const EnhancedItemset = Tuple{Itemset,Int64}
 
 """
-    itemset(enhitemset::EnhancedItemset{IT}) where {IT<:AbstractItemset}
+    itemset(enhitemset::EnhancedItemset{IT}) where {IT<:Itemset}
 
 Getter for the [`Itemset`](@ref) wrapped within an [`EnhancedItemset`](@ref).
 
 See also [`EnhancedItemset`](@ref), [`Itemset`](@ref).
 """
-itemset(enhitemset::EnhancedItemset{IT}) where {IT} = first(enhitemset)
+itemset(enhitemset::EnhancedItemset) = first(enhitemset)
 
 """
     itemset(enhitemset::EnhancedItemset{IT})::UInt64
 
 Getter for the integer counter wrapped within `enhitemset`.
 
-See also [`AbstractItemset`](@ref), [`EnhancedItemset`](@ref).
+See also [`Itemset`](@ref), [`EnhancedItemset`](@ref).
 """
-count(enhitemset::EnhancedItemset{IT})::UInt64 where {IT} = last(enhitemset)
+count(enhitemset::EnhancedItemset)::UInt64 = last(enhitemset)
 
-function Base.convert(::Type{EnhancedItemset{IT}}, itemset::IT, count::Int64) where {IT}
+function Base.convert(::Type{EnhancedItemset}, itemset::Itemset, count::Int64)
     return EnhancedItemset((itemset, count))
 end
-function Base.convert(::Type{IT}, enhanceditemset::EnhancedItemset{IT}) where {IT}
+function Base.convert(::Type{IT}, enhanceditemset::EnhancedItemset)
     return first(enhanceditemset)
 end
 
@@ -48,7 +48,7 @@ Collection of [`EnhancedItemset`](@ref).
 
 See also [`EnhancedItemset`](@ref), [`fpgrowth`](@ref), [`FPTree`](@ref).
 """
-const ConditionalPatternBase{IT} = Vector{EnhancedItemset{IT}} where {IT<:AbstractItemset}
+const ConditionalPatternBase = Vector{EnhancedItemset}
 
 
 """
