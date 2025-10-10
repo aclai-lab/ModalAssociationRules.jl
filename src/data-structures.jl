@@ -28,7 +28,7 @@ count(enhitemset::EnhancedItemset)::UInt64 = last(enhitemset)
 function Base.convert(::Type{EnhancedItemset}, itemset::Itemset, count::Int64)
     return EnhancedItemset((itemset, count))
 end
-function Base.convert(::Type{IT}, enhanceditemset::EnhancedItemset)
+function Base.convert(::Type{Itemset}, enhanceditemset::EnhancedItemset)
     return first(enhanceditemset)
 end
 
