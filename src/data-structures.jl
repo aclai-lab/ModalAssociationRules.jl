@@ -1,34 +1,34 @@
 """
-    const EnhancedItemset = Tuple{Itemset,UInt32}
+    const EnhancedItemset = Tuple{IT,Int64} where {IT<:AbstractItemset}
 
-Compressed representation of multiple, identical [`Itemset`](@ref)s.
+Compressed representation of many, identical [`AbstractItemset`](@ref)s.
 
-See also [`Itemset`](@ref).
+See also [`AbstractItemset`](@ref).
 """
-const EnhancedItemset = Tuple{<:Itemset,Integer}
+const EnhancedItemset{IT} = Tuple{IT,Int64} where {IT<:AbstractItemset}
 
 """
-    itemset(enhitemset::EnhancedItemset)::Itemset
+    itemset(enhitemset::EnhancedItemset{IT}) where {IT<:AbstractItemset}
 
 Getter for the [`Itemset`](@ref) wrapped within an [`EnhancedItemset`](@ref).
 
 See also [`EnhancedItemset`](@ref), [`Itemset`](@ref).
 """
-itemset(enhitemset::EnhancedItemset) = first(enhitemset)
+itemset(enhitemset::EnhancedItemset{IT}) where {IT} = first(enhitemset)
 
 """
-    itemset(enhitemset::EnhancedItemset)::Integer
+    itemset(enhitemset::EnhancedItemset{IT})::UInt64
 
 Getter for the integer counter wrapped within `enhitemset`.
 
-See also [`EnhancedItemset`](@ref), [`Itemset`](@ref).
+See also [`AbstractItemset`](@ref), [`EnhancedItemset`](@ref).
 """
-count(enhitemset::EnhancedItemset)::Integer = last(enhitemset)
+count(enhitemset::EnhancedItemset{IT})::UInt64 where {IT} = last(enhitemset)
 
-function Base.convert(::Type{EnhancedItemset}, itemset::Itemset, count::Integer)
+function Base.convert(::Type{EnhancedItemset{IT}}, itemset::IT, count::Int64) where {IT}
     return EnhancedItemset((itemset, count))
 end
-function Base.convert(::Type{Itemset}, enhanceditemset::EnhancedItemset)
+function Base.convert(::Type{IT}, enhanceditemset::EnhancedItemset{IT}) where {IT}
     return first(enhanceditemset)
 end
 
@@ -48,7 +48,7 @@ Collection of [`EnhancedItemset`](@ref).
 
 See also [`EnhancedItemset`](@ref), [`fpgrowth`](@ref), [`FPTree`](@ref).
 """
-const ConditionalPatternBase = Vector{EnhancedItemset}
+const ConditionalPatternBase{IT} = Vector{EnhancedItemset{IT}} where {IT<:AbstractItemset}
 
 
 """
@@ -88,7 +88,7 @@ mutable struct FPTree
     content::Union{Nothing,Item}        # Item contained in this node (nothing if root)
     parent::Union{Nothing,FPTree}       # parent node
     const children::Vector{FPTree}      # children nodes
-    count::Integer                        # number of equal Items this node represents
+    count::Int64                        # number of equal Items this node represents
 
     link::Union{Nothing,FPTree}         # link to another FPTree root
 
