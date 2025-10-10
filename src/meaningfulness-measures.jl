@@ -96,6 +96,7 @@ macro localmeasure(measname, measlogic)
                 # of the meaningfulness measure callback.
                 if hasminingstate(miner, state) && haskey(response, state)
                     _explicitsubject = applymask(subject, miner)
+
                     miningstate!(
                         miner,
                         state,
