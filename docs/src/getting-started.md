@@ -308,7 +308,7 @@ hasminingstate(bulldozer::Bulldozer, key::Symbol)
 measures(bulldozer::Bulldozer)
 
 reduceminer!(local_results::AbstractVector{B}) where {B<:Bulldozer}
-load_localmemo!(miner::AbstractMiner, localmemo::LmeasMemo)
+loadlocalmemo!(miner::AbstractMiner, localmemo::LmeasMemo)
 ```
 
 

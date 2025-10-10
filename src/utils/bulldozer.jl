@@ -360,7 +360,7 @@ function reduceminer!(local_results::AbstractVector{B}) where {B<:Bulldozer}
 end
 
 """
-    function load_localmemo!(miner::AbstractMiner, localmemo::LmeasMemo)
+    function loadlocalmemo!(miner::AbstractMiner, localmemo::LmeasMemo)
 
 Load a local memoization structure inside `miner`.
 Also, returns a dictionary associating each loaded local [`Itemset`](@ref) loaded to its
@@ -368,7 +368,7 @@ its global support, in order to simplify `miner`'s job when working in the globa
 
 See also [`Itemset`](@ref), [`LmeasMemo`](@ref), [`lsupport`](@ref), [`Miner`](@ref).
 """
-function load_localmemo!(miner::AbstractMiner, localmemo::LmeasMemo)
+function loadlocalmemo!(miner::AbstractMiner, localmemo::LmeasMemo)
     fragments = DefaultDict{Itemset,Integer}(0)
     min_lsupport_threshold = findmeasure(miner, lsupport)[2]
 
