@@ -143,17 +143,17 @@ include("algorithms/eclat.jl")
 
 export eclat
 
-#### include("algorithms/anchored-semantics.jl")
-####
-#### export anchored_semantics
-#### export anchored_growprune, anchored_apriori
-#### export anchored_fpgrowth
+include("algorithms/anchored-semantics.jl")
+
+export anchored_semantics
+export anchored_growprune, anchored_apriori
+export anchored_fpgrowth
 ####
 #### # utilities to help an user generate an alphabet graphically;
 #### # see future-work folder.
 #### # include("alphabet-proposal.jl")
 #### # export motifsalphabet
 ####
-#### include("deprecate.jl")
+include("deprecate.jl")
 
 end
