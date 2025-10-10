@@ -183,7 +183,7 @@ function fpgrowth(miner::M)::M where {M<:AbstractMiner}
 
     # reduce all the local-memoization structures obtained before,
     # and proceed to compute global supports
-    local_results = miner_reduce!(local_results)
+    local_results = reduceminer!(local_results)
     fpgrowth_fragments = load_localmemo!(miner, local_results)
 
     # global setting

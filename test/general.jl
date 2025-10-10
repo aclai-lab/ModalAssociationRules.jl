@@ -590,7 +590,7 @@ for x in r2
     localmemo!(b2, (:lsupport, pq, x), 0.56)
 end
 
-blmemo = miner_reduce!([b1,b2])
+blmemo = reduceminer!([b1,b2])
 @test length(blmemo) == 20
 
 @test datatype(b1) <: SupportedLogiset

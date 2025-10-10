@@ -510,7 +510,7 @@ end
 # this generic reducer could be implemented;
 # it might require a bit of refactoring but should be correct.
 """
-    miner_reduce!(miners::AbstractVector{M}) where {M<:AbstractMiner}
+    reduceminer!(miners::AbstractVector{M}) where {M<:AbstractMiner}
 
 Reduce multiple [`AbstractMiner`](@ref), obtaining a new miner of the same type, wrapping
 all the items within `miners` vector, as well as the data related to [`localmemo`](@ref)
@@ -534,7 +534,7 @@ and [`globalmemo`](@ref) [`MeaningfulnessMeasure`](@ref)s.
 See also [`AbstractMiner`](@ref), [`localmemo`](@ref), [`MeaningfulnessMeasure`](@ref),
 [`globalmemo`](@ref).
 """
-function miner_reduce!(
+function reduceminer!(
     miners::AbstractVector{M};
     includeitems::Bool=true,
     includefreqitems::Bool=true,

@@ -84,7 +84,7 @@ export info, info!, hasinfo
 export mine!, apply!
 export generaterules, generaterules!
 
-export partial_deepcopy, miner_reduce!
+export partial_deepcopy, reduceminer!
 
 include("mining-policies.jl")
 

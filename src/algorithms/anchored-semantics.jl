@@ -102,14 +102,14 @@ function anchored_semantics(miner::M; kwargs...)::M where {M<:AbstractMiner}
         Threads.@spawn miningalgo(_miner; kwargs...)
     end
 
-    # NOTE - miner_reduce! is currently called with default kwargs, as they are virtually
+    # NOTE - reduceminer! is currently called with default kwargs, as they are virtually
     # always the best choice
 
-    resulting_miner = miner_reduce!(fetch.(tasks))
+    resulting_miner = reduceminer!(fetch.(tasks))
 
     # perform one latest reduce operation to overwrite the argument miner;
     # this is a bit of overhead.
-    return miner_reduce!([miner, resulting_miner])
+    return reduceminer!([miner, resulting_miner])
 end
 
 
