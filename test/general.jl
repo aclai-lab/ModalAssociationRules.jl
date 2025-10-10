@@ -5,12 +5,15 @@ using ModalAssociationRules
 using StatsBase
 
 using SoleData
+using SoleData.Artifacts
 using SoleLogics
 
 import ModalAssociationRules.children, ModalAssociationRules.info
 
+##### use case example #####################################################################
+
 # load NATOPS dataset and convert it to a Logiset
-X_df, y = load_NATOPS()
+X_df, y = load(NatopsLoader())
 X1 = scalarlogiset(X_df)
 
 # different tested algorithms will use different Logiset's copies,
@@ -51,6 +54,16 @@ pqr = Itemset{Item}([manual_p, manual_q, manual_r])
 pqs = Itemset{Item}([manual_p, manual_q, manual_s])
 r = Itemset{Item}(manual_r)
 
+raw_p = SmallItemset(UInt64(1))
+raw_q = SmallItemset(UInt64(2))
+raw_r = SmallItemset(UInt64(4))
+raw_s = SmallItemset(UInt64(8))
+raw_pq = union(raw_p, raw_q)
+raw_qr = union(raw_q, raw_r)
+raw_pr = union(raw_p, raw_r)
+raw_pqr = union(union(raw_p, raw_q), raw_r)
+raw_pqs = union(union(raw_p, raw_q), raw_s)
+
 @test pq in pq
 @test qr in pqr
 @test (pqr in [pq,qr]) == false
@@ -85,30 +98,32 @@ enhanceditemset = convert(EnhancedItemset, pq, 42)
 
 @test ConditionalPatternBase <: Vector{EnhancedItemset}
 
-@test_nowarn ARule(pq, Itemset([manual_r]))
+# due to a major refactoring with the package, Itemset is actually an utility type and
+# is used mostly to just pretty print a raw bitmask over applied to an itemset collection;
+# now, ARule can only embody AbstractItemsets
+@test_throws MethodError ARule(pq, Itemset([manual_r]))
 
-arule = ARule(pq, Itemset([manual_r]))
+arule = ARule(raw_pq, raw_r)
 @test content(arule) |> first == antecedent(arule)
 @test content(arule) |> last == consequent(arule)
-@test Itemset(arule) == pqr
 
-arule2 = ARule(qr, Itemset([manual_p]))
-arule3 = ARule(Itemset([manual_q, manual_p]), Itemset([manual_r]))
+arule2 = ARule(raw_qr, raw_p)
+arule3 = ARule(raw_pq, raw_r)
 
 @test arule != arule2
 @test arule == arule3
 
-@test_throws ArgumentError ARule(qr, Itemset([manual_q]))
+@test_throws ArgumentError ARule(raw_qr, raw_q)
 
 @test MeaningfulnessMeasure <: Tuple{Function,Threshold,Threshold}
 
-@test ARMSubject <: Union{ARule,Itemset}
+@test ARMSubject <: Union{ARule,Itemset,SmallItemset}
 @test LmeasMemoKey <: Tuple{Symbol,ARMSubject,Integer}
 @test LmeasMemo <: Dict{LmeasMemoKey,Threshold}
 @test GmeasMemoKey <: Tuple{Symbol,ARMSubject}
 @test GmeasMemo <: Dict{GmeasMemoKey,Threshold}
 
-# "core.jl - Miner"
+##### things related to Miner ##############################################################
 mine!(fpgrowth_miner)
 
 @test_nowarn Miner(X1, apriori, manual_items)
@@ -169,7 +184,7 @@ _temp_apriori_miner = Miner(X1, apriori, manual_items, _itemsetmeasures, _ruleme
 @test_nowarn repr("text/plain", _temp_miner)
 
 
-# meaningfulness measures
+##### meaningfulness measures ##############################################################
 @test islocalof(lsupport, lsupport) == false
 @test islocalof(lsupport, gsupport) == true
 @test islocalof(gsupport, lsupport) == false
@@ -211,23 +226,13 @@ lsupport(Itemset(manual_lr), SoleLogics.getinstance(X2, 7), fpgrowth_miner)
 # more on Miner miningstate (a.k.a, "customization system")
 @test ModalAssociationRules.initminingstate(apriori, data(apriori_miner)) == MiningState()
 
-# "rulemining-utils.jl"
-@test combineitems([pq, qr], 3) |> first == pqr
-@test combineitems([manual_p, manual_q], [manual_r]) |> collect |> length == 3
-@test combineitems([manual_p, manual_q], [manual_r]) |>
-    collect |> first == Itemset([manual_p, manual_r])
-
-# Deprecated test
-# @test growprune([pq,qr,pr], [pq,qr,pr], 3) |> collect |> unique == pqr
-# @test generaterules(freqitems(fpgrowth_miner), fpgrowth_miner) |> first isa ARule
-
 _rulemeasures_just_for_test = [(ModalAssociationRules.gconfidence, 1.1, 1.1)]
 _temp_fpgrowth_miner = Miner(
     X3, fpgrowth, [manual_p, manual_lp], _itemsetmeasures, _rulemeasures_just_for_test)
 @test mine!(_temp_fpgrowth_miner) |> collect == ARule[]
 @test_nowarn globalmemo(_temp_fpgrowth_miner)
 
-# "fpgrowth.jl - FPTree"
+##### fptree data structure ################################################################
 root = FPTree()
 @test root isa FPTree
 @test content(root) === nothing
@@ -359,6 +364,8 @@ end
 
 
 
+##### more on fptrees ######################################################################
+
 fpt = FPTree(pqr)
 @test_throws MethodError htable = HeaderTable([pqr], fpt)
 @test_nowarn @eval htable = HeaderTable(fpt)
@@ -400,10 +407,7 @@ itemset_from_formula = Itemset(CONJUNCTION(Atom("p"), Atom("q")))
 
 @test_nowarn syntaxstring(EnhancedItemset((itemset_from_formula, 1)))
 
-itemset_1 = Itemset(Atom("p"))
-itemset_2 = Itemset(Atom("q"))
-arule1 = ARule((itemset_1, itemset_2))
-@test convert(Itemset, arule1) == Itemset([itemset_1..., itemset_2...])
+arule1 = ARule((raw_p, raw_q))
 
 @test_nowarn Base.hash(arule1, UInt(42))
 
@@ -432,7 +436,7 @@ _genericMiner = genericMiner()
 
 
 
-##### Creation of a custom Miner
+##### Creation of a custom Miner ###########################################################
 
 struct statefulMiner <: AbstractMiner
     miningstate::MiningState
@@ -480,22 +484,23 @@ end
 
 
 
-##### Mining policies edge cases
+##### Mining policies edge cases ###########################################################
 
 _my_itemset = ["p", "q"] .|> Atom .|> Item |> Itemset
 @test_nowarn isanchoreditemset()(_my_itemset)
-@test_throws ArgumentError isanchoreditemset(npropositions=-1)(_my_itemset)
+@test_throws ArgumentError isanchoreditemset(npropositions=-1)(_my_itemset, fpgrowth_miner)
 
 _my_vd1 = VariableDistance(1, [[1,2,3,4,5]])
 _my_p = Atom(ScalarCondition(_my_vd1, <=, 1.5)) |> Item
-isdimensionally_coherent_itemset()(_my_p |> Itemset)
+isdimensionally_coherent_itemset()(_my_p |> Itemset, fpgrowth_miner)
 
 _my_q = Atom(ScalarCondition(VariableMin(1), >=, 3)) |> Item
 _my_non_dimensionally_coherent_itemset = [_my_p, _my_q] |> Itemset
 
 # the following is false, since _my_q references a generic variable #1, while
 # _my_p is applied specifically to vectors having 5 components.
-@test isdimensionally_coherent_itemset()(_my_non_dimensionally_coherent_itemset) == false
+@test isdimensionally_coherent_itemset()(
+    _my_non_dimensionally_coherent_itemset, fpgrowth_miner) == false
 
 _my_vd2 = VariableDistance(1, [[5,6,7]])
 _my_r = Atom(ScalarCondition(_my_vd2, <=, 1.5)) |> Item
@@ -503,7 +508,8 @@ _my_non_dimensionally_coherent_itemset2 = [_my_p, _my_r] |> Itemset
 
 # the following is false since _my_p references a vector having 5 components, while
 # _my_r, although being a VariableDistance, is designed to deal with 3-component vectors.
-@test isdimensionally_coherent_itemset()(_my_non_dimensionally_coherent_itemset2) == false
+@test isdimensionally_coherent_itemset()(
+    _my_non_dimensionally_coherent_itemset2, fpgrowth_miner) == false
 
 
 # beware: the following are dimensionally coherent since they both wrap scalars!
@@ -516,7 +522,8 @@ _my_dimensionally_itemset = Itemset([
     ScalarCondition(VariableDistance(1, [1,2,3,4,5]), <=, 1.0) |> Atom |> Item,
     ScalarCondition(VariableDistance(1, [1,2,3]), <=, 1.0) |> Atom |> Item
 ])
-@test isdimensionally_coherent_itemset()(_my_dimensionally_itemset) == true
+@test isdimensionally_coherent_itemset()(
+    _my_dimensionally_itemset, fpgrowth_miner) == true
 
 
 # these, instead, are two items wrapping 1 vector of 5 elements and 1 vector of 3 elements
@@ -524,26 +531,14 @@ _my_dimensionally_itemset = Itemset([
     ScalarCondition(VariableDistance(1, [[1,2,3,4,5]]), <=, 1.0) |> Atom |> Item,
     ScalarCondition(VariableDistance(1, [[1,2,3]]), <=, 1.0) |> Atom |> Item
 ])
-@test isdimensionally_coherent_itemset()(_my_dimensionally_itemset) == false
+@test isdimensionally_coherent_itemset()(
+    _my_dimensionally_itemset, fpgrowth_miner) == false
 
 _my_vd1 = VariableDistance(1, [[1,2,3,4,5], [1,2,3,4,5]])
 
 
 
-##### Dataset loaders
-
-# the following tests works fine when running in local, but returns the error below in CI;
-# since they are already tested in SoleData (.Artifacts submodule), they can be removed.
-#
-# Expression: isempty(stderr_content)
-# Evaluated: isempty("┌ Warning: `load_epilepsy()` is deprecated, use `load(EpilepsyLoader())` instead.\n│   caller = #185 at Test.jl:925 [inlined]\n└ @ Core /opt/hostedtoolcache/julia/1.11.6/x64/share/julia/stdlib/v1.11/Test/src/Test.jl:925\n")
-#
-# @test_nowarn load_NATOPS()
-# @test_nowarn load_hugadb()
-# @test_nowarn load_libras()
-# @test_nowarn load_epilepsy()
-
-##### AbstractMiner functionalities
+##### AbstractMiner functionalities ########################################################
 
 @test_nowarn localmemo!(fpgrowth_miner, (:lsupport, pq, 1), 0.56)
 @test localmemo(fpgrowth_miner, (:lsupport, pq, 1)) == 0.56
@@ -555,7 +550,7 @@ _my_vd1 = VariableDistance(1, [[1,2,3,4,5], [1,2,3,4,5]])
 @test_nowarn miningstate!(fpgrowth_miner, :worldmask, (1, pq), [0,0,0])
 @test miningstate(fpgrowth_miner, :worldmask)[(1,pq)] == BitVector([0,0,0])
 
-@test_throws ErrorException generaterules([pq], genericMiner()) |> first
+@test_throws ErrorException generaterules([raw_pq], genericMiner()) |> first
 @test_throws ErrorException generaterules!(genericMiner())
 @test_throws ErrorException arule_analysis(arule3, genericMiner())
 @test_throws MethodError all_arule_analysis(genericMiner())
@@ -575,7 +570,7 @@ filtered_miner = Miner(
 @test_nowarn SoleLogics.allworlds(filtered_miner)
 
 
-##### Bulldozer
+##### Bulldozer ############################################################################
 
 r1 = 1:10
 r2 = 11:20
@@ -596,7 +591,7 @@ blmemo = reduceminer!([b1,b2])
 @test datatype(b1) <: SupportedLogiset
 
 
-##### Checking that MultiLogiset is Miner wrapping a custom MultiLogiset
+##### Checking that MultiLogiset is Miner wrapping a custom MultiLogiset ###################
 
 # we artificially create a little frame
 X_df2 = deepcopy(X_df)
@@ -613,17 +608,7 @@ X_multi = SoleData.MultiLogiset([X1, scalarlogiset(X_df2)])
     X_multi, apriori, manual_items, _itemsetmeasures, _rulemeasures)
 
 
-##### Utilities
-
-# fpgrowth contains a policy to filter out association rules that are "too long"
-long_itemset1 = [convert(Char,i) for i in 65:80] .|> Atom .|> Item |> Itemset
-long_itemset2 = [convert(Char,i) for i in 81:90] .|> Atom .|> Item |> Itemset
-
-# here, we try to apply such a policy to an arbitrary set of rules,
-# even if they are external to the miner itself.
-@test applypolicies!([ARule(long_itemset1, long_itemset2)], fpgrowth_miner) |> length == 0
-
-@test_nowarn partial_deepcopy(fpgrowth_miner)
+##### Utilities ############################################################################
 
 # dummy names to reference each item
 variablenames = [
@@ -634,15 +619,16 @@ variablenames = [
 @test_nowarn begin
     redirect_stdout(devnull) do
         all_arule_analysis(fpgrowth_miner, variablenames)
-    end
+        Base.show(stdout, arule, fpgrowth_miner; variablenames=variablenames)
+   end
 end
 
 
-##### Policies
+##### Policies #############################################################################
 
 @test_throws ArgumentError islimited_length_itemset(; maxlength=0)
-@test islimited_length_itemset(; maxlength=nothing)(long_itemset1) == true
-@test islimited_length_itemset(; maxlength=5)(long_itemset1) == false
+@test islimited_length_itemset(; maxlength=nothing)(long_itemset1, fpgrowth_miner) == true
+@test islimited_length_itemset(; maxlength=5)(long_itemset1, fpgrowth_miner) == false
 
 @test_throws ArgumentError islimited_length_arule(antecedent_maxlength=0)
 @test_throws ArgumentError isanchoredarule(npropositions=-1)
@@ -661,7 +647,7 @@ X4 = scalarlogiset(X_df, _my_dimensionally_itemset .|> feature)
     _my_dimensionally_itemset, X4, 1, fpgrowth_miner)[:measure] == 0.0
 
 
-##### Anchored semantics
+##### Anchored semantics ###################################################################
 
 apriori_unanchored_miner = Miner(
     X1,
