@@ -324,8 +324,11 @@ end
 
 _lconfidence_logic = (rule, X, ith_instance, miner) -> begin
     _instance = getinstance(X, ith_instance)
-    num = lsupport(convert(Itemset, rule), _instance, miner)
-    den = lsupport(antecedent(rule), _instance, miner)
+
+    _antecedent, _consequent = content(rule)
+
+    num = lsupport(union(_antecedent, _consequent), _instance, miner)
+    den = lsupport(_antecedent, _instance, miner)
 
     return Dict(:measure => num/den)
 end
@@ -381,17 +384,21 @@ end
 _lleverage_logic = (rule, X, ith_instance, miner) -> begin
     _instance = getinstance(X, ith_instance)
 
-    _ans = lsupport(convert(Itemset, rule), _instance, miner) -
-        lsupport(antecedent(rule), _instance, miner) *
-        lsupport(consequent(rule), _instance, miner)
+    _antecedent, _consequent = content(rule)
+
+    _ans = lsupport(union(_antecedent, _consequent), _instance, miner) -
+        lsupport(_antecedent, _instance, miner) *
+        lsupport(_consequent, _instance, miner)
 
     return Dict(:measure => _ans)
 end
 
 _gleverage_logic = (rule, X, threshold, miner) -> begin
-    _ans = gsupport(convert(Itemset, rule), X, threshold, miner) -
-        gsupport(antecedent(rule), X, threshold, miner) *
-        gsupport(consequent(rule), X, threshold, miner)
+    _antecedent, _consequent = content(rule)
+
+    _ans = gsupport(union(_antecedent, _consequent), X, threshold, miner) -
+        gsupport(_antecedent, X, threshold, miner) *
+        gsupport(_consequent, X, threshold, miner)
 
     return Dict(:measure => _ans)
 end
