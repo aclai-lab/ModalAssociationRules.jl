@@ -54,7 +54,7 @@ myitemcollection = ItemCollection{N,Item}(Item[
 
 m = Miner(
     X1,
-    fpgrowth,
+    eclat,
     Vector(myitemcollection[]),
     [(gsupport, 0.1, 0.1)],
     [(gconfidence, 0.0, 0.0)],
