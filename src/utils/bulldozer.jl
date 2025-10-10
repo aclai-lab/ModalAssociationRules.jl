@@ -82,10 +82,11 @@ struct Bulldozer{D<:MineableData,N,I<:AbstractItem} <: AbstractMiner
         itemsetpolicies::Vector{<:Function}=Function[],
         miningstate::MiningState=MiningState()
     ) where {D<:MineableData,I<:Item}
-        return new{D,I}(
+        N = length(items)
+        return new{D,N,I}(
             data,
             instancesrange,
-            SVector{length(items),I}(items),
+            SVector{N,I}(items),
             itemsetmeasures,
             LmeasMemo(),
             worldfilter,
