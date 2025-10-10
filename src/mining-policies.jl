@@ -37,7 +37,7 @@ function islimited_length_itemset(; maxlength::Union{Nothing,Integer}=nothing)::
     end
 
     return function _islimited_length_itemset(
-        itemset::IT,
+        itemset::Union{IT,Itemset},
         _::M # to adhere to the common interface
     ) where {IT<:AbstractItemset, M<:AbstractMiner}
         return length(itemset) <= maxlength
@@ -79,7 +79,7 @@ function isanchoreditemset(; npropositions::Integer=1, ignoreuntillength::Intege
     # "⟨A⟩Up[V2] ≤ 1.0 ∧ Down[V2] ≤ 1.0";
 
     return function _isanchoreditemset(
-        itemset::IT,
+        itemset::Union{IT,Itemset},
         miner::M
     ) where {IT<:AbstractItemset, M<:AbstractMiner}
         _itemset = applymask(itemset, miner)
@@ -107,7 +107,7 @@ function isdimensionally_coherent_itemset(;)::Function
     # however, we stick to the same pattern.
 
     return function _isdimensionally_coherent_itemset(
-        itemset::IT,
+        itemset::Union{IT,Itemset},
         miner::M
     ) where {IT<:AbstractItemset, M<:AbstractMiner}
         itemset = applymask(itemset, miner)
