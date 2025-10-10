@@ -46,7 +46,7 @@ manual_v2_modal = vcat(
 
 myitems = manual_items
 
-N = 12
+N = 10
 myitemcollection = ItemCollection{N,Item}(Item[
     Atom(ScalarCondition(VariableMin(i), <, 100.0)) # trivial alphabet
     for i in 1:N
@@ -54,7 +54,7 @@ myitemcollection = ItemCollection{N,Item}(Item[
 
 m = Miner(
     X1,
-    apriori,
+    fpgrowth,
     Vector(myitemcollection[]),
     [(gsupport, 0.1, 0.1)],
     [(gconfidence, 0.0, 0.0)],
