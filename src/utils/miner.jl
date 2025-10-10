@@ -472,7 +472,7 @@ function arule_analysis(
         itemset_global_info = true
     end
 
-    Base.show(io, arule; variablenames=variablenames)
+    Base.show(io, arule, miner; variablenames=variablenames)
     println(io, "")
 
     # report global emasures for the rule
