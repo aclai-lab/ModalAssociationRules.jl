@@ -368,7 +368,7 @@ its global support, in order to simplify `miner`'s job when working in the globa
 
 See also [`Itemset`](@ref), [`LmeasMemo`](@ref), [`lsupport`](@ref), [`Miner`](@ref).
 """
-function loadlocalmemo!(miner::AbstractMiner, localmemo::LmeasMemo)
+function loadlocalmemo!(miner::M, localmemo::LmeasMemo) where {M<:AbstractMiner}
     fragments = DefaultDict{itemsettype(miner),Integer}(0)
     min_lsupport_threshold = findmeasure(miner, lsupport)[2]
 

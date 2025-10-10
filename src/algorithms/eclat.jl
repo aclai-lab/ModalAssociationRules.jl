@@ -28,13 +28,13 @@ julia> mine!(eclat_miner)
 See also [`anchored_eclat`](@ref), [`Miner`](@ref).
 """
 function eclat(miner::M)::M where {M<:AbstractMiner}
-    _itemtype = itemtype(miner)
+    # _itemtype = itemtype(miner) # TODO remove comment
     X = data(miner)
 
     # we want to obtain a vertical format from data:
     # given an item c, we collect the instance IDs on which c holds;
     # if the mining is constrained, we ensure the constraints are applied on 1-itemsets.
-    candidates = Itemset{_itemtype}.(items(miner))
+    candidates = itemsetpopulation(miner; prec=info(miner, :itemsetprecision)) # Itemset{_itemtype}.(items(miner)) TODO remove comment
     applypolicies!(candidates, miner)
 
     # actually, the (modal) vertical format associates a more complex structure:
@@ -43,21 +43,26 @@ function eclat(miner::M)::M where {M<:AbstractMiner}
     #   [truth values on the worlds of the second instance],
     #   ...
     # ]
-    Xvertical = Dict{Itemset{_itemtype}, Vector{<:WorldMask}}()
+    Xvertical = Dict{itemsettype(miner),Vector{WorldMask}}()
 
-    Threads.@threads for candidate in candidates
+    # Threads.@threads
+    for candidate in candidates
         # we keep track of the instances for which a candidate has enough global support;
         # m is a MeaningfulnessMeasure (tuple (measure, local threshold, global threshold));
+
         if all(m -> m[1](candidate, X, m[2], miner) >= m[3], itemsetmeasures(miner))
             lock(miningstatelock(miner)) do
                 push!(freqitems(miner), candidate)
 
                 Xvertical[candidate] = (
-                    miningstate(miner, :worldmask)[(ith_instance, candidate)]
+                    miningstate(miner, :worldmask)[
+                        (ith_instance, applymask(candidate, miner))
+                    ]
                     for ith_instance in 1:ninstances(X)
                 ) |> collect
             end
         end
+
     end
 
     # we rearrange the vertical format in a standard format via sorting by globalmemo
@@ -72,13 +77,13 @@ function eclat(miner::M)::M where {M<:AbstractMiner}
     function _eclat!(
         miner::M,
         # the future states to visit
-        futurestates::AbstractArray{Pair{IT,IM}},
+        futurestates::AbstractArray{Pair{IT,Vector{WorldMask}}},
         # last state of the DFS (an itemset and all the truth values metadata associated)
-        prevstate::Pair{IT,IM},
+        prevstate::Pair{IT,Vector{WorldMask}},
         # local and global threhsolds for support
         lthreshold::T,
         gthreshold::T
-    ) where {M<:AbstractMiner, IT<:Itemset, IM<:Vector{<:WorldMask}, T<:Threshold}
+    ) where {M<:AbstractMiner,IT<:AbstractItemset,T<:Threshold}
         # base case of the DFS
         if length(futurestates) == 0
             return
@@ -87,14 +92,14 @@ function eclat(miner::M)::M where {M<:AbstractMiner}
         # the DFS possibly recurs on each children node
         for (i,currentstate) in enumerate(futurestates)
             # merge the current itemset, with the item of the DFS' children
-            _newstate_itemset = union(currentstate[1], prevstate[1]) |> sort!
+            _newstate_itemset = union(currentstate[1], prevstate[1]) # |> sort! TODO remove comment
 
             # update the truth values of each world of each instance
             _newstate_worldmasks = map(
-                s -> s[1] .& s[2], zip(currentstate[2], prevstate[2])
+                s -> intersect(s[1], s[2]), zip(currentstate[2], prevstate[2]) # TODO remove comment s[1] .& s[2], zip(currentstate[2], prevstate[2])
             )
 
-            newstate = Pair{IT,IM}(
+            newstate = Pair{IT,Vector{WorldMask}}(
                 _newstate_itemset,
                 _newstate_worldmasks
             )
@@ -119,7 +124,7 @@ function eclat(miner::M)::M where {M<:AbstractMiner}
 
             # apply all policies, update the globalmemo and continue the recursion
             if newstate_gsupport >= gthreshold &&
-                all(policy -> policy(newstate[1]), itemsetpolicies(miner))
+                all(policy -> policy(newstate[1], miner), itemsetpolicies(miner))
 
                 lock(miningstatelock(miner)) do
                     push!(freqitems(miner), newstate[1])

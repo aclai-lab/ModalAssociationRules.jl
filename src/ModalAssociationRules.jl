@@ -138,11 +138,11 @@ include("algorithms/fpgrowth.jl")
 
 export patternbase, bounce!, projection
 export fpgrowth
-####
-#### include("algorithms/eclat.jl")
-####
-#### export eclat
-####
+
+include("algorithms/eclat.jl")
+
+export eclat
+
 #### include("algorithms/anchored-semantics.jl")
 ####
 #### export anchored_semantics
