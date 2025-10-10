@@ -167,6 +167,14 @@ function fpgrowth(miner::M)::M where {M<:AbstractMiner}
         ))
     end
 
+    # all fpgrowth works with explicit itemset representation;
+    # at the end of the algorithm, we want to convert it to the inner representation
+    # leveraged by the miner
+    _itemsetpopulation = itemsetpopulation(miner; prec=info(miner, :itemsetprecision))
+    for (n, item) in enumerate(items(miner))
+        miningstate(miner, :itemtomask)[item] = _itemsetpopulation[n]
+    end
+
     X = data(miner)
     _ninstances = ninstances(X)
     local_results = Vector{Bulldozer}(undef, _ninstances)
@@ -190,21 +198,6 @@ function fpgrowth(miner::M)::M where {M<:AbstractMiner}
     for (itemset, gfrequency_int) in fpgrowth_fragments
         # an itemsets is mined if the flag is still true at the end of the cycle
         saveflag = true
-
-        # apply frequent items mining policies here
-        # NOTE - policies are already checked in _fpgrowth_count_phase, where itemsets
-        # are generated and also tested against local meaningfulness measures
-        # for policy in itemsetpolicies(miner)
-        #     if !policy(itemset)
-        #         saveflag = false
-        #         break
-        #     end
-        # end
-
-        # if !saveflag
-        #     # atleast one policy does not hold
-        #     continue
-        # end
 
         # manually compute and save miner's global support if >= min threhsold;
         _threshold = getglobalthreshold(miner, gsupport)
@@ -240,7 +233,7 @@ function fpgrowth(miner::M)::M where {M<:AbstractMiner}
 end
 
 # `fpgrowth` main logic
-function _fpgrowth(miner::Bulldozer{D,I}) where {D<:MineableData,I<:Item}
+function _fpgrowth(miner::Bulldozer{D,N,I}) where {D<:MineableData,N,I<:Item}
     _nworlds = nworlds(miner)
     nworld_to_itemset = [Itemset{I}() for _ in 1:_nworlds]
 
@@ -307,9 +300,9 @@ end
 function _fpgrowth_kernel(
     fptree::FPTree,
     htable::HeaderTable,
-    miner::Bulldozer{D,I},
+    miner::Bulldozer{D,N,I},
     leftout_fptree::FPTree
-) where {D<:MineableData,I<:Item}
+) where {D<:MineableData,N,I<:Item}
     # if `fptree` contains only one path (i.e., it is a linked list),
     # then combine all the Itemsets collected from previous step with the remained ones.
     if islist(fptree)
@@ -402,7 +395,7 @@ function _fpgrowth_count_phase(
     # we consider each combination of items (where the itemset `survivor_itemset` is fixed)
     # which also do honor the `itemsetpolicies`
     for combo in Iterators.filter(
-            _combo -> all(__policy -> __policy(_combo), itemsetpolicies(miner)),
+            _combo -> all(__policy -> __policy(_combo, miner), itemsetpolicies(miner)),
             combineitems(survivor_itemset, leftout_itemset)
         )
 
@@ -421,8 +414,8 @@ function _fpgrowth_count_phase(
 
         # local support needs to be updated
         if first_time_found || lsupport_value > localmemo(miner, memokey, isprojected=true)
-            localmemo!(miner,
-                (:lsupport, combo, miningstate(miner, :current_instance)),
+            localmemo!(miner, (
+                :lsupport, _translate(combo, miner), miningstate(miner, :current_instance)),
                 lsupport_value,
                 isprojected=true
             )
@@ -430,6 +423,17 @@ function _fpgrowth_count_phase(
     end
 end
 
+# translate an explicit Itemset to the AbstractItemset interpretation within a miner
+function _translate(itemset::Itemset, miner::M) where {M<:AbstractMiner}
+    _dictionary = miningstate(miner, :itemtomask)
+    result = _dictionary[itemset[1]]
+
+    for item in itemset[2:end]
+        result = union(result, _dictionary[item])
+    end
+
+    return result
+end
 
 """
     initminingstate(::typeof(fpgrowth), ::MineableData)::MiningState
@@ -457,6 +461,10 @@ function initminingstate(
         :current_items_frequency => DefaultDict{Item,Int}(0),
 
         # keep track of which instance (of a generic MineableData) is currently being mined
-        :current_instance => 1
+        :current_instance => 1,
+
+        # dict assigning an ID to each item in a miner;
+        # the first one is 00...001, the second one is 00...010, and so on.
+        :itemtomask => Dict{Item,AbstractItemset}()
     ])
 end
