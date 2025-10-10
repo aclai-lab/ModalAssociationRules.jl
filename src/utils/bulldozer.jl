@@ -76,17 +76,16 @@ struct Bulldozer{D<:MineableData,N,I<:AbstractItem} <: AbstractMiner
     function Bulldozer(
         data::D,
         instancesrange::UnitRange{Int64},
-        items::Vector{I},
+        items::SVector{N,I},
         itemsetmeasures::Vector{<:MeaningfulnessMeasure};
         worldfilter::Union{Nothing,WorldFilter}=nothing,
         itemsetpolicies::Vector{<:Function}=Function[],
         miningstate::MiningState=MiningState()
-    ) where {D<:MineableData,I<:Item}
-        N = length(items)
+    ) where {D<:MineableData,N,I<:Item}
         return new{D,N,I}(
             data,
             instancesrange,
-            SVector{N,I}(items),
+            items,
             itemsetmeasures,
             LmeasMemo(),
             worldfilter,
@@ -370,13 +369,17 @@ its global support, in order to simplify `miner`'s job when working in the globa
 See also [`Itemset`](@ref), [`LmeasMemo`](@ref), [`lsupport`](@ref), [`Miner`](@ref).
 """
 function loadlocalmemo!(miner::AbstractMiner, localmemo::LmeasMemo)
-    fragments = DefaultDict{Itemset,Integer}(0)
+    fragments = DefaultDict{itemsettype(miner),Integer}(0)
     min_lsupport_threshold = findmeasure(miner, lsupport)[2]
 
     for (lmemokey, lmeasvalue) in localmemo
         meas, subject, _ = lmemokey
         localmemo!(miner, lmemokey, lmeasvalue)
         if meas == :lsupport && lmeasvalue >= min_lsupport_threshold
+            if subject isa Itemset
+                subject = _translate(subject, miner)
+            end
+
             fragments[subject] += 1
         end
     end
