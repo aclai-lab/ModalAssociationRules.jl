@@ -163,7 +163,11 @@ struct Miner{
             isheterogeneous_arule(),
         ]),
 
-        info::Info=Info(:istrained => false, :size => nothing),
+        info::Info=Info(
+            :istrained => false,
+            :size => nothing,
+            :itemsetprecision => nothing
+        ),
 
         itemsetprecision::Type{<:Unsigned}=UInt64
     ) where {
@@ -196,6 +200,9 @@ struct Miner{
         nitems = length(items)
         nmasks = ceil(nitems / (sizeof(itemsetprecision)*8)) |> Int64
         itemsettype = SmallItemset{nmasks, itemsetprecision}
+
+        # for future retrieval
+        info[:itemsetprecision] = itemsetprecision
 
         new{D,nitems,I,itemsettype}(
             X,
