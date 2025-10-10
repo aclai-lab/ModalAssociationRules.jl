@@ -116,28 +116,28 @@ include("algorithms/apriori.jl")
 
 export combineitems, growprune
 export apriori
-####
-#### include("data-structures.jl")
-####
-#### export EnhancedItemset, count
-#### export ConditionalPatternBase
-####
-#### export FPTree
-#### export content, parent, children, count
-#### export content!, parent!, children!
-#### export count!, addcount!
-#### export isroot, islist
-#### export itemset_from_fplist, retrieveleaf
-#### export grow!
-####
-#### export HeaderTable, items
-#### export link, link!, follow
-#### export checksanity!
-####
-#### include("algorithms/fpgrowth.jl")
-####
-#### export patternbase, bounce!, projection
-#### export fpgrowth
+
+include("data-structures.jl")
+
+export EnhancedItemset, count
+export ConditionalPatternBase
+
+export FPTree
+export content, parent, children, count
+export content!, parent!, children!
+export count!, addcount!
+export isroot, islist
+export itemset_from_fplist, retrieveleaf
+export grow!
+
+export HeaderTable, items
+export link, link!, follow
+export checksanity!
+
+include("algorithms/fpgrowth.jl")
+
+export patternbase, bounce!, projection
+export fpgrowth
 ####
 #### include("algorithms/eclat.jl")
 ####
