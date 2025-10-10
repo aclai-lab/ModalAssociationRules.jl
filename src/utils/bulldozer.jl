@@ -45,20 +45,20 @@ be thread-safe.
 
 See also [`AbstractMiner`](@ref), [`Miner`](@ref).
 """
-struct Bulldozer{D<:MineableData,I<:Item} <: AbstractMiner
+struct Bulldozer{D<:MineableData,N,I<:AbstractItem} <: AbstractMiner
     # data mineable by the Bulldozer
     data::D
 
     # original instance ids associated with the current slice of data
     # if this is 5:10, this this means that the first instance of the slice is
     # the original fifth and so on.
-    instancesrange::UnitRange{<:Integer}
+    instancesrange::UnitRange{Int64}
 
     # alphabet
-    items::Vector{I}
+    items::SVector{N,I}
 
     # measures associated with mined itemsets
-    itemsetmeasures::Vector{<:MeaningfulnessMeasure}
+    itemsetmeasures::Vector{MeaningfulnessMeasure}
 
     # meaningfulness measures memoization structure
     localmemo::LmeasMemo
@@ -75,24 +75,31 @@ struct Bulldozer{D<:MineableData,I<:Item} <: AbstractMiner
 
     function Bulldozer(
         data::D,
-        instancesrange::UnitRange{<:Integer},
+        instancesrange::UnitRange{Int64},
         items::Vector{I},
         itemsetmeasures::Vector{<:MeaningfulnessMeasure};
         worldfilter::Union{Nothing,WorldFilter}=nothing,
         itemsetpolicies::Vector{<:Function}=Function[],
         miningstate::MiningState=MiningState()
     ) where {D<:MineableData,I<:Item}
-        return new{D,I}(data, instancesrange, items, itemsetmeasures, LmeasMemo(),
-            worldfilter, itemsetpolicies, miningstate,
+        return new{D,I}(
+            data,
+            instancesrange,
+            SVector{length(items),I}(items),
+            itemsetmeasures,
+            LmeasMemo(),
+            worldfilter,
+            itemsetpolicies,
+            miningstate,
             ReentrantLock(), ReentrantLock(), ReentrantLock()
         )
     end
 
-    function Bulldozer(miner::Miner, instancesrange::UnitRange{<:Integer}; kwargs...)
-        data_slice = slicedataset(data(miner), instancesrange)
+    function Bulldozer(miner::Miner, instancesrange::UnitRange{Int64}; kwargs...)
+        dataslice = slicedataset(data(miner), instancesrange)
 
         return Bulldozer(
-                data_slice,
+                dataslice,
                 instancesrange,
                 items(miner),
                 itemsetmeasures(miner),
@@ -103,7 +110,7 @@ struct Bulldozer{D<:MineableData,I<:Item} <: AbstractMiner
             )
     end
 
-    function Bulldozer(miner::Miner, ith_instance::Integer; kwargs...)
+    function Bulldozer(miner::Miner, ith_instance::Int64; kwargs...)
         # fallback to UnitRange constructor
         Bulldozer(miner, ith_instance:ith_instance; kwargs...)
     end
@@ -162,19 +169,19 @@ Return the instance slice range on which `bulldozer` is working.
 instancesrange(bulldozer::Bulldozer) = bulldozer.instancesrange
 
 """
-    instanceprojection(bulldozer::Bulldozer, ith_instance::Integer)
+    instanceprojection(bulldozer::Bulldozer, ith_instance::Int64)
 
 Maps the `ith_instance` on a range starting from 1, instead of [`instancerange`](@ref).
 
 See also [`Bulldozer`](@ref), [`instancerange`](@ref).
 """
-instanceprojection(bulldozer::Bulldozer, ith_instance::Integer) = begin
+instanceprojection(bulldozer::Bulldozer, ith_instance::Int64) = begin
     return ith_instance - first(instancesrange(bulldozer)) + 1
 end
 
 """
     data(bulldozer::Bulldozer)
-    data(bulldozer::Bulldozer, ith_instance::Integer)
+    data(bulldozer::Bulldozer, ith_instance::Int64)
 
 Getter for the [`MineableData`](@ref) wrapped within `bulldozer`, or a specific instance.
 
@@ -182,7 +189,7 @@ See [`data(::AbstractMiner)`](@ref), [`SoleLogics.LogicalInstance`](@ref),
 [`MineableData`](@ref).
 """
 data(bulldozer::Bulldozer) = bulldozer.data
-data(bulldozer::Bulldozer, ith_instance::Integer) = begin
+data(bulldozer::Bulldozer, ith_instance::Int64) = begin
     SoleLogics.getinstance(data(bulldozer), instanceprojection(bulldozer, ith_instance))
 end
 
@@ -198,9 +205,7 @@ items(bulldozer::Bulldozer) = bulldozer.items
 
     See also [`itemsetmeasures(::AbstractMiner)`](@ref).
     """
-itemsetmeasures(
-    bulldozer::Bulldozer
-)::Vector{<:MeaningfulnessMeasure} = bulldozer.itemsetmeasures
+itemsetmeasures(bulldozer::Bulldozer) = bulldozer.itemsetmeasures
 
 """
     localmemo(bulldozer::Bulldozer)
@@ -327,7 +332,7 @@ measures(bulldozer::Bulldozer) = itemsetmeasures(bulldozer)
 
 
 
-# utilities
+##### utilities ############################################################################
 
 """
     function miner_reduce!(b1::Bulldozer, b2::Bulldozer)::LmeasMemo
