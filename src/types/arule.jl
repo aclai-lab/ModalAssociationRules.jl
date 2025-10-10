@@ -159,9 +159,15 @@ function Base.show(io::IO, arule::ARule{IT}) where {IT}
     print(io, "$(_antecedent) => $(_consequent)")
 end
 
-function Base.show(io::IO, arule::ARule{IT}, miner::AbstractMiner) where {IT}
-    _antecedentstr = applymask(arule |> antecedent, miner) |> syntaxstring
-    _consequentstr = applymask(arule |> consequent, miner) |> syntaxstring
+function Base.show(
+    io::IO,
+    arule::ARule{IT},
+    miner::AbstractMiner;
+    variablenames::Union{Nothing,Vector{String}}=nothing
+) where {IT}
+    _antecedent = applymask(arule |> antecedent, miner) |> formula
+    _consequent = applymask(arule |> consequent, miner) |> formula
 
-    print(io, "$(_antecedentstr) => $(_consequentstr)");
+    print(io, "$(syntaxstring(_antecedent, variable_names_map=variablenames)) => " *
+        "$(syntaxstring(_consequent, variable_names_map=variablenames))")
 end
