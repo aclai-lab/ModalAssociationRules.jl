@@ -95,7 +95,13 @@ macro localmeasure(measname, measlogic)
                 # between an instance and a subject must be obtained by the internal logic
                 # of the meaningfulness measure callback.
                 if hasminingstate(miner, state) && haskey(response, state)
-                    miningstate!(miner, state, (ith_instance,subject), response[state])
+                    _explicitsubject = applymask(subject, miner)
+                    miningstate!(
+                        miner,
+                        state,
+                        (ith_instance, _explicitsubject),
+                        response[state]
+                    )
                 end
             end
 
