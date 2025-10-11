@@ -494,14 +494,14 @@ end
 # utilities
 
 """
-    partial_deepcopy(original::AbstractMiner)
+    spawnminer(original::AbstractMiner)
 
 Deepcopy an [`AbstractMiner`](@ref), but maintain a reference to the original data wrapped
 from the original miner.
 
 See also [`AbstractMiner`](@ref).
 """
-function partial_deepcopy(original::AbstractMiner)
+function spawnminer(original::AbstractMiner)
     error("Not implemented.")
 end
 

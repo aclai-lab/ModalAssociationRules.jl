@@ -184,9 +184,11 @@ function fpgrowth(miner::M)::M where {M<:AbstractMiner}
         max(1, div(_ninstances, Threads.nthreads()))
     )
     tasks = map(chunks) do chunk
-        Threads.@spawn _fpgrowth(
+        # Threads.@spawn
+        _fpgrowth(
             Bulldozer(miner, chunk; itemsetpolicies=itemsetpolicies(miner)))
     end
+
     local_results = fetch.(tasks)
 
     # reduce all the local-memoization structures obtained before,
@@ -426,6 +428,9 @@ end
 # translate an explicit Itemset to the AbstractItemset interpretation within a miner
 function _translate(itemset::Itemset, miner::M) where {M<:AbstractMiner}
     _dictionary = miningstate(miner, :itemtomask)
+
+    println(_dictionary)
+
     result = _dictionary[itemset[1]]
 
     for item in itemset[2:end]

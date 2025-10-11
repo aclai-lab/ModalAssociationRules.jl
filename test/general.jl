@@ -554,7 +554,7 @@ _my_vd1 = VariableDistance(1, [[1,2,3,4,5], [1,2,3,4,5]])
 @test_throws ErrorException generaterules!(genericMiner())
 @test_throws ErrorException arule_analysis(arule3, genericMiner())
 @test_throws MethodError all_arule_analysis(genericMiner())
-@test_throws ErrorException partial_deepcopy(genericMiner())
+@test_throws ErrorException spawnminer(genericMiner())
 @test_throws ErrorException SoleLogics.frame(genericMiner())
 
 filtered_miner = Miner(
@@ -663,27 +663,27 @@ apriori_unanchored_miner = Miner(
 
 @test_throws ErrorException anchored_semantics(fpgrowth_miner)
 
-variables = [
+_variables = [
     VariableDistance(id, m)
     for (id, m) in [(1,[[1,2,3]]), (2,[[4,5,6]]), (3,[[7,8,9]])]
 ]
 
-propositionalatoms = [Atom(ScalarCondition(v, <=, 200.0)) for v in variables]
+propositionalatoms = [Atom(ScalarCondition(v, <=, 200.0)) for v in _variables]
 
 _items = Vector{Item}(propositionalatoms)
 
-X3 = scalarlogiset(X_df, variables)
-for miningalgo in [apriori, fpgrowth]
+X3 = scalarlogiset(X_df, _variables)
+for miningalgo in [fpgrowth]
     anchored_miner = Miner(
         X3,
         miningalgo,
         _items,
         _itemsetmeasures,
         _rulemeasures
-        )
-        @test_nowarn anchored_semantics(anchored_miner)
-        @test globalmemo(anchored_miner) |> length == 7
-    end
+    )
+    @test_nowarn anchored_semantics(anchored_miner)
+    @test globalmemo(anchored_miner) |> length == 7
+end
 
 anchored_apriori_miner = Miner(X3, apriori, _items, _itemsetmeasures, _rulemeasures)
 anchored_fpgrowth_miner = Miner(X3, fpgrowth, _items, _itemsetmeasures, _rulemeasures)

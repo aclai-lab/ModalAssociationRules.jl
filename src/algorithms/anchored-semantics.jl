@@ -44,7 +44,7 @@ end
 Logic to be executed before the the algorithm wrapped within the `miner`;
 the goal is to make such an algorithm coherent with anchored semantics.
 """
-function anchored_semantics(miner::M; kwargs...)::M where {M<:AbstractMiner}
+function anchored_semantics(miner::M; kwargs...) where {M<:AbstractMiner}
     try
         isanchored_miner(miner)
     catch
@@ -83,10 +83,8 @@ function anchored_semantics(miner::M; kwargs...)::M where {M<:AbstractMiner}
     # build one miner for each group of anchors, each of which contains the group itself
     # enriched with all the modal_literals set.
     miners = [
-        partial_deepcopy(
+        spawnminer(
             miner;
-            new_items=vcat(group, modal_literals),
-
             # TODO - change interval.y - interval.x + 1 into "size(interval)" when
             # size(::GeometricalWorld) is implemented in SoleLogics; see the following issue
             # https://github.com/aclai-lab/SoleLogics.jl/issues/68
@@ -102,14 +100,7 @@ function anchored_semantics(miner::M; kwargs...)::M where {M<:AbstractMiner}
         Threads.@spawn miningalgo(_miner; kwargs...)
     end
 
-    # NOTE - reduceminer! is currently called with default kwargs, as they are virtually
-    # always the best choice
-
-    resulting_miner = reduceminer!(fetch.(tasks))
-
-    # perform one latest reduce operation to overwrite the argument miner;
-    # this is a bit of overhead.
-    return reduceminer!([miner, resulting_miner])
+    return fetch.(tasks)
 end
 
 

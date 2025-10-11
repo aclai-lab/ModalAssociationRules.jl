@@ -614,7 +614,7 @@ end
 
 
 """
-    partial_deepcopy(original::Miner, newitems::Union{nothing,Vector{I}}=nothing)
+    spawnminer(original::Miner, newitems::Union{nothing,Vector{I}}=nothing)
 
 Deepcopy a [`Miner`](@ref), but maintain a reference to the original data wrapped
 from the original miner.
@@ -639,36 +639,17 @@ See also [`anchored_fpgrowth`](@ref), [`arulepolicies`](@ref), [`items`](@ref),
 [`Itemset`](@ref), [`itemsetpolicies`](@ref), [`MineableData`](@ref), [`Miner`](@ref),
 [`worldfilter`](@ref).
 """
-function partial_deepcopy(
-    original::Miner;
-    new_items::Union{Nothing,Vector{I}}=nothing,
-    new_worldfilter::Union{Nothing,WorldFilter}=nothing,
-    new_itemsetpolicies::Union{Nothing,Vector{<:Function}}=nothing,
-    new_arulepolicies::Union{Nothing,Vector{<:Function}}=nothing
-) where {I<:Item}
-    if isnothing(new_items)
-        new_items = deepcopy(original |> items)
-    end
-    if isnothing(new_worldfilter)
-        new_worldfilter = deepcopy(original |> worldfilter)
-    end
-    if isnothing(new_itemsetpolicies)
-        new_itemsetpolicies = deepcopy(original |> itemsetpolicies)
-    end
-    if isnothing(new_arulepolicies)
-        new_arulepolicies = deepcopy(original |> arulepolicies)
-    end
-
+function spawnminer(original::Miner)
     return Miner(
-        data(original), # keep the reference here
-        deepcopy(original |> algorithm),
-        new_items,
-        deepcopy(original |> itemsetmeasures),
-        deepcopy(original |> arulemeasures);
+        data(original),
+        original |> algorithm,
+        copy(new_items),
+        original |> itemsetmeasures,
+        original |> arulemeasures;
         worldfilter = new_worldfilter,
         itemsetpolicies = new_itemsetpolicies,
         arulepolicies = new_arulepolicies,
-        info = deepcopy(original |> info)
+        info = copy(original |> info)
     )
 end
 
