@@ -662,6 +662,8 @@ function spawnminer(
         _items = deepcopy(original |> items)
     end
 
+    println("Original miningstate: $(typeof(miningstate(original)))")
+
     newminer = Miner(
         data(original),
         original |> algorithm,

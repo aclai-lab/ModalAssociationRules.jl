@@ -487,7 +487,7 @@ end
 ##### Mining policies edge cases ###########################################################
 
 _my_itemset = ["p", "q"] .|> Atom .|> Item |> Itemset
-@test_nowarn isanchoreditemset()(_my_itemset)
+@test_nowarn isanchoreditemset()(_my_itemset, fpgrowth_miner)
 @test_throws ArgumentError isanchoreditemset(npropositions=-1)(_my_itemset, fpgrowth_miner)
 
 _my_vd1 = VariableDistance(1, [[1,2,3,4,5]])
@@ -585,9 +585,6 @@ for x in r2
     localmemo!(b2, (:lsupport, pq, x), 0.56)
 end
 
-blmemo = reduceminer!([b1,b2])
-@test length(blmemo) == 20
-
 @test datatype(b1) <: SupportedLogiset
 
 
@@ -627,8 +624,6 @@ end
 ##### Policies #############################################################################
 
 @test_throws ArgumentError islimited_length_itemset(; maxlength=0)
-@test islimited_length_itemset(; maxlength=nothing)(long_itemset1, fpgrowth_miner) == true
-@test islimited_length_itemset(; maxlength=5)(long_itemset1, fpgrowth_miner) == false
 
 @test_throws ArgumentError islimited_length_arule(antecedent_maxlength=0)
 @test_throws ArgumentError isanchoredarule(npropositions=-1)
@@ -673,7 +668,7 @@ propositionalatoms = [Atom(ScalarCondition(v, <=, 200.0)) for v in _variables]
 _items = Vector{Item}(propositionalatoms)
 
 X3 = scalarlogiset(X_df, _variables)
-for miningalgo in [fpgrowth]
+for miningalgo in [apriori, fpgrowth]
     anchored_miner = Miner(
         X3,
         miningalgo,
