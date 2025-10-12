@@ -144,6 +144,17 @@ struct Miner{
         X::D,
         algorithm::Function,
         items::Vector{I},
+        args...;
+        kwargs...
+    ) where {D<:MineableData,I<:AbstractItem}
+        items = unique(items)
+        return Miner(X, algorithm, SVector{length(items),I}(items), args...; kwargs...)
+    end
+
+    function Miner(
+        X::D,
+        algorithm::Function,
+        items::SVector{N,I},
 
         itemset_constrained_measures::Vector{<:MeaningfulnessMeasure}=[
             (gsupport, 0.1, 0.1)
@@ -163,6 +174,8 @@ struct Miner{
             isheterogeneous_arule(),
         ]),
 
+        miningstate::Union{Nothing,MiningState}=nothing,
+
         info::Info=Info(
             :istrained => false,
             :size => nothing,
@@ -172,10 +185,9 @@ struct Miner{
         itemsetprecision::Type{<:Unsigned}=UInt64
     ) where {
         D<:MineableData,
+        N,
         I<:AbstractItem
     }
-        items = unique(items)
-
         # dataset frames must be equal
         # TODO - support MultiLogiset mining
         if X isa SoleData.MultiLogiset
@@ -194,20 +206,21 @@ struct Miner{
                 "internally by gsupport."))
         end
 
-        miningstate = initminingstate(algorithm, X)
+        if isnothing(miningstate)
+            miningstate = initminingstate(algorithm, X)
+        end
 
         # number of binary masks needed to retrieve an entire itemset from an ItemCollection
-        nitems = length(items)
-        nmasks = ceil(nitems / (sizeof(itemsetprecision)*8)) |> Int64
+        nmasks = ceil(N / (sizeof(itemsetprecision)*8)) |> Int64
         itemsettype = SmallItemset{nmasks, itemsetprecision}
 
         # for future retrieval
         info[:itemsetprecision] = itemsetprecision
 
-        new{D,nitems,I,itemsettype}(
+        new{D,N,I,itemsettype}(
             X,
             algorithm,
-            SVector{nitems,I}(items),
+            items,
             itemset_constrained_measures,
             arule_constrained_measures,
             Vector{itemsettype}(),
@@ -639,22 +652,35 @@ See also [`anchored_fpgrowth`](@ref), [`arulepolicies`](@ref), [`items`](@ref),
 [`Itemset`](@ref), [`itemsetpolicies`](@ref), [`MineableData`](@ref), [`Miner`](@ref),
 [`worldfilter`](@ref).
 """
-function spawnminer(original::Miner)
-    return Miner(
+function spawnminer(
+    original::Miner;
+    _items::Union{Nothing,Vector{I}},
+    _worldfilter::Union{Nothing,WorldFilter}=nothing
+) where {I<:AbstractItem}
+
+    if isnothing(_items)
+        _items = deepcopy(original |> items)
+    end
+
+    newminer = Miner(
         data(original),
         original |> algorithm,
-        copy(new_items),
+        _items,
         original |> itemsetmeasures,
         original |> arulemeasures;
-        worldfilter = new_worldfilter,
-        itemsetpolicies = new_itemsetpolicies,
-        arulepolicies = new_arulepolicies,
+        worldfilter = _worldfilter,
+        itemsetpolicies = copy(original |> itemsetpolicies),
+        arulepolicies = copy(original |> arulepolicies),
+        miningstate = copy(original |> miningstate),
         info = copy(original |> info)
     )
+
+    return newminer
 end
 
-# dispatches coming for external packages
 
+
+##### dispatches coming for external packages ##############################################
 
 """
     function SoleLogics.frame(miner::AbstractMiner)

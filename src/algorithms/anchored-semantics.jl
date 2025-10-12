@@ -85,10 +85,11 @@ function anchored_semantics(miner::M; kwargs...) where {M<:AbstractMiner}
     miners = [
         spawnminer(
             miner;
+            _items=deepcopy(vcat(group, modal_literals)),
             # TODO - change interval.y - interval.x + 1 into "size(interval)" when
             # size(::GeometricalWorld) is implemented in SoleLogics; see the following issue
             # https://github.com/aclai-lab/SoleLogics.jl/issues/68
-            new_worldfilter=SoleLogics.FunctionalWorldFilter(
+            _worldfilter=SoleLogics.FunctionalWorldFilter(
                 interval -> (interval.y - interval.x,) == groupsize, Interval{Int})
         )
 

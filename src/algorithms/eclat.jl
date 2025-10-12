@@ -45,7 +45,7 @@ function eclat(miner::M)::M where {M<:AbstractMiner}
     # ]
     Xvertical = Dict{itemsettype(miner),Vector{WorldMask}}()
 
-    # Threads.@threads
+    # Threads.@threads # TODO uncomment this
     for candidate in candidates
         # we keep track of the instances for which a candidate has enough global support;
         # m is a MeaningfulnessMeasure (tuple (measure, local threshold, global threshold));

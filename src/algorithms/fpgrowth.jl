@@ -64,7 +64,7 @@ function patternbase(
     end
 
     # assert pattern base does not contain dirty leftovers
-    Base.filter!(x -> !isempty(first(x)), _patternbase)
+    filter!(x -> !isempty(first(x)), _patternbase)
 
     return _patternbase, leftout_count
 end
@@ -97,14 +97,14 @@ function bounce!(pbase::ConditionalPatternBase, miner::AbstractMiner)
     end
 
     for enhanceditemset in pbase
-        Base.filter!(_item ->
+        filter!(_item ->
             count_accumulator[_item] / _nworlds >= _lsupport_threshold,
             enhanceditemset |> itemset
         )
     end
 
     # assert pattern base does not contain dirty leftovers
-    Base.filter!(x -> !isempty(first(x)), pbase)
+    filter!(x -> !isempty(first(x)), pbase)
 end
 
 """
@@ -167,14 +167,6 @@ function fpgrowth(miner::M)::M where {M<:AbstractMiner}
         ))
     end
 
-    # all fpgrowth works with explicit itemset representation;
-    # at the end of the algorithm, we want to convert it to the inner representation
-    # leveraged by the miner
-    _itemsetpopulation = itemsetpopulation(miner; prec=info(miner, :itemsetprecision))
-    for (n, item) in enumerate(items(miner))
-        miningstate(miner, :itemtomask)[item] = _itemsetpopulation[n]
-    end
-
     X = data(miner)
     _ninstances = ninstances(X)
     local_results = Vector{Bulldozer}(undef, _ninstances)
@@ -184,26 +176,59 @@ function fpgrowth(miner::M)::M where {M<:AbstractMiner}
         max(1, div(_ninstances, Threads.nthreads()))
     )
     tasks = map(chunks) do chunk
-        # Threads.@spawn
-        _fpgrowth(
+        Threads.@spawn _fpgrowth(
             Bulldozer(miner, chunk; itemsetpolicies=itemsetpolicies(miner)))
     end
-
     local_results = fetch.(tasks)
 
     # reduce all the local-memoization structures obtained before,
     # and proceed to compute global supports
-    local_results = reduceminer!(local_results)
-    fpgrowth_fragments = loadlocalmemo!(miner, local_results)
+    local_results = miner_reduce!(local_results)
+    fpgrowth_fragments = load_localmemo!(miner, local_results)
+
+    # this is an highly inefficient inverse index, needed to translate items to
+    # their specific itemset representation; the latter, for example, being SmallItemset or
+    # Itemset.
+    #
+    # this code is not perfect, and wastes this time for keeping the compatibility with
+    # some bad design decisions of the past;
+    # this is a small price to pay to avoid more headaches.
+    inverseindex = Dict{itemtype(miner),itemsettype(miner)}()
+    _itemsetpopulation = itemsetpopulation(miner; prec=info(miner, :itemsetprecision))
+
+    for (i,item) in enumerate(items(miner))
+        inverseindex[item] = _itemsetpopulation[i]
+    end
+
+    _translate = itemset -> reduce(union, [inverseindex[item] for item in itemset])
 
     # global setting
     for (itemset, gfrequency_int) in fpgrowth_fragments
         # an itemsets is mined if the flag is still true at the end of the cycle
         saveflag = true
 
+        # apply frequent items mining policies here
+        # NOTE - policies are already checked in _fpgrowth_count_phase, where itemsets
+        # are generated and also tested against local meaningfulness measures
+        # for policy in itemsetpolicies(miner)
+        #     if !policy(itemset)
+        #         saveflag = false
+        #         break
+        #     end
+        # end
+
+        # if !saveflag
+        #     # atleast one policy does not hold
+        #     continue
+        # end
+
         # manually compute and save miner's global support if >= min threhsold;
         _threshold = getglobalthreshold(miner, gsupport)
         gfrequency = gfrequency_int / _ninstances
+
+        # before operating with the itemset, we translate it to the the generic
+        # AbstractItemset type of the miner
+        # itemset = _translate(itemset)
 
         if gfrequency >= _threshold
             globalmemo!(miner, GmeasMemoKey((Symbol(gsupport), itemset)), gfrequency)
@@ -225,8 +250,8 @@ function fpgrowth(miner::M)::M where {M<:AbstractMiner}
             end
 
             if saveflag
-                # all the meaningfulness measures holds
-                push!(freqitems(miner), itemset)
+                # all the meaningfulness measures holds;
+                push!(freqitems(miner), _translate(itemset))
             end
         end
     end
@@ -235,7 +260,7 @@ function fpgrowth(miner::M)::M where {M<:AbstractMiner}
 end
 
 # `fpgrowth` main logic
-function _fpgrowth(miner::Bulldozer{D,N,I}) where {D<:MineableData,N,I<:Item}
+function _fpgrowth(miner::Bulldozer{D,I}) where {D<:MineableData,I<:Item}
     _nworlds = nworlds(miner)
     nworld_to_itemset = [Itemset{I}() for _ in 1:_nworlds]
 
@@ -302,9 +327,9 @@ end
 function _fpgrowth_kernel(
     fptree::FPTree,
     htable::HeaderTable,
-    miner::Bulldozer{D,N,I},
+    miner::Bulldozer{D,I},
     leftout_fptree::FPTree
-) where {D<:MineableData,N,I<:Item}
+) where {D<:MineableData,I<:Item}
     # if `fptree` contains only one path (i.e., it is a linked list),
     # then combine all the Itemsets collected from previous step with the remained ones.
     if islist(fptree)
@@ -345,6 +370,7 @@ function _fpgrowth_kernel(
                         _leftout_count = min(_leftout_count, leftout_count_dict[item])
                     end
                 end
+
                 return _leftout_count / _nworlds
             end,
             miner
@@ -416,8 +442,8 @@ function _fpgrowth_count_phase(
 
         # local support needs to be updated
         if first_time_found || lsupport_value > localmemo(miner, memokey, isprojected=true)
-            localmemo!(miner, (
-                :lsupport, _translate(combo, miner), miningstate(miner, :current_instance)),
+            localmemo!(miner,
+                (:lsupport, combo, miningstate(miner, :current_instance)),
                 lsupport_value,
                 isprojected=true
             )
@@ -425,20 +451,6 @@ function _fpgrowth_count_phase(
     end
 end
 
-# translate an explicit Itemset to the AbstractItemset interpretation within a miner
-function _translate(itemset::Itemset, miner::M) where {M<:AbstractMiner}
-    _dictionary = miningstate(miner, :itemtomask)
-
-    println(_dictionary)
-
-    result = _dictionary[itemset[1]]
-
-    for item in itemset[2:end]
-        result = union(result, _dictionary[item])
-    end
-
-    return result
-end
 
 """
     initminingstate(::typeof(fpgrowth), ::MineableData)::MiningState
@@ -466,10 +478,6 @@ function initminingstate(
         :current_items_frequency => DefaultDict{Item,Int}(0),
 
         # keep track of which instance (of a generic MineableData) is currently being mined
-        :current_instance => 1,
-
-        # dict assigning an ID to each item in a miner;
-        # the first one is 00...001, the second one is 00...010, and so on.
-        :itemtomask => Dict{Item,AbstractItemset}()
+        :current_instance => 1
     ])
 end

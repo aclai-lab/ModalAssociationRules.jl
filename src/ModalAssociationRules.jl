@@ -7,6 +7,7 @@ import Base.firstindex, Base.lastindex
 
 using Clustering
 using Combinatorics
+using ConcurrentCollections
 using DataStructures
 using Distributed
 using IterTools

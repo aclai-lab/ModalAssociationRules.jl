@@ -45,20 +45,20 @@ be thread-safe.
 
 See also [`AbstractMiner`](@ref), [`Miner`](@ref).
 """
-struct Bulldozer{D<:MineableData,N,I<:AbstractItem} <: AbstractMiner
+struct Bulldozer{D<:MineableData,I<:Item} <: AbstractMiner
     # data mineable by the Bulldozer
     data::D
 
     # original instance ids associated with the current slice of data
     # if this is 5:10, this this means that the first instance of the slice is
     # the original fifth and so on.
-    instancesrange::UnitRange{Int64}
+    instancesrange::UnitRange{<:Integer}
 
     # alphabet
-    items::SVector{N,I}
+    items::Vector{I}
 
     # measures associated with mined itemsets
-    itemsetmeasures::Vector{MeaningfulnessMeasure}
+    itemsetmeasures::Vector{<:MeaningfulnessMeasure}
 
     # meaningfulness measures memoization structure
     localmemo::LmeasMemo
@@ -75,31 +75,24 @@ struct Bulldozer{D<:MineableData,N,I<:AbstractItem} <: AbstractMiner
 
     function Bulldozer(
         data::D,
-        instancesrange::UnitRange{Int64},
+        instancesrange::UnitRange{<:Integer},
         items::SVector{N,I},
         itemsetmeasures::Vector{<:MeaningfulnessMeasure};
         worldfilter::Union{Nothing,WorldFilter}=nothing,
         itemsetpolicies::Vector{<:Function}=Function[],
         miningstate::MiningState=MiningState()
     ) where {D<:MineableData,N,I<:Item}
-        return new{D,N,I}(
-            data,
-            instancesrange,
-            items,
-            itemsetmeasures,
-            LmeasMemo(),
-            worldfilter,
-            itemsetpolicies,
-            miningstate,
+        return new{D,I}(data, instancesrange, items, itemsetmeasures, LmeasMemo(),
+            worldfilter, itemsetpolicies, miningstate,
             ReentrantLock(), ReentrantLock(), ReentrantLock()
         )
     end
 
-    function Bulldozer(miner::Miner, instancesrange::UnitRange{Int64}; kwargs...)
-        dataslice = slicedataset(data(miner), instancesrange)
+    function Bulldozer(miner::Miner, instancesrange::UnitRange{<:Integer}; kwargs...)
+        data_slice = slicedataset(data(miner), instancesrange)
 
         return Bulldozer(
-                dataslice,
+                data_slice,
                 instancesrange,
                 items(miner),
                 itemsetmeasures(miner),
@@ -110,7 +103,7 @@ struct Bulldozer{D<:MineableData,N,I<:AbstractItem} <: AbstractMiner
             )
     end
 
-    function Bulldozer(miner::Miner, ith_instance::Int64; kwargs...)
+    function Bulldozer(miner::Miner, ith_instance::Integer; kwargs...)
         # fallback to UnitRange constructor
         Bulldozer(miner, ith_instance:ith_instance; kwargs...)
     end
@@ -169,19 +162,19 @@ Return the instance slice range on which `bulldozer` is working.
 instancesrange(bulldozer::Bulldozer) = bulldozer.instancesrange
 
 """
-    instanceprojection(bulldozer::Bulldozer, ith_instance::Int64)
+    instanceprojection(bulldozer::Bulldozer, ith_instance::Integer)
 
 Maps the `ith_instance` on a range starting from 1, instead of [`instancerange`](@ref).
 
 See also [`Bulldozer`](@ref), [`instancerange`](@ref).
 """
-instanceprojection(bulldozer::Bulldozer, ith_instance::Int64) = begin
+instanceprojection(bulldozer::Bulldozer, ith_instance::Integer) = begin
     return ith_instance - first(instancesrange(bulldozer)) + 1
 end
 
 """
     data(bulldozer::Bulldozer)
-    data(bulldozer::Bulldozer, ith_instance::Int64)
+    data(bulldozer::Bulldozer, ith_instance::Integer)
 
 Getter for the [`MineableData`](@ref) wrapped within `bulldozer`, or a specific instance.
 
@@ -189,7 +182,7 @@ See [`data(::AbstractMiner)`](@ref), [`SoleLogics.LogicalInstance`](@ref),
 [`MineableData`](@ref).
 """
 data(bulldozer::Bulldozer) = bulldozer.data
-data(bulldozer::Bulldozer, ith_instance::Int64) = begin
+data(bulldozer::Bulldozer, ith_instance::Integer) = begin
     SoleLogics.getinstance(data(bulldozer), instanceprojection(bulldozer, ith_instance))
 end
 
@@ -205,7 +198,9 @@ items(bulldozer::Bulldozer) = bulldozer.items
 
     See also [`itemsetmeasures(::AbstractMiner)`](@ref).
     """
-itemsetmeasures(bulldozer::Bulldozer) = bulldozer.itemsetmeasures
+itemsetmeasures(
+    bulldozer::Bulldozer
+)::Vector{<:MeaningfulnessMeasure} = bulldozer.itemsetmeasures
 
 """
     localmemo(bulldozer::Bulldozer)
@@ -332,21 +327,21 @@ measures(bulldozer::Bulldozer) = itemsetmeasures(bulldozer)
 
 
 
-##### utilities ############################################################################
+# utilities
 
 """
-    function reduceminer!(b1::Bulldozer, b2::Bulldozer)::LmeasMemo
+    function miner_reduce!(b1::Bulldozer, b2::Bulldozer)::LmeasMemo
 
 Reduce many [`Bulldozer`](@ref)s together, merging their local memo structures in linear
 time.
 
 !!! note
     This method will soon be deprecated in favour of a general dispatch
-    reduceminer!(::AbstractVector{M})
+    miner_reduce!(::AbstractVector{M})
 
 See also [`LmeasMemo`](@ref), [`localmemo(::Bulldozer)`](@ref);
 """
-function reduceminer!(local_results::AbstractVector{B}) where {B<:Bulldozer}
+function miner_reduce!(local_results::AbstractVector{B}) where {B<:Bulldozer}
     b1lmemo = local_results |> first |> localmemo
 
     for i in 2:length(local_results)
@@ -360,7 +355,7 @@ function reduceminer!(local_results::AbstractVector{B}) where {B<:Bulldozer}
 end
 
 """
-    function loadlocalmemo!(miner::AbstractMiner, localmemo::LmeasMemo)
+    function load_localmemo!(miner::AbstractMiner, localmemo::LmeasMemo)
 
 Load a local memoization structure inside `miner`.
 Also, returns a dictionary associating each loaded local [`Itemset`](@ref) loaded to its
@@ -368,18 +363,14 @@ its global support, in order to simplify `miner`'s job when working in the globa
 
 See also [`Itemset`](@ref), [`LmeasMemo`](@ref), [`lsupport`](@ref), [`Miner`](@ref).
 """
-function loadlocalmemo!(miner::M, localmemo::LmeasMemo) where {M<:AbstractMiner}
-    fragments = DefaultDict{itemsettype(miner),Integer}(0)
+function load_localmemo!(miner::AbstractMiner, localmemo::LmeasMemo)
+    fragments = DefaultDict{Itemset,Integer}(0)
     min_lsupport_threshold = findmeasure(miner, lsupport)[2]
 
     for (lmemokey, lmeasvalue) in localmemo
         meas, subject, _ = lmemokey
         localmemo!(miner, lmemokey, lmeasvalue)
         if meas == :lsupport && lmeasvalue >= min_lsupport_threshold
-            if subject isa Itemset
-                subject = _translate(subject, miner)
-            end
-
             fragments[subject] += 1
         end
     end

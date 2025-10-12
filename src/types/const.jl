@@ -187,7 +187,7 @@ capabilities.
 To understand how to specialize a [`Miner`](@ref), see [`hasminingstate`](@ref),
 [`initminingstate`](@ref), ['miningstate`](@ref), [`miningstate!`](@ref).
 """
-const MiningState = Dict{Symbol,Any}
+const MiningState = ConcurrentDict{Symbol,Any}
 
 """
     const Info = Dict{Symbol,Any}
