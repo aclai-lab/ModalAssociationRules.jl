@@ -19,6 +19,6 @@
 TODO
 
 .vscode/settings.json
-test/benchmark/spark/venv
-!test/benchmark/spark/requirements.txt
-!test/benchmark/spark/*.txt
+test/benchmark/pythonic/venv
+!test/benchmark/pythonic/requirements.txt
+!test/benchmark/pythonic/*.txt
