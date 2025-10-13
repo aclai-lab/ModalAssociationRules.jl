@@ -13,9 +13,6 @@ using Random
 
 TESTFOLDER = joinpath(@__DIR__, "test", "benchmark", "synthetic")
 
-include((TESTFOLDER, "logiset.jl") |> joinpath)
-include((TESTFOLDER, "generation.jl") |> joinpath)
-
 rng = Xoshiro(7)
 
 # this BenchmarkTools' parameterization ensures a fair benchmarking, with no memoization
