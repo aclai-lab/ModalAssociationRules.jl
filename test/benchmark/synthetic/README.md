@@ -1,1 +1,1 @@
-This folder contains the logic needed to orchestrate an ARM pipeline over a synthetic modal dataset (see `generation.jl`).
+This folder contains the logic needed to orchestrate an ARM pipeline over a synthetic modal dataset (see `generation.jl` and `logiset.jl` within `src`).
