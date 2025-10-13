@@ -29,6 +29,9 @@ mean_times = []
 # this is useful for plotting a whiskers plot 
 all_runtimes = []
 
+# frequent itemsets for each minimum support set
+freq_itemsets_found = []
+
 for min_support in min_supports:
     _current_all_runtimes = []
 
@@ -37,15 +40,17 @@ for min_support in min_supports:
 
         start_time = time.time()
         
-        frequent_itemsets = fpgrowth(df, min_support=0.2, use_colnames=True)
+        frequent_itemsets = fpgrowth(df, min_support=min_support, use_colnames=True)
         
         end_time = time.time()
         _current_all_runtimes.append(end_time - start_time)
 
     # aggregate statistics
-
     all_runtimes.append(_current_all_runtimes)
     mean_times.append(np.mean(_current_all_runtimes))
+    freq_itemsets_found.append(len(frequent_itemsets))
+
 
 print(mean_times)
 print(all_runtimes)
+print(freq_itemsets_found)
