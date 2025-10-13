@@ -145,6 +145,14 @@ export anchored_fpgrowth
 # include("alphabet-proposal.jl")
 # export motifsalphabet
 
+# functionalities that could be moved in SoleLogics
+include("utils/logiset.jl")
+export Logiset
+export instances, ninstances, getinstance, frame, getinstance, slicedataset
+
+include("utils/generation.jl")
+export generate
+
 include("deprecate.jl")
 
 end
