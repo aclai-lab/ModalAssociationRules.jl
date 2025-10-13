@@ -1,3 +1,4 @@
+using BenchmarkTools
 using Graphs
 
 using ModalAssociationRules
@@ -18,10 +19,6 @@ open(DATAPATH, "r") do file
     end
 end
 
-items = [t for transaction in transactions for t in transaction] |> unique .|> Item
-itemmeasures = [(gsupport, 1.0, 0.2)]
-rulemeasures = [(gconfidence, 0.8, 0.8)]
-
 # create a degenerate Kripke frame, containing only one world (i.e., a propositional model)
 world = World.(1:1)
 graph = Graphs.SimpleDiGraph(1, 0)
@@ -39,6 +36,10 @@ modaldataset = Vector{KripkeStructure}([
     for transaction in transactions
 ]) |> Logiset
 
+items = [t for transaction in transactions for t in transaction] |> unique .|> Item
+itemmeasures = [(gsupport, 1.0, 0.2)]
+rulemeasures = [(gconfidence, 0.8, 0.8)]
+
 miner = Miner(
     modaldataset,
     fpgrowth,
@@ -49,4 +50,11 @@ miner = Miner(
     arule_policies=Function[]
 );
 
-mine!(miner; fpeonly=true)
+EVALS = 1
+SAMPLES = 10
+GCTRIAL = true
+
+@benchmark mine!($miner; forcemining=true, fpeonly=true) teardown = begin
+    localmemo($miner) |> empty!
+    globalmemo($miner) |> empty!
+end evals=EVALS samples=SAMPLES gctrial=GCTRIAL
