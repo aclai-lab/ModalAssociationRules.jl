@@ -20,6 +20,16 @@ GLOBAL_MINING_STATES = [
 ]
 
 """
+    MEMOIZATION_POWER = 4
+
+Limit up to which memoize measures in memory.
+
+See also [`MeaningfulnessMeasure`](@ref).
+"""
+LOCAL_MEMOIZATION_POWER = 4
+GLOBAL_MEMOIZATION_POWER = 4
+
+"""
     macro localmeasure(measname, measlogic)
 
 Build a generic local meaningfulness measure, levering the optimizations provided by any
@@ -74,21 +84,25 @@ macro localmeasure(measname, measlogic)
             X, ith_instance = instance.s, instance.i_instance
 
             # key to access memoization structures
-            memokey = LmeasMemoKey((Symbol($(esc(fname))), subject, ith_instance))
+            if length(subject) <= LOCAL_MEMOIZATION_POWER
+                memokey = LmeasMemoKey((Symbol($(esc(fname))), subject, ith_instance))
 
-            # leverage memoization if possible
-            memoized = localmemo(miner, memokey)
-            if !isnothing(memoized)
-                return memoized
+                # leverage memoization if possible
+                memoized = localmemo(miner, memokey)
+                if !isnothing(memoized)
+                    return memoized
+                end
+
+                # compute local measure
+                response = $(esc(measlogic))(subject, X, ith_instance, miner)
+                measure = response[:measure]
+
+                # save measure in memoization structure.
+                localmemo!(miner, memokey, measure)
+            else
+                response = $(esc(measlogic))(subject, X, ith_instance, miner)
+                measure = response[:measure]
             end
-
-            # compute local measure
-            response = $(esc(measlogic))(subject, X, ith_instance, miner)
-            measure = response[:measure]
-
-            # save measure in memoization structure;
-            # do more stuff depending on `miningstate` dispatch (see the documentation).
-            localmemo!(miner, memokey, measure)
 
             for state in LOCAL_MINING_STATES
                 # the numerical value to save more informations about the relation
@@ -160,23 +174,30 @@ macro globalmeasure(measname, measlogic)
             threshold::Threshold,
             miner::AbstractMiner
         )
-            # key to access memoization structures
-            memokey = GmeasMemoKey((Symbol($(esc(fname))), subject))
 
-            # leverage memoization if possible
-            memoized = globalmemo(miner, memokey)
-            if !isnothing(memoized)
-                return memoized
+            if length(subject) <= GLOBAL_MEMOIZATION_POWER
+                # key to access memoization structures
+                memokey = GmeasMemoKey((Symbol($(esc(fname))), subject))
+
+                # leverage memoization if possible
+                memoized = globalmemo(miner, memokey)
+                if !isnothing(memoized)
+                    return memoized
+                end
+
+                # compute global measure
+                response = $(esc(measlogic))(subject, X, threshold, miner)
+                measure = response[:measure]
+
+                # save measure in memoization structure;
+                # do more stuff depending on `miningstate` dispatch (see the documentation).
+                # to know more, see `localmeasure` comments.
+                globalmemo!(miner, memokey, measure)
+            else
+                # in this case, only compute the global measure
+                response = $(esc(measlogic))(subject, X, threshold, miner)
+                measure = response[:measure]
             end
-
-            # compute local measure
-            response = $(esc(measlogic))(subject, X, threshold, miner)
-            measure = response[:measure]
-
-            # save measure in memoization structure;
-            # do more stuff depending on `miningstate` dispatch (see the documentation).
-            # to know more, see `localmeasure` comments.
-            globalmemo!(miner, memokey, measure)
 
             ## for state in GLOBAL_MINING_STATES
             ##     if hasminingstate(miner, state) && haskey(response, state)
