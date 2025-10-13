@@ -1,0 +1,1 @@
+This folder contains the driver shell file to compare apriori and fpgrowth algorithm.
