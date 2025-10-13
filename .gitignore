@@ -20,3 +20,4 @@ TODO
 
 .vscode/settings.json
 test/benchmark/spark/venv
+!test/benchmark/spark/requirements.txt
