@@ -26,8 +26,8 @@ Limit up to which memoize measures in memory.
 
 See also [`MeaningfulnessMeasure`](@ref).
 """
-LOCAL_MEMOIZATION_POWER = 4
-GLOBAL_MEMOIZATION_POWER = 4
+LOCAL_MEMOIZATION_POWER = 1
+GLOBAL_MEMOIZATION_POWER = 1
 
 """
     macro localmeasure(measname, measlogic)
