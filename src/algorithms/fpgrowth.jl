@@ -350,6 +350,7 @@ function _fpgrowth_kernel(
                         _leftout_count = min(_leftout_count, leftout_count_dict[item])
                     end
                 end
+
                 return _leftout_count / _nworlds
             end,
             miner
