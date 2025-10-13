@@ -1,6 +1,26 @@
-r z h k p
-z y x w v u t s
-s x o n r
-x z y m t s q e
-z
-x z y r q t p
+a b c d e f g h i j k l m n o p q r s t u v w y x z
+a b c d e f g h i j k l m n o p q r s t u v w y x
+a b c d e f g h i j k l m n o p q r s t u v w y
+a b c d e f g h i j k l m n o p q r s t u v w 
+a b c d e f g h i j k l m n o p q r s t u v
+a b c d e f g h i j k l m n o p q r s t u
+a b c d e f g h i j k l m n o p q r s t 
+a b c d e f g h i j k l m n o p q r s 
+a b c d e f g h i j k l m n o p q r
+a b c d e f g h i j k l m n o p q 
+a b c d e f g h i j k l m n o p 
+a b c d e f g h i j k l m n o 
+a b c d e f g h i j k l m n
+a b c d e f g h i j k l m
+a b c d e f g h i j k l
+a b c d e f g h i j k 
+a b c d e f g h i j 
+a b c d e f g h i 
+a b c d e f g h
+a b c d e f g
+a b c d e f 
+a b c d e 
+a b c d
+a b c
+a b
+a
