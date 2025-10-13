@@ -221,7 +221,7 @@ content(rule::ARule)::Tuple{Itemset,Itemset} = (rule.antecedent, rule.consequent
 
 Getter for `rule`'s antecedent.
 
-See also [`antecedent`](@ref), [`ARule`](@ref), [`Itemset`](@ref).
+See also [`ARule`](@ref), [`consequent`](@ref), [`Itemset`](@ref).
 """
 antecedent(rule::ARule)::Itemset = rule.antecedent
 
@@ -230,9 +230,19 @@ antecedent(rule::ARule)::Itemset = rule.antecedent
 
 Getter for `rule`'s consequent.
 
-See also [`consequent`](@ref), [`ARule`](@ref), [`Itemset`](@ref).
+See also [`antecedent`](@ref), [`ARule`](@ref), [`Itemset`](@ref).
 """
 consequent(rule::ARule)::Itemset = rule.consequent
+
+"""
+    length(rule::ARule)::Int64
+
+Return the totale length of a `rule`, obtained by summing the length of the antecedent
+and the length of the consequent.
+
+See [`antecedent`](@ref), [`ARule`](@ref), [`consequent`](@ref)-
+"""
+length(rule::ARule)::Int64 = length(antecedent(rule)) + length(consequent(rule))
 
 """
     function Base.:(==)(rule1::ARule, rule2::ARule)
