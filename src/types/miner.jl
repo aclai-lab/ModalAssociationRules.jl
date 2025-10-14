@@ -438,7 +438,7 @@ function apply!(
 
     # stop the mining process with frequent patterns extraction,
     if fpeonly
-        println("Returning without rules generation")
+        # println("Returning without rules generation")
         return miner
     else
         # or go ahead an return a generator for association rules
