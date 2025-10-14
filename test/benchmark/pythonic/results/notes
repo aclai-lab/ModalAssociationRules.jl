@@ -95,3 +95,138 @@ certainly not be globally frequent.
 ####   (:lsupport, [c, i, e, l, r, p, m], 3)             => 1.0
 ####   (:lsupport, [j, c, k, e, d, a, r, q, s, f], 2)    => 1.0
 ####   ⋮                                                 => ⋮
+
+
+mas run:
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Algorithm: apriori
+Any[2.91445607373e11, 3.03641497959e11, 1.36200439536e11, 1.25452035355e11, 1.12654162935e11, 1.25302737374e11, 1.18078602233e11, 1.08263465992e11, 1.28383351934e11, 1.26494616358e11, 1.1684163042e11, 1.22702815131e11, 1.26780344173e11, 1.22253130184e11, 1.06990029759e11, 1.11817503199e11, 1.15883463877e11, 1.15839131722e11, 1.00124219964e11, 1.06741550008e11]
+Any[[2.91445607373e11], [3.03641497959e11], [1.36200439536e11], [1.25452035355e11], [1.12654162935e11], [1.25302737374e11], [1.18078602233e11], [1.08263465992e11], [1.28383351934e11], [1.26494616358e11], [1.1684163042e11], [1.22702815131e11], [1.26780344173e11], [1.22253130184e11], [1.06990029759e11], [1.11817503199e11], [1.15883463877e11], [1.15839131722e11], [1.00124219964e11], [1.06741550008e11]]
+Any[1048574, 524286, 262142, 131070, 65534, 32766, 16382, 8190, 4094, 2046, 1022, 510, 254, 126, 62, 30, 14, 6, 2, 2]
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Algorithm: fpgrowth
+Any[2.91445607373e11, 3.03641497959e11, 1.36200439536e11, 1.25452035355e11, 1.12654162935e11, 1.25302737374e11, 1.18078602233e11, 1.08263465992e11, 1.28383351934e11, 1.26494616358e11, 1.1684163042e11, 1.22702815131e11, 1.26780344173e11, 1.22253130184e11, 1.06990029759e11, 1.11817503199e11, 1.15883463877e11, 1.15839131722e11, 1.00124219964e11, 1.06741550008e11, 2.38691873061e11, 2.58907221095e11, 1.20921445999e11, 1.28415853299e11, 1.18302908998e11, 1.15084360669e11, 1.08044670035e11, 1.15402142919e11, 1.11755566789e11, 1.08344782387e11, 1.25086139377e11, 1.25180166211e11, 1.08774330154e11, 1.21430487383e11, 1.09914854614e11, 1.11573098428e11, 1.15324404676e11, 1.09247519049e11, 1.20378241273e11, 1.08030419945e11]
+Any[[2.91445607373e11], [3.03641497959e11], [1.36200439536e11], [1.25452035355e11], [1.12654162935e11], [1.25302737374e11], [1.18078602233e11], [1.08263465992e11], [1.28383351934e11], [1.26494616358e11], [1.1684163042e11], [1.22702815131e11], [1.26780344173e11], [1.22253130184e11], [1.06990029759e11], [1.11817503199e11], [1.15883463877e11], [1.15839131722e11], [1.00124219964e11], [1.06741550008e11], [2.38691873061e11], [2.58907221095e11], [1.20921445999e11], [1.28415853299e11], [1.18302908998e11], [1.15084360669e11], [1.08044670035e11], [1.15402142919e11], [1.11755566789e11], [1.08344782387e11], [1.25086139377e11], [1.25180166211e11], [1.08774330154e11], [1.21430487383e11], [1.09914854614e11], [1.11573098428e11], [1.15324404676e11], [1.09247519049e11], [1.20378241273e11], [1.08030419945e11]]
+Any[1048574, 524286, 262142, 131070, 65534, 32766, 16382, 8190, 4094, 2046, 1022, 510, 254, 126, 62, 30, 14, 6, 2, 2, 1048574, 524286, 262142, 131070, 65534, 32766, 16382, 8190, 4094, 2046, 1022, 510, 254, 126, 62, 30, 14, 6, 2, 2]
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Returning without rules generation
+Algorithm: eclat
+Any[2.91445607373e11, 3.03641497959e11, 1.36200439536e11, 1.25452035355e11, 1.12654162935e11, 1.25302737374e11, 1.18078602233e11, 1.08263465992e11, 1.28383351934e11, 1.26494616358e11, 1.1684163042e11, 1.22702815131e11, 1.26780344173e11, 1.22253130184e11, 1.06990029759e11, 1.11817503199e11, 1.15883463877e11, 1.15839131722e11, 1.00124219964e11, 1.06741550008e11, 2.38691873061e11, 2.58907221095e11, 1.20921445999e11, 1.28415853299e11, 1.18302908998e11, 1.15084360669e11, 1.08044670035e11, 1.15402142919e11, 1.11755566789e11, 1.08344782387e11, 1.25086139377e11, 1.25180166211e11, 1.08774330154e11, 1.21430487383e11, 1.09914854614e11, 1.11573098428e11, 1.15324404676e11, 1.09247519049e11, 1.20378241273e11, 1.08030419945e11, 2.42013797131e11, 2.40492045068e11, 1.26411970442e11, 1.22508167982e11, 1.05444328116e11, 1.33354277429e11, 1.14736149556e11, 1.31661290957e11, 1.08492969698e11, 1.15699178214e11, 1.20119013616e11, 1.23101836401e11, 1.20440710166e11, 1.19953778268e11, 1.24670924239e11, 1.28645852845e11, 1.08832963957e11, 1.16569654823e11, 1.10437397239e11, 1.20367056125e11]
+Any[[2.91445607373e11], [3.03641497959e11], [1.36200439536e11], [1.25452035355e11], [1.12654162935e11], [1.25302737374e11], [1.18078602233e11], [1.08263465992e11], [1.28383351934e11], [1.26494616358e11], [1.1684163042e11], [1.22702815131e11], [1.26780344173e11], [1.22253130184e11], [1.06990029759e11], [1.11817503199e11], [1.15883463877e11], [1.15839131722e11], [1.00124219964e11], [1.06741550008e11], [2.38691873061e11], [2.58907221095e11], [1.20921445999e11], [1.28415853299e11], [1.18302908998e11], [1.15084360669e11], [1.08044670035e11], [1.15402142919e11], [1.11755566789e11], [1.08344782387e11], [1.25086139377e11], [1.25180166211e11], [1.08774330154e11], [1.21430487383e11], [1.09914854614e11], [1.11573098428e11], [1.15324404676e11], [1.09247519049e11], [1.20378241273e11], [1.08030419945e11], [2.42013797131e11], [2.40492045068e11], [1.26411970442e11], [1.22508167982e11], [1.05444328116e11], [1.33354277429e11], [1.14736149556e11], [1.31661290957e11], [1.08492969698e11], [1.15699178214e11], [1.20119013616e11], [1.23101836401e11], [1.20440710166e11], [1.19953778268e11], [1.24670924239e11], [1.28645852845e11], [1.08832963957e11], [1.16569654823e11], [1.10437397239e11], [1.20367056125e11]]
+Any[1048574, 524286, 262142, 131070, 65534, 32766, 16382, 8190, 4094, 2046, 1022, 510, 254, 126, 62, 30, 14, 6, 2, 2, 1048574, 524286, 262142, 131070, 65534, 32766, 16382, 8190, 4094, 2046, 1022, 510, 254, 126, 62, 30, 14, 6, 2, 2, 1048574, 524286, 262142, 131070, 65534, 32766, 16382, 8190, 4094, 2046, 1022, 510, 254, 126, 62, 30, 14, 6, 2, 2]
