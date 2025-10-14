@@ -73,6 +73,9 @@ all_runtimes = []
 # frequent itemsets for each minimum support set
 freq_itemsets_found = []
 
+# memory consumption estimated by BenchmarkTools
+mean_memories = []
+
 
 for miningalgo in [apriori, fpgrowth, eclat]
 
@@ -104,19 +107,24 @@ for miningalgo in [apriori, fpgrowth, eclat]
         push!(all_runtimes, _current.times)
         push!(mean_times, mean(_current.times))
         push!(freq_itemsets_found, length(freqitems(miner)))
+        push!(mean_memories, memory(_current))
     end
 
+    # aggregate the results and write them
     results = Dict(
         "mean_times" => mean_times,
         "all_runtimes" => all_runtimes,
-        "frequent_itemsets" => freq_itemsets_found
+        "frequent_itemsets" => freq_itemsets_found,
+        "mean_memories" => mean_memories
     )
 
     open(joinpath(BENCHMARK_REPOSITORY, "results", "mas-$(miningalgo).json"), "w") do io
         JSON.print(io, results)
     end
 
+    # reset and restart
     mean_times = []
     all_runtimes = []
     freq_itemsets_found = []
+    mean_memories = []
 end
