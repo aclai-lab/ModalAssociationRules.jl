@@ -26,7 +26,7 @@ NEDGES = configuration["n_edges_per_frame"]
 NITEMS = configuration["n_items"]
 
 MIN_LOCAL_SUPPORTS = configuration["min_local_supports"]
-MIN_GLOBAL_SUPPORTS = configuration["mi_global_supports"]
+MIN_GLOBAL_SUPPORTS = configuration["min_global_supports"]
 
 EVALS = configuration["num_evals"]
 SAMPLES = configuration["num_runs"]
@@ -37,7 +37,7 @@ GCTRIAL = configuration["gctrial"]
 
 # alphabet of both propositional and modal literals (considering diamond operator)
 facts = [i |> Atom for i in 1:NITEMS]   # exploited during the creation of modal instances
-items = Item.(facts)    # "handles" for the facts above
+items = Item.(vcat(facts, diamond().(facts)))    # "handles" for the facts above
 
 # create the synthetic
 modaldataset = Vector{KripkeStructure}([
