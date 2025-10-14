@@ -1,6 +1,7 @@
 using BenchmarkTools
 using Graphs
 using JSON
+using ProgressBars
 
 using ModalAssociationRules
 
@@ -34,6 +35,7 @@ open(DATAPATH, "r") do file
 end
 
 ntransactions = length(transactions)
+min_supports = configuration["min_supports"]
 
 # create a degenerate Kripke frame, containing only one world (i.e., a propositional model)
 world = World.(1:1)
@@ -71,52 +73,50 @@ all_runtimes = []
 # frequent itemsets for each minimum support set
 freq_itemsets_found = []
 
-for min_support in configuration["min_supports"]
 
-    # some items are trivially globally unfrequent;
-    # since we do not want to mine an exponential number of itemsets on one world,
-    # just for immediately after discovering that they are not frequent, we remove them now.
-    _pruneditems = [
-        item
-        for item in items
-        if (count(x -> x == formula(item), vcat(transactions...)) / ntransactions) > min_support
-    ]
+for miningalgo in [apriori, fpgrowth, eclat]
 
-    miner = Miner(
-        modaldataset,
-        fpgrowth,
-        items,
-        [(gsupport, 1.0, min_support)],
-        rulemeasures;
-        itemset_policies=Function[],
-        arule_policies=Function[]
-    );
+    for min_support in ProgressBar(min_supports)
+        # some items are trivially globally unfrequent;
+        # since we do not want to mine an exponential number of itemsets on one world,
+        # just for immediately after discovering that they are not frequent, we remove them now.
+        _pruneditems = [
+            item
+            for item in items
+            if (count(x -> x == formula(item), vcat(transactions...)) / ntransactions) > min_support
+        ]
 
-    println("Measuring min_support=$min_support")
+        miner = Miner(
+            modaldataset,
+            fpgrowth,
+            _pruneditems,
+            [(gsupport, 1.0, min_support)],
+            rulemeasures;
+            itemset_policies=Function[],
+            arule_policies=Function[]
+        );
 
-    _current = @benchmark mine!($miner; forcemining=true, fpeonly=true) teardown = begin
-        localmemo($miner) |> empty!
-        globalmemo($miner) |> empty!
-    end evals=EVALS samples=SAMPLES gctrial=GCTRIAL
+        _current = @benchmark mine!($miner; forcemining=true, fpeonly=true) teardown = begin
+            localmemo($miner) |> empty!
+            globalmemo($miner) |> empty!
+        end evals=EVALS samples=SAMPLES gctrial=GCTRIAL
 
-    push!(all_runtimes, _current.times)
-    push!(mean_times, mean(_current.times))
-    push!(freq_itemsets_found, length(freqitems(miner)))
+        push!(all_runtimes, _current.times)
+        push!(mean_times, mean(_current.times))
+        push!(freq_itemsets_found, length(freqitems(miner)))
+    end
 
-    println("Time for $min_support is: $(mean(_current.times))")
+    results = Dict(
+        "mean_times" => mean_times,
+        "all_runtimes" => all_runtimes,
+        "frequent_itemsets" => freq_itemsets_found
+    )
+
+    open(joinpath(BENCHMARK_REPOSITORY, "results", "mas-$(miningalgo).json"), "w") do io
+        JSON.print(io, results)
+    end
+
+    mean_times = []
+    all_runtimes = []
+    freq_itemsets_found = []
 end
-
-#### julia> localmemo(miner)
-#### Dict{Tuple{Symbol, ARMSubject, Integer}, Float64} with 2097320 entries:
-####   (:lsupport, [n, b, c, e, d, a, l, r, q], 3)       => 1.0
-####   (:lsupport, [c, o, k, d, a, l, h, r, q, m], 1)    => 1.0
-####   (:lsupport, [g, j, o, k, d, a, l, h, p, m], 4)    => 1.0
-####   (:lsupport, [g, b, t, i, d, l, h, p, q], 1)       => 1.0
-####   (:lsupport, [n, g, b, e, a, l, r, s, m], 1)       => 1.0
-####   (:lsupport, [n, j, t, c, k, d, l, h, f, m], 1)    => 1.0
-####   (:lsupport, [g, b, j, t, o, k, e, d, l, r, s], 1) => 1.0
-####   (:lsupport, [g, b, j, t, c, i, o, k, r, q, f], 1) => 1.0
-####   (:lsupport, [b, t, i, o, d, a, h, r, q, s, f], 1) => 1.0
-####   (:lsupport, [c, i, e, l, r, p, m], 3)             => 1.0
-####   (:lsupport, [j, c, k, e, d, a, r, q, s, f], 2)    => 1.0
-####   ⋮                                                 => ⋮
