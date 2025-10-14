@@ -18,7 +18,6 @@
 
 TODO
 
+**/deprecated/
+
 .vscode/settings.json
-test/benchmark/pythonic/venv
-!test/benchmark/pythonic/requirements.txt
-!test/benchmark/pythonic/*.txt
