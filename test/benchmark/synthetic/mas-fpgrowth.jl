@@ -23,7 +23,7 @@ NINSTANCES = configuration["n_instances"]
 NWORLDS = configuration["n_worlds_per_frame"]
 NEDGES = configuration["n_edges_per_frame"]
 
-NITEMS = configuration["n_items"]
+NITEMS = configuration["n_propositional_items"]
 
 MIN_LOCAL_SUPPORTS = configuration["min_local_supports"]
 MIN_GLOBAL_SUPPORTS = configuration["min_global_supports"]
@@ -32,24 +32,30 @@ EVALS = configuration["num_evals"]
 SAMPLES = configuration["num_runs"]
 GCTRIAL = configuration["gctrial"]
 
+ModalAssociationRules.LOCAL_MEMOIZATION_POWER = (1<<63)-1
+ModalAssociationRules.GLOBAL_MEMOIZATION_POWER = (1<<63)-1
+
 
 ##### modal dataset creation ###############################################################
 
 # alphabet of both propositional and modal literals (considering diamond operator)
-facts = [i |> Atom for i in 1:NITEMS]   # exploited during the creation of modal instances
-items = Item.(vcat(facts, diamond().(facts)))    # "handles" for the facts above
+propfacts = [i |> Atom for i in 1:NITEMS] # exploited during the creation of modal instances
 
-# create the synthetic
+facts = vcat(propfacts, diamond().(propfacts))
+_items = Item.(facts)    # "handles" for the facts above
+
+# create the synthetic modal dataset (by seed)
 modaldataset = Vector{KripkeStructure}([
     generate(
         randframe(SEED, NWORLDS, NEDGES),
-        facts,
-        inittruthvalues(BooleanAlgebra());
-        random=true,
-        rng=SEED
+        propfacts,
+        vcat([SoleLogics.TOP for _ in 1:i], [SoleLogics.BOT for _ in i:NINSTANCES]),
+        incremental=true;
+        # random=true,
+        # rng=SEED
     )
     for i in 1:NINSTANCES
-]) |> Logiset
+])
 
 # can be ignored, as they are just a default value to be placed within Miner's constructor
 rulemeasures = [(gconfidence, 0.5, 0.5)]
@@ -57,78 +63,87 @@ rulemeasures = [(gconfidence, 0.5, 0.5)]
 
 ##### Effective benchmarking ###############################################################
 
-# mean time for each measurement set
-meantimes = []
+# copy the configuration in the final report
+results = configuration
 
-# also keep track of the individual measurements for each set;
-# this is useful for plotting whisker plots
-alltimes = []
+for miningalgo in [fpgrowth, eclat, apriori]
 
-# frequent itemsets for each minimum support set
-nitemsets = []
+    # mean time for each measurement set
+    meantimes = []
 
-# memory consumption estimated by BenchmarkTools
-memories = []
+    # also keep track of the individual measurements for each set;
+    # this is useful for plotting whisker plots
+    alltimes = []
 
+    # frequent itemsets for each minimum support set
+    nitemsets = []
 
-for miningalgo in [apriori, fpgrowth, eclat]
+    # memory consumption estimated by BenchmarkTools
+    memories = []
 
-    for mingsupport in ProgressBar(MIN_GLOBAL_SUPPORTS)
-
+    for mingsupport in MIN_GLOBAL_SUPPORTS
         for minlsupport in MIN_LOCAL_SUPPORTS
-            # The following is an early pruning strategy suitable for the fully
-            # propositional mining scenario.
-            #
-            # # some items are trivially globally unfrequent;
-            # # since we do not want to mine an exponential number of itemsets on one world,
-            # # just for immediately after discovering that they are not frequent, we remove
-            # # them now.
-            # _pruneditems = [
-            #     item
-            #     for item in items
-            #     if (count(
-            #            x -> x == formula(item), vcat(transactions...)
-            #        ) / ntransactions) > minsupport)
-            # ]
 
             miner = Miner(
-                modaldataset,
+                modaldataset |> Logiset,
                 fpgrowth,
-                items,
-                [(gsupport, mingsupport, minlsupport)],
+                _items,
+                [(gsupport, minlsupport, mingsupport)],
                 rulemeasures;
                 itemset_policies=Function[],
                 arule_policies=Function[]
             );
 
-            _current = @benchmark mine!($miner; forcemining=true, fpeonly=true) teardown = begin
+            _current = @benchmark mine!(
+                $miner;
+                forcemining=true,
+                fpeonly=true
+            ) teardown = begin
                 localmemo($miner) |> empty!
                 globalmemo($miner) |> empty!
             end evals=EVALS samples=SAMPLES gctrial=GCTRIAL
 
-            push!(alltimes, _current.times)
-            push!(meantimes, mean(_current.times))
-            push!(nitemsets, length(freqitems(miner)))
-            push!(memories, memory(_current))
-        end
+                push!(alltimes, _current.times)
+                push!(meantimes, mean(_current.times))
+                push!(nitemsets, length(freqitems(miner)))
 
-    end
+                push!(memories, memory(_current))
 
-    results = configuration
+                println("Current minimum $(minlsupport)")
+
+        end # end of local support loop
+    end # end of global support loop
 
     # aggregate the results and write them
-    results["meantimes"] = meantimes,
-    results["alltimes"] = alltimes,
-    results["frequent_itemsets"] = nitemsets,
+    results["meantimes"] = meantimes
+    results["alltimes"] = alltimes
+    results["frequent_itemsets"] = nitemsets
+
     results["memories"] = memories
 
-    open(joinpath(BENCHMARK_REPOSITORY, "results", "mas-$(miningalgo).json"), "w") do io
+    open(joinpath(BENCHMARK_REPOSITORY, "results", "v2-$(miningalgo).json"), "w") do io
         JSON.print(io, results)
     end
-
-    # reset and restart
-    meantimes = []
-    alltimes = []
-    nitemsets = []
-    memories = []
 end
+
+
+##### plotting #############################################################################
+
+# results = JSON.parsefile(joinpath(BENCHMARK_REPOSITORY, "results", "v2-fpgrowth.json"))
+#
+# X = Float64.(results["min_global_supports"])
+# Y = Float64.(results["min_local_supports"])
+#
+# XGRID = repeat(X', length(Y))
+# YGRID = repeat(Y', length(X))
+#
+# Z = Float64.(reshape(results["meantimes"], 20, 20))
+
+# surface(
+#     XGRID, YGRID, Z,
+#     xlabel = "Min gsupp",
+#     ylabel = "Min lsupp",
+#     zlabel = "Time",
+#     zlims = (0, 1e7),
+#     contour = :projection
+# )
