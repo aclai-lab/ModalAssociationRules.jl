@@ -23,32 +23,32 @@ you can generate the latter using `randframe(rng, nworlds, nedges)`.
 
 # Arguments
 - `fr::SoleLogics.AbstractFrame{W}`: frame containing only worlds (nodes) and relations
-(edges);
+    (edges);
 - `facts::Vector{S}`: facts whose truth value can be evaluated on each world;
 - `truthvalues::Union{A,T}`: legal truth values, such as
-SoleLogics.BooleanAlgebra() |> inittruthvalues).
+    SoleLogics.BooleanAlgebra() |> inittruthvalues).
 
 # Keyword Arguments
-`random::Bool=true`: set a truth value for each fact on every world, and choose its value
-randomly; this is the intended default behaviour;
-`rng::AbstractRNG=false`: required by `random=true`;
-`fulltransfer::Bool=false`: set all the `facts` to be `truthvalues[1]` on every world;
-this is useful if you are generating a degenerate, propositional dataset,
-`incremental::Bool=false`: set the `facts[1]` to be true on the first world,
-`facts[1:2]` to be true on the second world, ..., `facts[1:nworlds]` to be true on the last
-world.
+- `random::Bool=true`: set a truth value for each fact on every world, and choose its value
+    randomly; this is the intended default behaviour;
+- `rng::AbstractRNG=false`: required by `random=true`;
+- `fulltransfer::Bool=false`: set all the `facts` to be `truthvalues[1]` on every world;
+    this is useful if you are generating a degenerate, propositional dataset,
+- `incremental::Bool=false`: set the `facts[1]` to be true on the first world,
+    `facts[1:2]` to be true on the second world, ..., `facts[1:nworlds]` to be true on the
+    last world.
 """
 function generate(
     fr::SoleLogics.AbstractFrame{W},
     facts::Vector{S},
     truthvalues::Vector{T};
     random::Bool=true,
-    rng::AbstractRNG,
+    rng::AbstractRNG=Random.GLOBAL_RNG,
     fulltransfer::Bool=false,
     incremental::Bool=false,
 )::KripkeStructure where {
     W<:AbstractWorld,
-    S<:SyntaxLeaf,
+    S<:SyntaxTree,
     T<:Truth
 }
     defaulttruth = truthvalues |> first    # default truth value for later assignments
@@ -59,9 +59,11 @@ function generate(
             w => TruthDict([f => defaulttruth for f in facts]) for w in fr.worlds
         ])
     elseif incremental
+        _factslen = length(facts)
+
         # facts[1:i] are all true on the worlds from the first to the ith.
         valuation = Dict([
-            w => TruthDict([f => defaulttruth for f in facts[1:i]])
+            w => TruthDict([f => defaulttruth for f in facts[1:(i%_factslen + 1)]])
             for (i,w) in enumerate(fr.worlds)
         ])
     elseif random
