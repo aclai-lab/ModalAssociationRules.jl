@@ -86,7 +86,7 @@ for miningalgo in [fpgrowth, eclat, apriori]
 
             miner = Miner(
                 modaldataset |> Logiset,
-                fpgrowth,
+                miningalgo,
                 _items,
                 [(gsupport, minlsupport, mingsupport)],
                 rulemeasures;
