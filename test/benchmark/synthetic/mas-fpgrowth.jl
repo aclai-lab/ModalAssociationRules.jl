@@ -121,29 +121,7 @@ for miningalgo in [apriori] # [fpgrowth, eclat, apriori]
 
     results["memories"] = memories
 
-    open(joinpath(BENCHMARK_REPOSITORY, "results", "v2-$(miningalgo).json"), "w") do io
+    open(joinpath(BENCHMARK_REPOSITORY, "results", "$(miningalgo).json"), "w") do io
         JSON.print(io, results)
     end
 end
-
-
-##### plotting #############################################################################
-
-# results = JSON.parsefile(joinpath(BENCHMARK_REPOSITORY, "results", "v2-fpgrowth.json"))
-#
-# X = Float64.(results["min_global_supports"])
-# Y = Float64.(results["min_local_supports"])
-#
-# XGRID = repeat(X', length(Y))
-# YGRID = repeat(Y', length(X))
-#
-# Z = Float64.(reshape(results["meantimes"], 20, 20))
-
-# surface(
-#     XGRID, YGRID, Z,
-#     xlabel = "Min gsupp",
-#     ylabel = "Min lsupp",
-#     zlabel = "Time",
-#     zlims = (0, 1e7),
-#     contour = :projection
-# )
