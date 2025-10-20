@@ -66,7 +66,7 @@ rulemeasures = [(gconfidence, 0.5, 0.5)]
 # copy the configuration in the final report
 results = configuration
 
-for miningalgo in [fpgrowth, eclat, apriori]
+for miningalgo in [apriori] # [fpgrowth, eclat, apriori]
 
     # mean time for each measurement set
     meantimes = []
