@@ -12,12 +12,12 @@ DATA_REPOSITORY = joinpath(@__DIR__, "test", "experiments", "ENZYMES", "data")
 # every label is one of the 6 types of enzymes;
 # the dataset is balanced, with 100 enzymes of each type.
 LABELS_FILENAME = joinpath(DATA_REPOSITORY, "ENZYMES_graph_labels.txt")
-labels = split(read(LABELS_FILENAME, String) |> strip, "\n") .|> String
+labels = parse.(Int, split(read(LABELS_FILENAME, String) |> strip, "\n") .|> String)
 
 
 # every node belongs to one of the 600 total graphs
 GRAPH_INDICATOR_FILENAME = joinpath(DATA_REPOSITORY, "ENZYMES_graph_indicator.txt")
-node_to_class = parse.(
+node_to_graph = parse.(
     Int,
     split(read(GRAPH_INDICATOR_FILENAME, String) |> strip, "\n")
 )
@@ -40,3 +40,39 @@ edges = [
     parse.(Int, strip.(split(s, ","))) |> Tuple
     for s in split(read(EDGES_FILENAME, String) |> strip, "\n")
 ]
+
+# mapping from node to neighbor
+from_to = Dict([
+    u => v
+    for (u,v) in edges
+])
+
+# and vice versa
+for (u,v) in edges
+    from_to[v] = u
+end
+
+# compose the effective graph structure (i encodes the ith graph)
+kripkeframes = []
+for i in 1:600
+    # retrieve all the nodes of the ith graph
+    _nodes = findall(x -> x == i, node_to_graph)
+
+    # we want the worlds to start at 1, by adding a normalization scalar (𝑁)
+    𝑁 = minimum(_nodes) - 1
+
+    # create the graph
+    graph = Graphs.SimpleGraph(length(_nodes))
+
+    # push the edges into the graph
+    for n in _nodes
+        neighbor = get(from_to, n, nothing)
+        if !isnothing(neighbor)
+            Graphs.add_edge!(graph, n-𝑁, neighbor-𝑁)
+        end
+    end
+
+    # create the kripke frame
+    worlds = World.(1:length(_nodes))
+    push!(kripkeframes, SoleLogics.ExplicitCrispUniModalFrame(worlds, graph))
+end
