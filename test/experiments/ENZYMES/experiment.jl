@@ -32,6 +32,9 @@ node_labels = parse.(
     Int,
     split(read(NODE_LABELS_FILENAME, String) |> strip, "\n")
 )
+# this is needed later, since we are going to let nodes start from 1 in every new graph
+# and we do not want to lose the reference to the corresponding label of the node
+graph_and_ithnode_to_label = Dict{Tuple{Int,Int},Int}()
 
 
 # the effective graph structure
@@ -47,14 +50,9 @@ from_to = Dict([
     for (u,v) in edges
 ])
 
-# and vice versa
-for (u,v) in edges
-    from_to[v] = u
-end
-
 
 # compose the effective graph structure (i encodes the ith graph)
-kripkeframes = []
+kripkeframes = ExplicitCrispUniModalFrame[]
 for i in 1:600
     # retrieve all the nodes of the ith graph
     _nodes = findall(x -> x == i, node_to_graph)
@@ -65,12 +63,15 @@ for i in 1:600
     # create the graph
     graph = Graphs.SimpleGraph(length(_nodes))
 
-    # push the edges into the graph
     for n in _nodes
+        # push the edge associated with n into the graph, if it exists
         neighbor = get(from_to, n, nothing)
         if !isnothing(neighbor)
             Graphs.add_edge!(graph, n-𝑁, neighbor-𝑁)
         end
+
+        # also, associate the (n-𝑁)-th node in the ith graph with the corresponding label
+        graph_and_ithnode_to_label[(i,n-𝑁)] = node_labels[n]
     end
 
     # create the kripke frame
@@ -85,6 +86,22 @@ sheet = Atom(2)
 turn = Atom(3)
 _atoms = [helix, sheet, turn]
 
+
+# every world within each frame has to be enriched with one atom encoding the
+# secondary structure element of a protein
+modaldataset = KripkeStructure[]
+
+for (i,kripkeframe) in enumerate(kripkeframes)
+    valuation = Dict([
+        w => TruthDict([Atom(graph_and_ithnode_to_label[(i, w.name)]) => TOP])
+        for w in kripkeframe.worlds
+    ])
+
+    push!(modaldataset, KripkeStructure(kripkeframe, valuation))
+end
+
+
+# atoms are enriched with modal operators (◊ and □), and are converted to items
 _items = Vector{Item}(
     Iterators.flatten([ _atoms, diamond().(_atoms), box().(_atoms) ]) |> collect
 )
