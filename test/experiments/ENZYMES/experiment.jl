@@ -102,8 +102,23 @@ end
 
 
 # atoms are enriched with modal operators (◊ and □), and are converted to items
+_todiamond = x -> diamond().(x)
+_tobox = x -> box().(x)
+
 _items = Vector{Item}(
-    Iterators.flatten([ _atoms, diamond().(_atoms), box().(_atoms) ]) |> collect
+    Iterators.flatten([
+        _atoms,
+
+        _atoms |> _todiamond,
+        _atoms |> _todiamond |> _todiamond,
+        _atoms |> _todiamond |> _todiamond |> _todiamond,
+        # _atoms |> _todiamond |> _todiamond |> _todiamond |> _todiamond,
+        # _atoms |> _todiamond |> _todiamond |> _todiamond |> _todiamond |> _todiamond,
+
+        # box().(_atoms),
+        # diamond().(box().(_atoms)),
+        # box().(box().(_atoms)),
+    ]) |> collect
 )
 
 
@@ -116,6 +131,7 @@ MODAL_DATASET_4 = modaldataset[_mask_indexes(4)] |> Logiset
 MODAL_DATASET_5 = modaldataset[_mask_indexes(5)] |> Logiset
 MODAL_DATASET_6 = modaldataset[_mask_indexes(6)] |> Logiset
 
+# dataset synonyms
 # Oxidoreductases
 𝑂 = MODAL_DATASET_1
 # Transferases
@@ -130,18 +146,34 @@ MODAL_DATASET_6 = modaldataset[_mask_indexes(6)] |> Logiset
 𝐿𝑖 = MODAL_DATASET_6
 
 
-miner = Miner(
-    MODAL_DATASET_1,
-    fpgrowth,
-    _items,
-    [(gsupport, 0.1, 0.1)],
-    [(gconfidence, 0.1, 0.1)],
-    itemset_policies=Function[
-        isanchored_itemset(ignoreuntillength=1),
-        isdimensionally_coherent_itemset()
-    ],
-    arule_policies=Function[
-        islimited_length_arule(consequent_maxlength=3),
-        isanchored_arule()
+rules = Vector{Vector{ARule}}()
+
+for _dataset in [
+        MODAL_DATASET_1
+        MODAL_DATASET_2
+        MODAL_DATASET_3
+        MODAL_DATASET_4
+        MODAL_DATASET_5
+        MODAL_DATASET_6
     ]
-)
+
+
+    miner = Miner(
+        MODAL_DATASET_1,
+        eclat,
+        _items,
+        [(gsupport, 0.1, 0.2)],
+        [(gconfidence, 0.1, 0.1)],
+        itemset_policies=Function[
+            isanchored_itemset()
+        ],
+        arule_policies=Function[
+            # islimited_length_arule(consequent_maxlength=3),
+            isanchored_arule()
+        ]
+    )
+
+    mine!(miner)
+
+    push!(rules, arules(miner))
+end
