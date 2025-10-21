@@ -52,6 +52,7 @@ for (u,v) in edges
     from_to[v] = u
 end
 
+
 # compose the effective graph structure (i encodes the ith graph)
 kripkeframes = []
 for i in 1:600
@@ -76,3 +77,14 @@ for i in 1:600
     worlds = World.(1:length(_nodes))
     push!(kripkeframes, SoleLogics.ExplicitCrispUniModalFrame(worlds, graph))
 end
+
+
+# alphabet definition
+helix = Atom(1)
+sheet = Atom(2)
+turn = Atom(3)
+_atoms = [helix, sheet, turn]
+
+_items = Vector{Item}(
+    Iterators.flatten([ _atoms, diamond().(_atoms), box().(_atoms) ]) |> collect
+)
