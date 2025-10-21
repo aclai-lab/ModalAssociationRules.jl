@@ -103,6 +103,11 @@ _atoms = [helix, sheet, turn]
 modaldataset = KripkeStructure[]
 
 for (i,kripkeframe) in enumerate(kripkeframes)
+
+    # TODO
+    # are these graphs labeled correctly?
+    # it does seem that Atom(3) is being captured in every kind of enzyme
+
     valuation = Dict([
         w => TruthDict([Atom(graph_and_ithnode_to_label[(i, w.name)]) => TOP])
         for w in kripkeframe.worlds
@@ -178,12 +183,13 @@ for _dataset in [
         MODAL_DATASET_6
     ]
 
+    println("Mining ")
 
     miner = Miner(
         MODAL_DATASET_1,
         eclat,
         _items,
-        [(gsupport, 0.1, 0.2)],
+        [(gsupport, 0.08, 0.05)],
         [(gconfidence, 0.1, 0.1)],
         itemset_policies=Function[
             isanchored_itemset()
@@ -236,3 +242,10 @@ for (i,g) in zip([_eid1, _eid2, _eid3, _eid4, _eid5, _eid6], [g1,g2,g3,g4,g5,g6]
     Compose.draw(
         Compose.PNG(joinpath(WORKING_DIRECTORY, "plots", "enzym_$i.png"), 600,  600), p)
 end
+
+
+##### notes ################################################################################
+
+# if support is [(gsupport, 0.1, 0.2)], then the mined rules are the same within each class!
+# julia> rules[1] |> Set == vcat(rules...) |> unique |> Set
+#
