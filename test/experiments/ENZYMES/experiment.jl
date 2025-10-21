@@ -109,12 +109,12 @@ _items = Vector{Item}(
 
 # partition the modal dataset into the six groups of enzymes
 _mask_indexes = id -> findall(x -> x == id, labels)
-MODAL_DATASET_1 = modaldataset[_mask_indexes(1)]
-MODAL_DATASET_2 = modaldataset[_mask_indexes(2)]
-MODAL_DATASET_3 = modaldataset[_mask_indexes(3)]
-MODAL_DATASET_4 = modaldataset[_mask_indexes(4)]
-MODAL_DATASET_5 = modaldataset[_mask_indexes(5)]
-MODAL_DATASET_6 = modaldataset[_mask_indexes(6)]
+MODAL_DATASET_1 = modaldataset[_mask_indexes(1)] |> Logiset
+MODAL_DATASET_2 = modaldataset[_mask_indexes(2)] |> Logiset
+MODAL_DATASET_3 = modaldataset[_mask_indexes(3)] |> Logiset
+MODAL_DATASET_4 = modaldataset[_mask_indexes(4)] |> Logiset
+MODAL_DATASET_5 = modaldataset[_mask_indexes(5)] |> Logiset
+MODAL_DATASET_6 = modaldataset[_mask_indexes(6)] |> Logiset
 
 # Oxidoreductases
 𝑂 = MODAL_DATASET_1
@@ -128,3 +128,20 @@ MODAL_DATASET_6 = modaldataset[_mask_indexes(6)]
 𝐼 = MODAL_DATASET_5
 # Ligases
 𝐿𝑖 = MODAL_DATASET_6
+
+
+miner = Miner(
+    MODAL_DATASET_1,
+    fpgrowth,
+    _items,
+    [(gsupport, 0.1, 0.1)],
+    [(gconfidence, 0.1, 0.1)],
+    itemset_policies=Function[
+        isanchored_itemset(ignoreuntillength=1),
+        isdimensionally_coherent_itemset()
+    ],
+    arule_policies=Function[
+        islimited_length_arule(consequent_maxlength=3),
+        isanchored_arule()
+    ]
+)
