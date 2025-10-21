@@ -4,9 +4,15 @@ using ModalAssociationRules
 using SoleLogics: World, randframe
 using SoleLogics: KripkeStructure, ExplicitCrispUniModalFrame
 
+using Plots
+using GraphPlot # this should be removed
+using Compose
+
+import Cairo, Fontconfig
 
 # load ENZYMES dataset
-DATA_REPOSITORY = joinpath(@__DIR__, "test", "experiments", "ENZYMES", "data")
+WORKING_DIRECTORY = joinpath(@__DIR__, "test", "experiments", "ENZYMES")
+DATA_REPOSITORY = joinpath(WORKING_DIRECTORY, "data")
 
 
 # every label is one of the 6 types of enzymes;
@@ -53,6 +59,8 @@ from_to = Dict([
 
 # compose the effective graph structure (i encodes the ith graph)
 kripkeframes = ExplicitCrispUniModalFrame[]
+rawgraphs = SimpleGraph[]
+
 for i in 1:600
     # retrieve all the nodes of the ith graph
     _nodes = findall(x -> x == i, node_to_graph)
@@ -73,6 +81,9 @@ for i in 1:600
         # also, associate the (n-𝑁)-th node in the ith graph with the corresponding label
         graph_and_ithnode_to_label[(i,n-𝑁)] = node_labels[n]
     end
+
+    # collect raw graphs for possible visualization purposes
+    push!(rawgraphs, graph)
 
     # create the kripke frame
     worlds = World.(1:length(_nodes))
@@ -124,27 +135,37 @@ _items = Vector{Item}(
 
 # partition the modal dataset into the six groups of enzymes
 _mask_indexes = id -> findall(x -> x == id, labels)
+# Oxidoreductases
 MODAL_DATASET_1 = modaldataset[_mask_indexes(1)] |> Logiset
+# Transferases
 MODAL_DATASET_2 = modaldataset[_mask_indexes(2)] |> Logiset
+# Hydrolases
 MODAL_DATASET_3 = modaldataset[_mask_indexes(3)] |> Logiset
+# Lyases
 MODAL_DATASET_4 = modaldataset[_mask_indexes(4)] |> Logiset
+# Isomerases
 MODAL_DATASET_5 = modaldataset[_mask_indexes(5)] |> Logiset
+# Ligases
 MODAL_DATASET_6 = modaldataset[_mask_indexes(6)] |> Logiset
 
-# dataset synonyms
-# Oxidoreductases
-𝑂 = MODAL_DATASET_1
-# Transferases
-𝑇 = MODAL_DATASET_2
-# Hydrolases
-𝐻 = MODAL_DATASET_3
-# Lyases
-𝐿𝑦 = MODAL_DATASET_4
-# Isomerases
-𝐼 = MODAL_DATASET_5
-# Ligases
-𝐿𝑖 = MODAL_DATASET_6
 
+datasets = [
+    MODAL_DATASET_1,
+    MODAL_DATASET_2,
+    MODAL_DATASET_3,
+    MODAL_DATASET_4,
+    MODAL_DATASET_5,
+    MODAL_DATASET_6,
+]
+
+datasetnames = [
+    "Oxidoreductases",
+    "Transferases",
+    "Hydrolases",
+    "Lyases",
+    "Isomerases",
+    "Ligases",
+]
 
 rules = Vector{Vector{ARule}}()
 
@@ -176,4 +197,42 @@ for _dataset in [
     mine!(miner)
 
     push!(rules, arules(miner))
+end
+
+
+##### visualization ########################################################################
+
+# indexes for which you find an example of graph for each type
+_eid1 = findall(x -> x == 1, labels) |> first
+_eid2 = findall(x -> x == 2, labels) |> first
+_eid3 = findall(x -> x == 3, labels) |> first
+_eid4 = findall(x -> x == 4, labels) |> first
+_eid5 = findall(x -> x == 5, labels) |> first
+_eid6 = findall(x -> x == 6, labels) |> first
+
+# one graph for each label
+g1 = rawgraphs[_eid1]
+g2 = rawgraphs[_eid2]
+g3 = rawgraphs[_eid3]
+g4 = rawgraphs[_eid4]
+g5 = rawgraphs[_eid5]
+g6 = rawgraphs[_eid6]
+
+for (i,g) in zip([_eid1, _eid2, _eid3, _eid4, _eid5, _eid6], [g1,g2,g3,g4,g5,g6])
+    node_colors = []
+    for ithnode in 1:nv(g)
+        nodetype = graph_and_ithnode_to_label[(i,ithnode)]
+        if nodetype == 1
+            push!(node_colors, "blue")
+        elseif nodetype == 2
+            push!(node_colors, "red")
+        else
+            push!(node_colors, "green")
+        end
+    end
+
+    p = gplot(g, nodefillc=node_colors)
+
+    Compose.draw(
+        Compose.PNG(joinpath(WORKING_DIRECTORY, "plots", "enzym_$i.png"), 600,  600), p)
 end
