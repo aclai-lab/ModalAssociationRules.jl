@@ -105,3 +105,26 @@ end
 _items = Vector{Item}(
     Iterators.flatten([ _atoms, diamond().(_atoms), box().(_atoms) ]) |> collect
 )
+
+
+# partition the modal dataset into the six groups of enzymes
+_mask_indexes = id -> findall(x -> x == id, labels)
+MODAL_DATASET_1 = modaldataset[_mask_indexes(1)]
+MODAL_DATASET_2 = modaldataset[_mask_indexes(2)]
+MODAL_DATASET_3 = modaldataset[_mask_indexes(3)]
+MODAL_DATASET_4 = modaldataset[_mask_indexes(4)]
+MODAL_DATASET_5 = modaldataset[_mask_indexes(5)]
+MODAL_DATASET_6 = modaldataset[_mask_indexes(6)]
+
+# Oxidoreductases
+𝑂 = MODAL_DATASET_1
+# Transferases
+𝑇 = MODAL_DATASET_2
+# Hydrolases
+𝐻 = MODAL_DATASET_3
+# Lyases
+𝐿𝑦 = MODAL_DATASET_4
+# Isomerases
+𝐼 = MODAL_DATASET_5
+# Ligases
+𝐿𝑖 = MODAL_DATASET_6
