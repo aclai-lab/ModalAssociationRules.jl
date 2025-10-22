@@ -194,7 +194,7 @@ for (i,_dataset) in enumerate([
         eclat,
         _items,
         [(gsupport, 0.08, 0.05)],
-        [(gconfidence, 0.1, 0.1)],
+        [(gconfidence, 0.1, 0.1), (glift, 0.5, 1.0)],
         itemset_policies=Function[
             isanchored_itemset()
         ],
@@ -225,27 +225,95 @@ end
 
 
 # overwrite rules with the serialized ones, and interpret them as sets;
-_ruleslength = 6
-rulesets = [Set{ARule}() for _ in 1:_ruleslength]
+_nclasses = 6
+rulesets = [Set{ARule}() for _ in 1:_nclasses]
 for i in 1:length(rules)
     rules[i] = deserialize(joinpath(RULES_REPOSITORY, "enzymes_$i"))
     rulesets[i] = rules[i] |> Set
 end
 
 
-# we want to isolate the rules that are unique to each group
-for i in 1:_ruleslength
+# rules that are unique to each group
+isolated_rulesets = rulesets
+
+for i in 1:_nclasses
     # given a set of rules, we want to setdiff with all the other
-    for j in 1:_ruleslength
+    for j in 1:_nclasses
         # of course, we avoid applying setdiff to the same ith set
         if i == j
             continue
         end
 
-        println("Differentiating $i - $j")
-
-        setdiff!(rulesets[i], rulesets[j])
+        setdiff!(isolated_rulesets[i], rulesets[j])
     end
+end
+
+
+##### results printing #####################################################################
+
+# for each previously trained miner, we want to print the resulting rules in the
+# results folder, also reporting the meaningfulness measures
+function printreport(
+    _miner::Miner,
+    i::Int,
+    rules::Vector{ARule};
+    reportprefix::String="results_"
+)
+    # we expect the experiment to consider global confidence and global lift
+    rulecollection = [
+        (
+            rule,
+            round(
+                globalmemo(_miner, (:gsupport, antecedent(rule))), digits=2
+                ),
+            round(
+                globalmemo(_miner, (:gsupport, Itemset(rule))), digits=2
+            ),
+            round(
+                globalmemo(_miner, (:gconfidence, rule)), digits=2
+            ),
+            round(
+                globalmemo(_miner, (:glift, rule)), digits=2
+            ),
+        )
+        for rule in rules
+    ]
+
+    # rules are ordered decreasingly by global lift
+    sort!(rulecollection, by=x->x[5], rev=true);
+
+    reportname = joinpath(RESULTS_REPOSITORY, "$(reportprefix)$(i)")
+
+    println("Writing to: $(reportname)")
+
+    open(reportname, "w") do io
+        println(io, "Columns are: rule, ant support, ant+cons support,  confidence, lift")
+
+        padding = maximum(length.(_miner |> freqitems))
+        for (rule, antgsupp, consgsupp, conf, lift) in rulecollection
+            println(io,
+                rpad(rule, 8 * padding) * " " * rpad(string(antgsupp), 10) * " " *
+                rpad(string(consgsupp), 10) * " " * rpad(string(conf), 10) * " " *
+                string(lift)
+            )
+        end
+    end
+end
+
+
+# we print all the rules for each miner
+for i in 1:_nclasses
+    _miner = deserialize(joinpath(MINERS_REPOSITORY, "miner_$i"))
+    printreport(_miner, i, arules(_miner))
+end
+
+
+# we also print the very unique sets of rules for each miner
+for i in 1:_nclasses
+    _miner = deserialize(joinpath(MINERS_REPOSITORY, "miner_$i"))
+
+    printreport(_miner, i, isolated_rulesets[i] |> collect;
+        reportprefix="isolated_results_")
 end
 
 
