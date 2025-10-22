@@ -1,14 +1,20 @@
 using Graphs
+import Serialization
 
 using ModalAssociationRules
 using SoleLogics: World, randframe
 using SoleLogics: KripkeStructure, ExplicitCrispUniModalFrame
 
+# dependencies for graph plotting
 using Plots
-using GraphPlot # this should be removed
+using GraphPlot
 using Compose
-
 import Cairo, Fontconfig
+
+# the association rules are serialized in this repository
+RULES_REPOSITORY = joinpath(WORKING_DIRECTORY, "rules")
+RESULTS_REPOSITORY = joinpath(WORKING_DIRECTORY, "results")
+
 
 # load ENZYMES dataset
 WORKING_DIRECTORY = joinpath(@__DIR__, "test", "experiments", "ENZYMES")
@@ -65,8 +71,8 @@ for i in 1:600
     # retrieve all the nodes of the ith graph
     _nodes = findall(x -> x == i, node_to_graph)
 
-    # we want the worlds to start at 1, by adding a normalization scalar (𝑁)
-    𝑁 = minimum(_nodes) - 1
+    # we want the worlds to start at 1, by adding a normalization scalar (scalar)
+    scalar = minimum(_nodes) - 1
 
     # create the graph
     graph = Graphs.SimpleGraph(length(_nodes))
@@ -75,11 +81,11 @@ for i in 1:600
         # push the edge associated with n into the graph, if it exists
         neighbor = get(from_to, n, nothing)
         if !isnothing(neighbor)
-            Graphs.add_edge!(graph, n-𝑁, neighbor-𝑁)
+            Graphs.add_edge!(graph, n-scalar, neighbor-scalar)
         end
 
-        # also, associate the (n-𝑁)-th node in the ith graph with the corresponding label
-        graph_and_ithnode_to_label[(i,n-𝑁)] = node_labels[n]
+        # also, associate the (n-scalar)-th node in the ith graph with the corresponding label
+        graph_and_ithnode_to_label[(i,n-scalar)] = node_labels[n]
     end
 
     # collect raw graphs for possible visualization purposes
@@ -103,11 +109,6 @@ _atoms = [helix, sheet, turn]
 modaldataset = KripkeStructure[]
 
 for (i,kripkeframe) in enumerate(kripkeframes)
-
-    # TODO
-    # are these graphs labeled correctly?
-    # it does seem that Atom(3) is being captured in every kind of enzyme
-
     valuation = Dict([
         w => TruthDict([Atom(graph_and_ithnode_to_label[(i, w.name)]) => TOP])
         for w in kripkeframe.worlds
@@ -131,9 +132,9 @@ _items = Vector{Item}(
         # _atoms |> _todiamond |> _todiamond |> _todiamond |> _todiamond,
         # _atoms |> _todiamond |> _todiamond |> _todiamond |> _todiamond |> _todiamond,
 
-        # box().(_atoms),
-        # diamond().(box().(_atoms)),
-        # box().(box().(_atoms)),
+        _atoms |> _tobox,
+        _atoms |> _tobox |> _tobox,
+        _atoms |> _tobox |> _tobox |> _tobox
     ]) |> collect
 )
 
@@ -186,7 +187,7 @@ for _dataset in [
     println("Mining ")
 
     miner = Miner(
-        MODAL_DATASET_1,
+        _dataset,
         eclat,
         _items,
         [(gsupport, 0.08, 0.05)],
@@ -203,6 +204,40 @@ for _dataset in [
     mine!(miner)
 
     push!(rules, arules(miner))
+end
+
+
+# we serialize each group of rules
+for (i,rulegroup) in enumerate(rules)
+    serialize(
+        joinpath(RULES_REPOSITORY, "enzymes_$i"),
+        rulegroup
+    )
+end
+
+
+# overwrite rules with the serialized ones, and interpret them as sets;
+_ruleslength = 6
+rulesets = [Set{ARule}() for _ in 1:_ruleslength]
+for i in 1:length(rules)
+    rules[i] = deserialize(joinpath(RULES_REPOSITORY, "enzymes_$i"))
+    rulesets[i] = rules[i] |> Set
+end
+
+
+# we want to isolate the rules that are unique to each group
+for i in 1:_ruleslength
+    # given a set of rules, we want to setdiff with all the other
+    for j in 1:_ruleslength
+        # of course, we avoid applying setdiff to the same ith set
+        if i == j
+            continue
+        end
+
+        println("Differentiating $i - $j")
+
+        setdiff!(rulesets[i], rulesets[j])
+    end
 end
 
 
@@ -245,7 +280,3 @@ end
 
 
 ##### notes ################################################################################
-
-# if support is [(gsupport, 0.1, 0.2)], then the mined rules are the same within each class!
-# julia> rules[1] |> Set == vcat(rules...) |> unique |> Set
-#
