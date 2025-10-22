@@ -21,4 +21,6 @@ TODO
 **/deprecated/
 /test/benchmark/synthetic/deprecated/
 
+/test/experiments/ENZYMES/miners/*
+
 .vscode/settings.json
