@@ -11,6 +11,10 @@ using GraphPlot
 using Compose
 import Cairo, Fontconfig
 
+
+# to fix the directory in which this file lives
+WORKING_DIRECTORY = joinpath(@__DIR__, "test", "experiments", "ENZYMES")
+
 # the association rules are serialized in this repository
 RULES_REPOSITORY = joinpath(WORKING_DIRECTORY, "rules")
 # the miners are serialized in this repository
@@ -20,7 +24,6 @@ RESULTS_REPOSITORY = joinpath(WORKING_DIRECTORY, "results")
 
 
 # load ENZYMES dataset
-WORKING_DIRECTORY = joinpath(@__DIR__, "test", "experiments", "ENZYMES")
 DATA_REPOSITORY = joinpath(WORKING_DIRECTORY, "data")
 
 
