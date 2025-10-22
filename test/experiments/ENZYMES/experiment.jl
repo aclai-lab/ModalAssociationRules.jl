@@ -13,6 +13,9 @@ import Cairo, Fontconfig
 
 # the association rules are serialized in this repository
 RULES_REPOSITORY = joinpath(WORKING_DIRECTORY, "rules")
+# the miners are serialized in this repository
+MINERS_REPOSITORY = joinpath(WORKING_DIRECTORY, "miners")
+# the final analysis is saved in this repository
 RESULTS_REPOSITORY = joinpath(WORKING_DIRECTORY, "results")
 
 
@@ -175,16 +178,16 @@ datasetnames = [
 
 rules = Vector{Vector{ARule}}()
 
-for _dataset in [
+for (i,_dataset) in enumerate([
         MODAL_DATASET_1
         MODAL_DATASET_2
         MODAL_DATASET_3
         MODAL_DATASET_4
         MODAL_DATASET_5
         MODAL_DATASET_6
-    ]
+    ])
 
-    println("Mining ")
+    println("Mining $i-th enzyme")
 
     miner = Miner(
         _dataset,
@@ -204,6 +207,11 @@ for _dataset in [
     mine!(miner)
 
     push!(rules, arules(miner))
+
+    serialize(
+        joinpath(MINERS_REPOSITORY, "miner_$i"),
+        miner
+    )
 end
 
 
