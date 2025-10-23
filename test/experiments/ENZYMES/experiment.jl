@@ -181,6 +181,9 @@ datasetnames = [
 
 rules = Vector{Vector{ARule}}()
 
+# estimated number of match to consider a pattern to be frequent within a modal instance
+ADAPTIVE_LSUPP_THRESHOLD_FACTOR = 3
+
 for (i,_dataset) in enumerate([
         MODAL_DATASET_1
         MODAL_DATASET_2
@@ -192,12 +195,17 @@ for (i,_dataset) in enumerate([
 
     println("Mining $i-th enzyme")
 
+    _instances = _dataset |> instances
+    _lsupp_threshold = ADAPTIVE_LSUPP_THRESHOLD_FACTOR / (
+        sum(x -> length(x.frame.worlds), _instances) / (length(_instances))
+    )
+
     miner = Miner(
         _dataset,
         eclat,
         _items,
-        [(gsupport, 0.08, 0.05)],
-        [(gconfidence, 0.1, 0.7), (glift, 0.5, 1.5)],
+        [(gsupport, _lsupp_threshold*0.85, 0.05)],
+        [(gconfidence, 0.1, 0.5), (glift, 0.5, 2.0)],
         itemset_policies=Function[
             isanchored_itemset()
         ],
@@ -237,11 +245,13 @@ end
 
 
 # rules that are unique to each group
-isolated_rulesets = rulesets
+isolated_rulesets = deepcopy(rulesets)
 
 for i in 1:_nclasses
     # given a set of rules, we want to setdiff with all the other
     for j in 1:_nclasses
+        println("$i - $j")
+
         # of course, we avoid applying setdiff to the same ith set
         if i == j
             continue
@@ -318,7 +328,6 @@ for i in 1:_nclasses
     printreport(_miner, i, isolated_rulesets[i] |> collect;
         reportprefix="isolated_results_")
 end
-
 
 ##### visualization ########################################################################
 
