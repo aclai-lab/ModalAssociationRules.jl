@@ -69,6 +69,13 @@ from_to = Dict([
 ])
 
 
+# convert the id of a node (1,2 or 3) to the corresponding secondary structure element;
+# 1 is helix, 2 is sheet, 3 is turn
+function id_to_sse(id::Int)
+    return id == 1 ? "h" : (id == 2 ? "s" : "t")
+end
+
+
 # compose the effective graph structure (i encodes the ith graph)
 kripkeframes = ExplicitCrispUniModalFrame[]
 rawgraphs = SimpleGraph[]
@@ -104,9 +111,37 @@ end
 
 
 # alphabet definition
-helix = Atom(1)
-sheet = Atom(2)
-turn = Atom(3)
+
+# fundamental propositions
+helix, nothelix = Atom("h"), NEGATION(Atom("h"))
+sheet, notsheet = Atom("s"), NEGATION(Atom("s"))
+turn, notturn = Atom("t"), NEGATION(Atom("t"))
+
+# base alphabet that is enriched in various manners
+seed_alphabet = SyntaxTree[helix, sheet, turn]
+
+# you can choose wheter to also consider relaxed propositions
+push!(seed_alphabet, DISJUNCTION(helix, sheet))
+push!(seed_alphabet, DISJUNCTION(helix, turn))
+push!(seed_alphabet, DISJUNCTION(sheet, turn))
+
+propositional_alphabet = convert(Vector{SyntaxTree}, deepcopy(seed_alphabet))
+
+# box and diamond up to modal depth 1
+for op in [DIAMOND, BOX]
+    for p in seed_alphabet
+        push!(propositional_alphabet, op(p))
+    end
+end
+
+# all the combinations of box and diamond up to modal depth 2
+for ((op1, op2)) in Iterators.product([DIAMOND, BOX], [DIAMOND, BOX])
+    for p in Iterators.flatten([seed_alphabet, NEGATION.(seed_alphabet)])
+        push!(propositional_alphabet, op1(op2(p)))
+    end
+end
+
+
 _atoms = [helix, sheet, turn]
 
 
@@ -124,25 +159,29 @@ for (i,kripkeframe) in enumerate(kripkeframes)
 end
 
 
-# atoms are enriched with modal operators (◊ and □), and are converted to items
-_todiamond = x -> diamond().(x)
-_tobox = x -> box().(x)
+# materialize the items for mining
+_items = Item.(propositional_alphabet)
 
-_items = Vector{Item}(
-    Iterators.flatten([
-        _atoms,
-
-        _atoms |> _todiamond,
-        _atoms |> _todiamond |> _todiamond,
-        _atoms |> _todiamond |> _todiamond |> _todiamond,
-        # _atoms |> _todiamond |> _todiamond |> _todiamond |> _todiamond,
-        # _atoms |> _todiamond |> _todiamond |> _todiamond |> _todiamond |> _todiamond,
-
-        _atoms |> _tobox,
-        _atoms |> _tobox |> _tobox,
-        _atoms |> _tobox |> _tobox |> _tobox
-    ]) |> collect
-)
+### deprecated
+### # atoms are enriched with modal operators (◊ and □), and are converted to items
+### _todiamond = x -> diamond().(x)
+### _tobox = x -> box().(x)
+###
+### _items = Vector{Item}(
+###     Iterators.flatten([
+###         _atoms,
+###
+###         _atoms |> _todiamond,
+###         _atoms |> _todiamond |> _todiamond,
+###         _atoms |> _todiamond |> _todiamond |> _todiamond,
+###         # _atoms |> _todiamond |> _todiamond |> _todiamond |> _todiamond,
+###         # _atoms |> _todiamond |> _todiamond |> _todiamond |> _todiamond |> _todiamond,
+###
+###         _atoms |> _tobox,
+###         _atoms |> _tobox |> _tobox,
+###         _atoms |> _tobox |> _tobox |> _tobox
+###     ]) |> collect
+### )
 
 
 # partition the modal dataset into the six groups of enzymes
