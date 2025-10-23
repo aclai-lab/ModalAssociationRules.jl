@@ -161,6 +161,17 @@ MODAL_DATASET_5 = modaldataset[_mask_indexes(5)] |> Logiset
 MODAL_DATASET_6 = modaldataset[_mask_indexes(6)] |> Logiset
 
 
+# full dataset
+MODAL_DATASET_FULL = vcat(
+    modaldataset[_mask_indexes(1)]...,
+    modaldataset[_mask_indexes(2)]...,
+    modaldataset[_mask_indexes(3)]...,
+    modaldataset[_mask_indexes(4)]...,
+    modaldataset[_mask_indexes(5)]...,
+    modaldataset[_mask_indexes(6)]...,
+) |> Logiset
+
+
 datasets = [
     MODAL_DATASET_1,
     MODAL_DATASET_2,
