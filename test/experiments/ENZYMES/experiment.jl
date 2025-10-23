@@ -121,9 +121,9 @@ turn, notturn = Atom("t"), NEGATION(Atom("t"))
 seed_alphabet = SyntaxTree[helix, sheet, turn]
 
 # you can choose wheter to also consider relaxed propositions
-push!(seed_alphabet, DISJUNCTION(helix, sheet))
-push!(seed_alphabet, DISJUNCTION(helix, turn))
-push!(seed_alphabet, DISJUNCTION(sheet, turn))
+# push!(seed_alphabet, DISJUNCTION(helix, sheet))
+# push!(seed_alphabet, DISJUNCTION(helix, turn))
+# push!(seed_alphabet, DISJUNCTION(sheet, turn))
 
 propositional_alphabet = convert(Vector{SyntaxTree}, deepcopy(seed_alphabet))
 
@@ -135,11 +135,11 @@ for op in [DIAMOND, BOX]
 end
 
 # all the combinations of box and diamond up to modal depth 2
-for ((op1, op2)) in Iterators.product([DIAMOND, BOX], [DIAMOND, BOX])
-    for p in Iterators.flatten([seed_alphabet, NEGATION.(seed_alphabet)])
-        push!(propositional_alphabet, op1(op2(p)))
-    end
-end
+# for ((op1, op2)) in Iterators.product([DIAMOND, BOX], [DIAMOND, BOX])
+#     for p in Iterators.flatten([seed_alphabet, NEGATION.(seed_alphabet)])
+#         push!(propositional_alphabet, op1(op2(p)))
+#     end
+# end
 
 
 _atoms = [helix, sheet, turn]
@@ -151,7 +151,9 @@ modaldataset = KripkeStructure[]
 
 for (i,kripkeframe) in enumerate(kripkeframes)
     valuation = Dict([
-        w => TruthDict([Atom(graph_and_ithnode_to_label[(i, w.name)]) => TOP])
+        w => TruthDict([Atom(
+            (graph_and_ithnode_to_label[(i, w.name)]) |> id_to_sse) => TOP
+        ])
         for w in kripkeframe.worlds
     ])
 
@@ -164,24 +166,24 @@ _items = Item.(propositional_alphabet)
 
 ### deprecated
 ### # atoms are enriched with modal operators (◊ and □), and are converted to items
-### _todiamond = x -> diamond().(x)
-### _tobox = x -> box().(x)
-###
-### _items = Vector{Item}(
-###     Iterators.flatten([
-###         _atoms,
-###
-###         _atoms |> _todiamond,
-###         _atoms |> _todiamond |> _todiamond,
-###         _atoms |> _todiamond |> _todiamond |> _todiamond,
-###         # _atoms |> _todiamond |> _todiamond |> _todiamond |> _todiamond,
-###         # _atoms |> _todiamond |> _todiamond |> _todiamond |> _todiamond |> _todiamond,
-###
-###         _atoms |> _tobox,
-###         _atoms |> _tobox |> _tobox,
-###         _atoms |> _tobox |> _tobox |> _tobox
-###     ]) |> collect
-### )
+ _todiamond = x -> diamond().(x)
+ _tobox = x -> box().(x)
+
+ _items = Vector{Item}(
+     Iterators.flatten([
+         _atoms,
+
+         _atoms |> _todiamond,
+         _atoms |> _todiamond |> _todiamond,
+         _atoms |> _todiamond |> _todiamond |> _todiamond,
+         # _atoms |> _todiamond |> _todiamond |> _todiamond |> _todiamond,
+         # _atoms |> _todiamond |> _todiamond |> _todiamond |> _todiamond |> _todiamond,
+
+         _atoms |> _tobox,
+         _atoms |> _tobox |> _tobox,
+         _atoms |> _tobox |> _tobox |> _tobox
+     ]) |> collect
+ )
 
 
 # partition the modal dataset into the six groups of enzymes
@@ -232,7 +234,7 @@ datasetnames = [
 rules = Vector{Vector{ARule}}()
 
 # estimated number of match to consider a pattern to be frequent within a modal instance
-ADAPTIVE_LSUPP_THRESHOLD_FACTOR = 3
+ADAPTIVE_LSUPP_THRESHOLD_FACTOR = 15 # 3
 
 for (i,_dataset) in enumerate([
         MODAL_DATASET_1
@@ -254,10 +256,10 @@ for (i,_dataset) in enumerate([
         _dataset,
         eclat,
         _items,
-        [(gsupport, _lsupp_threshold*0.85, 0.05)],
+        [(gsupport, 0.5, 0.05)],
         [(gconfidence, 0.1, 0.5), (glift, 0.5, 2.0)],
         itemset_policies=Function[
-            isanchored_itemset()
+            isanchored_itemset(ignoreuntillength=0)
         ],
         arule_policies=Function[
             # islimited_length_arule(consequent_maxlength=3),
@@ -300,8 +302,6 @@ isolated_rulesets = deepcopy(rulesets)
 for i in 1:_nclasses
     # given a set of rules, we want to setdiff with all the other
     for j in 1:_nclasses
-        println("$i - $j")
-
         # of course, we avoid applying setdiff to the same ith set
         if i == j
             continue
@@ -382,87 +382,4 @@ end
 
 ##### visualization ########################################################################
 
-# indexes for which you find an example of graph for each type
-_eid1 = findall(x -> x == 1, labels) |> first
-_eid2 = findall(x -> x == 2, labels) |> first
-_eid3 = findall(x -> x == 3, labels) |> first
-_eid4 = findall(x -> x == 4, labels) |> first
-_eid5 = findall(x -> x == 5, labels) |> first
-_eid6 = findall(x -> x == 6, labels) |> first
-
-# one graph for each label
-g1 = rawgraphs[_eid1]
-g2 = rawgraphs[_eid2]
-g3 = rawgraphs[_eid3]
-g4 = rawgraphs[_eid4]
-g5 = rawgraphs[_eid5]
-g6 = rawgraphs[_eid6]
-
-for (i,g) in zip([_eid1, _eid2, _eid3, _eid4, _eid5, _eid6], [g1,g2,g3,g4,g5,g6])
-    node_colors = []
-    for ithnode in 1:nv(g)
-        nodetype = graph_and_ithnode_to_label[(i,ithnode)]
-        if nodetype == 1
-            push!(node_colors, "blue")
-        elseif nodetype == 2
-            push!(node_colors, "red")
-        else
-            push!(node_colors, "green")
-        end
-    end
-
-    p = gplot(g, nodefillc=node_colors)
-
-    Compose.draw(
-        Compose.PNG(joinpath(WORKING_DIRECTORY, "plots", "enzym_$i.png"), 600,  600), p)
-end
-
-
-##### REPL scratchpad for copy-pasting #####################################################
-
-println((
-    3 / sum(x -> length(x.frame.worlds), modaldataset[_mask_indexes(1)]) / 100)
-)
-println((
-    3 / sum(x -> length(x.frame.worlds), modaldataset[_mask_indexes(2)]) / 100)
-)
-println((
-    3 / sum(x -> length(x.frame.worlds), modaldataset[_mask_indexes(3)]) / 100)
-)
-println((
-    3 / sum(x -> length(x.frame.worlds), modaldataset[_mask_indexes(4)]) / 100)
-)
-println((
-    3 / sum(x -> length(x.frame.worlds), modaldataset[_mask_indexes(5)]) / 100)
-)
-println((
-    3 / sum(x -> length(x.frame.worlds), modaldataset[_mask_indexes(6)]) / 100)
-)
-
-
-############################################################################################
-
-class = 1
-for ithexamp in 1:20
-    _eid1 = findall(x -> x == class, labels)[ithexamp]
-    g1 = rawgraphs[_eid1]
-
-    for (i,g) in zip([_eid1], [g1])
-        node_colors = []
-        for ithnode in 1:nv(g)
-            nodetype = graph_and_ithnode_to_label[(i,ithnode)]
-            if nodetype == 1
-                push!(node_colors, "blue")
-            elseif nodetype == 2
-                push!(node_colors, "red")
-            else
-                push!(node_colors, "green")
-            end
-        end
-
-        p = gplot(g, nodefillc=node_colors)
-
-        Compose.draw(
-            Compose.PNG(joinpath(WORKING_DIRECTORY, "plots", "CLASS$(class)_enzym_$(i)_$(ithexamp).png"), 600,  600), p)
-    end
-end
+include(visualization.jl)
