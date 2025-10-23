@@ -387,3 +387,31 @@ println((
 println((
     3 / sum(x -> length(x.frame.worlds), modaldataset[_mask_indexes(6)]) / 100)
 )
+
+
+############################################################################################
+
+class = 1
+for ithexamp in 1:20
+    _eid1 = findall(x -> x == class, labels)[ithexamp]
+    g1 = rawgraphs[_eid1]
+
+    for (i,g) in zip([_eid1], [g1])
+        node_colors = []
+        for ithnode in 1:nv(g)
+            nodetype = graph_and_ithnode_to_label[(i,ithnode)]
+            if nodetype == 1
+                push!(node_colors, "blue")
+            elseif nodetype == 2
+                push!(node_colors, "red")
+            else
+                push!(node_colors, "green")
+            end
+        end
+
+        p = gplot(g, nodefillc=node_colors)
+
+        Compose.draw(
+            Compose.PNG(joinpath(WORKING_DIRECTORY, "plots", "CLASS$(class)_enzym_$(i)_$(ithexamp).png"), 600,  600), p)
+    end
+end
