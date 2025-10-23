@@ -367,7 +367,7 @@ for (i,g) in zip([_eid1, _eid2, _eid3, _eid4, _eid5, _eid6], [g1,g2,g3,g4,g5,g6]
 end
 
 
-##### notes ################################################################################
+##### REPL scratchpad for copy-pasting #####################################################
 
 println((
     3 / sum(x -> length(x.frame.worlds), modaldataset[_mask_indexes(1)]) / 100)
