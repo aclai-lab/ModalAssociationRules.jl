@@ -197,7 +197,7 @@ for (i,_dataset) in enumerate([
         eclat,
         _items,
         [(gsupport, 0.08, 0.05)],
-        [(gconfidence, 0.1, 0.1), (glift, 0.5, 1.0)],
+        [(gconfidence, 0.1, 0.7), (glift, 0.5, 1.5)],
         itemset_policies=Function[
             isanchored_itemset()
         ],
@@ -359,3 +359,22 @@ end
 
 
 ##### notes ################################################################################
+
+println((
+    3 / sum(x -> length(x.frame.worlds), modaldataset[_mask_indexes(1)]) / 100)
+)
+println((
+    3 / sum(x -> length(x.frame.worlds), modaldataset[_mask_indexes(2)]) / 100)
+)
+println((
+    3 / sum(x -> length(x.frame.worlds), modaldataset[_mask_indexes(3)]) / 100)
+)
+println((
+    3 / sum(x -> length(x.frame.worlds), modaldataset[_mask_indexes(4)]) / 100)
+)
+println((
+    3 / sum(x -> length(x.frame.worlds), modaldataset[_mask_indexes(5)]) / 100)
+)
+println((
+    3 / sum(x -> length(x.frame.worlds), modaldataset[_mask_indexes(6)]) / 100)
+)
