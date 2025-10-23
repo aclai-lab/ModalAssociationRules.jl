@@ -329,6 +329,7 @@ for i in 1:_nclasses
         reportprefix="isolated_results_")
 end
 
+
 ##### visualization ########################################################################
 
 # indexes for which you find an example of graph for each type
