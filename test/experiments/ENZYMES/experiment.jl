@@ -1,5 +1,5 @@
 using Graphs
-import Serialization
+using Serialization
 
 using ModalAssociationRules
 using SoleLogics: World, randframe
@@ -131,15 +131,16 @@ propositional_alphabet = convert(Vector{SyntaxTree}, deepcopy(seed_alphabet))
 for op in [DIAMOND, BOX]
     for p in seed_alphabet
         push!(propositional_alphabet, op(p))
+        push!(propositional_alphabet, op(NEGATION(p)))
     end
 end
 
 # all the combinations of box and diamond up to modal depth 2
-# for ((op1, op2)) in Iterators.product([DIAMOND, BOX], [DIAMOND, BOX])
-#     for p in Iterators.flatten([seed_alphabet, NEGATION.(seed_alphabet)])
-#         push!(propositional_alphabet, op1(op2(p)))
-#     end
-# end
+for ((op1, op2)) in Iterators.product([DIAMOND, BOX], [DIAMOND, BOX])
+    for p in Iterators.flatten([seed_alphabet]) # NEGATION.(seed_alphabet)])
+        push!(propositional_alphabet, op1(op2(p)))
+    end
+end
 
 
 _atoms = [helix, sheet, turn]
@@ -151,9 +152,18 @@ modaldataset = KripkeStructure[]
 
 for (i,kripkeframe) in enumerate(kripkeframes)
     valuation = Dict([
-        w => TruthDict([Atom(
-            (graph_and_ithnode_to_label[(i, w.name)]) |> id_to_sse) => TOP
-        ])
+        w => begin
+            all_labels = ["h", "s", "t"]
+            toplabel = (graph_and_ithnode_to_label[(i, w.name)]) |> id_to_sse
+            botlabel = [l for l in all_labels if l != toplabel]
+
+            # we only deal with three propositional symbols, h, s, and t.
+            TruthDict([
+                Atom(toplabel) => TOP,
+                Atom(botlabel[1]) => BOT,
+                Atom(botlabel[2]) => BOT
+            ])
+        end
         for w in kripkeframe.worlds
     ])
 
@@ -166,24 +176,24 @@ _items = Item.(propositional_alphabet)
 
 ### deprecated
 ### # atoms are enriched with modal operators (◊ and □), and are converted to items
- _todiamond = x -> diamond().(x)
- _tobox = x -> box().(x)
-
- _items = Vector{Item}(
-     Iterators.flatten([
-         _atoms,
-
-         _atoms |> _todiamond,
-         _atoms |> _todiamond |> _todiamond,
-         _atoms |> _todiamond |> _todiamond |> _todiamond,
-         # _atoms |> _todiamond |> _todiamond |> _todiamond |> _todiamond,
-         # _atoms |> _todiamond |> _todiamond |> _todiamond |> _todiamond |> _todiamond,
-
-         _atoms |> _tobox,
-         _atoms |> _tobox |> _tobox,
-         _atoms |> _tobox |> _tobox |> _tobox
-     ]) |> collect
- )
+### _todiamond = x -> diamond().(x)
+### _tobox = x -> box().(x)
+###
+### _items = Vector{Item}(
+###     Iterators.flatten([
+###         _atoms,
+###
+###         _atoms |> _todiamond,
+###         _atoms |> _todiamond |> _todiamond,
+###         _atoms |> _todiamond |> _todiamond |> _todiamond,
+###         # _atoms |> _todiamond |> _todiamond |> _todiamond |> _todiamond,
+###         # _atoms |> _todiamond |> _todiamond |> _todiamond |> _todiamond |> _todiamond,
+###
+###         _atoms |> _tobox,
+###         _atoms |> _tobox |> _tobox,
+###         _atoms |> _tobox |> _tobox |> _tobox
+###     ]) |> collect
+### )
 
 
 # partition the modal dataset into the six groups of enzymes
@@ -236,6 +246,9 @@ rules = Vector{Vector{ARule}}()
 # estimated number of match to consider a pattern to be frequent within a modal instance
 ADAPTIVE_LSUPP_THRESHOLD_FACTOR = 15 # 3
 
+# reference to the last miner trained later
+debugminer = nothing
+
 for (i,_dataset) in enumerate([
         MODAL_DATASET_1
         MODAL_DATASET_2
@@ -256,16 +269,18 @@ for (i,_dataset) in enumerate([
         _dataset,
         eclat,
         _items,
-        [(gsupport, 0.5, 0.05)],
+        [(gsupport, 0.1, 0.05)],
         [(gconfidence, 0.1, 0.5), (glift, 0.5, 2.0)],
         itemset_policies=Function[
-            isanchored_itemset(ignoreuntillength=0)
+            isanchored_itemset(ignoreuntillength=1)
         ],
         arule_policies=Function[
             # islimited_length_arule(consequent_maxlength=3),
             isanchored_arule()
         ]
     )
+
+    debugminer = miner
 
     mine!(miner)
 
