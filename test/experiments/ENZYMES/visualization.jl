@@ -20,11 +20,11 @@ for (i,g) in zip([_eid1, _eid2, _eid3, _eid4, _eid5, _eid6], [g1,g2,g3,g4,g5,g6]
     for ithnode in 1:nv(g)
         nodetype = graph_and_ithnode_to_label[(i,ithnode)]
         if nodetype == 1
-            push!(node_colors, "blue")
+            push!(node_colors, "blue") # helix (h)
         elseif nodetype == 2
-            push!(node_colors, "red")
+            push!(node_colors, "red") # sheet (s)
         else
-            push!(node_colors, "green")
+            push!(node_colors, "green") # turns (t)
         end
     end
 
