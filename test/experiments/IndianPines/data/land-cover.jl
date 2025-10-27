@@ -10,7 +10,7 @@ using MAT
 # this scriipt has been adapted from
 # https://github.com/aclai-lab/results/blob/master/datasets/land-cover.jl
 
-data_dir = joinpath(@__DIR__, "test", "experiments", "IndianPines")
+data_dir = joinpath(@__DIR__, "test", "experiments", "IndianPines", "data")
 
 function LandCoverDataset(
 	dataset_name::String
@@ -39,10 +39,13 @@ function LandCoverDataset(
 
     ########################################################################################
 
-
     function IndianPinesDataset(;modIndianPines8 = false)
-        X = matread(data_dir * "./Indian_pines_corrected.mat")["indian_pines_corrected"]
-        Y = matread(data_dir * "./Indian_pines_gt.mat")["indian_pines_gt"]
+        X = matread(
+            joinpath(data_dir, "Indian_pines_corrected.mat"))["indian_pines_corrected"]
+
+        Y = matread(
+            joinpath(data_dir, "Indian_pines_gt.mat"))["indian_pines_gt"]
+
         (X, Y) = map(((x)->round.(Int,x)), (X, Y))
         (X,Y), (modIndianPines8 == false ? [
                 "Alfalfa",
@@ -176,7 +179,6 @@ function LandCoverDataset(
 			throw_n_log("Unknown land cover dataset_name: $(dataset_name)")
 	end
 
-	println()
 	println("Image size: $(size(Xmap))")
 
 	X, Y, tot_variables = size(Xmap, 1), size(Xmap, 2), size(Xmap, 3)
@@ -358,3 +360,21 @@ function LandCoverDataset(
         dataset
     end
 end
+
+
+# taken from:
+# https://github.com/aclai-lab/results/blob/master/datasets/dataset-utils.jl
+function dict2cube(X::OrderedDict)
+    # cat(values(X)...; dims=(length(size(first(values(X))))+1)) # Simple but causes StackOverflowError because of the splatting
+    _X = collect(values(X))
+    s = unique(size.(_X))
+    @assert length(s) == 1 "$(s)"
+    s = s[1]
+    __X = similar(first(_X), s..., length(_X))
+    for (i,x) in enumerate(_X)
+        __X[[(:) for j in 1:length(s)]...,i] .= x
+    end
+    __X
+end
+
+dict2cube((X,Y)::Tuple{OrderedDict,Union{OrderedDict,AbstractVector}}) = (dict2cube(X), collect(values(Y)))
