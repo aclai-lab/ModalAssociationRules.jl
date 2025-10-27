@@ -131,7 +131,7 @@ propositional_alphabet = convert(Vector{SyntaxTree}, deepcopy(seed_alphabet))
 for op in [DIAMOND, BOX]
     for p in seed_alphabet
         push!(propositional_alphabet, op(p))
-        push!(propositional_alphabet, op(NEGATION(p)))
+        # push!(propositional_alphabet, op(NEGATION(p)))
     end
 end
 
@@ -142,8 +142,12 @@ for ((op1, op2)) in Iterators.product([DIAMOND, BOX], [DIAMOND, BOX])
     end
 end
 
-
 _atoms = [helix, sheet, turn]
+for _atom in _atoms
+    push!(propositional_alphabet, DIAMOND(DIAMOND(DIAMOND(_atoms))))
+    push!(propositional_alphabet, DIAMOND(DIAMOND(DIAMOND(DIAMOND(_atoms)))))
+    push!(propositional_alphabet, BOX(BOX(BOX(_atoms))))
+end
 
 
 # every world within each frame has to be enriched with one atom encoding the

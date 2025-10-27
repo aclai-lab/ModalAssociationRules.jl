@@ -1,3 +1,4 @@
+using Statistics
 
 # indexes for which you find an example of graph for each type
 _eid1 = findall(x -> x == 1, labels) |> first
@@ -59,8 +60,11 @@ println((
 
 ############################################################################################
 
+# save the png for the first `nexamples` of `class`
+
+nexamples = 20
 class = 1
-for ithexamp in 1:20
+for ithexamp in 1:nexamples
     _eid1 = findall(x -> x == class, labels)[ithexamp]
     g1 = rawgraphs[_eid1]
 
@@ -83,3 +87,17 @@ for ithexamp in 1:20
             Compose.PNG(joinpath(WORKING_DIRECTORY, "plots", "CLASS$(class)_enzym_$(i)_$(ithexamp).png"), 600,  600), p)
     end
 end
+
+# variance across classes
+x = [sum(x -> length(x.frame.worlds), modaldataset[_mask_indexes(i)])/100 for i in 1:6]
+[(x[i] - sum(x)/6)^2 / 6 for i in 1:6] |> sum
+
+# variance within a class
+c = 1
+worlds_in_class_instances = [length(x.frame.worlds) for x in modaldataset[_mask_indexes(c)]]
+mean_worlds_within_instance = mean(worlds_in_class_instances)
+[(i - mean_worlds_within_instance)^2 / 100 for i in worlds_in_class_instances] |> sum
+
+
+##### regex for querying the results #######################################################
+#^(?=.*\(◊□h\))(?=.*\(□¬s\))(?=.*\(□h\))(?=.*\(◊¬s\))(?=.*\(h\))(?=.*\(◊h\))(?=.*=>\s*□□h).*
