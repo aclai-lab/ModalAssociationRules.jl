@@ -1,8 +1,11 @@
 using Random
-using ImageFiltering
 using DataStructures
-using MAT
 using StatsBase
+
+# TODO - these dependencies should be removed from MAS, as they are only useful
+# during the experiments.
+using ImageFiltering
+using MAT
 
 function LandCoverDataset(
 	dataset_name::String
