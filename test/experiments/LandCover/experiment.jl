@@ -9,6 +9,9 @@ LOADER_DIRECTORY = joinpath(WORKING_DIRECTORY, "data", "land-cover.jl")
 
 include(LOADER_DIRECTORY)
 
+
+# dataset loading
+
 X_array, y = LandCoverDataset(
     "Pavia University";
     window_size          = 3,
@@ -27,3 +30,11 @@ df = DataFrame([
 ], :auto)
 
 X_df = scalarlogiset(df)
+
+
+# alphabet definition
+DC, EC, PO, TPP, TPPi, NTPP, NTPPi = SoleLogics.RCC8Relations
+
+_interval = Interval2D((1,1), (2,2))
+_condition = ScalarCondition(VariableMin(1), >, 10) |> Atom
+check(_condition, getinstance(X_df, 1), _interval)
