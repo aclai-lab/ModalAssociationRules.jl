@@ -27,4 +27,6 @@ TODO
 /test/experiments/ENZYMES/results_24_october_with_negations/
 /test/experiments/ENZYMES/rules/
 
+/test/experiments/LandCover/data/
+
 .vscode/settings.json
