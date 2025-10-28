@@ -7,7 +7,7 @@ using StatsBase
 using ImageFiltering
 using MAT
 
-# this scriipt has been adapted from
+# this script has been adapted from
 # https://github.com/aclai-lab/results/blob/master/datasets/land-cover.jl
 
 data_dir = joinpath(@__DIR__, "test", "experiments", "IndianPines", "data")
@@ -41,10 +41,10 @@ function LandCoverDataset(
 
     function IndianPinesDataset(;modIndianPines8 = false)
         X = matread(
-            joinpath(data_dir, "Indian_pines_corrected.mat"))["indian_pines_corrected"]
+            joinpath(data_dir, "IndianPines/Indian_pines_corrected.mat"))["indian_pines_corrected"]
 
         Y = matread(
-            joinpath(data_dir, "Indian_pines_gt.mat"))["indian_pines_gt"]
+            joinpath(data_dir, "IndianPines/Indian_pines_gt.mat"))["indian_pines_gt"]
 
         (X, Y) = map(((x)->round.(Int,x)), (X, Y))
         (X,Y), (modIndianPines8 == false ? [
