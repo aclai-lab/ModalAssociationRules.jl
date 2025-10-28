@@ -10,7 +10,7 @@ using MAT
 # this script has been adapted from
 # https://github.com/aclai-lab/results/blob/master/datasets/land-cover.jl
 
-data_dir = joinpath(@__DIR__, "test", "experiments", "IndianPines", "data")
+data_dir = joinpath(@__DIR__, "test", "experiments", "LandCover", "data")
 
 function LandCoverDataset(
 	dataset_name::String
@@ -133,8 +133,10 @@ function LandCoverDataset(
     end
 
     function PaviaUniversityDataset()
-        X = matread(data_dir * "paviaU/PaviaU.mat")["paviaU"]
-        Y = matread(data_dir * "paviaU/PaviaU_gt.mat")["paviaU_gt"]
+        X = matread(
+            joinpath(data_dir, "paviaU/PaviaU.mat"))["paviaU"]
+        Y = matread(
+            joinpath(data_dir, "paviaU/PaviaU_gt.mat"))["paviaU_gt"]
         (X, Y) = map(((x)->round.(Int,x)), (X, Y))
         (X,Y), [
             "Asphalt",
