@@ -1,6 +1,5 @@
 using DataFrames
 
-
 using ModalAssociationRules
 
 import SoleData: ninstances, frame
@@ -10,16 +9,21 @@ LOADER_DIRECTORY = joinpath(WORKING_DIRECTORY, "data", "land-cover.jl")
 
 include(LOADER_DIRECTORY)
 
-X, y = X_df, y = LandCoverDataset(
+X_array, y = LandCoverDataset(
     "Pavia University";
     window_size          = 3,
     ninstances_per_class = 40,
     pad_window_size      = 5,
 );
-X_perm = permutedims(X, (1,2,4,3))
 
-# the size of X_df is (103, 360)
-X_df = [DataFrame(X[:, :, i, j], :auto) for i in axes(X,3), j in axes(X,4)]
+# size(X) is an Array{Int64,4} of size (3,3,103,360),
+# but we want it to be (3,3,360,103) before transforming it to a DataFrame
 
-# the size of X_df_perm is (360, 103), which is in line with y column vector
-X_df_perm = [DataFrame(X_perm[:, :, i, j], :auto) for i in axes(X,4), j in axes(X,3)]
+X_array = permutedims(X, (1,2,4,3))
+
+df = DataFrame([
+    [X_array[:, :, j, i] for j in axes(X_array, 3)]
+    for i in axes(X_array, 4)
+], :auto)
+
+X_df = scalarlogiset(df)
