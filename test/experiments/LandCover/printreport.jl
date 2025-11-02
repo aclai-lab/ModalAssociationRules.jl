@@ -39,7 +39,7 @@ function printreport(
             println(io, "$(_i)")
         end
 
-        println(io, "Columns are: rule, ant support, ant+cons support,  confidence, lift")
+        println(io, "\nColumns are: rule, ant support, ant+cons support,  confidence, lift")
 
         padding = maximum(length.(_miner |> freqitems))
         for (rule, antgsupp, consgsupp, conf, lift) in rulecollection
