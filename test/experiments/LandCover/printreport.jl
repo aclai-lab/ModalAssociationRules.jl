@@ -34,6 +34,8 @@ function printreport(
     println("Writing to: $(reportname)")
 
     open(reportname, "w") do io
+        println(io, "The alphabet is: $(items(_miner))")
+
         println(io, "Columns are: rule, ant support, ant+cons support,  confidence, lift")
 
         padding = maximum(length.(_miner |> freqitems))
