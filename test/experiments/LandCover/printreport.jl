@@ -34,7 +34,10 @@ function printreport(
     println("Writing to: $(reportname)")
 
     open(reportname, "w") do io
-        println(io, "The alphabet is: $(items(_miner))")
+        println(io, "The alphabet is: ")
+        for _i in items(_miner)
+            println(io, "$(_i)")
+        end
 
         println(io, "Columns are: rule, ant support, ant+cons support,  confidence, lift")
 
