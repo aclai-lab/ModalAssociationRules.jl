@@ -1,4 +1,5 @@
 using DataFrames
+using Serialization
 
 using ModalAssociationRules
 
@@ -45,7 +46,14 @@ X_gravel, _gravel = X_array[:,:,81:120,:], "gravel"
 # logic for printing rules
 include(joinpath(WORKING_DIRECTORY, "printreport.jl"))
 
-nrules_per_batch = 5
+
+# hook for inspecting things in the REPL
+debug_logiset = nothing
+debug_miner = nothing
+debug_current_items = nothing
+
+nitems_per_batch_propositional = 5
+nitems_per_batch_modal = 5
 
 # for each class, consider a different alphabet
 for (_current_X, classname) in zip((X_water, X_trees, X_asphalt), (_asphalt,_trees,_gravel))
@@ -57,6 +65,7 @@ for (_current_X, classname) in zip((X_water, X_trees, X_asphalt), (_asphalt,_tre
     ], :auto)
 
     _logiset = scalarlogiset(df)
+    debug_logiset = _logiset
 
     # alphabet generation
     _medians = df .|> median |> eachcol .|> median
@@ -64,36 +73,51 @@ for (_current_X, classname) in zip((X_water, X_trees, X_asphalt), (_asphalt,_tre
         Atom(ScalarCondition(VariableMin(i), >=, m)),
         Atom(ScalarCondition(VariableMax(i), <=, m))
         ) for (i,m) in enumerate(_medians)
-        ] |> Iterators.flatten |> collect
+    ] |> Iterators.flatten |> collect
 
-        _modal_atoms = Iterators.flatten((
-            diamond(DC).(_atoms),
-            diamond(PO).(_atoms)
-            )) |> collect
+    _modal_atoms = Iterators.flatten((
+        diamond(DC).(_atoms),
+        diamond(PO).(_atoms)
+        )) |> collect
 
-    _items = Item.((_atoms, _modal_atoms) |> Iterators.flatten)
+    _propositional_items = Item.(_atoms)
+    _modal_items = Item.(_modal_atoms)
 
     # we repeat the experiment with 10 batches of items, of size 20
     for i in 1:10
-        println("Executing experiment number $i for the class $classname")
+        printstyled(
+            "Executing experiment number $i for the class $classname\n", color=:green)
 
-        _current_items = sample(_items, nrules_per_batch; replace=false)
+        _current_items = vcat(
+            sample(_propositional_items, nitems_per_batch_propositional; replace=false),
+            sample(_modal_items, nitems_per_batch_modal; replace=false)
+        )
+
+        debug_current_items = _current_items
+
+        # println("The current items are $(_current_items)")
 
         miner = Miner(
             _logiset,
             eclat,
-            _items[1:_current_items],
+            _propositional_items[1:10], # _current_items,
             # measure, local threshold, global threshold
-            [(gsupport, 0.1, 0.7)],
-            [(gconfidence, 0.1, 0.5), (glift, 0.5, 1.5)],
+            [(gsupport, 0.2, 0.1)],
+            [(gconfidence, 0.1, 0.6), (glift, 0.5, 1.5)],
             itemset_policies=Function[
                 isanchored_itemset(ignoreuntillength=1)
             ],
             arule_policies=Function[
                 # islimited_length_arule(consequent_maxlength=3),
                 isanchored_arule()
-            ]
+            ],
+
+            # we only consider 5x5 patches
+            worldfilter=SoleLogics.FunctionalWorldFilter(
+                i -> (i.x.y - i.x.x == 5) && (i.y.y - i.y.x == 5), Interval2D{Int64}
+            ),
         )
+        debug_miner = miner
 
         mine!(miner)
 
@@ -104,12 +128,18 @@ for (_current_X, classname) in zip((X_water, X_trees, X_asphalt), (_asphalt,_tre
 
         for (i,rulegroup) in enumerate(arules(miner))
             serialize(
-                joinpath(WORKING_DIRECTORY, "rules_$(classname)_$(i)"),
+                joinpath(RULES_REPOSITORY, "rules_$(classname)_$(i)"),
                 rulegroup
             )
         end
 
-        printreport(miner, i, arules(miner); reportprefix="rules_$(classname)_")
+        try
+            printreport(miner, i, arules(miner); reportprefix="rules_$(classname)_")
+        catch e
+            if e isa ArgumentError
+                printstyled("Empty collection: $(classname)_$(i)\n", color=:red)
+            end
+        end
     end
 
 end
