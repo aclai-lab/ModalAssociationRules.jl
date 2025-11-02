@@ -39,7 +39,7 @@ function printreport(
         padding = maximum(length.(_miner |> freqitems))
         for (rule, antgsupp, consgsupp, conf, lift) in rulecollection
             println(io,
-                rpad(rule, 8 * padding) * " " * rpad(string(antgsupp), 10) * " " *
+                rpad(rule, 30 * padding) * " " * rpad(string(antgsupp), 10) * " " *
                 rpad(string(consgsupp), 10) * " " * rpad(string(conf), 10) * " " *
                 string(lift)
             )
