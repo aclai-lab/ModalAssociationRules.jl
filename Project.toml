@@ -1,8 +1,8 @@
 name = "ModalAssociationRules"
 uuid = "fb95e5f7-b6b0-4744-a282-88ebeeae65a3"
 license = "MIT"
-authors = ["Mauro Milella", "Giovanni Pagliarini"]
 version = "0.2.1"
+authors = ["Mauro Milella", "Giovanni Pagliarini"]
 
 [deps]
 Accessors = "7d9f7c33-5ae7-4f3b-8dc6-eff91059b697"
@@ -62,7 +62,7 @@ Fontconfig = "0.4.1"
 GraphPlot = "0.6.1"
 ImageFiltering = "0.7.12"
 IterTools = "1"
-JSON = "0.21.4"
+JSON = "0.21.4, 1"
 Lazy = "0.15"
 MAT = "0.10.7"
 MLJ = "0.20, 0.21"
