@@ -4,14 +4,7 @@
 *.dat
 
 /Manifest.toml
-/test/data/NATOPS/NATOPSDimension*
-/test/experiments/results/*
-/test/experiments/old
 /docs/build/
-/statprof/*
-/test/analyses/*
-/test/notes
-/test/deprecated
 *.txt
 *.tex
 *.zip
