@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Hands on · ModalAssociationRules.jl</title><meta name="title" content="Hands on · ModalAssociationRules.jl"/><meta property="og:title" content="Hands on · ModalAssociationRules.jl"/><meta property="twitter:title" content="Hands on · ModalAssociationRules.jl"/><meta name="description" content="Documentation for ModalAssociationRules.jl."/><meta property="og:description" content="Documentation for ModalAssociationRules.jl."/><meta property="twitter:description" content="Documentation for ModalAssociationRules.jl."/><meta property="og:url" content="https://aclai-lab.github.io/ModalAssociationRules.jl/hands-on/"/><meta property="twitter:url" content="https://aclai-lab.github.io/ModalAssociationRules.jl/hands-on/"/><link rel="canonical" href="https://aclai-lab.github.io/ModalAssociationRules.jl/hands-on/"/><script data-outdated-warner src="../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../search_index.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../"><img src="../assets/logo.png" alt="ModalAssociationRules.jl logo"/></a><div class="docs-package-name"><span class="docs-autofit"><a href="../">ModalAssociationRules.jl</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../">Home</a></li><li><a class="tocitem" href="../getting-started/">Getting started</a></li><li><a class="tocitem" href="../modal-generalization/">Mining with modal logic</a></li><li class="is-active"><a class="tocitem" href>Hands on</a><ul class="internal"><li><a class="tocitem" href="#Step-by-step-Experiment"><span>Step-by-step Experiment</span></a></li><li><a class="tocitem" href="#Implementing-a-new-meaningfulness-measure"><span>Implementing a new meaningfulness measure</span></a></li><li><a class="tocitem" href="#Writing-a-new-mining-algorithm"><span>Writing a new mining algorithm</span></a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>Hands on</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Hands on</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/aclai-lab/ModalAssociationRules.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/aclai-lab/ModalAssociationRules.jl/blob/main/docs/src/hands-on.md" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="hands-on"><a class="docs-heading-anchor" href="#hands-on">Hands-on</a><a id="hands-on-1"></a><a class="docs-heading-anchor-permalink" href="#hands-on" title="Permalink"></a></h1><h2 id="Step-by-step-Experiment"><a class="docs-heading-anchor" href="#Step-by-step-Experiment">Step-by-step Experiment</a><a id="Step-by-step-Experiment-1"></a><a class="docs-heading-anchor-permalink" href="#Step-by-step-Experiment" title="Permalink"></a></h2><p>Here, we retrace the experiments implemented <a href="../assets/articles/time2025.pdf">in this article</a>.</p><p>They are related to body tracking; in particular, we want to describe the movement of <a href="https://timeseriesclassification.com/description.php?Dataset=NATOPS">NATOPS dataset</a>.</p><pre><code class="language-julia hljs">using ModalAssociationRules
+using SoleData
+
+# load a sample dataset (NATOPS)
+# and transform it into a scalar logiset.
+X_df, y = load_NATOPS()
+X = scalarlogiset(X_df[1:30, :])
+
+# focus on just the first three variables;
+# define a collection of Items, that is, 
+# an alphabet of propositional letters (propositions)
+# and modal literals. 
+p = Atom(ScalarCondition(VariableMin(1), &gt;, -0.5))
+q = Atom(ScalarCondition(VariableMin(2), &lt;=, -2.2))
+r = Atom(ScalarCondition(VariableMin(3), &gt;, -3.6))
+
+lp = box(IA_L)(p)
+lq = diamond(IA_L)(q)
+lr = box(IA_L)(r)
+
+items = Vector{Item}([p, q, r, lp, lq, lr])
+
+# define which measures to use to establish the interestingness
+# of both itemsets (groups of items) and association rules;
+# also define a minimum threshold that must be surpassed both 
+# locally, inside an instance, and globally across all instances.
+
+# 0.1 is the local minsup, while 0.2 is the global minsup.
+itemsetmeasures = [(gsupport, 0.1, 0.2)]
+# 0.3 is the local minconfidence, while 0.5 is the global one.
+arulemeasures = [(gconfidence, 0.3, 0.5)]
+
+# choose an association rule mining algorithm, like fpgrowth;
+# we can finally define a Miner machine.
+miner = Miner(X, fpgrowth, items, itemsetmeasures, arulemeasures)
+
+# we execute the miner and retrieve the resulting rules
+mine!(miner)
+myrules = arules(miner)</code></pre><p>We can create more complex Miner objects by specifying three kinds of policies, which define the properties that must be satisfied by X&#39;s worlds, the Itemsets collected during the mining, and the final ARules.</p><pre><code class="language-julia hljs">miner = Miner(
+    X
+    fpgrowth,
+    items,
+    itemsetmeasures,
+    arulemeasures,
+
+    # we specify a condition that the worlds of the logiset X must honor
+    worldfilter=SoleLogics.FunctionalWorldFilter(
+        x -&gt; length(x) &lt;= 10, Interval{Int}
+    ),
+
+    # an itemset is considered meaningful if it also honors specific condiitons
+    itemset_policies=[islimited_length_itemset(; maxlength=5)],
+
+    # similarly, for the association rules extracted
+    arule_policies=[
+        islimited_length_arule(; antecedent_maxlength=5),
+        isanchored_arule(; npropositions=1),
+        isheterogeneous_arule(; antecedent_nrepetitions=1, consequent_nrepetitions=0),
+    ],
+)</code></pre><h2 id="Implementing-a-new-meaningfulness-measure"><a class="docs-heading-anchor" href="#Implementing-a-new-meaningfulness-measure">Implementing a new meaningfulness measure</a><a id="Implementing-a-new-meaningfulness-measure-1"></a><a class="docs-heading-anchor-permalink" href="#Implementing-a-new-meaningfulness-measure" title="Permalink"></a></h2><p>At the moment of writing, <a href="../getting-started/#ModalAssociationRules.lsupport"><code>lsupport</code></a> and <a href="../getting-started/#ModalAssociationRules.gsupport"><code>gsupport</code></a> must always be leveraged when extracting frequent itemsets, while the global fragment of the other <a href="@ref"><code>MeaningfulnessMeasures</code></a> is exploited by <a href="@ref"><code>generaterules</code></a> to generate the final list of <a href="../getting-started/#ModalAssociationRules.ARule"><code>ARule</code></a>s.</p><p>Although still not used, the local counterpart of meaningfulness measures for association rules could be an idea for further costraining the generation. In general, we suggest to always implement a local and a global part for you meaningfulness measures.</p><p>Every local measure must adhere to the following interface:</p><pre><code class="language-julia hljs">(s::ARMSubject, X::MineableData, ith_instance::Int64, miner::AbstractMiner)</code></pre><p>and it can defined with the macro below.</p><pre><code class="language-julia hljs">@localmeasure mylocalmeasure _mylocalmeasure_logic</code></pre><p>Every global measure must adhere this interface instead:</p><pre><code class="language-julia hljs">(s::ARMSubject, X::MineableData, threshold::Float64, miner::AbstractMiner)</code></pre><p>and it can be defined using <a href="ref"><code>@globalmeasure</code></a>.</p><p>Remember you can link your implementations using <a href="@ref"><code>@linkeas</code></a>, and retrieve each counterpart (local-to-global and vinceversa) using <a href="../getting-started/#ModalAssociationRules.findmeasure-Tuple{Miner, Function}"><code>findmeasure</code></a>.</p><p>We could play by implementing one of the many meaningfulness measures proposed <a href="https://link.springer.com/chapter/10.1007/978-3-540-44918-8_3">in this paper</a>. For example, we could implement <code>lift</code> as follows:</p><pre><code class="language-julia hljs"># local measure, based on local support
+_llift_logic = (rule, X, ith_instance, miner) -&gt; begin
+    _instance = getinstance(X, ith_instance)
+
+    num = lconfidence(rule, _instance, miner)
+    den = lsupport(consequent(rule), _instance, miner)
+
+    return Dict(:measure =&gt; num/den)
+end
+
+# global measure, based on global support
+_glift_logic = (rule, X, threshold, miner) -&gt; begin
+    num = gconfidence(rule, X, threshold, miner)
+    den = gsupport(consequent(rule), X, threshold, miner)
+
+    return Dict(:measure =&gt; num/den)
+end
+
+@localmeasure llift _llift_logic
+@globalmeasure glift _glift_logic
+@linkmeas glift llift</code></pre><h2 id="Writing-a-new-mining-algorithm"><a class="docs-heading-anchor" href="#Writing-a-new-mining-algorithm">Writing a new mining algorithm</a><a id="Writing-a-new-mining-algorithm-1"></a><a class="docs-heading-anchor-permalink" href="#Writing-a-new-mining-algorithm" title="Permalink"></a></h2><p>While the logic for enumerating the association rules from a set of frequent itemsets is quite straightforward, you can implement your custom frequent itemset extraction process by simplying accepting an <a href="../getting-started/#ModalAssociationRules.AbstractMiner"><code>AbstractMiner</code></a> as the only argument (this is what <a href="@ref"><code>apply!</code></a> driver function expects).</p><p>For adapting an already existing kind of <a href="../getting-started/#ModalAssociationRules.AbstractMiner"><code>AbstractMiner</code></a> to your needings, you can leverage <a href="../algorithms/#ModalAssociationRules.initminingstate-Tuple{typeof(fpgrowth), AbstractDataset}"><code>initminingstate</code></a> trait. This is particularly useful when you don&#39;t want to define a whole new miner structure, but just want to consider some auxiliary data structures during the mining.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../modal-generalization/">« Mining with modal logic</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.14.1 on <span class="colophon-date" title="Monday 10 November 2025 17:01">Monday 10 November 2025</span>. Using Julia version 1.11.7.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>- · ModalAssociationRules.jl</title><meta name="title" content="- · ModalAssociationRules.jl"/><meta property="og:title" content="- · ModalAssociationRules.jl"/><meta property="twitter:title" content="- · ModalAssociationRules.jl"/><meta name="description" content="Documentation for ModalAssociationRules.jl."/><meta property="og:description" content="Documentation for ModalAssociationRules.jl."/><meta property="twitter:description" content="Documentation for ModalAssociationRules.jl."/><meta property="og:url" content="https://aclai-lab.github.io/ModalAssociationRules.jl/assets/figures/natops-signals/README/"/><meta property="twitter:url" content="https://aclai-lab.github.io/ModalAssociationRules.jl/assets/figures/natops-signals/README/"/><link rel="canonical" href="https://aclai-lab.github.io/ModalAssociationRules.jl/assets/figures/natops-signals/README/"/><script data-outdated-warner src="../../../warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../../../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../../documenter.js"></script><script src="../../../../search_index.js"></script><script src="../../../../siteinfo.js"></script><script src="../../../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../../themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../../../../"><img src="../../../logo.png" alt="ModalAssociationRules.jl logo"/></a><div class="docs-package-name"><span class="docs-autofit"><a href="../../../../">ModalAssociationRules.jl</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../../../../">Home</a></li><li><a class="tocitem" href="../../../../getting-started/">Getting started</a></li><li><a class="tocitem" href="../../../../modal-generalization/">Mining with modal logic</a></li><li><a class="tocitem" href="../../../../hands-on/">Hands on</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>-</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>-</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/aclai-lab/ModalAssociationRules.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/aclai-lab/ModalAssociationRules.jl/blob/main/docs/src/assets/figures/natops-signals/README.md" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><p>This folder contains a raw and structured dissection of a signal typical of the movement &quot;I have command&quot;, of the dataset NATOPS.</p><p>More specifically, it is the right hand Y signal of the first instance.</p><p>Both <code>raw</code> and <code>structured</code> signals are generated starting with this julia preamble:</p><pre><code class="language-julia hljs">using Plots
+using ModalAssociationRules
+
+# for save .tex plots instead of .png
+pgfplotsx()
+
+X_df, y = load_NATOPS();
+X = X_df[1:30, :]</code></pre><p>The <code>raw</code> signals are generated with the following julia code:</p><pre><code class="language-julia hljs">windows = [ 
+    [(s:s+9) for s in 1:10:41]..., 
+    [(s:s+19) for s in 1:10:31]...,  
+    [(s:s+29) for s in 1:10:21]...,  
+    [(s:s+39) for s in 1:10:11]...,  
+    [(s:s+49) for s in 1:10:1]..., 
+]
+
+for i in windows
+    x = collect(i)
+    y = @view X[1,5][x]
+
+    p = plot(x, y;
+        label=false,            # remove legend
+        linecolor=:blue,
+        linewidth=2,
+        size=(10 * length(i), 250),
+        ylims=(-2, 1.9),
+        xticks=false,           # remove x-axis ticks
+        yticks=false,           # remove y-axis ticks
+        xlabel=&quot;&quot;,              # remove x label
+        ylabel=&quot;&quot;,              # remove y label
+        framestyle=:none,       # remove frame/axes completely
+        background_color=:transparent
+    )
+
+    _first = i |&gt; first
+    _last = i |&gt; last
+    
+    savefig(p,  &quot;$(_first)-to-$(_last).tex&quot;)
+end</code></pre><p>while the <code>structured</code> signals are generated with:</p><pre><code class="language-julia hljs">windows = [(s:s+9) for s in 1:10:41]
+for i in windows
+    x = collect(i)
+    y = @view X[1,5][x]
+
+    p = plot(x, y; 
+        label=&quot;Right hand&quot;, linecolor=:blue, linewidth=2, 
+        size=(500,250), ylims=(-2,1.9), 
+        xticks=collect(1:50), xlabel=&quot;Time&quot;, ylabel=&quot;Position on y axis&quot;
+    )
+    
+    savefig(p, string &lt;| i[1])
+end</code></pre></article><nav class="docs-footer"><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.14.1 on <span class="colophon-date" title="Monday 10 November 2025 17:01">Monday 10 November 2025</span>. Using Julia version 1.11.7.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
