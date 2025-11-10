@@ -28,9 +28,9 @@ DC, EC, PO, TPP, TPPi, NTPP, NTPPi = SoleLogics.RCC8Relations
 # dataset loading
 X_array, y = LandCoverDataset(
     "Pavia University";
-    window_size          = 5, # this was 3 originally
+    window_size          = 7, # this was 3 originally
     ninstances_per_class = 40,
-    pad_window_size      = 5,
+    pad_window_size      = 7, # 5,
 );
 
 # size(X) is an Array{Int64,4} of size (3,3,103,360),
@@ -41,7 +41,7 @@ X_array = permutedims(X_array, (1,2,4,3))
 X_asphalt, _asphalt = X_array[:,:,1:40,:], "asphalt"
 X_meadows, _meadows = X_array[:,:,41:80,:], "meadows"
 X_gravel, _gravel = X_array[:,:,81:120,:], "gravel"
-
+# X_trees, _trees = X_array[:,:,121:160,:], "trees"
 
 # logic for printing rules
 include(joinpath(WORKING_DIRECTORY, "printreport.jl"))
@@ -52,11 +52,12 @@ debug_logiset = nothing
 debug_miner = nothing
 debug_current_items = nothing
 
-nitems_per_batch_propositional = 5
-nitems_per_batch_modal = 5
+n_batches = 10 # number of times the extraction is repeated for a specific class
+nitems_per_batch_propositional = 10
+nitems_per_batch_modal = 10
 
 # for each class, consider a different alphabet
-for (_current_X, classname) in zip((X_water, X_trees, X_asphalt), (_asphalt,_trees,_gravel))
+for (_current_X, classname) in zip((X_asphalt, X_meadows, X_gravel), (_asphalt,_meadows,_gravel))
 
     # convert the Array{Int64, 4} into a DataFrame
     df = DataFrame([
@@ -76,15 +77,16 @@ for (_current_X, classname) in zip((X_water, X_trees, X_asphalt), (_asphalt,_tre
     ] |> Iterators.flatten |> collect
 
     _modal_atoms = Iterators.flatten((
-        diamond(DC).(_atoms),
-        diamond(PO).(_atoms)
-        )) |> collect
+        diamond(DC).(_atoms), # this is probably too relaxed and should not be considered
+        diamond(PO).(_atoms),
+        diamond(NTPP).(_atoms)
+    )) |> collect
 
     _propositional_items = Item.(_atoms)
     _modal_items = Item.(_modal_atoms)
 
     # we repeat the experiment with 10 batches of items, of size 20
-    for i in 1:10
+    for i in 1:n_batches
         printstyled(
             "Executing experiment number $i for the class $classname\n", color=:green)
 
@@ -100,7 +102,7 @@ for (_current_X, classname) in zip((X_water, X_trees, X_asphalt), (_asphalt,_tre
         miner = Miner(
             _logiset,
             eclat,
-            _propositional_items[1:10], # _current_items,
+            _current_items, # _propositional_items[1:10],
             # measure, local threshold, global threshold
             [(gsupport, 0.2, 0.1)],
             [(gconfidence, 0.1, 0.6), (glift, 0.5, 1.5)],
@@ -114,24 +116,23 @@ for (_current_X, classname) in zip((X_water, X_trees, X_asphalt), (_asphalt,_tre
 
             # we only consider 5x5 patches
             worldfilter=SoleLogics.FunctionalWorldFilter(
-                i -> (i.x.y - i.x.x == 5) && (i.y.y - i.y.x == 5), Interval2D{Int64}
+                i -> (
+                    ((i.x.y - i.x.x) == 5) && ((i.y.y - i.y.x) == 5)
+                ) || (
+                  ((i.x.y - i.x.x) == 3) && ((i.y.y - i.y.x) == 3)
+                )
+                ,
+                    Interval2D{Int64}
             ),
         )
         debug_miner = miner
 
         mine!(miner)
 
-        serialize(
-            joinpath(MINERS_REPOSITORY, "miner_$(classname)_$i"),
-            miner
-        )
-
-        for (i,rulegroup) in enumerate(arules(miner))
-            serialize(
-                joinpath(RULES_REPOSITORY, "rules_$(classname)_$(i)"),
-                rulegroup
-            )
-        end
+        # serialize(
+        #     joinpath(MINERS_REPOSITORY, "miner_$(classname)_$i"),
+        #     miner
+        # )
 
         try
             printreport(miner, i, arules(miner); reportprefix="rules_$(classname)_")
@@ -147,6 +148,37 @@ end
 
 # scratchpad
 ### DC, EC, PO, TPP, TPPi, NTPP, NTPPi = SoleLogics.RCC8Relations
-### _interval = Interval2D((1,2), (1,2))
-### _atom = ScalarCondition(VariableMin(1), >, 10) |> Atom
-### check(_atom, getinstance(X_df, 1), _interval)
+# _interval = Interval2D((1,5), (1,5))
+# _atom = ScalarCondition(VariableMin(1), >, 10) |> Atom
+# check(_atom, getinstance(X_df, 1), _interval)
+
+for ma in _modal_atoms
+    pa = ma.children |> first
+
+    for _interval in [Interval2D((j,j+5), (j,j+5)) for j in 1:10]
+        for i in 1:40
+            _instance = getinstance(debug_logiset, i)
+
+            if check(a, _instance, _interval)
+                println("Interval $_interval is true on the $i-th instance")
+            elseif check(pa, _instance, _interval)
+                println("The modal literals is false, but the propositional part is true!")
+            end
+        end
+    end
+end
+
+
+### playing with accessibles
+fr = frame(debug_logiset, 1)
+
+ws = accessibles(fr, Interval2D((1,5),(1,5)) , DC) |> collect
+
+worldfilter=SoleLogics.FunctionalWorldFilter(
+    i -> (
+        ((i.x.y - i.x.x) == 5) && ((i.y.y - i.y.x) == 5)
+    ) || (
+        ((i.x.y - i.x.x) == 3) && ((i.y.y - i.y.x) == 3)
+    ),
+        Interval2D{Int64}
+)
