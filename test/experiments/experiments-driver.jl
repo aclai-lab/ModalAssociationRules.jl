@@ -3,25 +3,24 @@
 #
 # Experiment suite general driver; include this file in any of your experiments.
 #
+# This file collects the common logic between motif-based modal association rule mining
+# experiments (e.g., NATOPS, HuGaDB).
 #
-# This experiment suite is organized as follows:
-# 1. each experiment is organized in a file, ranging from natops0.jl to natops6.jl
-#   1.1 natops0.jl is just a little sketch with a few simple tests to ensure correctness
-#   1.2 natops1.jl to natops6.jl contains one experiment for each NATOPS dataset class
-# 2. for each experiment, a few variables are chosen
-# 3. multiple motifs are extracted for each variable, using `motifsalphabet` and
-#   checking the results manually
-# 4. each motif is wrapped within a `VariableDistance` variable
-#   4.1 each VariableDistance also wraps a distance function (dtw by default);
-#       note that the distance's decision should be justified depending on your data domain
-# 5. an alphabet of `Atom` is created by incorporating an operator and a threshold
-#   together with each `VariableDistance`
-#   5.1 the operator is always "<"
-#   5.2 the threshold is computed by a rule of thumb... actually, this has to be more robust
-# 6. the mining starts, keeping track of the time needed to generate freq. items and rules
-#   6.1 each experiment has its policies to limit the number of results
-#   6.2 this part is managed by the `experiment!` function
-#   6.3 also, association rules are printed, sorted decreasingly by global confidence
+# Within each experiment, a subset of classes and variables is chosen.
+#
+# The most representative motifs for each variable are extracted by calling `motifsalphabet`
+# and checking the results manually.
+#
+# Each motif is wrapped within a `VariableDistance` variable;
+# every VariableDistance also wraps a distance function (normalized Euclidean is the default).
+
+# An alphabet of `Atom` is created by incorporating the relation "<" and a threshold
+# (the latter is estimated with an heuristics).
+#
+# The mining starts, keeping track of the time needed to generate freq. items and rules;
+# see the `experiment!` function.
+#
+# At the end, all the association rules are printed, sorted decreasingly by global confidence.
 #
 # Note; you can use the following regex to look for rows in a results report having both the
 # variable numbers specified:
@@ -31,7 +30,6 @@
 
 using Test
 
-using DynamicAxisWarping
 using MatrixProfile
 using ModalAssociationRules
 using Plots
@@ -65,15 +63,6 @@ function zeuclidean(x::Vector{<:Real}, y::Vector{<:Real})
 
     # z-normalized euclidean distance formula
     return sqrt(sum((x_z .- y_z).^2))
-end
-
-function _dtw(x::Vector{<:Real}, y::Vector{<:Real})
-    if length(x) != length(y)
-        # TODO - instead of returning a big number, throw an error and catch it while mining
-        return maxintfloat()
-    end
-
-    return dtw(x, y) |> first
 end
 
 # suggest a threshold to associate with a given motif, to create a literal;
@@ -285,21 +274,3 @@ function load_motifs(filepath, save_filename_prefix)
 
     return ids, motifs, featurenames
 end
-
-# algorithm use for mining;
-# currently, it is set to apriori instead of fpgrowth because of issue #97
-miningalgo = apriori
-
-# we define a distance function between two time series
-# you could choose between zeuclidean(x,y) or dtw(x,y) |> first
-expdistance = (x, y) -> zeuclidean(x, y) |> first
-
-
-# TODO - these parameters are deprecated and should be ignored
-
-# default parameters for matrix profile generation
-windowlength = 20
-nmotifs = 3
-_seed = 3498
-r = 5    # how similar two windows must be to belong to the same motif
-th = 10  # how nearby in time two motifs are allowed to be
