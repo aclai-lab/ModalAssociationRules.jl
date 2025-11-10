@@ -5,7 +5,7 @@ using Plots
 using PGFPlotsX
 pgfplotsx()
 
-RESULTS_REPOSITORY = joinpath(@__DIR__, "test", "benchmark" "results")
+RESULTS_REPOSITORY = joinpath(@__DIR__, "test", "benchmark", "results")
 
 apriori_data =  JSON.parsefile(joinpath(RESULTS_REPOSITORY, "apriori.json"))
 fpgrowth_data =  JSON.parsefile(joinpath(RESULTS_REPOSITORY, "fpgrowth.json"))
