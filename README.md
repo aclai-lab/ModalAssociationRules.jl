@@ -85,3 +85,7 @@ miner = Miner(
     ],
 )
 ```
+
+## Experiments
+
+To reproduce the experiments of this package, download the release associated with the article or the event in which this has been presented, instantiate it, and follow the Jupyter Notebooks in the `test/experiments` folder.
