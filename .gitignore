@@ -13,17 +13,4 @@ TODO
 
 **/deprecated/
 
-/test/experiments/NATOPS/results
-
-/test/experiments/ENZYMES/miners/
-/test/experiments/ENZYMES/plots/
-/test/experiments/ENZYMES/results/
-/test/experiments/ENZYMES/rules/
-
-/test/experiments/LandCover/data/
-/test/experiments/LandCover/miners/
-/test/experiments/LandCover/plots/
-/test/experiments/LandCover/results/
-/test/experiments/LandCover/rules/
-
 .vscode/settings.json
