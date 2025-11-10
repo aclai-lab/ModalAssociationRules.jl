@@ -6,7 +6,7 @@ using PGFPlotsX
 pgfplotsx() # to export plots in .tex
 
 # folder in which plots are saved
-PLOT_FOLDER_PATH = joinpath(@__DIR__, "test", "benchmark", "plots")
+PLOT_FOLDER_PATH = joinpath(@__DIR__, "test", "benchmark", "NATOPS", "results")
 
 # folder in which the extracted motifs are serialized
 SERIALIZED_FILES_PATH = joinpath(@__DIR__, "test", "experiments", "NATOPS", "serialized")
