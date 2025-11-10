@@ -62,8 +62,8 @@ println((
 
 # save the png for the first `nexamples` of `class`
 
-nexamples = 20
-class = 1
+nexamples = 40
+class = 6
 for ithexamp in 1:nexamples
     _eid1 = findall(x -> x == class, labels)[ithexamp]
     g1 = rawgraphs[_eid1]
