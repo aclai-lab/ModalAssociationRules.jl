@@ -134,9 +134,9 @@ function LandCoverDataset(
 
     function PaviaUniversityDataset()
         X = matread(
-            joinpath(data_dir, "paviaU/PaviaU.mat"))["paviaU"]
+            joinpath(data_dir, "paviauni/PaviaU.mat"))["paviauni"]
         Y = matread(
-            joinpath(data_dir, "paviaU/PaviaU_gt.mat"))["paviaU_gt"]
+            joinpath(data_dir, "paviauni/PaviaU_gt.mat"))["paviaU_gt"]
         (X, Y) = map(((x)->round.(Int,x)), (X, Y))
         (X,Y), [
             "Asphalt",
