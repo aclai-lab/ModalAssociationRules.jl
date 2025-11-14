@@ -357,14 +357,14 @@ _llift_logic = (rule, X, ith_instance, miner) -> begin
     _instance = getinstance(X, ith_instance)
 
     num = lconfidence(rule, _instance, miner)
-    den = lsupport(antecedent(rule), _instance, miner)
+    den = lsupport(consequent(rule), _instance, miner)
 
     return Dict(:measure => num/den)
 end
 
 _glift_logic = (rule, X, threshold, miner) -> begin
     num = gconfidence(rule, X, threshold, miner)
-    den = gsupport(antecedent(rule), X, threshold, miner)
+    den = gsupport(consequent(rule), X, threshold, miner)
 
     return Dict(:measure => num/den)
 end
