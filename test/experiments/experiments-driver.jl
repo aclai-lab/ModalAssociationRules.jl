@@ -114,7 +114,10 @@ function experiment!(miner::Miner, reportname::String)
             rule,
             round(
                 globalmemo(miner, (:gsupport, antecedent(rule))), digits=2
-                ),
+            ),
+            round(
+                globalmemo(miner, (:gsupport, consequent(rule))), digits=2
+            ),
             round(
                 globalmemo(miner, (:gsupport, Itemset(rule))), digits=2
             ),
@@ -128,20 +131,19 @@ function experiment!(miner::Miner, reportname::String)
         for rule in arules(miner)
     ]
 
-    # sort by lift (the 5th position in rulecollection)
-    sort!(rulecollection, by=x->x[5], rev=true);
+    # sort by lift (the 6th position in rulecollection)
+    sort!(rulecollection, by=x->x[6], rev=true);
 
-    reportname = joinpath([@__DIR__, "results", reportname])
     println("Writing to: $(reportname)")
     open(reportname, "w") do io
-        println(io, "Columns are: rule, ant support, ant+cons support,  confidence, lift")
+        println(io, "Columns are: rule, ant support, cons support, ant+cons support,  confidence, lift")
 
         padding = maximum(length.(miner |> freqitems))
-        for (rule, antgsupp, consgsupp, conf, lift) in rulecollection
+        for (rule, antgsupp, consgsupp, totalsupp, conf, lift) in rulecollection
             println(io,
                 rpad(rule, 30 * padding) * " " * rpad(string(antgsupp), 10) * " " *
-                rpad(string(consgsupp), 10) * " " * rpad(string(conf), 10) * " " *
-                string(lift)
+                rpad(string(consgsupp), 10) * " " * rpad(string(totalsupp), 10) * " " *
+                rpad(string(conf), 10) * " " * string(lift)
             )
         end
     end
@@ -179,6 +181,7 @@ function initialize_experiment(
         diamond(IA_B).(propositionalatoms),
         diamond(IA_E).(propositionalatoms),
         diamond(IA_D).(propositionalatoms),
+        diamond(IA_O).(propositionalatoms),
     ])
 
     _items = Vector{Item}(atoms)
