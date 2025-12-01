@@ -1,8 +1,8 @@
 name = "ModalAssociationRules"
 uuid = "fb95e5f7-b6b0-4744-a282-88ebeeae65a3"
 license = "MIT"
-authors = ["Mauro Milella", "Giovanni Pagliarini"]
 version = "0.2.1"
+authors = ["Mauro Milella", "Giovanni Pagliarini"]
 
 [deps]
 Accessors = "7d9f7c33-5ae7-4f3b-8dc6-eff91059b697"
@@ -63,7 +63,7 @@ IterTools = "1"
 JSON = "0.21.4"
 Lazy = "0.15"
 MAT = "0.10.7"
-MLJ = "0.20, 0.21"
+MLJ = "0.20, 0.21, 0.22"
 MatrixProfile = "1.1.1"
 MultiData = "0.1.4"
 PGFPlotsX = "1.6.2"
