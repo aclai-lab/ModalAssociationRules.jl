@@ -11,7 +11,7 @@ const EnhancedItemset = Tuple{<:Itemset,Integer}
     itemset(enhitemset::EnhancedItemset)::Itemset
 
 Getter for the [`Itemset`](@ref) wrapped within an [`EnhancedItemset`](@ref).
-
+ 
 See also [`EnhancedItemset`](@ref), [`Itemset`](@ref).
 """
 itemset(enhitemset::EnhancedItemset) = first(enhitemset)
