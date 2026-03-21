@@ -1,8 +1,8 @@
 name = "ModalAssociationRules"
 uuid = "fb95e5f7-b6b0-4744-a282-88ebeeae65a3"
 license = "MIT"
-authors = ["Mauro Milella", "Giovanni Pagliarini"]
 version = "0.2.1"
+authors = ["Mauro Milella", "Giovanni Pagliarini"]
 
 [deps]
 Accessors = "7d9f7c33-5ae7-4f3b-8dc6-eff91059b697"
@@ -76,7 +76,7 @@ Reexport = "1"
 ResumableFunctions = "1"
 Revise = "3"
 SoleBase = "0.13.3"
-SoleData = "0.16.3"
+SoleData = "0.16.4"
 SoleLogics = "0.13.2"
 StatProfilerHTML = "1.6.0"
 StaticArrays = "1.9.15"
