@@ -26,8 +26,8 @@ Limit up to which memoize measures in memory.
 
 See also [`MeaningfulnessMeasure`](@ref).
 """
-LOCAL_MEMOIZATION_POWER = (1<<63)-1
-GLOBAL_MEMOIZATION_POWER = (1<<63)-1
+LOCAL_MEMOIZATION_POWER = (1 << 63) - 1
+GLOBAL_MEMOIZATION_POWER = (1 << 63) - 1
 
 """
     macro localmeasure(measname, measlogic)
@@ -109,7 +109,7 @@ macro localmeasure(measname, measlogic)
                 # between an instance and a subject must be obtained by the internal logic
                 # of the meaningfulness measure callback.
                 if hasminingstate(miner, state) && haskey(response, state)
-                    miningstate!(miner, state, (ith_instance,subject), response[state])
+                    miningstate!(miner, state, (ith_instance, subject), response[state])
                 end
             end
 
@@ -283,8 +283,8 @@ _lsupport_logic = (itemset, X, ith_instance, miner) -> begin
     _anchor_feature_idx = findfirst(
         # it must be dimensionally constraind
         _item -> _item |> feature |> typeof <: VariableDistance &&
-        # it must be an anchor (propositional, without modalities like in SyntaxTree case)
-        _item |> formula |> typeof <: Atom,
+            # it must be an anchor (propositional, without modalities like in SyntaxTree case)
+                _item |> formula |> typeof <: Atom,
         itemset
     )
 
@@ -299,14 +299,14 @@ _lsupport_logic = (itemset, X, ith_instance, miner) -> begin
 
     # TODO: implement this for various GeometricalWorld types in SoleLogics
     # see https://github.com/aclai-lab/SoleLogics.jl/issues/68
-    function _worldsize(w::Interval{T}) where T
+    function _worldsize(w::Interval{T}) where {T}
         return (w.y - w.x,)
     end
 
     _fairworlds = Ref(0) # keeps track of the number of worlds in which itemset can be true
     wmask = WorldMask([
         _worldsize(w) == _repr_size ?
-            (_fairworlds[] += 1; check(formula(itemset), X, ith_instance, w)) : 0
+        (_fairworlds[] += 1; check(formula(itemset), X, ith_instance, w)) : 0
 
         for w in allworlds(miner; ith_instance=ith_instance)
     ])
@@ -335,7 +335,7 @@ _lconfidence_logic = (rule, X, ith_instance, miner) -> begin
     num = lsupport(convert(Itemset, rule), _instance, miner)
     den = lsupport(antecedent(rule), _instance, miner)
 
-    return Dict(:measure => num/den)
+    return Dict(:measure => num / den)
 end
 
 _gconfidence_logic = (rule, X, threshold, miner) -> begin
@@ -349,7 +349,7 @@ _gconfidence_logic = (rule, X, threshold, miner) -> begin
     # this is really just an overhead
     # @assert den >= num "ERROR: conf between $(_union) [$(num)] and $(_antecedent) [$(den)]"
 
-    return Dict(:measure => num/den)
+    return Dict(:measure => num / den)
 end
 
 
@@ -357,16 +357,16 @@ _llift_logic = (rule, X, ith_instance, miner) -> begin
     _instance = getinstance(X, ith_instance)
 
     num = lconfidence(rule, _instance, miner)
-    den = lsupport(consequent(rule), _instance, miner)
+    den = lsupport(antecedent(rule), _instance, miner)
 
-    return Dict(:measure => num/den)
+    return Dict(:measure => num / den)
 end
 
 _glift_logic = (rule, X, threshold, miner) -> begin
     num = gconfidence(rule, X, threshold, miner)
-    den = gsupport(consequent(rule), X, threshold, miner)
+    den = gsupport(antecedent(rule), X, threshold, miner)
 
-    return Dict(:measure => num/den)
+    return Dict(:measure => num / den)
 end
 
 
@@ -376,14 +376,14 @@ _lconviction_logic = (rule, X, ith_instance, miner) -> begin
     num = 1 - lsupport(consequent(rule), _instance, miner)
     den = 1 - lconfidence(rule, _instance, miner)
 
-    return Dict(:measure => num/den)
+    return Dict(:measure => num / den)
 end
 
 _gconviction_logic = (rule, X, threshold, miner) -> begin
     num = 1 - gsupport(consequent(rule), X, threshold, miner)
     den = 1 - gconfidence(rule, X, threshold, miner)
 
-    return Dict(:measure => num/den)
+    return Dict(:measure => num / den)
 end
 
 
@@ -391,16 +391,16 @@ _lleverage_logic = (rule, X, ith_instance, miner) -> begin
     _instance = getinstance(X, ith_instance)
 
     _ans = lsupport(convert(Itemset, rule), _instance, miner) -
-        lsupport(antecedent(rule), _instance, miner) *
-        lsupport(consequent(rule), _instance, miner)
+           lsupport(antecedent(rule), _instance, miner) *
+           lsupport(consequent(rule), _instance, miner)
 
     return Dict(:measure => _ans)
 end
 
 _gleverage_logic = (rule, X, threshold, miner) -> begin
     _ans = gsupport(convert(Itemset, rule), X, threshold, miner) -
-        gsupport(antecedent(rule), X, threshold, miner) *
-        gsupport(consequent(rule), X, threshold, miner)
+           gsupport(antecedent(rule), X, threshold, miner) *
+           gsupport(consequent(rule), X, threshold, miner)
 
     return Dict(:measure => _ans)
 end

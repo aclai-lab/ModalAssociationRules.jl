@@ -12,7 +12,7 @@ function printreport(
             rule,
             round(
                 globalmemo(_miner, (:gsupport, antecedent(rule))), digits=2
-                ),
+            ),
             round(
                 globalmemo(_miner, (:gsupport, Itemset(rule))), digits=2
             ),
@@ -27,7 +27,7 @@ function printreport(
     ]
 
     # rules are ordered decreasingly by global lift
-    sort!(rulecollection, by=x->x[5], rev=true);
+    sort!(rulecollection, by=x -> x[5], rev=true)
 
     reportname = joinpath(RESULTS_REPOSITORY, "$(reportprefix)$(i)")
 

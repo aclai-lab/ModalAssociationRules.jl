@@ -28,13 +28,13 @@ function isanchored_miner(miner::AbstractMiner)
         policy -> policy |> Symbol == :_isdimensionally_coherent_itemset, _itemset_policies)
 
     if isnothing(_isanchored_index) || isnothing(_isdimensionally_coherent) || getfield(
-        _itemset_policies[_isanchored_index], :ignoreuntillength) == 0
+           _itemset_policies[_isanchored_index], :ignoreuntillength) == 0
 
         throw(
             AssertionError("The miner must possess both isdimensionally_coherent_itemset " *
-            "and anchored_itemset policy, the latter with ignoreuntillength parameter " *
-            "set to 1 or higher."
-        ))
+                           "and anchored_itemset policy, the latter with ignoreuntillength parameter " *
+                           "set to 1 or higher."
+            ))
     end
 end
 
@@ -60,7 +60,7 @@ function anchored_semantics(miner::M; kwargs...)::M where {M<:AbstractMiner}
 
     # lambda to return the refsize of a VariableDistance wrapped within the item
     _item_refsize = item -> formula(item) |> SoleLogics.value |> SoleData.metacond |>
-        SoleData.feature |> refsize
+                            SoleData.feature |> refsize
 
     anchor_groups = undef
     try
@@ -138,12 +138,12 @@ function anchored_grow_prune(
 ) where {I<:Item}
     return Iterators.filter(
         itemset -> all(
-                # if combo does not contain an ancor, just ignore it;
-                # this utility is not the most convenient place to apply itemset policies
-                # related to anchoredness (e.g., during anchored apriori).
-                combo -> (Itemset{I}(combo) in frequents) || !(isanchored_itemset()(combo)),
-                combinations(itemset, k-1)
-            ),
+            # if combo does not contain an ancor, just ignore it;
+            # this utility is not the most convenient place to apply itemset policies
+            # related to anchoredness (e.g., during anchored apriori).
+            combo -> (Itemset{I}(combo) in frequents) || !(isanchored_itemset()(combo)),
+            combinations(itemset, k - 1)
+        ),
         combine_items(candidates, k) |> unique
     )
 end
@@ -162,7 +162,7 @@ See also [`AbstractMiner`](@ref), [`anchored_semantics`](@ref), [`apriori`](@ref
 function anchored_apriori(miner::M; kwargs...)::M where {M<:AbstractMiner}
     if algorithm(miner) != apriori
         throw(ArgumentError("Miner is wrapping $(algorithm(miner)) algorithm instead of " *
-            "apriori."))
+                            "apriori."))
     end
 
     return anchored_semantics(miner; prune_strategy=anchored_grow_prune, kwargs...)
@@ -182,7 +182,7 @@ See also [`AbstractMiner`](@ref), [`anchored_semantics`](@ref), ['fpgrowth`](@re
 function anchored_fpgrowth(miner::M; kwargs...)::M where {M<:AbstractMiner}
     if algorithm(miner) != fpgrowth
         throw(ArgumentError("Miner is wrapping $(algorithm(miner)) algorithm instead of " *
-            "fpgrowth."))
+                            "fpgrowth."))
     end
 
     return anchored_semantics(miner; kwargs...)
@@ -198,7 +198,7 @@ See also [`AbstractMiner`](@ref), [`anchored_semantics`](@ref), [`eclat`](@ref).
 function anchored_eclat(miner::M; kwargs...)::M where {M<:AbstractMiner}
     if algorithm(miner) != fpgrowth
         throw(ArgumentError("Miner is wrapping $(algorithm(miner)) algorithm instead of " *
-            "fpgrowth."))
+                            "fpgrowth."))
     end
 
     return anchored_semantics(miner; kwargs...)

@@ -53,7 +53,7 @@ r = Itemset{Item}(manual_r)
 
 @test pq in pq
 @test qr in pqr
-@test (pqr in [pq,qr]) == false
+@test (pqr in [pq, qr]) == false
 
 @test Itemset{Item} <: Itemset{<:Item}
 @test Itemset{Item}(Item[manual_p]) == Item[manual_p]
@@ -215,7 +215,7 @@ lsupport(Itemset(manual_lr), SoleLogics.getinstance(X2, 7), fpgrowth_miner)
 @test combine_items([pq, qr], 3) |> first == pqr
 @test combine_items([manual_p, manual_q], [manual_r]) |> collect |> length == 3
 @test combine_items([manual_p, manual_q], [manual_r]) |>
-    collect |> first == Itemset([manual_p, manual_r])
+      collect |> first == Itemset([manual_p, manual_r])
 
 # Deprecated test
 # @test grow_prune([pq,qr,pr], [pq,qr,pr], 3) |> collect |> unique == pqr
@@ -305,7 +305,7 @@ manual_fptree = FPTree()
 @test count(x -> x == manual_r, content.(manual_fptree |> ModalAssociationRules.children)) == 1
 
 # 2nd property - the sum of counts for each item equals the total count we know manually
-item_to_count = Dict{Item, Integer}(
+item_to_count = Dict{Item,Integer}(
     manual_p => 0,
     manual_q => 0,
     manual_r => 0
@@ -338,7 +338,7 @@ end
 # 4th property - there are x itemsets having prefix p before y, where y is the label of a
 # node in the tree, p is the prefix on the path from the root, and x the count of the node.
 # Here, we check that each retrieved prefix is not duplicated.
-prefix_existance = Dict{Itemset, Bool}()
+prefix_existance = Dict{Itemset,Bool}()
 
 function _allowed_existence(fptree::FPTree)
     function _retrieve_prefix(fptree::FPTree)
@@ -452,7 +452,7 @@ _my_lsupport_logic = (itemset, X, ith_instance, miner) -> begin
     wmask = [
         check(formula(itemset), X, ith_instance, w) for w in allworlds(X, ith_instance)]
 
-        return Dict(
+    return Dict(
         :measure => count(wmask) / nworlds(X, ith_instance),
         :worldmask => wmask,
     )
@@ -486,7 +486,7 @@ _my_itemset = ["p", "q"] .|> Atom .|> Item |> Itemset
 @test_nowarn isanchored_itemset()(_my_itemset)
 @test_throws ArgumentError isanchored_itemset(npropositions=-1)(_my_itemset)
 
-_my_vd1 = VariableDistance(1, [[1,2,3,4,5]])
+_my_vd1 = VariableDistance(1, [[1, 2, 3, 4, 5]])
 _my_p = Atom(ScalarCondition(_my_vd1, <=, 1.5)) |> Item
 isdimensionally_coherent_itemset()(_my_p |> Itemset)
 
@@ -497,7 +497,7 @@ _my_non_dimensionally_coherent_itemset = [_my_p, _my_q] |> Itemset
 # _my_p is applied specifically to vectors having 5 components.
 @test isdimensionally_coherent_itemset()(_my_non_dimensionally_coherent_itemset) == false
 
-_my_vd2 = VariableDistance(1, [[5,6,7]])
+_my_vd2 = VariableDistance(1, [[5, 6, 7]])
 _my_r = Atom(ScalarCondition(_my_vd2, <=, 1.5)) |> Item
 _my_non_dimensionally_coherent_itemset2 = [_my_p, _my_r] |> Itemset
 
@@ -513,20 +513,20 @@ _my_non_dimensionally_coherent_itemset2 = [_my_p, _my_r] |> Itemset
 # For example, one could do "distance(element_in_cluster, target) < 1.0" and then check if
 # enough elements in a cluster honoured the condition.
 _my_dimensionally_itemset = Itemset([
-    ScalarCondition(VariableDistance(1, [1,2,3,4,5]), <=, 1.0) |> Atom |> Item,
-    ScalarCondition(VariableDistance(1, [1,2,3]), <=, 1.0) |> Atom |> Item
+    ScalarCondition(VariableDistance(1, [1, 2, 3, 4, 5]), <=, 1.0) |> Atom |> Item,
+    ScalarCondition(VariableDistance(1, [1, 2, 3]), <=, 1.0) |> Atom |> Item
 ])
 @test isdimensionally_coherent_itemset()(_my_dimensionally_itemset) == true
 
 
 # these, instead, are two items wrapping 1 vector of 5 elements and 1 vector of 3 elements
 _my_dimensionally_itemset = Itemset([
-    ScalarCondition(VariableDistance(1, [[1,2,3,4,5]]), <=, 1.0) |> Atom |> Item,
-    ScalarCondition(VariableDistance(1, [[1,2,3]]), <=, 1.0) |> Atom |> Item
+    ScalarCondition(VariableDistance(1, [[1, 2, 3, 4, 5]]), <=, 1.0) |> Atom |> Item,
+    ScalarCondition(VariableDistance(1, [[1, 2, 3]]), <=, 1.0) |> Atom |> Item
 ])
 @test isdimensionally_coherent_itemset()(_my_dimensionally_itemset) == false
 
-_my_vd1 = VariableDistance(1, [[1,2,3,4,5], [1,2,3,4,5]])
+_my_vd1 = VariableDistance(1, [[1, 2, 3, 4, 5], [1, 2, 3, 4, 5]])
 
 
 
@@ -552,8 +552,8 @@ _my_vd1 = VariableDistance(1, [[1,2,3,4,5], [1,2,3,4,5]])
 @test globalmemo(fpgrowth_miner, (:gsupport, pq)) == 0.61
 
 @test_nowarn miningstate!(fpgrowth_miner, :current_instance, 2)
-@test_nowarn miningstate!(fpgrowth_miner, :worldmask, (1, pq), [0,0,0])
-@test miningstate(fpgrowth_miner, :worldmask)[(1,pq)] == BitVector([0,0,0])
+@test_nowarn miningstate!(fpgrowth_miner, :worldmask, (1, pq), [0, 0, 0])
+@test miningstate(fpgrowth_miner, :worldmask)[(1, pq)] == BitVector([0, 0, 0])
 
 @test_throws ErrorException generaterules([pq], genericMiner()) |> first
 @test_throws ErrorException generaterules!(genericMiner())
@@ -590,7 +590,7 @@ for x in r2
     localmemo!(b2, (:lsupport, pq, x), 0.56)
 end
 
-blmemo = miner_reduce!([b1,b2])
+blmemo = miner_reduce!([b1, b2])
 @test length(blmemo) == 20
 
 @test datatype(b1) <: SupportedLogiset
@@ -604,7 +604,7 @@ _ninstances, _nvars = size(X_df2)
 
 for i in 1:_ninstances
     for v in 1:_nvars
-        X_df2[i,v] = X_df2[i,v][1:5]
+        X_df2[i, v] = X_df2[i, v][1:5]
     end
 end
 
@@ -616,8 +616,8 @@ X_multi = SoleData.MultiLogiset([X1, scalarlogiset(X_df2)])
 ##### Utilities
 
 # fpgrowth contains a policy to filter out association rules that are "too long"
-long_itemset1 = [convert(Char,i) for i in 65:80] .|> Atom .|> Item |> Itemset
-long_itemset2 = [convert(Char,i) for i in 81:90] .|> Atom .|> Item |> Itemset
+long_itemset1 = [convert(Char, i) for i in 65:80] .|> Atom .|> Item |> Itemset
+long_itemset2 = [convert(Char, i) for i in 81:90] .|> Atom .|> Item |> Itemset
 
 # here, we try to apply such a policy to an arbitrary set of rules,
 # even if they are external to the miner itself.
@@ -679,7 +679,7 @@ apriori_unanchored_miner = Miner(
 
 variables = [
     VariableDistance(id, m)
-    for (id, m) in [(1,[[1,2,3]]), (2,[[4,5,6]]), (3,[[7,8,9]])]
+    for (id, m) in [(1, [[1, 2, 3]]), (2, [[4, 5, 6]]), (3, [[7, 8, 9]])]
 ]
 
 propositionalatoms = [Atom(ScalarCondition(v, <=, 200.0)) for v in variables]
@@ -694,10 +694,10 @@ for miningalgo in [apriori, fpgrowth]
         _items,
         _itemsetmeasures,
         _rulemeasures
-        )
-        @test_nowarn anchored_semantics(anchored_miner)
-        @test globalmemo(anchored_miner) |> length == 7
-    end
+    )
+    @test_nowarn anchored_semantics(anchored_miner)
+    @test globalmemo(anchored_miner) |> length == 7
+end
 
 anchored_apriori_miner = Miner(X3, apriori, _items, _itemsetmeasures, _rulemeasures)
 anchored_fpgrowth_miner = Miner(X3, fpgrowth, _items, _itemsetmeasures, _rulemeasures)

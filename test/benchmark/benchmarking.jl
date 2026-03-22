@@ -32,8 +32,8 @@ EVALS = configuration["num_evals"]
 SAMPLES = configuration["num_runs"]
 GCTRIAL = configuration["gctrial"]
 
-ModalAssociationRules.LOCAL_MEMOIZATION_POWER = (1<<63)-1
-ModalAssociationRules.GLOBAL_MEMOIZATION_POWER = (1<<63)-1
+ModalAssociationRules.LOCAL_MEMOIZATION_POWER = (1 << 63) - 1
+ModalAssociationRules.GLOBAL_MEMOIZATION_POWER = (1 << 63) - 1
 
 
 ##### modal dataset creation ###############################################################
@@ -92,7 +92,7 @@ for miningalgo in [apriori] # [fpgrowth, eclat, apriori]
                 rulemeasures;
                 itemset_policies=Function[],
                 arule_policies=Function[]
-            );
+            )
 
             _current = @benchmark mine!(
                 $miner;
@@ -101,15 +101,15 @@ for miningalgo in [apriori] # [fpgrowth, eclat, apriori]
             ) teardown = begin
                 localmemo($miner) |> empty!
                 globalmemo($miner) |> empty!
-            end evals=EVALS samples=SAMPLES gctrial=GCTRIAL
+            end evals = EVALS samples = SAMPLES gctrial = GCTRIAL
 
-                push!(alltimes, _current.times)
-                push!(meantimes, mean(_current.times))
-                push!(nitemsets, length(freqitems(miner)))
+            push!(alltimes, _current.times)
+            push!(meantimes, mean(_current.times))
+            push!(nitemsets, length(freqitems(miner)))
 
-                push!(memories, memory(_current))
+            push!(memories, memory(_current))
 
-                println("Current minimum $(minlsupport)")
+            println("Current minimum $(minlsupport)")
 
         end # end of local support loop
     end # end of global support loop

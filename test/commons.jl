@@ -14,7 +14,7 @@ end
 # check if local support coincides for each frequent itemset
 function isequal_lsupp(miner1::AbstractMiner, miner2::AbstractMiner)
     for itemset in freqitems(miner1)
-        for ninstance in 1:(miner1 |> data |> ninstances)
+        for ninstance in 1:(miner1|>data|>ninstances)
             miner1_lsupp = get(miner1.localmemo, (:lsupport, itemset, ninstance), -1.0)
             miner2_lsupp = get(miner2.localmemo, (:lsupport, itemset, ninstance), -1.0)
 
@@ -74,7 +74,7 @@ function _compare_arules(miner1::AbstractMiner, miner2::AbstractMiner, rule::ARu
         lconfidence(rule, SoleLogics.getinstance(data(miner2), ninstance), miner2)
 
         @test miner1.localmemo[(:lconfidence, rule, ninstance)] ===
-        miner2.localmemo[(:lconfidence, rule, ninstance)]
+              miner2.localmemo[(:lconfidence, rule, ninstance)]
     end
 end
 

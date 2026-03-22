@@ -59,7 +59,7 @@ function isanchored_itemset(; npropositions::Integer=1, ignoreuntillength::Integ
 
     if npropositions < 0 || ignoreuntillength < 0
         throw(ArgumentError("All parameters must be >= 0; (given values: " *
-                "npropositions=$(npropositions), ignoreuntillength=$(ignoreuntillength))"))
+                            "npropositions=$(npropositions), ignoreuntillength=$(ignoreuntillength))"))
     end
 
     # beware to this policy; consider a candidate-based mining algorithm such as apriori;
@@ -69,7 +69,7 @@ function isanchored_itemset(; npropositions::Integer=1, ignoreuntillength::Integ
 
     return function _isanchored_itemset(itemset::Itemset)
         return length(itemset) <= ignoreuntillength ||
-            count(it -> formula(it) isa Atom, itemset) >= npropositions
+               count(it -> formula(it) isa Atom, itemset) >= npropositions
     end
 end
 
@@ -163,7 +163,7 @@ function islimited_length_arule(;
 
     return function _islimited_length_arule(rule::ARule)::Bool
         return length(rule |> antecedent) <= antecedent_maxlength &&
-            length(rule |> consequent) <= consequent_maxlength
+               length(rule |> consequent) <= consequent_maxlength
     end
 end
 
@@ -229,13 +229,13 @@ function isheterogeneous_arule(;
     if antecedent_nrepetitions < 1
         throw(
             ArgumentError("antecedent_nrepetitions must be >= 1 " *
-            "(given value is $(antecedent_nrepetitions))"))
+                          "(given value is $(antecedent_nrepetitions))"))
     end
 
     if consequent_nrepetitions < 0
         throw(
             ArgumentError("consequent_nrepetitions must be >= 0 " *
-            "(given value is $(consequent_nrepetitions))"))
+                          "(given value is $(consequent_nrepetitions))"))
     end
 
     function __extract_value(item::Item)
@@ -250,7 +250,7 @@ function isheterogeneous_arule(;
 
     function _extract_variable_number(item::Item)
         return __extract_value(item) |> SoleData.metacond |> SoleData.feature |>
-            SoleData.i_variable
+               SoleData.i_variable
     end
 
     function _extract_threshold(item::Item)
@@ -260,25 +260,23 @@ function isheterogeneous_arule(;
     # two items are too similar
     function ishomogeneous(item1::Item, item2::Item)
         return _extract_variable_number(item1) == _extract_variable_number(item2) &&
-            (!consider_thresholds || _extract_threshold(item1) == _extract_threshold(item2))
+               (!consider_thresholds || _extract_threshold(item1) == _extract_threshold(item2))
     end
 
     return function _isheterogeneous_arule(rule::ARule)
         return all(
             # for each antecedent item
             ant_item ->
-                # no other items in antecedent shares (too much) the same variable
+            # no other items in antecedent shares (too much) the same variable
                 count(__ant_item ->
-                    ishomogeneous(ant_item, __ant_item), antecedent(rule)
+                        ishomogeneous(ant_item, __ant_item), antecedent(rule)
                 ) <= antecedent_nrepetitions &&
 
                 # every consequent item does not shares (too much) the same variable
                 # with the fixed antecedent
-                count(cons_item ->
-                    ishomogeneous(ant_item, cons_item), consequent(rule)
-                ) <= consequent_nrepetitions,
-
-            antecedent(rule)
+                    count(cons_item ->
+                            ishomogeneous(ant_item, cons_item), consequent(rule)
+                    ) <= consequent_nrepetitions, antecedent(rule)
         )
     end
 

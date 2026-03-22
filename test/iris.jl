@@ -24,10 +24,10 @@ X = scalarlogiset(X1;
 )
 
 _1_items = Vector{Item}(Atom.([
-    ScalarCondition(VariableMin(1), >=,  5)
-    ScalarCondition(VariableMin(2), <=,  4)
-    ScalarCondition(VariableMin(3), <=,  4)
-    ScalarCondition(VariableMin(4), <=,  2)
+    ScalarCondition(VariableMin(1), >=, 5)
+    ScalarCondition(VariableMin(2), <=, 4)
+    ScalarCondition(VariableMin(3), <=, 4)
+    ScalarCondition(VariableMin(4), <=, 2)
 ]))
 
 # 1st comparison

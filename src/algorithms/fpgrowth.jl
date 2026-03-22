@@ -78,7 +78,7 @@ See also [`ConditionalPatternBase`](@ref), [`EnhancedItemset`](@ref). [`FPTree`]
 """
 function bounce!(pbase::ConditionalPatternBase, miner::AbstractMiner)
     # accumulators needed to establish whether an enhanced itemset is promoted or no
-    count_accumulator = DefaultDict{Item, Integer}(0)
+    count_accumulator = DefaultDict{Item,Integer}(0)
 
     # to find local support threshold we need to search for its corresponding global
     # measure (global support), obtaining a MeaningfulnessMeasure tuple;
@@ -98,7 +98,7 @@ function bounce!(pbase::ConditionalPatternBase, miner::AbstractMiner)
 
     for enhanceditemset in pbase
         filter!(_item ->
-            count_accumulator[_item] / _nworlds >= _lsupport_threshold,
+                count_accumulator[_item] / _nworlds >= _lsupport_threshold,
             enhanceditemset |> itemset
         )
     end
@@ -159,11 +159,11 @@ See also [`AbstractMiner`](@ref), [`Bulldozer`](@ref), [`FPTree`](@ref),
 function fpgrowth(miner::M)::M where {M<:AbstractMiner}
     if !(ModalAssociationRules.gsupport in reduce(vcat, itemsetmeasures(miner)))
         throw(ArgumentError("FP-Growth " *
-            "requires global support (gsupport) as meaningfulness measure in order to " *
-            "work. Please, add a tuple (gsupport, local support threshold, " *
-            "global support threshold) to miner.itemset_constrained_measures field.\n" *
-            "Note that local support is needed too, but it is already considered " *
-            "internally by global support."
+                            "requires global support (gsupport) as meaningfulness measure in order to " *
+                            "work. Please, add a tuple (gsupport, local support threshold, " *
+                            "global support threshold) to miner.itemset_constrained_measures field.\n" *
+                            "Note that local support is needed too, but it is already considered " *
+                            "internally by global support."
         ))
     end
 
@@ -278,8 +278,8 @@ function _fpgrowth(miner::Bulldozer{D,I}) where {D<:MineableData,I<:Item}
             ]
 
             nworld_to_itemset[nworld] = length(_itemset_in_world) > 0 ?
-                union(_itemset_in_world...) :
-                Itemset{I}()
+                                        union(_itemset_in_world...) :
+                                        Itemset{I}()
 
             # count 1-length frequent itemsets frequency;
             # a.k.a prepare miner internal miningstate state to handle an FPGrowth call.
@@ -317,7 +317,7 @@ function _fpgrowth_kernel(
         survivor_itemset = itemset_from_fplist(fptree)
         leftout_itemset = itemset_from_fplist(leftout_fptree)
 
-        leftout_count_dict = Dict{Item, Float64}()
+        leftout_count_dict = Dict{Item,Float64}()
         if fptree |> children |> length > 0
             for item in survivor_itemset
                 leftout_count_dict[item] =
@@ -403,9 +403,9 @@ function _fpgrowth_count_phase(
     # we consider each combination of items (where the itemset `survivor_itemset` is fixed)
     # which also do honor the `itemset_policies`
     for combo in Iterators.filter(
-            _combo -> all(__policy -> __policy(_combo), itemset_policies(miner)),
-            combine_items(survivor_itemset, leftout_itemset)
-        )
+        _combo -> all(__policy -> __policy(_combo), itemset_policies(miner)),
+        combine_items(survivor_itemset, leftout_itemset)
+    )
 
         # each combo must be reshaped, following a certain order specified
         # universally by the miner (lexicographic ordering).
