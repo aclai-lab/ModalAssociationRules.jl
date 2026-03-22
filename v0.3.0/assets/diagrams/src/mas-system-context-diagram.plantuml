@@ -1,0 +1,16 @@
+@startuml mas-system-context-diagram
+!theme mono
+title MAS - System Context Diagram
+
+actor "User" as user
+
+rectangle "ModalAssociationRules.jl" as mas
+
+rectangle "SoleLogics.jl" as solelogics
+rectangle "SoleData.jl" as soledata
+
+user --> mas : Extracts rules from data and filters them using
+mas --> solelogics : Gets a logical theory from
+mas --> soledata : Preprocesses data using
+
+@enduml
