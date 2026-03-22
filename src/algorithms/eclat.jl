@@ -43,7 +43,7 @@ function eclat(miner::M)::M where {M<:AbstractMiner}
     #   [truth values on the worlds of the second instance],
     #   ...
     # ]
-    Xvertical = Dict{Itemset{_itemtype}, Vector{<:WorldMask}}()
+    Xvertical = Dict{Itemset{_itemtype},Vector{<:WorldMask}}()
 
     Threads.@threads for candidate in candidates
         # we keep track of the instances for which a candidate has enough global support;
@@ -64,7 +64,7 @@ function eclat(miner::M)::M where {M<:AbstractMiner}
     Xvertical_sorted = collect(Xvertical)
     Xvertical_sorted = sort!(
         Xvertical_sorted,
-        by=kv->globalmemo(miner, (:gsupport, kv[1])),
+        by=kv -> globalmemo(miner, (:gsupport, kv[1])),
         rev=true
     )
 
@@ -78,14 +78,14 @@ function eclat(miner::M)::M where {M<:AbstractMiner}
         # local and global threhsolds for support
         lthreshold::T,
         gthreshold::T
-    ) where {M<:AbstractMiner, IT<:Itemset, IM<:Vector{<:WorldMask}, T<:Threshold}
+    ) where {M<:AbstractMiner,IT<:Itemset,IM<:Vector{<:WorldMask},T<:Threshold}
         # base case of the DFS
         if length(futurestates) == 0
             return
         end
 
         # the DFS possibly recurs on each children node
-        for (i,currentstate) in enumerate(futurestates)
+        for (i, currentstate) in enumerate(futurestates)
             # merge the current itemset, with the item of the DFS' children
             _newstate_itemset = union(currentstate[1], prevstate[1]) |> sort!
 
@@ -119,7 +119,7 @@ function eclat(miner::M)::M where {M<:AbstractMiner}
 
             # apply all policies, update the globalmemo and continue the recursion
             if newstate_gsupport >= gthreshold &&
-                all(policy -> policy(newstate[1]), itemset_policies(miner))
+               all(policy -> policy(newstate[1]), itemset_policies(miner))
 
                 lock(miningstatelock(miner)) do
                     push!(freqitems(miner), newstate[1])

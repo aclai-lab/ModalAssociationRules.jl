@@ -192,7 +192,7 @@ struct ARule
         intersection = intersect(antecedent, consequent)
         if !(intersection |> length == 0)
             throw(ArgumentError("Invalid rule. " *
-                "Antecedent and consequent share the following items: $(intersection)."
+                                "Antecedent and consequent share the following items: $(intersection)."
             ))
         end
 
@@ -257,9 +257,9 @@ function Base.:(==)(rule1::ARule, rule2::ARule)
     # same when considering the consequent;
     # if this is true and lengths are the same, then the two parts coincides.
     return length(antecedent(rule1)) == length(antecedent(rule2)) &&
-        length(consequent(rule1)) == length(consequent(rule2)) &&
-        antecedent(rule1) in antecedent(rule2) &&
-        consequent(rule1) in consequent(rule2)
+           length(consequent(rule1)) == length(consequent(rule2)) &&
+           antecedent(rule1) in antecedent(rule2) &&
+           consequent(rule1) in consequent(rule2)
 end
 
 """
@@ -289,7 +289,7 @@ function Base.show(
     _consequent = arule |> consequent |> formula
 
     print(io, "$(syntaxstring(_antecedent, variable_names_map=variablenames)) => " *
-        "$(syntaxstring(_consequent, variable_names_map=variablenames))")
+              "$(syntaxstring(_consequent, variable_names_map=variablenames))")
 end
 
 """

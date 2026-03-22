@@ -92,15 +92,15 @@ struct Bulldozer{D<:MineableData,I<:Item} <: AbstractMiner
         data_slice = slicedataset(data(miner), instancesrange)
 
         return Bulldozer(
-                data_slice,
-                instancesrange,
-                items(miner),
-                itemsetmeasures(miner),
-                worldfilter=deepcopy(worldfilter(miner)),
-                itemset_policies=deepcopy(itemset_policies(miner)),
-                miningstate=deepcopy(miningstate(miner));
-                kwargs...
-            )
+            data_slice,
+            instancesrange,
+            items(miner),
+            itemsetmeasures(miner),
+            worldfilter=deepcopy(worldfilter(miner)),
+            itemset_policies=deepcopy(itemset_policies(miner)),
+            miningstate=deepcopy(miningstate(miner));
+            kwargs...
+        )
     end
 
     function Bulldozer(miner::Miner, ith_instance::Integer; kwargs...)
@@ -275,19 +275,22 @@ Getter for the customizable dictionary wrapped by a [`Bulldozer`](@ref).
 
 See also [`miningstate!(::Bulldozer)`].
 """
-miningstate(bulldozer::Bulldozer)::MiningState = lock(miningstatelock(bulldozer)) do
-    bulldozer.miningstate
-end
-miningstate(bulldozer::Bulldozer, key::Symbol)::Any = lock(miningstatelock(bulldozer)) do
-    miningstate(bulldozer)[key]
-end
+miningstate(bulldozer::Bulldozer)::MiningState =
+    lock(miningstatelock(bulldozer)) do
+        bulldozer.miningstate
+    end
+miningstate(bulldozer::Bulldozer, key::Symbol)::Any =
+    lock(miningstatelock(bulldozer)) do
+        miningstate(bulldozer)[key]
+    end
 miningstate(
     bulldozer::Bulldozer,
     key::Symbol,
     inner_key
-)::Any = lock(miningstatelock(bulldozer)) do
-    miningstate(bulldozer, key)[inner_key]
-end
+)::Any =
+    lock(miningstatelock(bulldozer)) do
+        miningstate(bulldozer, key)[inner_key]
+    end
 
 """
     miningstate!(bulldozer::Bulldozer, key::Symbol, val)
@@ -295,9 +298,10 @@ end
 
 Setter for the content of a specific `bulldozer`'s [`miningstate`](@ref).
 """
-miningstate!(bulldozer::Bulldozer, key::Symbol, val) = lock(miningstatelock(bulldozer)) do
-    bulldozer.miningstate[key] = val
-end
+miningstate!(bulldozer::Bulldozer, key::Symbol, val) =
+    lock(miningstatelock(bulldozer)) do
+        bulldozer.miningstate[key] = val
+    end
 miningstate!(bulldozer::Bulldozer, key::Symbol, inner_key, val) = begin
     lock(miningstatelock(bulldozer)) do
         bulldozer.miningstate[key][inner_key] = val
@@ -311,9 +315,10 @@ Return whether `bulldozer` miningstate field contains a field `key`.
 
 See also [`Bulldozer`](@ref), [`miningstate`](@ref), [`miningstate!`](@ref).
 """
-hasminingstate(bulldozer::Bulldozer, key::Symbol) = lock(miningstatelock(bulldozer)) do
-    haskey(bulldozer |> miningstate, key)
-end
+hasminingstate(bulldozer::Bulldozer, key::Symbol) =
+    lock(miningstatelock(bulldozer)) do
+        haskey(bulldozer |> miningstate, key)
+    end
 
 """
     measures(bulldozer::Bulldozer)
