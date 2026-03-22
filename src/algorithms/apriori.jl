@@ -26,7 +26,18 @@ See also [`Item`](@ref), [`Itemset`](@ref).
 """
 function combine_items(variable::AbstractVector{<:Item}, fixed::AbstractVector{<:Item})
     # TODO - this may be deprecated
-    return (Itemset(union(combo, fixed)) for combo in combinations(variable))
+    # return (Itemset(union(combo, fixed)) for combo in combinations(variable))
+    #
+    # TODO maybe the correct version is the one below, but considering only !isempty(combo)
+    # return (Itemset(union(combo, fixed)) for combo in combinations(variable) if !isempty(combo) && !isempty(fixed))
+    #
+    return (Itemset(union(combo, fixed)) for combo in combinations(variable) if !isempty(combo))
+
+    # return (Itemset(
+    #     isempty(combo) ? fixed :
+    #     isempty(fixed) ? combo :
+    #     union(combo, fixed)
+    # ) for combo in combinations(variable))
 end
 
 """
@@ -53,7 +64,7 @@ function grow_prune(
         # note: why first(combo)? Because combinations(itemset, k-1) returns vectors,
         # each one wrapping one Itemset, but we just need that exact itemset.
         itemset -> all(
-                combo -> Itemset{I}(combo) in frequents, combinations(itemset, k-1)),
+            combo -> Itemset{I}(combo) in frequents, combinations(itemset, k - 1)),
         combine_items(candidates, k) |> unique
     )
 end
@@ -106,7 +117,7 @@ function apriori(
         candidates = sort.(prune_strategy(candidates, frequents, k) |> collect) |> unique
 
         verbose && printstyled("Starting new computational loop with " *
-            "$(length(candidates)) candidates (of length $(k))...\n", color=:green)
+                               "$(length(candidates)) candidates (of length $(k))...\n", color=:green)
 
         filter!(candidates, miner)  # apply filtering policies
     end
