@@ -63,8 +63,8 @@ function generate(
 
         # facts[1:i] are all true on the worlds from the first to the ith.
         valuation = Dict([
-            w => TruthDict([f => defaulttruth for f in facts[1:(i%_factslen + 1)]])
-            for (i,w) in enumerate(fr.worlds)
+            w => TruthDict([f => defaulttruth for f in facts[1:(i%_factslen+1)]])
+            for (i, w) in enumerate(fr.worlds)
         ])
     elseif random
         try

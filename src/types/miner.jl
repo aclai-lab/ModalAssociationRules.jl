@@ -203,9 +203,6 @@ See also [`AbstractMiner`](@ref), [`generaterules`](@ref),
 [`itemset_policies`](@ref).
 """
 arule_policies(::AbstractMiner) = error("Not implemented").
-
-
-
 """
     miningstate(miner::AbstractMiner)::MiningState
     miningstate(miner::AbstractMiner, key::Symbol)
@@ -325,13 +322,13 @@ function findmeasure(
 )::MeaningfulnessMeasure
     try
         return Iterators.filter(
-            m -> first(m)==meas || recognizer(meas, first(m)), measures(miner)) |> first
+            m -> first(m) == meas || recognizer(meas, first(m)), measures(miner)) |> first
     catch e
         if isa(e, ArgumentError)
             error("The provided miner has no measure $meas. " *
-            "Maybe the miner is not initialized properly, and $meas is omitted. " *
-            "Please use itemsetmeasures/arulemeasures to check which measures are , " *
-            "available and miner's setters to add a new measures and their thresholds.")
+                  "Maybe the miner is not initialized properly, and $meas is omitted. " *
+                  "Please use itemsetmeasures/arulemeasures to check which measures are , " *
+                  "available and miner's setters to add a new measures and their thresholds.")
         end
     end
 end
@@ -410,13 +407,13 @@ function apply!(
     if haskey(_info, :istrained) && !forcemining
         if _info[:istrained] == true
             @warn "The miner has already been trained; to force mining, please set " *
-                "`forcemining=true`. If you are performing some benchmarks, you probably " *
-                "want to clear the memoization structures (`lmemo` and `gmemo`) with " *
-                "`empty!` before proceeding further. "
+                  "`forcemining=true`. If you are performing some benchmarks, you probably " *
+                  "want to clear the memoization structures (`lmemo` and `gmemo`) with " *
+                  "`empty!` before proceeding further. "
 
             if !fpeonly
                 @warn "Association rules are going to be generated." *
-                return generaterules(freqitems(miner), miner)
+                      return generaterules(freqitems(miner), miner)
             else
                 @warn "Since `fpeonly=true`, maybe you just wanted to call freqitems?"
                 return miner
@@ -514,7 +511,7 @@ function all_arule_analysis(
     kwargs...
 ) where {S<:AbstractString}
     # for each rule, sorted by global confidence, print them
-    for r in sort(arules(miner), by = x -> miner.globalmemo[(:gconfidence, x)], rev=true)
+    for r in sort(arules(miner), by=x -> miner.globalmemo[(:gconfidence, x)], rev=true)
         ModalAssociationRules.arule_analysis(
             r, miner, args...;
             variablenames=variablenames,

@@ -142,28 +142,21 @@ struct Miner{
     function Miner(
         X::D,
         algorithm::Function,
-        items::Vector{I},
-
-        itemset_constrained_measures::Vector{<:MeaningfulnessMeasure}=[
+        items::Vector{I}, itemset_constrained_measures::Vector{<:MeaningfulnessMeasure}=[
             (gsupport, 0.1, 0.1)
         ],
         arule_constrained_measures::Vector{<:MeaningfulnessMeasure}=[
             (gconfidence, 0.2, 0.2)
-        ];
-
-        worldfilter::Union{Nothing,WorldFilter}=nothing,
+        ]; worldfilter::Union{Nothing,WorldFilter}=nothing,
         itemset_policies::Vector{<:Function}=Vector{Function}([
             isanchored_itemset(), # to ensure one proposition is the point-of-reference
             isdimensionally_coherent_itemset() # to ensure no different anchors coexist
-
         ]),
         arule_policies::Vector{<:Function}=Vector{Function}([
             islimited_length_arule(),
             isanchored_arule(),
             isheterogeneous_arule(),
-        ]),
-
-        info::Info=Info(:istrained => false, :size => nothing)
+        ]), info::Info=Info(:istrained => false, :size => nothing)
     ) where {
         D<:MineableData,
         I<:Item,
@@ -176,7 +169,7 @@ struct Miner{
 
         # gsupport is crucial to mine association rule
         if !(gsupport in first.(itemset_constrained_measures) ||
-            gsupport in first.(itemset_constrained_measures))
+             gsupport in first.(itemset_constrained_measures))
             throw(ArgumentError(
                 "Miner requires global support " *
                 "(gsupport) as meaningfulness measure in order to work properly. " *
@@ -253,7 +246,7 @@ arules(miner::Miner) = miner.arules
 See [`itemsetmeasures(::AbstractMiner)`]
 """
 itemsetmeasures(miner::Miner)::Vector{<:MeaningfulnessMeasure} =
-miner.itemset_constrained_measures
+    miner.itemset_constrained_measures
 
 """
 arulemeasures(miner::Miner)::Vector{<:MeaningfulnessMeasure}
@@ -261,7 +254,7 @@ arulemeasures(miner::Miner)::Vector{<:MeaningfulnessMeasure}
 See [`arulemeasures(miner::AbstractMiner)`](@ref).
 """
 arulemeasures(miner::Miner)::Vector{<:MeaningfulnessMeasure} =
-miner.arule_constrained_measures
+    miner.arule_constrained_measures
 
 """
     lmemolock(miner::Miner) = miner.lmemolock
@@ -361,9 +354,10 @@ Setter for the content of a specific field of `miner`'s [`miningstate`](@ref).
 See also [`Miner`](@ref), [`hasminingstate`](@ref), [`initminingstate`](@ref),
 [`MiningState`](@ref).
 """
-miningstate!(miner::Miner, key::Symbol, val) = lock(miningstatelock(miner)) do
-     miner.miningstate[key] = val
-end
+miningstate!(miner::Miner, key::Symbol, val) =
+    lock(miningstatelock(miner)) do
+        miner.miningstate[key] = val
+    end
 miningstate!(miner::Miner, key::Symbol, inner_key, val) = begin
     lock(miningstatelock(miner)) do
         miner.miningstate[key][inner_key] = val
@@ -444,9 +438,9 @@ function Base.show(io::IO, miner::Miner)
     println(io, "# of association rules mined: $(length(arules(miner)))\n")
 
     println(io, "Local measures memoization structure entries: " *
-        "$(length(miner.localmemo |> keys))")
+                "$(length(miner.localmemo |> keys))")
     println(io, "Global measures memoization structure entries: " *
-        "$(length(miner.globalmemo |> keys))\n")
+                "$(length(miner.globalmemo |> keys))\n")
 
     print(io, "Additional infos: $(info(miner) |> keys)\n")
     print(io, "Specialization fields: $(miningstate(miner) |> keys)")
@@ -500,18 +494,18 @@ function arule_analysis(
             gmeassym = globalmeasure |> Symbol
 
             println(io, "\t$(gmeassym)(X): " *
-                "$(globalmemo(miner, (gmeassym, antecedent(arule))))")
+                        "$(globalmemo(miner, (gmeassym, antecedent(arule))))")
             # if itemset_local_info
             # TODO -  report local measures for the antecedent (use `itemsets_localities`)
 
             println(io, "\t$(gmeassym)(Y): " *
-                "$(globalmemo(miner, (gmeassym, consequent(arule))))")
+                        "$(globalmemo(miner, (gmeassym, consequent(arule))))")
             # if itemset_local_info
             # TODO -  report local measures for the consequent (use `itemsets_localities`)
 
             _entire_content = union(antecedent(arule), consequent(arule))
             println(io, "\t$(gmeassym)(X⋃Y): " *
-                "$(globalmemo(miner, (gmeassym, _entire_content)))")
+                        "$(globalmemo(miner, (gmeassym, _entire_content)))")
             # if itemset_local_info
             # TODO -  report local measures for the consequent (use `itemsets_localities`)
 
@@ -527,7 +521,7 @@ See [`generaterules(::AbstractVector{Itemset}, ::Miner)`](@ref).
 function generaterules!(miner::Miner)
     if !info(miner, :istrained)
         throw(ErrorException("The miner should be trained before generating rules. " *
-            "Please, invoke `mine!`."
+                             "Please, invoke `mine!`."
         ))
     end
 
@@ -664,10 +658,10 @@ function partial_deepcopy(
         new_items,
         deepcopy(original |> itemsetmeasures),
         deepcopy(original |> arulemeasures);
-        worldfilter = new_worldfilter,
-        itemset_policies = new_itemset_policies,
-        arule_policies = new_arule_policies,
-        info = deepcopy(original |> info)
+        worldfilter=new_worldfilter,
+        itemset_policies=new_itemset_policies,
+        arule_policies=new_arule_policies,
+        info=deepcopy(original |> info)
     )
 end
 

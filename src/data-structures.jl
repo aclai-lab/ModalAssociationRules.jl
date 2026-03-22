@@ -121,9 +121,9 @@ mutable struct FPTree
 
         # leaf or internal node case scenario
         fptree = length(itemset) == 1 ?
-            new(item, nothing, FPTree[], 1, nothing) :
-            new(item, nothing,
-                FPTree[FPTree(itemset[2:end]; isroot=false)], 1, nothing)
+                 new(item, nothing, FPTree[], 1, nothing) :
+                 new(item, nothing,
+            FPTree[FPTree(itemset[2:end]; isroot=false)], 1, nothing)
 
         # vertical link
         map(child -> parent!(child, fptree), children(fptree))
@@ -141,11 +141,11 @@ mutable struct FPTree
         _item = first(_itemset)
 
         fptree = length(_itemset) == 1 ?
-            new(_item, nothing, FPTree[], _count, nothing) :
-            new(_item, nothing,
-                FPTree[(_itemset[2:end], _count) |> EnhancedItemset |> FPTree],
-                _count, nothing
-            )
+                 new(_item, nothing, FPTree[], _count, nothing) :
+                 new(_item, nothing,
+            FPTree[(_itemset[2:end], _count)|>EnhancedItemset|>FPTree],
+            _count, nothing
+        )
 
         map(child -> parent!(child, fptree), children(fptree))
 
@@ -300,8 +300,8 @@ function itemset_from_fplist(fptree::FPTree)::Itemset
         retrieved = [_retrieve(child) for child in children(fptree)]
 
         retrieved = length(retrieved) > 0 ?
-            union(retrieved...) :
-            Itemset{Item}()
+                    union(retrieved...) :
+                    Itemset{Item}()
 
         _content = content(fptree)
 
@@ -382,11 +382,11 @@ end
 function Base.show(io::IO, fptree::FPTree; indentation::Integer=0)
     _children = children(fptree)
 
-    println(io, "-"^indentation * "*"^(length(_children)==0) *
-        "$(fptree |> content |> syntaxstring) \t\t count: $(count(fptree))")
+    println(io, "-"^indentation * "*"^(length(_children) == 0) *
+                "$(fptree |> content |> syntaxstring) \t\t count: $(count(fptree))")
 
     for child in children(fptree)
-        Base.show(io, child; indentation=indentation+1)
+        Base.show(io, child; indentation=indentation + 1)
     end
 end
 
@@ -515,7 +515,7 @@ function checksanity!(htable::HeaderTable, miner::AbstractMiner)::Bool
     # force sorting if needed
     if !_issorted
         sort!(items(htable), by=t -> miningstate(
-            miner, :current_items_frequency)[t],
+                miner, :current_items_frequency)[t],
             rev=true
         )
     end
@@ -581,7 +581,7 @@ function grow!(
 
     # sorting must be guaranteed: remember an FPTree essentially is a prefix tree
     sort!(_itemset, by=t -> miningstate(
-        miner, :current_items_frequency)[t], rev=true)
+            miner, :current_items_frequency)[t], rev=true)
 
     # retrieve the item to grow the tree, and its count
     _count = count(enhanceditemset)
