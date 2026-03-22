@@ -28,6 +28,18 @@ jobs:
           version: ${{ matrix.version }}
           arch: ${{ matrix.arch }}
 
+      - name: Add dependencies as in local environment
+        run: |
+          julia --project -e '
+            using Pkg;
+            Pkg.add([
+              PackageSpec(url="https://github.com/aclai-lab/SoleBase.jl", rev="main"),
+              PackageSpec(url="https://github.com/aclai-lab/MultiData.jl", rev="main"),
+              PackageSpec(url="https://github.com/aclai-lab/SoleLogics.jl", rev="cb040e6"),
+              PackageSpec(name="SoleData", version="0.16.4"),
+              PackageSpec(url="https://github.com/aclai-lab/SoleModels.jl", rev="main")
+            ])'
+
       # - name: Add dependencies as in local environment
       #   run: |
       #     julia --project -e '
