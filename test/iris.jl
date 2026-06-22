@@ -11,24 +11,31 @@ using SoleData: VariableMin, VariableMax
 _X, y = @load_iris
 X1 = DataFrame(hcat(values(_X)...), collect(keys(_X)))
 
-X = scalarlogiset(X1;
+X = scalarlogiset(
+    X1;
     relations=AbstractRelation[],
     conditions=Vector{ScalarMetaCondition}(
-        collect(Iterators.flatten([
-            [ScalarMetaCondition(f, <=) for f in VariableMin.(1:4)],
-            [ScalarMetaCondition(f, >=) for f in VariableMin.(1:4)],
-            [ScalarMetaCondition(f, <=) for f in VariableMax.(1:4)],
-            [ScalarMetaCondition(f, >=) for f in VariableMax.(1:4)],
-        ]))
-    )
+        collect(
+            Iterators.flatten([
+                [ScalarMetaCondition(f, <=) for f in VariableMin.(1:4)],
+                [ScalarMetaCondition(f, >=) for f in VariableMin.(1:4)],
+                [ScalarMetaCondition(f, <=) for f in VariableMax.(1:4)],
+                [ScalarMetaCondition(f, >=) for f in VariableMax.(1:4)],
+            ]),
+        ),
+    ),
 )
 
-_1_items = Vector{Item}(Atom.([
-    ScalarCondition(VariableMin(1), >=,  5)
-    ScalarCondition(VariableMin(2), <=,  4)
-    ScalarCondition(VariableMin(3), <=,  4)
-    ScalarCondition(VariableMin(4), <=,  2)
-]))
+_1_items = Vector{Item}(
+    Atom.(
+        [
+            ScalarCondition(VariableMin(1), >=, 5)
+            ScalarCondition(VariableMin(2), <=, 4)
+            ScalarCondition(VariableMin(3), <=, 4)
+            ScalarCondition(VariableMin(4), <=, 2)
+        ],
+    ),
+)
 
 # 1st comparison
 _1_itemsetmeasures = [(gsupport, 0.8, 0.8)]
@@ -62,7 +69,6 @@ mine!(apriori_miner)
 mine!(fpgrowth_miner)
 
 compare_arules(apriori_miner, fpgrowth_miner)
-
 
 # Broken code (due to SoleData)
 

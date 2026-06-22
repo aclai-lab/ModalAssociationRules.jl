@@ -62,27 +62,23 @@ function zeuclidean(x::Vector{<:Real}, y::Vector{<:Real})
     y_z = _normalize(y)
 
     # z-normalized euclidean distance formula
-    return sqrt(sum((x_z .- y_z).^2))
+    return sqrt(sum((x_z .- y_z) .^ 2))
 end
 
 # suggest a threshold to associate with a given motif, to create a literal;
 # compute all the distances (for a given distance) and return the ith percentile
 # (also, as 2nd value, return the distances itself).
 function suggest_threshold(
-    motif::Vector{<:Real},
-    data;
-    distance::Function=expdistance,
-    _percentile::Integer=25
+    motif::Vector{<:Real}, data; distance::Function=expdistance, _percentile::Integer=25
 )
     distances = [
-        distance(motif, data[instance][start:(start + length(motif) - 1)])
-        for instance in 1:first(size(data))
-        for start in 1:(length(data[instance]) - length(motif))
+        distance(motif, data[instance][start:(start + length(motif) - 1)]) for
+        instance in 1:first(size(data)) for
+        start in 1:(length(data[instance]) - length(motif))
     ]
 
     return percentile(distances, _percentile), distances
 end
-
 
 # general experiment logic
 function experiment!(miner::Miner, reportname::String)
@@ -102,48 +98,50 @@ function experiment!(miner::Miner, reportname::String)
         # generate association rules
         println("Generating rules...")
         generating_start = time()
-        generaterules!(miner) |> collect
+        collect(generaterules!(miner))
         generating_end = time()
         println(
-            "Generation duration: $(round(generating_end - generating_start, digits=2))")
+            "Generation duration: $(round(generating_end - generating_start, digits=2))"
+        )
     end
 
     # collect all the results
     rulecollection = [
         (
             rule,
-            round(
-                globalmemo(miner, (:gsupport, antecedent(rule))), digits=2
-            ),
-            round(
-                globalmemo(miner, (:gsupport, consequent(rule))), digits=2
-            ),
-            round(
-                globalmemo(miner, (:gsupport, Itemset(rule))), digits=2
-            ),
-            round(
-                globalmemo(miner, (:gconfidence, rule)), digits=2
-            ),
-            round(
-                globalmemo(miner, (:glift, rule)), digits=2
-            ),
-        )
-        for rule in arules(miner)
+            round(globalmemo(miner, (:gsupport, antecedent(rule))); digits=2),
+            round(globalmemo(miner, (:gsupport, consequent(rule))); digits=2),
+            round(globalmemo(miner, (:gsupport, Itemset(rule))); digits=2),
+            round(globalmemo(miner, (:gconfidence, rule)); digits=2),
+            round(globalmemo(miner, (:glift, rule)); digits=2),
+        ) for rule in arules(miner)
     ]
 
     # sort by lift (the 6th position in rulecollection)
-    sort!(rulecollection, by=x->x[6], rev=true);
+    sort!(rulecollection; by=x->x[6], rev=true);
 
     println("Writing to: $(reportname)")
     open(reportname, "w") do io
-        println(io, "Columns are: rule, ant support, cons support, ant+cons support,  confidence, lift")
+        println(
+            io,
+            "Columns are: rule, ant support, cons support, ant+cons support,  confidence, lift",
+        )
 
-        padding = maximum(length.(miner |> freqitems))
+        padding = maximum(length.(freqitems(miner)))
         for (rule, antgsupp, consgsupp, totalsupp, conf, lift) in rulecollection
-            println(io,
-                rpad(rule, 30 * padding) * " " * rpad(string(antgsupp), 10) * " " *
-                rpad(string(consgsupp), 10) * " " * rpad(string(totalsupp), 10) * " " *
-                rpad(string(conf), 10) * " " * string(lift)
+            println(
+                io,
+                rpad(rule, 30 * padding) *
+                " " *
+                rpad(string(antgsupp), 10) *
+                " " *
+                rpad(string(consgsupp), 10) *
+                " " *
+                rpad(string(totalsupp), 10) *
+                " " *
+                rpad(string(conf), 10) *
+                " " *
+                string(lift),
             )
         end
     end
@@ -157,49 +155,57 @@ function initialize_experiment(
     _distance=expdistance,
     _alpha_percentile=10,
     _worldfilter::Union{Nothing,WorldFilter}=nothing,
-    _itemsetmeasures = [(gsupport, 0.1, 0.1)],
-    _rulemeasures = [
+    _itemsetmeasures=[(gsupport, 0.1, 0.1)],
+    _rulemeasures=[
         (gconfidence, 0.1, 0.1),
         (glift, 0.0, 0.0), # we want to compute lift, regardless of a threshold
-    ]
+    ],
 )
     variables = [
-        VariableDistance(id, m, distance=_distance, featurename=name)
-        for (id, m, name) in zip(ids, motifs, featurenames)
+        VariableDistance(id, m; distance=_distance, featurename=name) for
+        (id, m, name) in zip(ids, motifs, featurenames)
     ]
 
     propositionalatoms = [
-        Atom(ScalarCondition(
-            v, <=, __suggest_threshold(v, data; _percentile=_alpha_percentile)
-        ))
-        for v in variables
+        Atom(
+            ScalarCondition(
+                v, <=, __suggest_threshold(v, data; _percentile=_alpha_percentile)
+            ),
+        ) for v in variables
     ]
 
-    atoms = reduce(vcat, [
-        propositionalatoms,
-        diamond(IA_A).(propositionalatoms),
-        diamond(IA_B).(propositionalatoms),
-        diamond(IA_E).(propositionalatoms),
-        diamond(IA_D).(propositionalatoms),
-        diamond(IA_O).(propositionalatoms),
-    ])
+    atoms = reduce(
+        vcat,
+        [
+            propositionalatoms,
+            diamond(IA_A).(propositionalatoms),
+            diamond(IA_B).(propositionalatoms),
+            diamond(IA_E).(propositionalatoms),
+            diamond(IA_D).(propositionalatoms),
+            diamond(IA_O).(propositionalatoms),
+        ],
+    )
 
     _items = Vector{Item}(atoms)
 
     _logiset = scalarlogiset(data, variables)
 
-    return _logiset, Miner(
-        _logiset, miningalgo, _items, _itemsetmeasures, _rulemeasures;
+    return _logiset,
+    Miner(
+        _logiset,
+        miningalgo,
+        _items,
+        _itemsetmeasures,
+        _rulemeasures;
         worldfilter=_worldfilter,
         itemset_policies=Function[
             # put ignoreuntillength=2 to reproduce the experiments in TIME2025
-            isanchored_itemset(ignoreuntillength=1), # isanchored_itemset(ignoreuntillength=2),
-            isdimensionally_coherent_itemset()
+            isanchored_itemset(; ignoreuntillength=1), # isanchored_itemset(ignoreuntillength=2),
+            isdimensionally_coherent_itemset(),
         ],
         arule_policies=Function[
-            islimited_length_arule(consequent_maxlength=3),
-            isanchored_arule()
-        ]
+            islimited_length_arule(; consequent_maxlength=3), isanchored_arule()
+        ],
     )
 end
 
@@ -211,8 +217,11 @@ function __suggest_threshold(var::VariableDistance, data; kwargs...)
     _refs = references(var)
     _i_variable = i_variable(var)
 
-    _ans = first.(map(
-        _ref -> suggest_threshold(_ref, data[:,_i_variable]; kwargs...) , _refs;)) |> minimum
+    _ans = minimum(
+        first.(
+            map(_ref -> suggest_threshold(_ref, data[:, _i_variable]; kwargs...), _refs;)
+        ),
+    )
     return round(_ans; digits=2)
 end
 
@@ -236,13 +245,12 @@ function label_motifs(
 
     # we only want to consider right hand and right elbow variables
     for varid in varids
-        _data = reduce(vcat, data[:,varid])
+        _data = reduce(vcat, data[:, varid])
         S1 = snippets(_data, n1, m1; m=m1)
         S2 = snippets(_data, n2, m2; m=m2)
 
         _motifs = [
-            [[_snippet(S1,i)] for i in 1:n1]...,
-            [[_snippet(S2,i)] for i in 1:n2]...
+            [[_snippet(S1, i)] for i in 1:n1]..., [[_snippet(S2, i)] for i in 1:n2]...
         ]
 
         for (i, _motif) in enumerate(_motifs)
@@ -257,7 +265,6 @@ function label_motifs(
             push!(motifs, _motif)
             push!(featurenames, _featurename)
         end
-
     end
 
     serialize(joinpath(save_filepath, "$(save_filename_prefix)-ids"), ids)
@@ -268,12 +275,11 @@ function label_motifs(
 end
 
 function load_motifs(filepath, save_filename_prefix)
-    ids = [id for id in deserialize(
-        joinpath(filepath, "$(save_filename_prefix)-ids"))];
-    motifs = [m for m in deserialize(
-        joinpath(filepath, "$(save_filename_prefix)-motifs"))];
-    featurenames = [f for f in deserialize(
-        joinpath(filepath, "$(save_filename_prefix)-featurenames"))];
+    ids = [id for id in deserialize(joinpath(filepath, "$(save_filename_prefix)-ids"))];
+    motifs = [m for m in deserialize(joinpath(filepath, "$(save_filename_prefix)-motifs"))];
+    featurenames = [
+        f for f in deserialize(joinpath(filepath, "$(save_filename_prefix)-featurenames"))
+    ];
 
     return ids, motifs, featurenames
 end

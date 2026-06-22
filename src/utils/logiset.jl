@@ -10,30 +10,29 @@ function ModalAssociationRules.instances(logiset::Logiset)
 end
 
 function ModalAssociationRules.ninstances(logiset::Logiset)
-    return logiset |> instances |> length
+    return length(instances(logiset))
 end
 
 function ModalAssociationRules.getinstance(
-    logiset::Logiset,
-    i::Int64
+    logiset::Logiset, i::Int64
 )::SoleLogics.LogicalInstance
     return SoleLogics.LogicalInstance(
-        SoleLogics.InterpretationVector(logiset |> instances), i)
+        SoleLogics.InterpretationVector(instances(logiset)), i
+    )
 end
 
 function ModalAssociationRules.frame(logiset::Logiset, i::Int64)
-    return instances(logiset)[i] |> SoleData.frame
+    return SoleData.frame(instances(logiset)[i])
 end
 
 function ModalAssociationRules.frame(
-    interpvec::SoleLogics.InterpretationVector{KripkeStructure},
-    i::Int64
+    interpvec::SoleLogics.InterpretationVector{KripkeStructure}, i::Int64
 )
     return interpvec.instances[1].frame
 end
 
 function Base.show(io::IO, logiset::Logiset)
-    print(io, "Logiset with $(logiset.instances |> length) instances.")
+    return print(io, "Logiset with $(logiset.instances |> length) instances.")
 end
 
 function ModalAssociationRules.getinstance(logiset::Logiset, i::Integer)
@@ -41,8 +40,7 @@ function ModalAssociationRules.getinstance(logiset::Logiset, i::Integer)
 end
 
 function ModalAssociationRules.slicedataset(
-    logiset::Logiset,
-    instancerange::UnitRange{<:Integer}
+    logiset::Logiset, instancerange::UnitRange{<:Integer}
 )
-    return instances(logiset)[instancerange] |> Logiset
+    return Logiset(instances(logiset)[instancerange])
 end

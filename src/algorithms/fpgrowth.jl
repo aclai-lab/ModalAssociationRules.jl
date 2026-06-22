@@ -18,11 +18,7 @@ See also [`AbstractMiner`](@ref), [`ConditionalPatternBase`](@ref),
 [`EnhancedItemset`](@ref), [`fpgrowth`](@ref), [`FPTree`](@ref), [`Item`](@ref),
 [`Itemset`](@ref), [`WorldMask`](@ref).
 """
-function patternbase(
-    item::Item,
-    htable::HeaderTable,
-    miner::AbstractMiner
-)
+function patternbase(item::Item, htable::HeaderTable, miner::AbstractMiner)
     # think a pattern base as a vector of vector of itemsets;
     # the reason why the type is explicited differently here, is that every item must be
     # associated with a specific WorldMask to guarantee correctness.
@@ -52,11 +48,7 @@ function patternbase(
         # items inside the itemset are sorted decreasingly by global support.
         # Note that, although we are working with enhanced itemsets, the sorting only
         # requires to consider the items inside them (so, the "non-enhanced" part).
-        sort!(
-            _itemset,
-            by=t -> miningstate(miner, :current_items_frequency)[t],
-            rev=true
-        )
+        sort!(_itemset; by=t -> miningstate(miner, :current_items_frequency)[t], rev=true)
 
         push!(_patternbase, EnhancedItemset((_itemset, fptcount)))
 
@@ -78,7 +70,7 @@ See also [`ConditionalPatternBase`](@ref), [`EnhancedItemset`](@ref). [`FPTree`]
 """
 function bounce!(pbase::ConditionalPatternBase, miner::AbstractMiner)
     # accumulators needed to establish whether an enhanced itemset is promoted or no
-    count_accumulator = DefaultDict{Item, Integer}(0)
+    count_accumulator = DefaultDict{Item,Integer}(0)
 
     # to find local support threshold we need to search for its corresponding global
     # measure (global support), obtaining a MeaningfulnessMeasure tuple;
@@ -97,14 +89,14 @@ function bounce!(pbase::ConditionalPatternBase, miner::AbstractMiner)
     end
 
     for enhanceditemset in pbase
-        filter!(_item ->
-            count_accumulator[_item] / _nworlds >= _lsupport_threshold,
-            enhanceditemset |> itemset
+        filter!(
+            _item -> count_accumulator[_item] / _nworlds >= _lsupport_threshold,
+            itemset(enhanceditemset),
         )
     end
 
     # assert pattern base does not contain dirty leftovers
-    filter!(x -> !isempty(first(x)), pbase)
+    return filter!(x -> !isempty(first(x)), pbase)
 end
 
 """
@@ -117,10 +109,7 @@ state is OK, that is, its items are sorted decreasingly by [`gsupport`](@ref).
 See also [`ConditionalPatternBase`](@ref), [`FPTree`](@ref), [`gsupport`](@ref),
 [`HeaderTable`](@ref), [`AbstractMiner`](@ref).
 """
-function projection(
-    pbase::ConditionalPatternBase,
-    miner::AbstractMiner
-)
+function projection(pbase::ConditionalPatternBase, miner::AbstractMiner)
     # what this function does, essentially, is to filter the given pattern base.
     fptree = FPTree()
 
@@ -131,7 +120,6 @@ function projection(
 
     return fptree, HeaderTable(fptree; miner=miner)
 end
-
 
 """
     fpgrowth(miner::AbstractMiner; verbose::Bool=true)::Nothing
@@ -158,13 +146,16 @@ See also [`AbstractMiner`](@ref), [`Bulldozer`](@ref), [`FPTree`](@ref),
 """
 function fpgrowth(miner::M)::M where {M<:AbstractMiner}
     if !(ModalAssociationRules.gsupport in reduce(vcat, itemsetmeasures(miner)))
-        throw(ArgumentError("FP-Growth " *
-            "requires global support (gsupport) as meaningfulness measure in order to " *
-            "work. Please, add a tuple (gsupport, local support threshold, " *
-            "global support threshold) to miner.itemset_constrained_measures field.\n" *
-            "Note that local support is needed too, but it is already considered " *
-            "internally by global support."
-        ))
+        throw(
+            ArgumentError(
+                "FP-Growth " *
+                "requires global support (gsupport) as meaningfulness measure in order to " *
+                "work. Please, add a tuple (gsupport, local support threshold, " *
+                "global support threshold) to miner.itemset_constrained_measures field.\n" *
+                "Note that local support is needed too, but it is already considered " *
+                "internally by global support.",
+            ),
+        )
     end
 
     X = data(miner)
@@ -172,12 +163,12 @@ function fpgrowth(miner::M)::M where {M<:AbstractMiner}
     local_results = Vector{Bulldozer}(undef, _ninstances)
 
     chunks = Iterators.partition(
-        1:_ninstances,
-        max(1, div(_ninstances, Threads.nthreads()))
+        1:_ninstances, max(1, div(_ninstances, Threads.nthreads()))
     )
     tasks = map(chunks) do chunk
         Threads.@spawn _fpgrowth(
-            Bulldozer(miner, chunk; itemset_policies=itemset_policies(miner)))
+            Bulldozer(miner, chunk; itemset_policies=itemset_policies(miner))
+        )
     end
     local_results = fetch.(tasks)
 
@@ -257,9 +248,8 @@ function _fpgrowth(miner::Bulldozer{D,I}) where {D<:MineableData,I<:Item}
 
         Threads.@threads for candidate in Itemset{I}.(__items)
             for (gmeas_algo, lthreshold, gthreshold) in __itemsetmeasures
-                if localof(gmeas_algo)(
-                    candidate, data(miner, ith_instance), miner) >= lthreshold
-
+                if localof(gmeas_algo)(candidate, data(miner, ith_instance), miner) >=
+                    lthreshold
                     put!(frequents_channel, candidate)
                 end
             end
@@ -269,17 +259,13 @@ function _fpgrowth(miner::Bulldozer{D,I}) where {D<:MineableData,I<:Item}
 
         for (nworld, _) in enumerate(SoleLogics.allworlds(miner; ith_instance=ith_instance))
             _itemset_in_world = [
-                itemset
-                for itemset in frequents
-                if miningstate(
-                    miner,
-                    :worldmask
-                )[(instanceprojection(miner, ith_instance), itemset)][nworld] > 0
+                itemset for itemset in frequents if miningstate(miner, :worldmask)[(
+                    instanceprojection(miner, ith_instance), itemset
+                )][nworld] > 0
             ]
 
-            nworld_to_itemset[nworld] = length(_itemset_in_world) > 0 ?
-                union(_itemset_in_world...) :
-                Itemset{I}()
+            nworld_to_itemset[nworld] =
+                length(_itemset_in_world) > 0 ? union(_itemset_in_world...) : Itemset{I}()
 
             # count 1-length frequent itemsets frequency;
             # a.k.a prepare miner internal miningstate state to handle an FPGrowth call.
@@ -305,10 +291,7 @@ end
 
 # `fpgrowth` recursive logic; scroll down to see initialization section.
 function _fpgrowth_kernel(
-    fptree::FPTree,
-    htable::HeaderTable,
-    miner::Bulldozer{D,I},
-    leftout_fptree::FPTree
+    fptree::FPTree, htable::HeaderTable, miner::Bulldozer{D,I}, leftout_fptree::FPTree
 ) where {D<:MineableData,I<:Item}
     # if `fptree` contains only one path (i.e., it is a linked list),
     # then combine all the Itemsets collected from previous step with the remained ones.
@@ -317,11 +300,10 @@ function _fpgrowth_kernel(
         survivor_itemset = itemset_from_fplist(fptree)
         leftout_itemset = itemset_from_fplist(leftout_fptree)
 
-        leftout_count_dict = Dict{Item, Float64}()
-        if fptree |> children |> length > 0
+        leftout_count_dict = Dict{Item,Float64}()
+        if length(children(fptree)) > 0
             for item in survivor_itemset
-                leftout_count_dict[item] =
-                    retrievebycontent(fptree, item) |> count
+                leftout_count_dict[item] = count(retrievebycontent(fptree, item))
             end
         end
 
@@ -344,16 +326,21 @@ function _fpgrowth_kernel(
                 then we should consider 1311.
             =#
             (combo) -> begin
-                _leftout_count = typemax(Int64)
+                _leftout_count = 0
+
                 for item in keys(leftout_count_dict)
-                    if item in combo && leftout_count_dict[item] < _leftout_count
-                        _leftout_count = min(_leftout_count, leftout_count_dict[item])
+                    if item in combo
+                        _leftout_count = if _leftout_count == 0
+                            leftout_count_dict[item]
+                        else
+                            min(_leftout_count, leftout_count_dict[item])
+                        end
                     end
                 end
 
                 return _leftout_count / _nworlds
             end,
-            miner
+            miner,
         )
 
         _fpgrowth_count_phase(
@@ -364,7 +351,7 @@ function _fpgrowth_kernel(
                 # `lsupport_value_calculator` lambda function implementation.
                 return count(retrieveleaf(leftout_fptree)) / _nworlds
             end,
-            miner
+            miner,
         )
     else
         for item in reverse(htable)
@@ -374,8 +361,7 @@ function _fpgrowth_kernel(
             # a new FPTree is projected, via the conditional pattern base retrieved
             # starting from `fptree` nodes whose content is exactly `item`;
             # a projection is a subset of the original dataset, viewed as a FPTree.
-            conditional_fptree, conditional_htable =
-                projection(_patternbase, miner)
+            conditional_fptree, conditional_htable = projection(_patternbase, miner)
 
             # update the leftout fptree with a new children
             _leftout_fptree = deepcopy(leftout_fptree)
@@ -383,12 +369,7 @@ function _fpgrowth_kernel(
 
             # if the new fptree is not empty, call this recursively,
             # considering `item` as a leftout item.
-            _fpgrowth_kernel(
-                conditional_fptree,
-                conditional_htable,
-                miner,
-                _leftout_fptree
-            )
+            _fpgrowth_kernel(conditional_fptree, conditional_htable, miner, _leftout_fptree)
         end
     end
 end
@@ -398,14 +379,17 @@ function _fpgrowth_count_phase(
     survivor_itemset::Itemset,
     leftout_itemset::Itemset,
     lsupport_value_calculator::Function,
-    miner::Bulldozer
+    miner::Bulldozer,
 )
     # we consider each combination of items (where the itemset `survivor_itemset` is fixed)
     # which also do honor the `itemset_policies`
     for combo in Iterators.filter(
-            _combo -> all(__policy -> __policy(_combo), itemset_policies(miner)),
-            combine_items(survivor_itemset, leftout_itemset)
-        )
+        _combo -> all(__policy -> __policy(_combo), itemset_policies(miner)),
+        combine_items(survivor_itemset, leftout_itemset),
+    )
+        if combo == []
+            continue
+        end
 
         # each combo must be reshaped, following a certain order specified
         # universally by the miner (lexicographic ordering).
@@ -421,16 +405,16 @@ function _fpgrowth_count_phase(
         first_time_found = !haskey(localmemo(miner), memokey)
 
         # local support needs to be updated
-        if first_time_found || lsupport_value > localmemo(miner, memokey, isprojected=true)
-            localmemo!(miner,
+        if first_time_found || lsupport_value > localmemo(miner, memokey; isprojected=true)
+            localmemo!(
+                miner,
                 (:lsupport, combo, miningstate(miner, :current_instance)),
-                lsupport_value,
-                isprojected=true
+                lsupport_value;
+                isprojected=true,
             )
         end
     end
 end
-
 
 """
     initminingstate(::typeof(fpgrowth), ::MineableData)::MiningState
@@ -439,10 +423,7 @@ end
 
 See also [`hasminingstate`](@ref), [`MiningState`](@ref), [`miningstate`](@ref).
 """
-function initminingstate(
-    ::typeof(fpgrowth),
-    ::MineableData
-)::MiningState
+function initminingstate(::typeof(fpgrowth), ::MineableData)::MiningState
     return MiningState([
         # given an instance I and an itemset λ, the default behaviour when computing
         # local support is to perform model checking in order to establish in how
@@ -458,6 +439,6 @@ function initminingstate(
         :current_items_frequency => DefaultDict{Item,Int}(0),
 
         # keep track of which instance (of a generic MineableData) is currently being mined
-        :current_instance => 1
+        :current_instance => 1,
     ])
 end

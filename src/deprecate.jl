@@ -1,5 +1,9 @@
-@deprecate apply!(miner::AbstractMiner, X::MineableData; kwargs...) mine!(miner::AbstractMiner; kwargs...)
-@deprecate mine!(miner::AbstractMiner, X::MineableData; kwargs...) mine!(miner::AbstractMiner; kwargs...)
+@deprecate apply!(miner::AbstractMiner, X::MineableData; kwargs...) mine!(
+    miner::AbstractMiner; kwargs...
+)
+@deprecate mine!(miner::AbstractMiner, X::MineableData; kwargs...) mine!(
+    miner::AbstractMiner; kwargs...
+)
 
 @deprecate apriori(miner::Miner, X::MineableData) apriori(miner)
 @deprecate fpgrowth(miner::Miner, X::MineableData) fpgrowth(miner)
@@ -12,7 +16,6 @@
 #
 # @deprecate _lconfidence_logic _dimensionalwise_lconfidence_logic
 # @deprecate _gconfidence_logic _dimensionalwise_gconfidence_logic
-
 
 # Old dataset loader exports, which now lives in SoleData
 export load_epilepsy, load_hugadb, load_libras, load_NATOPS

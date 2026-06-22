@@ -18,10 +18,6 @@ world_ids = collect(1:length(intervals))
 worlds = SoleLogics.World.(world_ids)
 
 # let's say we want a dense, undirected graph
-edges = [
-    Edge((i,j))
-    for i in world_ids
-    for j in world_ids
-]
+edges = [Edge((i, j)) for i in world_ids for j in world_ids]
 
-myframe = SoleLogics.ExplicitCrispUniModalFrame(worlds, edges |> SimpleGraph)
+myframe = SoleLogics.ExplicitCrispUniModalFrame(worlds, SimpleGraph(edges))

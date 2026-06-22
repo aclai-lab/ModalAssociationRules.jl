@@ -7,9 +7,9 @@ pgfplotsx()
 
 RESULTS_REPOSITORY = joinpath(@__DIR__, "test", "benchmark", "results")
 
-apriori_data =  JSON.parsefile(joinpath(RESULTS_REPOSITORY, "apriori.json"))
-fpgrowth_data =  JSON.parsefile(joinpath(RESULTS_REPOSITORY, "fpgrowth.json"))
-eclat_data =  JSON.parsefile(joinpath(RESULTS_REPOSITORY, "eclat.json"))
+apriori_data = JSON.parsefile(joinpath(RESULTS_REPOSITORY, "apriori.json"))
+fpgrowth_data = JSON.parsefile(joinpath(RESULTS_REPOSITORY, "fpgrowth.json"))
+eclat_data = JSON.parsefile(joinpath(RESULTS_REPOSITORY, "eclat.json"))
 
 xaxis = fpgrowth_data["min_local_supports"] # 0.0 : 0.05 : 1.00
 
@@ -31,20 +31,20 @@ apriori_data["meantimes"] = reverse(apriori_times)
 datasets = [
     (apriori_data, "ModalApriori", :orange),
     (fpgrowth_data, "ModalFP-Growth", :blue),
-    (eclat_data, "ModalEclat", :red)
+    (eclat_data, "ModalEclat", :red),
 ]
 
-p = plot(
+p = plot(;
     title="Time execution comparison of three MARM algorithms",
     xlabel="Minimum lsupp threshold",
     ylabel="CPU time [s]",
     legend=:topright,
-    size=(600,300)
+    size=(600, 300),
 );
 
 for (_data, label, color) in datasets
     yaxis = _data["meantimes"] / 1e9
-    plot!(p, xaxis, yaxis, label=label, lw=1, color=color);
+    plot!(p, xaxis, yaxis; label=label, lw=1, color=color);
 end
 
 # display(p)

@@ -34,11 +34,11 @@ See also [`Item`](@ref), [SoleLogics.Formula](https://aclai-lab.github.io/SoleLo
 formula(item::Item{F}) where {F<:SoleLogics.Formula} = item.formula
 
 function Base.isless(a::Item, b::Item)
-    isless(hash(a), hash(b))
+    return isless(hash(a), hash(b))
 end
 
 function Base.show(io::IO, item::Item)
-    print(io, syntaxstring(item.formula))
+    return print(io, syntaxstring(item.formula))
 end
 
 """
@@ -50,14 +50,14 @@ See also [`Item`](@ref), `SoleData.VarFeature`, `SoleData.AbstractUnivariateFeat
 """
 function feature(item::Item)
     # temporary variable holding the intermediate steps of item's manipulation
-    _intermediate = item |> formula
+    _intermediate = formula(item)
 
     # _intermediate could be <A>(Feature) or <A><A>(Feature) and so on.
     while _intermediate isa SoleLogics.SyntaxBranch
-        _intermediate = _intermediate |> SoleLogics.children |> first
+        _intermediate = first(SoleLogics.children(_intermediate))
     end
 
-    return _intermediate |> SoleData.value |> SoleData.metacond |> SoleData.feature
+    return SoleData.feature(SoleData.metacond(SoleData.value(_intermediate)))
 end
 
 """
@@ -143,7 +143,7 @@ function Base.in(itemset1::Itemset, itemset2::Itemset)
 end
 
 function Base.show(io::IO, itemset::Itemset)
-    print(io, "[" * join([syntaxstring(item) for item in itemset], ", ") * "]")
+    return print(io, "[" * join([syntaxstring(item) for item in itemset], ", ") * "]")
 end
 
 """
@@ -155,7 +155,7 @@ See also [`Item`](@ref), [`Itemset`](@ref),
 [`SoleLogics.LeftmostConjunctiveForm`](https://aclai-lab.github.io/SoleLogics.jl/stable/more-on-formulas/#SoleLogics.LeftmostConjunctiveForm)
 """
 formula(itemset::Itemset)::SoleLogics.LeftmostConjunctiveForm = begin
-    formula.(itemset) |> LeftmostConjunctiveForm
+    LeftmostConjunctiveForm(formula.(itemset))
 end
 
 """
@@ -190,17 +190,20 @@ struct ARule
 
     function ARule(antecedent::Itemset, consequent::Itemset)
         intersection = intersect(antecedent, consequent)
-        if !(intersection |> length == 0)
-            throw(ArgumentError("Invalid rule. " *
-                "Antecedent and consequent share the following items: $(intersection)."
-            ))
+        if !(length(intersection) == 0)
+            throw(
+                ArgumentError(
+                    "Invalid rule. " *
+                    "Antecedent and consequent share the following items: $(intersection).",
+                ),
+            )
         end
 
-        new(antecedent, consequent)
+        return new(antecedent, consequent)
     end
 
     function ARule(doublet::Tuple{Itemset,Itemset})
-        ARule(first(doublet), last(doublet))
+        return ARule(first(doublet), last(doublet))
     end
 end
 
@@ -257,9 +260,9 @@ function Base.:(==)(rule1::ARule, rule2::ARule)
     # same when considering the consequent;
     # if this is true and lengths are the same, then the two parts coincides.
     return length(antecedent(rule1)) == length(antecedent(rule2)) &&
-        length(consequent(rule1)) == length(consequent(rule2)) &&
-        antecedent(rule1) in antecedent(rule2) &&
-        consequent(rule1) in consequent(rule2)
+           length(consequent(rule1)) == length(consequent(rule2)) &&
+           antecedent(rule1) in antecedent(rule2) &&
+           consequent(rule1) in consequent(rule2)
 end
 
 """
@@ -275,21 +278,22 @@ function Base.convert(::Type{Itemset}, arule::ARule)::Itemset
 end
 
 function Base.hash(arule::ARule, h::UInt)
-    _antecedent = sort(arule |> antecedent)
-    _consequent = sort(arule |> consequent)
+    _antecedent = sort(antecedent(arule))
+    _consequent = sort(consequent(arule))
     return hash(vcat(_antecedent, _consequent), h)
 end
 
 function Base.show(
-    io::IO,
-    arule::ARule;
-    variablenames::Union{Nothing,Vector{String}}=nothing
+    io::IO, arule::ARule; variablenames::Union{Nothing,Vector{String}}=nothing
 )
-    _antecedent = arule |> antecedent |> formula
-    _consequent = arule |> consequent |> formula
+    _antecedent = formula(antecedent(arule))
+    _consequent = formula(consequent(arule))
 
-    print(io, "$(syntaxstring(_antecedent, variable_names_map=variablenames)) => " *
-        "$(syntaxstring(_consequent, variable_names_map=variablenames))")
+    return print(
+        io,
+        "$(syntaxstring(_antecedent, variable_names_map=variablenames)) => " *
+        "$(syntaxstring(_consequent, variable_names_map=variablenames))",
+    )
 end
 
 """
@@ -301,8 +305,6 @@ See also [`ARule`](@ref), [`GmeasMemo`](@ref), [`GmeasMemoKey`](@ref), [`Itemset
 [`LmeasMemo`](@ref), [`LmeasMemoKey`](@ref).
 """
 const ARMSubject = Union{ARule,Itemset}
-
-
 
 """
     const Threshold = Float64
