@@ -106,7 +106,10 @@ See also  [`ARule`](@ref), [`Bulldozer`](@ref), [`MeaningfulnessMeasure`](@ref),
 [`Item`](@ref), [`Itemset`](@ref), [`GmeasMemo`](@ref), [`LmeasMemo`](@ref),
 [`MiningState`](@ref), `SoleLogics.WorldFilter`.
 """
-struct Miner{D<:MineableData,I<:Item} <: AbstractMiner
+struct Miner{
+    D<:MineableData,
+    I<:Item
+} <: AbstractMiner
     X::D                            # target dataset
 
     algorithm::Function             # algorithm used to perform extraction
@@ -139,25 +142,25 @@ struct Miner{D<:MineableData,I<:Item} <: AbstractMiner
     function Miner(
         X::D,
         algorithm::Function,
-        items::Vector{I},
-        itemset_constrained_measures::Vector{<:MeaningfulnessMeasure}=[(
-            gsupport, 0.1, 0.1
-        )],
-        arule_constrained_measures::Vector{<:MeaningfulnessMeasure}=[(
-            gconfidence, 0.2, 0.2
-        )];
-
-        worldfilter::Union{Nothing,WorldFilter}=nothing,
+        items::Vector{I}, itemset_constrained_measures::Vector{<:MeaningfulnessMeasure}=[
+            (gsupport, 0.1, 0.1)
+        ],
+        arule_constrained_measures::Vector{<:MeaningfulnessMeasure}=[
+            (gconfidence, 0.2, 0.2)
+        ]; worldfilter::Union{Nothing,WorldFilter}=nothing,
         itemset_policies::Vector{<:Function}=Vector{Function}([
             isanchored_itemset(), # to ensure one proposition is the point-of-reference
-            isdimensionally_coherent_itemset(), # to ensure no different anchors coexist
+            isdimensionally_coherent_itemset() # to ensure no different anchors coexist
         ]),
         arule_policies::Vector{<:Function}=Vector{Function}([
-            islimited_length_arule(), isanchored_arule(), isheterogeneous_arule()
-        ]),
-
-        info::Info=Info(:istrained => false, :size => nothing),
-    ) where {D<:MineableData,I<:Item}
+            islimited_length_arule(),
+            isanchored_arule(),
+            isheterogeneous_arule(),
+        ]), info::Info=Info(:istrained => false, :size => nothing)
+    ) where {
+        D<:MineableData,
+        I<:Item,
+    }
         # dataset frames must be equal
         # TODO - support MultiLogiset mining
         if X isa SoleData.MultiLogiset
@@ -165,42 +168,26 @@ struct Miner{D<:MineableData,I<:Item} <: AbstractMiner
         end
 
         # gsupport is crucial to mine association rule
-        if !(
-            gsupport in first.(itemset_constrained_measures) ||
-            gsupport in first.(itemset_constrained_measures)
-        )
-            throw(
-                ArgumentError(
-                    "Miner requires global support " *
-                    "(gsupport) as meaningfulness measure in order to work properly. " *
-                    "Please, add a tuple (gsupport, local support threshold, global support " *
-                    "threshold) to itemset_constrained_measures field.\n" *
-                    "Local support (lsupport) is needed too, but it is already considered " *
-                    "internally by gsupport.",
-                ),
-            )
+        if !(gsupport in first.(itemset_constrained_measures) ||
+             gsupport in first.(itemset_constrained_measures))
+            throw(ArgumentError(
+                "Miner requires global support " *
+                "(gsupport) as meaningfulness measure in order to work properly. " *
+                "Please, add a tuple (gsupport, local support threshold, global support " *
+                "threshold) to itemset_constrained_measures field.\n" *
+                "Local support (lsupport) is needed too, but it is already considered " *
+                "internally by gsupport."))
         end
 
         miningstate = initminingstate(algorithm, X)
 
-        return new{D,I}(
-            X,
-            algorithm,
-            unique(items),
-            itemset_constrained_measures,
-            arule_constrained_measures,
-            Vector{Itemset}([]),
-            Vector{ARule}([]),
-            LmeasMemo(),
-            GmeasMemo(),
-            worldfilter,
-            itemset_policies,
-            arule_policies,
-            miningstate,
-            info,
-            ReentrantLock(),
-            ReentrantLock(),
-            ReentrantLock(),
+        new{D,I}(X, algorithm, unique(items),
+            itemset_constrained_measures, arule_constrained_measures,
+            Vector{Itemset}([]), Vector{ARule}([]),
+            LmeasMemo(), GmeasMemo(),
+            worldfilter, itemset_policies, arule_policies,
+            miningstate, info,
+            ReentrantLock(), ReentrantLock(), ReentrantLock()
         )
     end
 end
@@ -311,9 +298,9 @@ Setter for a specific entry `key` inside the local memoization structure wrapped
 
 See also [`Miner`](@ref), [`LmeasMemo`](@ref), [`LmeasMemoKey`](@ref).
 """
-function localmemo!(miner::Miner, key::LmeasMemoKey, val::Threshold)
+localmemo!(miner::Miner, key::LmeasMemoKey, val::Threshold) = begin
     lock(lmemolock(miner)) do
-        return miner.localmemo[key] = val
+        miner.localmemo[key] = val
     end
 end
 
@@ -332,9 +319,9 @@ Setter for a specific entry `key` inside the global memoization structure wrappe
 
 See also [`Miner`](@ref), [`GmeasMemo`](@ref), [`GmeasMemoKey`](@ref).
 """
-function globalmemo!(miner::Miner, key::GmeasMemoKey, val::Threshold)
+globalmemo!(miner::Miner, key::GmeasMemoKey, val::Threshold) = begin
     lock(gmemolock(miner)) do
-        return miner.globalmemo[key] = val
+        miner.globalmemo[key] = val
     end
 end
 
@@ -367,12 +354,13 @@ Setter for the content of a specific field of `miner`'s [`miningstate`](@ref).
 See also [`Miner`](@ref), [`hasminingstate`](@ref), [`initminingstate`](@ref),
 [`MiningState`](@ref).
 """
-miningstate!(miner::Miner, key::Symbol, val) = lock(miningstatelock(miner)) do
-    return miner.miningstate[key] = val
-end
-function miningstate!(miner::Miner, key::Symbol, inner_key, val)
+miningstate!(miner::Miner, key::Symbol, val) =
     lock(miningstatelock(miner)) do
-        return miner.miningstate[key][inner_key] = val
+        miner.miningstate[key] = val
+    end
+miningstate!(miner::Miner, key::Symbol, inner_key, val) = begin
+    lock(miningstatelock(miner)) do
+        miner.miningstate[key][inner_key] = val
     end
 end
 
@@ -390,9 +378,10 @@ See also [`ARule`](@ref), [`Base.filter!(::Vector{Itemset}, ::Miner)`](@ref),
 [`Itemset`](@ref), [`Base.filter!(::Vector{ARule}, ::Miner)`](@ref), [`Miner`](@ref).
 """
 function Base.filter!(
-    targets::Union{<:Vector{<:ARule},Vector{<:Itemset}}, policies_pool::Vector{<:Function}
+    targets::Union{<:Vector{<:ARule},Vector{<:Itemset}},
+    policies_pool::Vector{<:Function}
 )
-    return filter!(target -> all(policy -> policy(target), policies_pool), targets)
+    filter!(target -> all(policy -> policy(target), policies_pool), targets)
 end
 
 """
@@ -403,9 +392,9 @@ end
 See also [`Base.filter!(::Vector{ARule}, ::Miner)`](@ref), [`Itemset`](@ref),
 [`itemset_policies`](@ref), [`Miner`](@ref).
 """
-function Base.filter!(itemsets::Vector{<:Itemset}, miner::Miner)
-    return filter!(itemsets, itemset_policies(miner))
-end
+Base.filter!(itemsets::Vector{<:Itemset}, miner::Miner) = filter!(
+    itemsets, itemset_policies(miner)
+)
 
 """
     Base.filter!(arules::Vector{ARule}, miner::Miner)
@@ -413,7 +402,9 @@ end
 See also [`ARule`](@ref), [`arule_policies`](@ref),
 [`Base.filter!(::Vector{Itemset}, ::Miner)`](@ref), [`Itemset`](@ref), [`Miner`](@ref).
 """
-Base.filter!(arules::Vector{ARule}, miner::Miner) = filter!(arules, arule_policies(miner))
+Base.filter!(arules::Vector{ARule}, miner::Miner) = filter!(
+    arules, arule_policies(miner)
+)
 
 """
 miningstate(miner::Miner)
@@ -431,7 +422,10 @@ See also [`Miner`](@ref).
 """
 info(miner::Miner)::Info = miner.info
 
+
+
 # Miner's utilities
+
 
 function Base.show(io::IO, miner::Miner)
     println(io, "$(data(miner))")
@@ -443,19 +437,13 @@ function Base.show(io::IO, miner::Miner)
     println(io, "# of frequent patterns mined: $(length(freqitems(miner)))")
     println(io, "# of association rules mined: $(length(arules(miner)))\n")
 
-    println(
-        io,
-        "Local measures memoization structure entries: " *
-        "$(length(miner.localmemo |> keys))",
-    )
-    println(
-        io,
-        "Global measures memoization structure entries: " *
-        "$(length(miner.globalmemo |> keys))\n",
-    )
+    println(io, "Local measures memoization structure entries: " *
+                "$(length(miner.localmemo |> keys))")
+    println(io, "Global measures memoization structure entries: " *
+                "$(length(miner.globalmemo |> keys))\n")
 
     print(io, "Additional infos: $(info(miner) |> keys)\n")
-    return print(io, "Specialization fields: $(miningstate(miner) |> keys)")
+    print(io, "Specialization fields: $(miningstate(miner) |> keys)")
 end
 
 """
@@ -472,7 +460,7 @@ function arule_analysis(
     itemset_global_info::Bool=false,
     arule_measures=[gconfidence, glift, gconviction, gleverage],
     verbose::Bool=false,
-    variablenames::Union{Nothing,Vector{String}}=nothing,
+    variablenames::Union{Nothing,Vector{String}}=nothing
 )
     # print constraints
     if verbose
@@ -489,7 +477,7 @@ function arule_analysis(
 
     # report global emasures for the rule
     for measure in arule_measures
-        gmeassym = Symbol(measure)
+        gmeassym = measure |> Symbol
 
         if !haskey(globalmemo(miner), (gmeassym, arule))
             continue
@@ -503,30 +491,21 @@ function arule_analysis(
     if itemset_global_info
         for measure in itemsetmeasures(miner)
             globalmeasure = first(measure)
-            gmeassym = Symbol(globalmeasure)
+            gmeassym = globalmeasure |> Symbol
 
-            println(
-                io,
-                "\t$(gmeassym)(X): " *
-                "$(globalmemo(miner, (gmeassym, antecedent(arule))))",
-            )
+            println(io, "\t$(gmeassym)(X): " *
+                        "$(globalmemo(miner, (gmeassym, antecedent(arule))))")
             # if itemset_local_info
             # TODO -  report local measures for the antecedent (use `itemsets_localities`)
 
-            println(
-                io,
-                "\t$(gmeassym)(Y): " *
-                "$(globalmemo(miner, (gmeassym, consequent(arule))))",
-            )
+            println(io, "\t$(gmeassym)(Y): " *
+                        "$(globalmemo(miner, (gmeassym, consequent(arule))))")
             # if itemset_local_info
             # TODO -  report local measures for the consequent (use `itemsets_localities`)
 
             _entire_content = union(antecedent(arule), consequent(arule))
-            println(
-                io,
-                "\t$(gmeassym)(X⋃Y): " *
-                "$(globalmemo(miner, (gmeassym, _entire_content)))",
-            )
+            println(io, "\t$(gmeassym)(X⋃Y): " *
+                        "$(globalmemo(miner, (gmeassym, _entire_content)))")
             # if itemset_local_info
             # TODO -  report local measures for the consequent (use `itemsets_localities`)
 
@@ -541,16 +520,14 @@ See [`generaterules(::AbstractVector{Itemset}, ::Miner)`](@ref).
 """
 function generaterules!(miner::Miner)
     if !info(miner, :istrained)
-        throw(
-            ErrorException(
-                "The miner should be trained before generating rules. " *
-                "Please, invoke `mine!`.",
-            ),
-        )
+        throw(ErrorException("The miner should be trained before generating rules. " *
+                             "Please, invoke `mine!`."
+        ))
     end
 
     return generaterules(freqitems(miner), miner)
 end
+
 
 """
     generaterules(itemsets::AbstractVector{Itemset}, miner::Miner)
@@ -560,7 +537,10 @@ itemsets in `itemsets`, using the mining state saved within the `miner` structur
 
 See [`Itemset`](@ref), [`Miner`](@ref).
 """
-function generaterules(itemsets::AbstractVector{Itemset}, miner::Miner)
+function generaterules(
+    itemsets::AbstractVector{Itemset},
+    miner::Miner
+)
     arule_lock = ReentrantLock()
 
     @threads for itemset in filter(x -> length(x) >= 2, itemsets)
@@ -598,7 +578,8 @@ function generaterules(itemsets::AbstractVector{Itemset}, miner::Miner)
             interesting = true
             for meas in arulemeasures(miner)
                 (gmeas_algo, lthreshold, gthreshold) = meas
-                gmeas_result = gmeas_algo(currentrule, data(miner), lthreshold, miner)
+                gmeas_result = gmeas_algo(
+                    currentrule, data(miner), lthreshold, miner)
 
                 # some meaningfulness measure test is failed
                 if gmeas_result < gthreshold
@@ -610,7 +591,7 @@ function generaterules(itemsets::AbstractVector{Itemset}, miner::Miner)
             # all meaningfulness measure tests passed
             if interesting
                 lock(arule_lock) do
-                    return push!(arules(miner), currentrule)
+                    push!(arules(miner), currentrule)
                 end
             else
                 break
@@ -621,7 +602,9 @@ function generaterules(itemsets::AbstractVector{Itemset}, miner::Miner)
     return arules(miner)
 end
 
+
 # utilities
+
 
 """
     partial_deepcopy(original::Miner, newitems::Union{nothing,Vector{I}}=nothing)
@@ -654,35 +637,36 @@ function partial_deepcopy(
     new_items::Union{Nothing,Vector{I}}=nothing,
     new_worldfilter::Union{Nothing,WorldFilter}=nothing,
     new_itemset_policies::Union{Nothing,Vector{<:Function}}=nothing,
-    new_arule_policies::Union{Nothing,Vector{<:Function}}=nothing,
+    new_arule_policies::Union{Nothing,Vector{<:Function}}=nothing
 ) where {I<:Item}
     if isnothing(new_items)
-        new_items = deepcopy(items(original))
+        new_items = deepcopy(original |> items)
     end
     if isnothing(new_worldfilter)
-        new_worldfilter = deepcopy(worldfilter(original))
+        new_worldfilter = deepcopy(original |> worldfilter)
     end
     if isnothing(new_itemset_policies)
-        new_itemset_policies = deepcopy(itemset_policies(original))
+        new_itemset_policies = deepcopy(original |> itemset_policies)
     end
     if isnothing(new_arule_policies)
-        new_arule_policies = deepcopy(arule_policies(original))
+        new_arule_policies = deepcopy(original |> arule_policies)
     end
 
     return Miner(
         data(original), # keep the reference here
-        deepcopy(algorithm(original)),
+        deepcopy(original |> algorithm),
         new_items,
-        deepcopy(itemsetmeasures(original)),
-        deepcopy(arulemeasures(original));
+        deepcopy(original |> itemsetmeasures),
+        deepcopy(original |> arulemeasures);
         worldfilter=new_worldfilter,
         itemset_policies=new_itemset_policies,
         arule_policies=new_arule_policies,
-        info=deepcopy(info(original)),
+        info=deepcopy(original |> info)
     )
 end
 
 # dispatches coming for external packages
+
 
 """
     function SoleLogics.frame(miner::AbstractMiner)

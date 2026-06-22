@@ -80,20 +80,11 @@ struct Bulldozer{D<:MineableData,I<:Item} <: AbstractMiner
         itemsetmeasures::Vector{<:MeaningfulnessMeasure};
         worldfilter::Union{Nothing,WorldFilter}=nothing,
         itemset_policies::Vector{<:Function}=Function[],
-        miningstate::MiningState=MiningState(),
+        miningstate::MiningState=MiningState()
     ) where {D<:MineableData,I<:Item}
-        return new{D,I}(
-            data,
-            instancesrange,
-            items,
-            itemsetmeasures,
-            LmeasMemo(),
-            worldfilter,
-            itemset_policies,
-            miningstate,
-            ReentrantLock(),
-            ReentrantLock(),
-            ReentrantLock(),
+        return new{D,I}(data, instancesrange, items, itemsetmeasures, LmeasMemo(),
+            worldfilter, itemset_policies, miningstate,
+            ReentrantLock(), ReentrantLock(), ReentrantLock()
         )
     end
 
@@ -104,17 +95,17 @@ struct Bulldozer{D<:MineableData,I<:Item} <: AbstractMiner
             data_slice,
             instancesrange,
             items(miner),
-            itemsetmeasures(miner);
+            itemsetmeasures(miner),
             worldfilter=deepcopy(worldfilter(miner)),
             itemset_policies=deepcopy(itemset_policies(miner)),
-            miningstate=deepcopy(miningstate(miner)),
-            kwargs...,
+            miningstate=deepcopy(miningstate(miner));
+            kwargs...
         )
     end
 
     function Bulldozer(miner::Miner, ith_instance::Integer; kwargs...)
         # fallback to UnitRange constructor
-        return Bulldozer(miner, ith_instance:ith_instance; kwargs...)
+        Bulldozer(miner, ith_instance:ith_instance; kwargs...)
     end
 end
 
@@ -151,6 +142,7 @@ See also [`Bulldozer`](@ref), [`data(::Bulldozer)`](@ref), [`MineableData`](@ref
 """
 datatype(::Bulldozer{D}) where {D<:MineableData} = D
 
+
 """
     itemtype(::Bulldozer{D,I}) where {D,I<:Item} = I
 
@@ -159,6 +151,8 @@ Return the type of the [`Item`](@ref)s given by [`items(::Bulldozer)`](@ref).
 See also [`Bulldozer`](@ref), [`items(::Bulldozer)`](@ref), [`MineableData`](@ref).
 """
 itemtype(::Bulldozer{D,I}) where {D,I<:Item} = I
+
+
 
 """
     instancesrange(bulldozer::Bulldozer)
@@ -174,7 +168,7 @@ Maps the `ith_instance` on a range starting from 1, instead of [`instancerange`]
 
 See also [`Bulldozer`](@ref), [`instancerange`](@ref).
 """
-function instanceprojection(bulldozer::Bulldozer, ith_instance::Integer)
+instanceprojection(bulldozer::Bulldozer, ith_instance::Integer) = begin
     return ith_instance - first(instancesrange(bulldozer)) + 1
 end
 
@@ -188,10 +182,8 @@ See [`data(::AbstractMiner)`](@ref), [`SoleLogics.LogicalInstance`](@ref),
 [`MineableData`](@ref).
 """
 data(bulldozer::Bulldozer) = bulldozer.data
-function data(bulldozer::Bulldozer, ith_instance::Integer)
-    return SoleLogics.getinstance(
-        data(bulldozer), instanceprojection(bulldozer, ith_instance)
-    )
+data(bulldozer::Bulldozer, ith_instance::Integer) = begin
+    SoleLogics.getinstance(data(bulldozer), instanceprojection(bulldozer, ith_instance))
 end
 
 """
@@ -206,8 +198,9 @@ items(bulldozer::Bulldozer) = bulldozer.items
 
     See also [`itemsetmeasures(::AbstractMiner)`](@ref).
     """
-itemsetmeasures(bulldozer::Bulldozer)::Vector{<:MeaningfulnessMeasure} =
-    bulldozer.itemsetmeasures
+itemsetmeasures(
+    bulldozer::Bulldozer
+)::Vector{<:MeaningfulnessMeasure} = bulldozer.itemsetmeasures
 
 """
     localmemo(bulldozer::Bulldozer)
@@ -216,7 +209,7 @@ itemsetmeasures(bulldozer::Bulldozer)::Vector{<:MeaningfulnessMeasure} =
 See [`localmemo(::AbstractMiner)`](@ref), [`LmeasMemo`](@ref), [`LmeasMemoKey`](@ref).
 """
 localmemo(bulldozer::Bulldozer) = bulldozer.localmemo
-function localmemo(bulldozer::Bulldozer, key::LmeasMemoKey; isprojected::Bool=false)
+localmemo(bulldozer::Bulldozer, key::LmeasMemoKey; isprojected::Bool=false) = begin
     # see localmemo!: when memoizing a new local measure,
     # the number of the instance is projected depending on
     # the `instancesrange` of the Bulldozer.
@@ -227,7 +220,7 @@ function localmemo(bulldozer::Bulldozer, key::LmeasMemoKey; isprojected::Bool=fa
         key = LmeasMemoKey((_symbol, _armsubject, _ith_instance))
     end
 
-    return get(localmemo(bulldozer), key, nothing)
+    get(localmemo(bulldozer), key, nothing)
 end
 
 """
@@ -238,9 +231,13 @@ Setter for a specific entry `key` inside the local memoization structure wrapped
 
 See also [`Bulldozer`](@ref), [`LmeasMemo`](@ref), [`LmeasMemoKey`](@ref).
 """
-function localmemo!(
-    bulldozer::Bulldozer, key::LmeasMemoKey, val::Threshold; isprojected::Bool=false
-)
+localmemo!(
+    bulldozer::Bulldozer,
+    key::LmeasMemoKey,
+    val::Threshold;
+    isprojected::Bool=false
+) = begin
+
     if !isprojected
         _symbol, _armsubject, _ith_instance = key
         _ith_instance = _ith_instance + first(instancesrange(bulldozer)) - 1
@@ -248,9 +245,11 @@ function localmemo!(
     end
 
     lock(datalock(bulldozer)) do
-        return bulldozer.localmemo[key] = val
+        bulldozer.localmemo[key] = val
     end
 end
+
+
 
 """
     worldfilter(bulldozer::Bulldozer) = bulldozer.worldfilter
@@ -266,6 +265,7 @@ See also [`itemset_policies(::AbstractMiner)`](@ref).
 """
 itemset_policies(bulldozer::Bulldozer) = bulldozer.itemset_policies
 
+
 """
     miningstate(bulldozer::Bulldozer)::MiningState
     miningstate(bulldozer::Bulldozer, key::Symbol)::Any
@@ -275,15 +275,21 @@ Getter for the customizable dictionary wrapped by a [`Bulldozer`](@ref).
 
 See also [`miningstate!(::Bulldozer)`].
 """
-miningstate(bulldozer::Bulldozer)::MiningState = lock(miningstatelock(bulldozer)) do
-    return bulldozer.miningstate
-end
-miningstate(bulldozer::Bulldozer, key::Symbol)::Any = lock(miningstatelock(bulldozer)) do
-    return miningstate(bulldozer)[key]
-end
-miningstate(bulldozer::Bulldozer, key::Symbol, inner_key)::Any =
+miningstate(bulldozer::Bulldozer)::MiningState =
     lock(miningstatelock(bulldozer)) do
-        return miningstate(bulldozer, key)[inner_key]
+        bulldozer.miningstate
+    end
+miningstate(bulldozer::Bulldozer, key::Symbol)::Any =
+    lock(miningstatelock(bulldozer)) do
+        miningstate(bulldozer)[key]
+    end
+miningstate(
+    bulldozer::Bulldozer,
+    key::Symbol,
+    inner_key
+)::Any =
+    lock(miningstatelock(bulldozer)) do
+        miningstate(bulldozer, key)[inner_key]
     end
 
 """
@@ -292,14 +298,13 @@ miningstate(bulldozer::Bulldozer, key::Symbol, inner_key)::Any =
 
 Setter for the content of a specific `bulldozer`'s [`miningstate`](@ref).
 """
-function miningstate!(bulldozer::Bulldozer, key::Symbol, val)
+miningstate!(bulldozer::Bulldozer, key::Symbol, val) =
     lock(miningstatelock(bulldozer)) do
-        return bulldozer.miningstate[key] = val
+        bulldozer.miningstate[key] = val
     end
-end
-function miningstate!(bulldozer::Bulldozer, key::Symbol, inner_key, val)
+miningstate!(bulldozer::Bulldozer, key::Symbol, inner_key, val) = begin
     lock(miningstatelock(bulldozer)) do
-        return bulldozer.miningstate[key][inner_key] = val
+        bulldozer.miningstate[key][inner_key] = val
     end
 end
 
@@ -310,11 +315,10 @@ Return whether `bulldozer` miningstate field contains a field `key`.
 
 See also [`Bulldozer`](@ref), [`miningstate`](@ref), [`miningstate!`](@ref).
 """
-function hasminingstate(bulldozer::Bulldozer, key::Symbol)
+hasminingstate(bulldozer::Bulldozer, key::Symbol) =
     lock(miningstatelock(bulldozer)) do
-        return haskey(miningstate(bulldozer), key)
+        haskey(bulldozer |> miningstate, key)
     end
-end
 
 """
     measures(bulldozer::Bulldozer)
@@ -325,6 +329,8 @@ This exists to adhere to [`Miner`](@ref)'s interface.
 See also [`Bulldozer`](@ref), [`itemsetmeasures`](@ref), [`Miner`](@ref).
 """
 measures(bulldozer::Bulldozer) = itemsetmeasures(bulldozer)
+
+
 
 # utilities
 
@@ -341,10 +347,10 @@ time.
 See also [`LmeasMemo`](@ref), [`localmemo(::Bulldozer)`](@ref);
 """
 function miner_reduce!(local_results::AbstractVector{B}) where {B<:Bulldozer}
-    b1lmemo = localmemo(first(local_results))
+    b1lmemo = local_results |> first |> localmemo
 
     for i in 2:length(local_results)
-        b2lmemo = localmemo(local_results[i])
+        b2lmemo = local_results[i] |> localmemo
         for k in keys(b2lmemo)
             b1lmemo[k] = b2lmemo[k]
         end
@@ -390,5 +396,5 @@ function SoleLogics.frame(bulldozer::Bulldozer; kwargs...)
     ith_instance = miningstate(bulldozer, :current_instance)
     instance = data(bulldozer, ith_instance)
 
-    return frame(instance.s, ith_instance)
+    frame(instance.s, ith_instance)
 end

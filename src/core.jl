@@ -34,11 +34,11 @@ See also [`Item`](@ref), [SoleLogics.Formula](https://aclai-lab.github.io/SoleLo
 formula(item::Item{F}) where {F<:SoleLogics.Formula} = item.formula
 
 function Base.isless(a::Item, b::Item)
-    return isless(hash(a), hash(b))
+    isless(hash(a), hash(b))
 end
 
 function Base.show(io::IO, item::Item)
-    return print(io, syntaxstring(item.formula))
+    print(io, syntaxstring(item.formula))
 end
 
 """
@@ -50,14 +50,14 @@ See also [`Item`](@ref), `SoleData.VarFeature`, `SoleData.AbstractUnivariateFeat
 """
 function feature(item::Item)
     # temporary variable holding the intermediate steps of item's manipulation
-    _intermediate = formula(item)
+    _intermediate = item |> formula
 
     # _intermediate could be <A>(Feature) or <A><A>(Feature) and so on.
     while _intermediate isa SoleLogics.SyntaxBranch
-        _intermediate = first(SoleLogics.children(_intermediate))
+        _intermediate = _intermediate |> SoleLogics.children |> first
     end
 
-    return SoleData.feature(SoleData.metacond(SoleData.value(_intermediate)))
+    return _intermediate |> SoleData.value |> SoleData.metacond |> SoleData.feature
 end
 
 """
@@ -143,7 +143,7 @@ function Base.in(itemset1::Itemset, itemset2::Itemset)
 end
 
 function Base.show(io::IO, itemset::Itemset)
-    return print(io, "[" * join([syntaxstring(item) for item in itemset], ", ") * "]")
+    print(io, "[" * join([syntaxstring(item) for item in itemset], ", ") * "]")
 end
 
 """
@@ -155,7 +155,7 @@ See also [`Item`](@ref), [`Itemset`](@ref),
 [`SoleLogics.LeftmostConjunctiveForm`](https://aclai-lab.github.io/SoleLogics.jl/stable/more-on-formulas/#SoleLogics.LeftmostConjunctiveForm)
 """
 formula(itemset::Itemset)::SoleLogics.LeftmostConjunctiveForm = begin
-    LeftmostConjunctiveForm(formula.(itemset))
+    formula.(itemset) |> LeftmostConjunctiveForm
 end
 
 """
@@ -190,20 +190,17 @@ struct ARule
 
     function ARule(antecedent::Itemset, consequent::Itemset)
         intersection = intersect(antecedent, consequent)
-        if !(length(intersection) == 0)
-            throw(
-                ArgumentError(
-                    "Invalid rule. " *
-                    "Antecedent and consequent share the following items: $(intersection).",
-                ),
-            )
+        if !(intersection |> length == 0)
+            throw(ArgumentError("Invalid rule. " *
+                                "Antecedent and consequent share the following items: $(intersection)."
+            ))
         end
 
-        return new(antecedent, consequent)
+        new(antecedent, consequent)
     end
 
     function ARule(doublet::Tuple{Itemset,Itemset})
-        return ARule(first(doublet), last(doublet))
+        ARule(first(doublet), last(doublet))
     end
 end
 
@@ -278,22 +275,21 @@ function Base.convert(::Type{Itemset}, arule::ARule)::Itemset
 end
 
 function Base.hash(arule::ARule, h::UInt)
-    _antecedent = sort(antecedent(arule))
-    _consequent = sort(consequent(arule))
+    _antecedent = sort(arule |> antecedent)
+    _consequent = sort(arule |> consequent)
     return hash(vcat(_antecedent, _consequent), h)
 end
 
 function Base.show(
-    io::IO, arule::ARule; variablenames::Union{Nothing,Vector{String}}=nothing
+    io::IO,
+    arule::ARule;
+    variablenames::Union{Nothing,Vector{String}}=nothing
 )
-    _antecedent = formula(antecedent(arule))
-    _consequent = formula(consequent(arule))
+    _antecedent = arule |> antecedent |> formula
+    _consequent = arule |> consequent |> formula
 
-    return print(
-        io,
-        "$(syntaxstring(_antecedent, variable_names_map=variablenames)) => " *
-        "$(syntaxstring(_consequent, variable_names_map=variablenames))",
-    )
+    print(io, "$(syntaxstring(_antecedent, variable_names_map=variablenames)) => " *
+              "$(syntaxstring(_consequent, variable_names_map=variablenames))")
 end
 
 """
@@ -305,6 +301,8 @@ See also [`ARule`](@ref), [`GmeasMemo`](@ref), [`GmeasMemoKey`](@ref), [`Itemset
 [`LmeasMemo`](@ref), [`LmeasMemoKey`](@ref).
 """
 const ARMSubject = Union{ARule,Itemset}
+
+
 
 """
     const Threshold = Float64

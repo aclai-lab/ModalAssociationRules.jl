@@ -5,6 +5,7 @@ using SoleData: VariableDistance
 
 # policies related to frequent itemsets mining
 
+
 """
     function islimited_length_itemset(; maxlength::Union{Nothing,Integer}=nothing)::Function
 
@@ -32,6 +33,7 @@ function islimited_length_itemset(; maxlength::Union{Nothing,Integer}=nothing)::
     end
 end
 
+
 """
     function isanchored_itemset(;
         npropositions::Integer=1,
@@ -52,18 +54,12 @@ Closure returning a boolean function `F` with one argument `rule::Itemset`.
 See [`Item`](@ref), [`Itemset`](@ref), [`itemset_policies`](@ref),
 [`isanchored_arule`](@ref).
 """
-function isanchored_itemset(;
-    npropositions::Integer=1, ignoreuntillength::Integer=1
-)::Function
+function isanchored_itemset(; npropositions::Integer=1, ignoreuntillength::Integer=1)::Function
     # atleast `npropositions` items in the antecedent are not modal
 
     if npropositions < 0 || ignoreuntillength < 0
-        throw(
-            ArgumentError(
-                "All parameters must be >= 0; (given values: " *
-                "npropositions=$(npropositions), ignoreuntillength=$(ignoreuntillength))",
-            ),
-        )
+        throw(ArgumentError("All parameters must be >= 0; (given values: " *
+                            "npropositions=$(npropositions), ignoreuntillength=$(ignoreuntillength))"))
     end
 
     # beware to this policy; consider a candidate-based mining algorithm such as apriori;
@@ -76,6 +72,7 @@ function isanchored_itemset(;
                count(it -> formula(it) isa Atom, itemset) >= npropositions
     end
 end
+
 
 """
     function isdimensionally_coherent_itemset(;)::Function
@@ -99,7 +96,7 @@ function isdimensionally_coherent_itemset(;)::Function
         anchors = filter(item -> formula(item) isa Atom, itemset)
 
         # in particular, every Variable must not be a VariableDistance (e.g., VariableMin)
-        _anchortypes = Set([typeof(feature(anchor)) for anchor in anchors])
+        _anchortypes = Set([feature(anchor) |> typeof for anchor in anchors])
         if !any(_anchortype -> _anchortype <: SoleData.VariableDistance, _anchortypes)
             return true
         end
@@ -115,7 +112,7 @@ function isdimensionally_coherent_itemset(;)::Function
         # _referencesize = vardistance -> feature(vardistance) |> refsize
 
         # this is an hotfix
-        _referencesize = vardistance -> size(first(references(feature(vardistance))))
+        _referencesize = vardistance -> feature(vardistance) |> references |> first |> size
 
         _anchorsize = _referencesize(anchors[1])
 
@@ -123,7 +120,9 @@ function isdimensionally_coherent_itemset(;)::Function
     end
 end
 
+
 # policies related to association rule generation
+
 
 """
     function islimited_length_arule(;
@@ -147,7 +146,7 @@ See also [`antecedent`](@ref), [`ARule`](@ref), [`arule_policies`](@ref),
 """
 function islimited_length_arule(;
     antecedent_maxlength::Union{Nothing,Integer}=nothing,
-    consequent_maxlength::Union{Nothing,Integer}=1,
+    consequent_maxlength::Union{Nothing,Integer}=1
 )::Function
     function _check(threshold::Union{Nothing,Integer})::Integer
         if isnothing(threshold)
@@ -163,8 +162,8 @@ function islimited_length_arule(;
     consequent_maxlength = _check(consequent_maxlength)
 
     return function _islimited_length_arule(rule::ARule)::Bool
-        return length(antecedent(rule)) <= antecedent_maxlength &&
-               length(consequent(rule)) <= consequent_maxlength
+        return length(rule |> antecedent) <= antecedent_maxlength &&
+               length(rule |> consequent) <= consequent_maxlength
     end
 end
 
@@ -187,13 +186,13 @@ function isanchored_arule(; npropositions::Integer=1)::Function
     # atleast `npropositions` items in the antecedent are not modal
 
     if npropositions < 0
-        throw(ArgumentError("npropositions must be >= 0 (given value is $(npropositions))"))
+        throw(
+            ArgumentError("npropositions must be >= 0 (given value is $(npropositions))"))
     end
 
     return function _isanchored_arule(rule::ARule)
-        return isanchored_itemset(; npropositions=npropositions, ignoreuntillength=0)(
-            antecedent(rule)
-        )
+        return isanchored_itemset(;
+            npropositions=npropositions, ignoreuntillength=0)(antecedent(rule))
     end
 end
 
@@ -224,51 +223,44 @@ See [`antecedent`](@ref), [`ARule`](@ref), [`consequent`](@ref), [`generaterules
 function isheterogeneous_arule(;
     antecedent_nrepetitions::Integer=1,
     consequent_nrepetitions::Integer=0,
-    consider_thresholds::Bool=false,
+    consider_thresholds::Bool=false
 )::Function
+
     if antecedent_nrepetitions < 1
         throw(
-            ArgumentError(
-                "antecedent_nrepetitions must be >= 1 " *
-                "(given value is $(antecedent_nrepetitions))",
-            ),
-        )
+            ArgumentError("antecedent_nrepetitions must be >= 1 " *
+                          "(given value is $(antecedent_nrepetitions))"))
     end
 
     if consequent_nrepetitions < 0
         throw(
-            ArgumentError(
-                "consequent_nrepetitions must be >= 0 " *
-                "(given value is $(consequent_nrepetitions))",
-            ),
-        )
+            ArgumentError("consequent_nrepetitions must be >= 0 " *
+                          "(given value is $(consequent_nrepetitions))"))
     end
 
     function __extract_value(item::Item)
         _formula = formula(item)
 
         while _formula isa SoleLogics.SyntaxBranch
-            _formula = first(SoleLogics.children(_formula))
+            _formula = _formula |> SoleLogics.children |> first
         end
 
-        return SoleLogics.value(_formula)
+        return _formula |> SoleLogics.value
     end
 
     function _extract_variable_number(item::Item)
-        return SoleData.i_variable(
-            SoleData.feature(SoleData.metacond(__extract_value(item)))
-        )
+        return __extract_value(item) |> SoleData.metacond |> SoleData.feature |>
+               SoleData.i_variable
     end
 
     function _extract_threshold(item::Item)
-        return SoleData.threshold(SoleData.value(__extract_value(item)))
+        return __extract_value(item) |> SoleData.value |> SoleData.threshold
     end
 
     # two items are too similar
     function ishomogeneous(item1::Item, item2::Item)
-        return _extract_variable_number(item1) == _extract_variable_number(item2) && (
-            !consider_thresholds || _extract_threshold(item1) == _extract_threshold(item2)
-        )
+        return _extract_variable_number(item1) == _extract_variable_number(item2) &&
+               (!consider_thresholds || _extract_threshold(item1) == _extract_threshold(item2))
     end
 
     return function _isheterogeneous_arule(rule::ARule)
@@ -276,15 +268,16 @@ function isheterogeneous_arule(;
             # for each antecedent item
             ant_item ->
             # no other items in antecedent shares (too much) the same variable
-                count(
-                    __ant_item -> ishomogeneous(ant_item, __ant_item), antecedent(rule)
+                count(__ant_item ->
+                        ishomogeneous(ant_item, __ant_item), antecedent(rule)
                 ) <= antecedent_nrepetitions &&
 
                 # every consequent item does not shares (too much) the same variable
                 # with the fixed antecedent
-                count(cons_item -> ishomogeneous(ant_item, cons_item), consequent(rule)) <=
-                consequent_nrepetitions,
-            antecedent(rule),
+                    count(cons_item ->
+                            ishomogeneous(ant_item, cons_item), consequent(rule)
+                    ) <= consequent_nrepetitions, antecedent(rule)
         )
     end
+
 end

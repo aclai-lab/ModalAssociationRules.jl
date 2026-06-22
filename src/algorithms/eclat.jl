@@ -52,11 +52,10 @@ function eclat(miner::M)::M where {M<:AbstractMiner}
             lock(miningstatelock(miner)) do
                 push!(freqitems(miner), candidate)
 
-                return Xvertical[candidate] =
-                    (
-                        miningstate(miner, :worldmask)[(ith_instance, candidate)] for
-                        ith_instance in 1:ninstances(X)
-                    ) |> collect
+                Xvertical[candidate] = (
+                    miningstate(miner, :worldmask)[(ith_instance, candidate)]
+                    for ith_instance in 1:ninstances(X)
+                ) |> collect
             end
         end
     end
@@ -64,7 +63,9 @@ function eclat(miner::M)::M where {M<:AbstractMiner}
     # we rearrange the vertical format in a standard format via sorting by globalmemo
     Xvertical_sorted = collect(Xvertical)
     Xvertical_sorted = sort!(
-        Xvertical_sorted; by=kv->globalmemo(miner, (:gsupport, kv[1])), rev=true
+        Xvertical_sorted,
+        by=kv -> globalmemo(miner, (:gsupport, kv[1])),
+        rev=true
     )
 
     # think of this method as a DFS, visiting the candidate extensions of an itemset
@@ -76,28 +77,34 @@ function eclat(miner::M)::M where {M<:AbstractMiner}
         prevstate::Pair{IT,IM},
         # local and global threhsolds for support
         lthreshold::T,
-        gthreshold::T,
+        gthreshold::T
     ) where {M<:AbstractMiner,IT<:Itemset,IM<:Vector{<:WorldMask},T<:Threshold}
         # base case of the DFS
         if length(futurestates) == 0
-            return nothing
+            return
         end
 
         # the DFS possibly recurs on each children node
         for (i, currentstate) in enumerate(futurestates)
             # merge the current itemset, with the item of the DFS' children
-            _newstate_itemset = sort!(union(currentstate[1], prevstate[1]))
+            _newstate_itemset = union(currentstate[1], prevstate[1]) |> sort!
 
             # update the truth values of each world of each instance
             _newstate_worldmasks = map(
                 s -> s[1] .& s[2], zip(currentstate[2], prevstate[2])
             )
 
-            newstate = Pair{IT,IM}(_newstate_itemset, _newstate_worldmasks)
+            newstate = Pair{IT,IM}(
+                _newstate_itemset,
+                _newstate_worldmasks
+            )
 
             # the new candidate state should have enough global support, and respect all the
             # policies related to itemsets
-            newstate_gsupport = mean(mask -> mean(mask) >= lthreshold, newstate[2])
+            newstate_gsupport = mean(
+                mask -> mean(mask) >= lthreshold,
+                newstate[2]
+            )
 
             # WARNING: the user could want to save space and do not save all the metadata
             # related to the local support of each itemset;
@@ -106,29 +113,24 @@ function eclat(miner::M)::M where {M<:AbstractMiner}
                 localmemo!(
                     miner,
                     (:lsupport, newstate[1], ith_instance),
-                    mean(newstate[2][ith_instance]),
+                    mean(newstate[2][ith_instance])
                 )
             end
 
             # apply all policies, update the globalmemo and continue the recursion
             if newstate_gsupport >= gthreshold &&
-                all(policy -> policy(newstate[1]), itemset_policies(miner))
+               all(policy -> policy(newstate[1]), itemset_policies(miner))
+
                 lock(miningstatelock(miner)) do
-                    return push!(freqitems(miner), newstate[1])
+                    push!(freqitems(miner), newstate[1])
                 end
 
                 globalmemo!(
-                    miner, GmeasMemoKey((:gsupport, newstate[1])), newstate_gsupport
-                )
+                    miner, GmeasMemoKey((:gsupport, newstate[1])), newstate_gsupport)
 
-                _eclat!(
-                    miner,
-                    @view(futurestates[(i + 1):end]),
-                    newstate,
-                    lthreshold,
-                    gthreshold,
-                )
+                _eclat!(miner, @view(futurestates[(i+1):end]), newstate, lthreshold, gthreshold)
             end
+
         end
     end
 
@@ -137,14 +139,15 @@ function eclat(miner::M)::M where {M<:AbstractMiner}
         _eclat!(
             miner,
             @view(Xvertical_sorted[i:end]),
-            Xvertical_sorted[i - 1],
+            Xvertical_sorted[i-1],
             lthreshold,
-            gthreshold,
+            gthreshold
         )
     end
 
     return miner
 end
+
 
 """
     initminingstate(::typeof(eclat), ::MineableData)::MiningState
@@ -153,6 +156,11 @@ end
 
 See also [`hasminingstate`](@ref), [`MiningState`](@ref), [`miningstate`](@ref).
 """
-function initminingstate(::typeof(eclat), ::MineableData)::MiningState
-    return MiningState([:worldmask => Dict{Tuple{Int,Itemset},WorldMask}()])
+function initminingstate(
+    ::typeof(eclat),
+    ::MineableData
+)::MiningState
+    return MiningState([
+        :worldmask => Dict{Tuple{Int,Itemset},WorldMask}()
+    ])
 end

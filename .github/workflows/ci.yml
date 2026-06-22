@@ -14,7 +14,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        version: ['1.11', 'lts']
+        version: ['1.12.4']
         os: [ubuntu-latest]
         arch: [x64]
 
@@ -27,21 +27,6 @@ jobs:
         with:
           version: ${{ matrix.version }}
           arch: ${{ matrix.arch }}
-
-      # - name: Add dependencies as in local environment
-      #   run: |
-      #     julia --project -e '
-      #       using Pkg;
-      #       Pkg.add([
-      #         PackageSpec(url="https://github.com/aclai-lab/SoleBase.jl", rev="main"),
-      #         PackageSpec(url="https://github.com/aclai-lab/MultiData.jl", rev="main"),
-      #         PackageSpec(url="https://github.com/aclai-lab/SoleLogics.jl", rev="main"),
-      #         PackageSpec(url="https://github.com/aclai-lab/SoleData.jl", rev="main"),
-      #         PackageSpec(url="https://github.com/aclai-lab/SoleModels.jl", rev="main")
-      #       ])'
-
-      - name: Restore cache
-        uses: julia-actions/cache@v2
 
       - name: Build package
         uses: julia-actions/julia-buildpkg@v1

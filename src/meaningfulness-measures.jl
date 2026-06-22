@@ -5,7 +5,9 @@ then it is filled when computing any local meaningfulness measure created using
 
 See also [`AbstractMiner`](@ref), [`@localmeasure`](@ref), [`miningstate`](@ref).
 """
-LOCAL_MINING_STATES = [:worldmask]
+LOCAL_MINING_STATES = [
+    :worldmask
+]
 
 """
 If an [`AbstractMiner`](@ref)'s [`miningstate`](@ref) contains one of these fields,
@@ -14,7 +16,8 @@ then it is filled when computing any local meaningfulness measure created using
 
 See also [`AbstractMiner`](@ref), [`@globalmeasure`](@ref), [`miningstate`](@ref).
 """
-GLOBAL_MINING_STATES = []
+GLOBAL_MINING_STATES = [
+]
 
 """
     MEMOIZATION_POWER = 4
@@ -23,8 +26,8 @@ Limit up to which memoize measures in memory.
 
 See also [`MeaningfulnessMeasure`](@ref).
 """
-LOCAL_MEMOIZATION_POWER = (1<<63)-1
-GLOBAL_MEMOIZATION_POWER = (1<<63)-1
+LOCAL_MEMOIZATION_POWER = (1 << 63) - 1
+GLOBAL_MEMOIZATION_POWER = (1 << 63) - 1
 
 """
     macro localmeasure(measname, measlogic)
@@ -73,7 +76,9 @@ macro localmeasure(measname, measlogic)
     quote
         # wrap the given `measlogic` to leverage memoization and document it
         Core.@__doc__ function $(esc(fname))(
-            subject::ARMSubject, instance::LogicalInstance, miner::AbstractMiner
+            subject::ARMSubject,
+            instance::LogicalInstance,
+            miner::AbstractMiner
         )
             # retrieve logiset and the specific instance
             X, ith_instance = instance.s, instance.i_instance
@@ -164,8 +169,12 @@ macro globalmeasure(measname, measlogic)
     quote
         # wrap the given `measlogic` to leverage memoization
         Core.@__doc__ function $(esc(fname))(
-            subject::ARMSubject, X::MineableData, threshold::Threshold, miner::AbstractMiner
+            subject::ARMSubject,
+            X::MineableData,
+            threshold::Threshold,
+            miner::AbstractMiner
         )
+
             if length(subject) <= GLOBAL_MEMOIZATION_POWER
                 # key to access memoization structures
                 memokey = GmeasMemoKey((Symbol($(esc(fname))), subject))
@@ -215,192 +224,187 @@ See also [`globalof`](@ref), [`isglobalof`](@ref), [`islocalof`](@ref), [`localo
 """
 macro linkmeas(gmeasname, lmeasname)
     quote
-        ModalAssociationRules.islocalof(::typeof($(lmeasname)), ::typeof($(gmeasname))) =
-            true
-        ModalAssociationRules.isglobalof(::typeof($(gmeasname)), ::typeof($(lmeasname))) =
-            true
+        ModalAssociationRules.islocalof(
+            ::typeof($(lmeasname)), ::typeof($(gmeasname))) = true
+        ModalAssociationRules.isglobalof(
+            ::typeof($(gmeasname)), ::typeof($(lmeasname))) = true
         ModalAssociationRules.localof(::typeof($(gmeasname))) = $(lmeasname)
         ModalAssociationRules.globalof(::typeof($(lmeasname))) = $(gmeasname)
     end
 end
 
+
+
 # measures implementation
 
 # core logic of `lsupport`, as a lambda function
-__lsupport_logic =
-    (itemset, X, ith_instance, miner) -> begin
-        wmask = WorldMask([
-            # for each world, compute on which worlds the model checking algorithm returns true
-            check(formula(itemset), X, ith_instance, w)
+__lsupport_logic = (itemset, X, ith_instance, miner) -> begin
+    wmask = WorldMask([
+        # for each world, compute on which worlds the model checking algorithm returns true
+        check(formula(itemset), X, ith_instance, w)
 
-            # NOTE: the `worldfilter` wrapped within `miner` is levereaged, if given
-            for w in allworlds(miner; ith_instance=ith_instance)
-        ])
+        # NOTE: the `worldfilter` wrapped within `miner` is levereaged, if given
+        for w in allworlds(miner; ith_instance=ith_instance)
+    ])
 
-        # return the result, and eventually the information needed to support miningstate
-        return Dict(:measure => count(wmask) / length(wmask), :worldmask => wmask)
-    end
+    # return the result, and eventually the information needed to support miningstate
+    return Dict(
+        :measure => count(wmask) / length(wmask),
+        :worldmask => wmask,
+    )
+end
+
 
 # lsupport with anchored semantics, supporting modal operators
-_lsupport_logic =
-    (itemset, X, ith_instance, miner) -> begin
-        # this method assumes that the mining is taking place on geometric type worlds,
-        # such as Intervals or Interval2Ds, but not OneWorld!
-        # also, it is assumed that `isdimensionally_coherent_itemset` policy is being applied.
+_lsupport_logic = (itemset, X, ith_instance, miner) -> begin
+    # this method assumes that the mining is taking place on geometric type worlds,
+    # such as Intervals or Interval2Ds, but not OneWorld!
+    # also, it is assumed that `isdimensionally_coherent_itemset` policy is being applied.
 
-        # we need to establish on which worlds the itemset can be evaluated;
-        # e.g.1, [min(V1)>0.5, max(V2)<0.2] can be evaluated on any world.
-        # e.g.2, [dist(V1,motif1)<4.3, <D>dist(V2,motif2)<3.0] can be evaluated only in
-        # worlds w such that size(w) == size(motif1), (first item is a propositional anchor).
+    # we need to establish on which worlds the itemset can be evaluated;
+    # e.g.1, [min(V1)>0.5, max(V2)<0.2] can be evaluated on any world.
+    # e.g.2, [dist(V1,motif1)<4.3, <D>dist(V2,motif2)<3.0] can be evaluated only in
+    # worlds w such that size(w) == size(motif1), (first item is a propositional anchor).
 
-        # because of isdimensionally_coherent_itemset, we know the itemset is well-formed;
-        # we just need to find the size of the structure wrapped within any anchor item.
+    # because of isdimensionally_coherent_itemset, we know the itemset is well-formed;
+    # we just need to find the size of the structure wrapped within any anchor item.
 
-        # check if there is at least one element wrapping a "strange" type, that is not a
-        # condition of SoleData, such as the string "p" |> Atom |> Item.
-        _extractatom = x -> x isa SyntaxBranch ? _extractatom(SoleData.children(x)[1]) : x
+    # check if there is at least one element wrapping a "strange" type, that is not a
+    # condition of SoleData, such as the string "p" |> Atom |> Item.
+    _extractatom = x -> x isa SyntaxBranch ? _extractatom(SoleData.children(x)[1]) : x
 
-        if any(
-            it -> !(it isa SoleData.AbstractCondition),
-            SoleData.value.(_extractatom.(formula.(itemset))),
-        )
-            return __lsupport_logic(itemset, X, ith_instance, miner)
-        end
-
-        _features = feature.(itemset)
-        _anchor_feature_idx = findfirst(
-            # it must be dimensionally constraind
-            _item ->
-                typeof(feature(_item)) <: VariableDistance &&
-                # it must be an anchor (propositional, without modalities like in SyntaxTree case)
-                typeof(formula(_item)) <: Atom,
-            itemset,
-        )
-
-        # if no feature introduces a dimensional constraint, then just fallback to lsupport
-        if isnothing(_anchor_feature_idx)
-            return __lsupport_logic(itemset, X, ith_instance, miner)
-        end
-
-        # otherwise, proceed applying anchored support
-        _repr = _features[_anchor_feature_idx]
-        _repr_size = refsize(_repr)
-
-        # TODO: implement this for various GeometricalWorld types in SoleLogics
-        # see https://github.com/aclai-lab/SoleLogics.jl/issues/68
-        function _worldsize(w::Interval{T}) where {T}
-            return (w.y - w.x,)
-        end
-
-        _fairworlds = Ref(0) # keeps track of the number of worlds in which itemset can be true
-        wmask = WorldMask([
-            if _worldsize(w) == _repr_size
-                (_fairworlds[] += 1; check(formula(itemset), X, ith_instance, w))
-            else
-                0
-            end
-
-            for w in allworlds(miner; ith_instance=ith_instance)
-        ])
-
-        # return the result, and eventually the information needed to support miningstate
-        return Dict(:measure => count(wmask) / _fairworlds[], :worldmask => wmask)
+    if any(it -> !(it isa SoleData.AbstractCondition),
+        itemset .|> formula .|> _extractatom .|> SoleData.value
+    )
+        return __lsupport_logic(itemset, X, ith_instance, miner)
     end
+
+    _features = feature.(itemset)
+    _anchor_feature_idx = findfirst(
+        # it must be dimensionally constraind
+        _item -> _item |> feature |> typeof <: VariableDistance &&
+            # it must be an anchor (propositional, without modalities like in SyntaxTree case)
+                _item |> formula |> typeof <: Atom,
+        itemset
+    )
+
+    # if no feature introduces a dimensional constraint, then just fallback to lsupport
+    if isnothing(_anchor_feature_idx)
+        return __lsupport_logic(itemset, X, ith_instance, miner)
+    end
+
+    # otherwise, proceed applying anchored support
+    _repr = _features[_anchor_feature_idx]
+    _repr_size = _repr |> refsize
+
+    # TODO: implement this for various GeometricalWorld types in SoleLogics
+    # see https://github.com/aclai-lab/SoleLogics.jl/issues/68
+    function _worldsize(w::Interval{T}) where {T}
+        return (w.y - w.x,)
+    end
+
+    _fairworlds = Ref(0) # keeps track of the number of worlds in which itemset can be true
+    wmask = WorldMask([
+        _worldsize(w) == _repr_size ?
+        (_fairworlds[] += 1; check(formula(itemset), X, ith_instance, w)) : 0
+
+        for w in allworlds(miner; ith_instance=ith_instance)
+    ])
+
+    # return the result, and eventually the information needed to support miningstate
+    return Dict(
+        :measure => count(wmask) / _fairworlds[],
+        :worldmask => wmask,
+    )
+end
 
 # core logic of `gsupport`
-_gsupport_logic =
-    (itemset, X, threshold, miner) -> begin
-        return Dict(
-            :measure =>
+_gsupport_logic = (itemset, X, threshold, miner) -> begin
+    return Dict(
+        :measure => (
             # ∀ instance, compute how many times the local support overpass the threshold
-                mean(
-                    lsupport(itemset, getinstance(X, ith_instance), miner) >= threshold
-                    for ith_instance in 1:ninstances(X)
-                ),
-        )
-    end
+            lsupport(itemset, getinstance(X, ith_instance), miner) >= threshold
+            for ith_instance in 1:ninstances(X)
+        ) |> mean
+    )
+end
 
-_lconfidence_logic =
-    (rule, X, ith_instance, miner) -> begin
-        _instance = getinstance(X, ith_instance)
-        num = lsupport(convert(Itemset, rule), _instance, miner)
-        den = lsupport(antecedent(rule), _instance, miner)
 
-        return Dict(:measure => num/den)
-    end
+_lconfidence_logic = (rule, X, ith_instance, miner) -> begin
+    _instance = getinstance(X, ith_instance)
+    num = lsupport(convert(Itemset, rule), _instance, miner)
+    den = lsupport(antecedent(rule), _instance, miner)
 
-_gconfidence_logic =
-    (rule, X, threshold, miner) -> begin
-        _antecedent = antecedent(rule)
-        _consequent = consequent(rule)
-        _union = union(_antecedent, _consequent)
+    return Dict(:measure => num / den)
+end
 
-        num = gsupport(_union, X, threshold, miner)
-        den = gsupport(_antecedent, X, threshold, miner)
+_gconfidence_logic = (rule, X, threshold, miner) -> begin
+    _antecedent = antecedent(rule)
+    _consequent = consequent(rule)
+    _union = union(_antecedent, _consequent)
 
-        # this is really just an overhead
-        # @assert den >= num "ERROR: conf between $(_union) [$(num)] and $(_antecedent) [$(den)]"
+    num = gsupport(_union, X, threshold, miner)
+    den = gsupport(_antecedent, X, threshold, miner)
 
-        return Dict(:measure => num/den)
-    end
+    # this is really just an overhead
+    # @assert den >= num "ERROR: conf between $(_union) [$(num)] and $(_antecedent) [$(den)]"
 
-_llift_logic =
-    (rule, X, ith_instance, miner) -> begin
-        _instance = getinstance(X, ith_instance)
+    return Dict(:measure => num / den)
+end
 
-        num = lconfidence(rule, _instance, miner)
-        den = lsupport(antecedent(rule), _instance, miner)
 
-        return Dict(:measure => num/den)
-    end
+_llift_logic = (rule, X, ith_instance, miner) -> begin
+    _instance = getinstance(X, ith_instance)
 
-_glift_logic =
-    (rule, X, threshold, miner) -> begin
-        num = gconfidence(rule, X, threshold, miner)
-        den = gsupport(antecedent(rule), X, threshold, miner)
+    num = lconfidence(rule, _instance, miner)
+    den = lsupport(antecedent(rule), _instance, miner)
 
-        return Dict(:measure => num/den)
-    end
+    return Dict(:measure => num / den)
+end
 
-_lconviction_logic =
-    (rule, X, ith_instance, miner) -> begin
-        _instance = getinstance(X, ith_instance)
+_glift_logic = (rule, X, threshold, miner) -> begin
+    num = gconfidence(rule, X, threshold, miner)
+    den = gsupport(antecedent(rule), X, threshold, miner)
 
-        num = 1 - lsupport(consequent(rule), _instance, miner)
-        den = 1 - lconfidence(rule, _instance, miner)
+    return Dict(:measure => num / den)
+end
 
-        return Dict(:measure => num/den)
-    end
 
-_gconviction_logic =
-    (rule, X, threshold, miner) -> begin
-        num = 1 - gsupport(consequent(rule), X, threshold, miner)
-        den = 1 - gconfidence(rule, X, threshold, miner)
+_lconviction_logic = (rule, X, ith_instance, miner) -> begin
+    _instance = getinstance(X, ith_instance)
 
-        return Dict(:measure => num/den)
-    end
+    num = 1 - lsupport(consequent(rule), _instance, miner)
+    den = 1 - lconfidence(rule, _instance, miner)
 
-_lleverage_logic =
-    (rule, X, ith_instance, miner) -> begin
-        _instance = getinstance(X, ith_instance)
+    return Dict(:measure => num / den)
+end
 
-        _ans =
-            lsupport(convert(Itemset, rule), _instance, miner) -
-            lsupport(antecedent(rule), _instance, miner) *
-            lsupport(consequent(rule), _instance, miner)
+_gconviction_logic = (rule, X, threshold, miner) -> begin
+    num = 1 - gsupport(consequent(rule), X, threshold, miner)
+    den = 1 - gconfidence(rule, X, threshold, miner)
 
-        return Dict(:measure => _ans)
-    end
+    return Dict(:measure => num / den)
+end
 
-_gleverage_logic =
-    (rule, X, threshold, miner) -> begin
-        _ans =
-            gsupport(convert(Itemset, rule), X, threshold, miner) -
-            gsupport(antecedent(rule), X, threshold, miner) *
-            gsupport(consequent(rule), X, threshold, miner)
 
-        return Dict(:measure => _ans)
-    end
+_lleverage_logic = (rule, X, ith_instance, miner) -> begin
+    _instance = getinstance(X, ith_instance)
+
+    _ans = lsupport(convert(Itemset, rule), _instance, miner) -
+           lsupport(antecedent(rule), _instance, miner) *
+           lsupport(consequent(rule), _instance, miner)
+
+    return Dict(:measure => _ans)
+end
+
+_gleverage_logic = (rule, X, threshold, miner) -> begin
+    _ans = gsupport(convert(Itemset, rule), X, threshold, miner) -
+           gsupport(antecedent(rule), X, threshold, miner) *
+           gsupport(consequent(rule), X, threshold, miner)
+
+    return Dict(:measure => _ans)
+end
+
 
 # measures definition
 
@@ -444,6 +448,7 @@ See also [`Miner`](@ref), [`lsupport`](@ref), [`LogicalInstance`](@ref),
 """
 @globalmeasure gsupport _gsupport_logic
 
+
 """
     function lconfidence(
         rule::ARule,
@@ -463,6 +468,7 @@ See also [`AbstractMiner`](@ref), [`antecedent`](@ref), [`ARule`](@ref),
 [`LogicalInstance`](@ref), [`lsupport`](@ref), [`Threshold`](@ref).
 """
 @localmeasure lconfidence _lconfidence_logic
+
 
 """
     function gconfidence(
@@ -485,6 +491,7 @@ See also [`antecedent`](@ref), [`ARule`](@ref), [`AbstractMiner`](@ref), [`gsupp
 [`SupportedLogiset`](@ref).
 """
 @globalmeasure gconfidence _gconfidence_logic
+
 
 """
     function llift(
@@ -543,6 +550,7 @@ See also [`AbstractMiner`](@ref), [`antecedent`](@ref), [`ARule`](@ref),
 """
 @localmeasure lconviction _lconviction_logic
 
+
 """
     function gconviction(
         rule::ARule,
@@ -575,6 +583,7 @@ See also [`AbstractMiner`](@ref), [`antecedent`](@ref), [`ARule`](@ref),
 """
 @localmeasure lleverage _lleverage_logic
 
+
 """
     function gleverage(
         rule::ARule,
@@ -586,6 +595,7 @@ See also [`AbstractMiner`](@ref), [`antecedent`](@ref), [`ARule`](@ref),
 See also [`lleverage`](@ref).
 """
 @globalmeasure gleverage _gleverage_logic
+
 
 # All the meaningfulness measures defined in this file are linked here,
 # meaning that a global measure is associated to its corresponding local one.

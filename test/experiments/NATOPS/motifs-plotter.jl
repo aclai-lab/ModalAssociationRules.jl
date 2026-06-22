@@ -13,21 +13,23 @@ SERIALIZED_FILES_PATH = joinpath(@__DIR__, "test", "experiments", "NATOPS", "ser
 
 # logic for deserialization
 function load_motifs(filepath, save_filename_prefix)
-    ids = [id for id in deserialize(joinpath(filepath, "$(save_filename_prefix)-ids"))];
-    motifs = [m for m in deserialize(joinpath(filepath, "$(save_filename_prefix)-motifs"))];
-    featurenames = [
-        f for f in deserialize(joinpath(filepath, "$(save_filename_prefix)-featurenames"))
-    ];
+    ids = [id for id in deserialize(
+        joinpath(filepath, "$(save_filename_prefix)-ids"))]
+    motifs = [m for m in deserialize(
+        joinpath(filepath, "$(save_filename_prefix)-motifs"))]
+    featurenames = [f for f in deserialize(
+        joinpath(filepath, "$(save_filename_prefix)-featurenames"))]
 
     return ids, motifs, featurenames
 end
+
 
 ids, motifs, featurenames = load_motifs(serialized_path, "NATOPS-IHCC")
 
 for (i, motif) in enumerate(motifs)
     # we plot the normalized version of the motif, since it is always used with
     # z-euclidean distance
-    motif = first(motif)
+    motif = motif |> first
     motif_min = minimum(motif)
     motif_max = maximum(motif)
     motif_norm = (motif .- motif_min) ./ (motif_max - motif_min)
@@ -40,7 +42,7 @@ for (i, motif) in enumerate(motifs)
         legend=false,
         framestyle=:none,
         grid=:false,
-        linewidth=2,
+        linewidth=2
     )
 
     # Save plot to file

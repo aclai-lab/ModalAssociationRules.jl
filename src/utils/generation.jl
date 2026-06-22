@@ -46,8 +46,12 @@ function generate(
     rng::AbstractRNG=Random.GLOBAL_RNG,
     fulltransfer::Bool=false,
     incremental::Bool=false,
-)::KripkeStructure where {W<:AbstractWorld,S<:SyntaxTree,T<:Truth}
-    defaulttruth = first(truthvalues)    # default truth value for later assignments
+)::KripkeStructure where {
+    W<:AbstractWorld,
+    S<:SyntaxTree,
+    T<:Truth
+}
+    defaulttruth = truthvalues |> first    # default truth value for later assignments
 
     if fulltransfer
         # everything is true on every world
@@ -59,14 +63,14 @@ function generate(
 
         # facts[1:i] are all true on the worlds from the first to the ith.
         valuation = Dict([
-            w => TruthDict([f => defaulttruth for f in facts[1:(i % _factslen + 1)]]) for
-            (i, w) in enumerate(fr.worlds)
+            w => TruthDict([f => defaulttruth for f in facts[1:(i%_factslen+1)]])
+            for (i, w) in enumerate(fr.worlds)
         ])
     elseif random
         try
             valuation = Dict([
-                w => TruthDict([f => rand(rng, truthvalues) for f in facts]) for
-                w in fr.worlds
+                w => TruthDict([f => rand(rng, truthvalues) for f in facts])
+                for w in fr.worlds
             ])
         catch e
             if isa(e, UndefVarError)

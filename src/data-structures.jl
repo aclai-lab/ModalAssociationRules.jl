@@ -33,7 +33,7 @@ function Base.convert(::Type{Itemset}, enhanceditemset::EnhancedItemset)
 end
 
 function Base.show(io::IO, enhanceditemset::EnhancedItemset)
-    return print(io, "[$(first(enhanceditemset))] : $(last(enhanceditemset))")
+    print(io, "[$(first(enhanceditemset))] : $(last(enhanceditemset))")
 end
 
 """
@@ -49,6 +49,7 @@ Collection of [`EnhancedItemset`](@ref).
 See also [`EnhancedItemset`](@ref), [`fpgrowth`](@ref), [`FPTree`](@ref).
 """
 const ConditionalPatternBase = Vector{EnhancedItemset}
+
 
 """
     mutable struct FPTree
@@ -93,13 +94,13 @@ mutable struct FPTree
 
     # empty constructor
     function FPTree()
-        return new(nothing, nothing, FPTree[], 0, nothing)
+        new(nothing, nothing, FPTree[], 0, nothing)
     end
 
     # choose root or new subtree constructor
     function FPTree(itemset::Itemset; isroot=true)
         # singleton design pattern
-        return FPTree(itemset, Val(isroot))
+        FPTree(itemset, Val(isroot))
     end
 
     # root constructor
@@ -119,11 +120,10 @@ mutable struct FPTree
         item = itemset[1]
 
         # leaf or internal node case scenario
-        fptree = if length(itemset) == 1
-            new(item, nothing, FPTree[], 1, nothing)
-        else
-            new(item, nothing, FPTree[FPTree(itemset[2:end]; isroot=false)], 1, nothing)
-        end
+        fptree = length(itemset) == 1 ?
+                 new(item, nothing, FPTree[], 1, nothing) :
+                 new(item, nothing,
+            FPTree[FPTree(itemset[2:end]; isroot=false)], 1, nothing)
 
         # vertical link
         map(child -> parent!(child, fptree), children(fptree))
@@ -140,17 +140,12 @@ mutable struct FPTree
         _count = count(enhanceditemset)
         _item = first(_itemset)
 
-        fptree = if length(_itemset) == 1
-            new(_item, nothing, FPTree[], _count, nothing)
-        else
-            new(
-                _item,
-                nothing,
-                FPTree[FPTree(EnhancedItemset((_itemset[2:end], _count)))],
-                _count,
-                nothing,
-            )
-        end
+        fptree = length(_itemset) == 1 ?
+                 new(_item, nothing, FPTree[], _count, nothing) :
+                 new(_item, nothing,
+            FPTree[(_itemset[2:end], _count)|>EnhancedItemset|>FPTree],
+            _count, nothing
+        )
 
         map(child -> parent!(child, fptree), children(fptree))
 
@@ -214,6 +209,7 @@ See also [`count`](@ref), [`FPTree`](@ref).
 """
 addcount!(fptree::FPTree, deltacount::Integer) = fptree.count += deltacount
 
+
 """
     link(fptree::FPTree)::Union{Nothing,FPTree}
 
@@ -264,7 +260,7 @@ children!(fptree::FPTree, child::FPTree) = begin
 end
 
 function isroot(fptree::FPTree)::Bool
-    return isnothing(content(fptree))
+    return fptree |> content |> isnothing
 end
 
 """
@@ -275,9 +271,9 @@ Return true if every subtree in `fptree` has exactly 0 or 1 children.
 See also [`FPTree`](@ref)
 """
 function islist(fptree::FPTree)::Bool
-    arity = length(children(fptree))
+    arity = fptree |> children |> length
     if arity == 1
-        return islist(first(children(fptree)))
+        return islist(fptree |> children |> first)
     elseif arity > 1
         return false
     else
@@ -303,7 +299,9 @@ function itemset_from_fplist(fptree::FPTree)::Itemset
         # a Miner object! I don't know which items are being manipulated.
         retrieved = [_retrieve(child) for child in children(fptree)]
 
-        retrieved = length(retrieved) > 0 ? union(retrieved...) : Itemset{Item}()
+        retrieved = length(retrieved) > 0 ?
+                    union(retrieved...) :
+                    Itemset{Item}()
 
         _content = content(fptree)
 
@@ -324,10 +322,10 @@ function retrievebycontent(fptree::FPTree, target::Item)::Union{Nothing,FPTree}
 
     if content(fptree) == target
         return fptree
-    elseif length(children(fptree)) == 0
+    elseif length(fptree |> children) == 0
         return nothing
     else
-        return retrievebycontent(first(children(fptree)), target)
+        return retrievebycontent(fptree |> children |> first, target)
     end
 end
 
@@ -343,10 +341,10 @@ function retrieveleaf(fptree::FPTree)::FPTree
         throw(ArgumentError("FPTree is not shaped as list, function call is ambiguous."))
     end
 
-    if length(children(fptree)) == 0
+    if length(fptree |> children) == 0
         return fptree
     else
-        return retrieveleaf(first(children(fptree)))
+        return retrieveleaf(fptree |> children |> first)
     end
 end
 
@@ -378,21 +376,17 @@ function link!(from::FPTree, to::FPTree)
     end
 
     from = follow(from)
-    return from.link = to
+    from.link = to
 end
 
 function Base.show(io::IO, fptree::FPTree; indentation::Integer=0)
     _children = children(fptree)
 
-    println(
-        io,
-        "-"^indentation *
-        "*"^(length(_children)==0) *
-        "$(fptree |> content |> syntaxstring) \t\t count: $(count(fptree))",
-    )
+    println(io, "-"^indentation * "*"^(length(_children) == 0) *
+                "$(fptree |> content |> syntaxstring) \t\t count: $(count(fptree))")
 
     for child in children(fptree)
-        Base.show(io, child; indentation=indentation+1)
+        Base.show(io, child; indentation=indentation + 1)
     end
 end
 
@@ -416,7 +410,10 @@ struct HeaderTable
     #     new(Item[], Dict{Item,Union{Nothing,FPTree}}())
     # end
 
-    function HeaderTable(fptseed::FPTree; miner::Union{Nothing,AbstractMiner}=nothing)
+    function HeaderTable(
+        fptseed::FPTree;
+        miner::Union{Nothing,AbstractMiner}=nothing
+    )
         htable = new(Vector{Item}(), Dict{Item,Union{Nothing,FPTree}}([]))
 
         function fillhtable!(_children::Vector{FPTree}, htable::HeaderTable)
@@ -489,7 +486,7 @@ function link!(htable::HeaderTable, fptree::FPTree)
     if !(_content in hitems)
         push!(hitems, _content)
         htable.link[_content] = fptree
-        return nothing
+        return
     else
         from = follow(htable, _content)
         if from !== fptree
@@ -510,13 +507,16 @@ See also [`AbstractMiner`](@ref), [`gsupport`](@ref), [`HeaderTable`](@ref),
 """
 function checksanity!(htable::HeaderTable, miner::AbstractMiner)::Bool
     _issorted = issorted(
-        items(htable); by=t -> miningstate(miner, :current_items_frequency)[t], rev=true
+        items(htable),
+        by=t -> miningstate(miner, :current_items_frequency)[t],
+        rev=true
     )
 
     # force sorting if needed
     if !_issorted
-        sort!(
-            items(htable); by=t -> miningstate(miner, :current_items_frequency)[t], rev=true
+        sort!(items(htable), by=t -> miningstate(
+                miner, :current_items_frequency)[t],
+            rev=true
         )
     end
 
@@ -570,17 +570,18 @@ function grow!(
     fptree::FPTree,
     enhanceditemset::EnhancedItemset;
     miner::Union{Nothing,AbstractMiner},
-    kwargs...,
+    kwargs...
 )
     _itemset = itemset(enhanceditemset)
 
     # base case
     if length(_itemset) == 0
-        return nothing
+        return
     end
 
     # sorting must be guaranteed: remember an FPTree essentially is a prefix tree
-    sort!(_itemset; by=t -> miningstate(miner, :current_items_frequency)[t], rev=true)
+    sort!(_itemset, by=t -> miningstate(
+            miner, :current_items_frequency)[t], rev=true)
 
     # retrieve the item to grow the tree, and its count
     _count = count(enhanceditemset)
@@ -594,7 +595,8 @@ function grow!(
         # there is no need to create a new child, just grow an already existing one
         subfptree = _children[_children_idx]
         addcount!(subfptree, _count)
-        grow!(subfptree, EnhancedItemset((_itemset[2:end], _count)); miner=miner, kwargs...)
+        grow!(
+            subfptree, (_itemset[2:end], _count) |> EnhancedItemset; miner=miner, kwargs...)
     else
         # here we want to create a new children FPTree, and set this as its parent;
         # note that we don't want to update count and contributors since we already
@@ -606,9 +608,12 @@ end
 
 """$(doc_fptree_grow)"""
 function grow!(
-    fptree::FPTree, itemset::IT; miner::Union{Nothing,AbstractMiner}, kwargs...
+    fptree::FPTree,
+    itemset::IT;
+    miner::Union{Nothing,AbstractMiner},
+    kwargs...
 ) where {IT<:Itemset}
-    return grow!(fptree, convert(EnhancedItemset, itemset, 1); miner=miner, kwargs...)
+    grow!(fptree, convert(EnhancedItemset, itemset, 1); miner=miner, kwargs...)
 end
 
 """$(doc_fptree_grow)"""
@@ -616,7 +621,7 @@ function grow!(
     fptree::FPTree,
     collection::Union{ConditionalPatternBase,Vector{IT}};
     miner::Union{Nothing,AbstractMiner},
-    kwargs...,
+    kwargs...
 ) where {IT<:Itemset}
-    return map(element -> grow!(fptree, element; miner=miner, kwargs...), collection)
+    map(element -> grow!(fptree, element; miner=miner, kwargs...), collection)
 end

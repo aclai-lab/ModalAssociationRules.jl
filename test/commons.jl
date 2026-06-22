@@ -6,15 +6,15 @@ using Test
 # check if global support coincides for each frequent itemset
 function isequal_gsupp(miner1::AbstractMiner, miner2::AbstractMiner)
     for itemset in freqitems(miner1)
-        @test miner1.globalmemo[(:gsupport, itemset)] ==
-            miner2.globalmemo[(:gsupport, itemset)]
+        @test miner1.globalmemo[
+            (:gsupport, itemset)] == miner2.globalmemo[(:gsupport, itemset)]
     end
 end
 
 # check if local support coincides for each frequent itemset
 function isequal_lsupp(miner1::AbstractMiner, miner2::AbstractMiner)
     for itemset in freqitems(miner1)
-        for ninstance in 1:(ninstances(data(miner1)))
+        for ninstance in 1:(miner1|>data|>ninstances)
             miner1_lsupp = get(miner1.localmemo, (:lsupport, itemset, ninstance), -1.0)
             miner2_lsupp = get(miner2.localmemo, (:lsupport, itemset, ninstance), -1.0)
 
@@ -28,10 +28,8 @@ function isequal_lsupp(miner1::AbstractMiner, miner2::AbstractMiner)
                 # (instead, apriori has to explore this path).
                 continue
             elseif miner1_lsupp != miner2_lsupp
-                print(
-                    "Debug print: failed test for itemset $(itemset) at " *
-                    " instance $(ninstance)",
-                )
+                print("Debug print: failed test for itemset $(itemset) at " *
+                      " instance $(ninstance)")
             end
 
             @test miner1_lsupp == miner2_lsupp
@@ -60,7 +58,7 @@ function compare_freqitems(miner1::AbstractMiner, miner2::AbstractMiner)
     isequal_lsupp(miner1, miner2)
 
     isequal_gsupp(miner2, miner1)
-    return isequal_lsupp(miner2, miner1)
+    isequal_lsupp(miner2, miner1)
 end
 
 # utility to compare arules between miners;
@@ -71,20 +69,20 @@ function _compare_arules(miner1::AbstractMiner, miner2::AbstractMiner, rule::ARu
     @test miner1.globalmemo[(:gconfidence, rule)] == miner2.globalmemo[(:gconfidence, rule)]
 
     # local confidence comparison;
-    for ninstance in ninstances(data(miner1))
+    for ninstance in miner1 |> data |> ninstances
         lconfidence(rule, SoleLogics.getinstance(data(miner1), ninstance), miner1)
         lconfidence(rule, SoleLogics.getinstance(data(miner2), ninstance), miner2)
 
         @test miner1.localmemo[(:lconfidence, rule, ninstance)] ===
-            miner2.localmemo[(:lconfidence, rule, ninstance)]
+              miner2.localmemo[(:lconfidence, rule, ninstance)]
     end
 end
 
 # driver to compare arules between miners
 function compare_arules(miner1::AbstractMiner, miner2::AbstractMiner)
     for miner in [miner1, miner2]
-        if isempty(arules(miner))
-            collect(generaterules!(miner))
+        if miner |> arules |> isempty
+            generaterules!(miner) |> collect
         end
     end
 
@@ -99,7 +97,7 @@ end
 # perform comparison
 function compare(miner1::AbstractMiner, miner2::AbstractMiner)
     compare_freqitems(miner1, miner2)
-    return compare_arules(miner1, miner2)
+    compare_arules(miner1, miner2)
 end
 
 function compare(miners::Vector{<:AbstractMiner}; verbose::Bool=false)
@@ -108,12 +106,12 @@ function compare(miners::Vector{<:AbstractMiner}; verbose::Bool=false)
     for targetminer in miners[2:end]
         verbose && printstyled(
             "\t$(mainminer |> algorithm |> string) vs " *
-            "$(targetminer |> algorithm |> string)\n";
-            color=:green,
+            "$(targetminer |> algorithm |> string)\n",
+            color=:green
         )
     end
 
-    return map(targetminer -> compare(mainminer, targetminer), miners[2:end])
+    map(targetminer -> compare(mainminer, targetminer), miners[2:end])
 end
 
 export isequal_gsupp, isequal_lsupp

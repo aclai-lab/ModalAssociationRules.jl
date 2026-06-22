@@ -22,23 +22,19 @@ function isanchored_miner(miner::AbstractMiner)
     _itemset_policies = itemset_policies(miner)
 
     _isanchored_index = findfirst(
-        policy -> Symbol(policy) == :_isanchored_itemset, _itemset_policies
-    )
+        policy -> policy |> Symbol == :_isanchored_itemset, _itemset_policies)
 
     _isdimensionally_coherent = findfirst(
-        policy -> Symbol(policy) == :_isdimensionally_coherent_itemset, _itemset_policies
-    )
+        policy -> policy |> Symbol == :_isdimensionally_coherent_itemset, _itemset_policies)
 
-    if isnothing(_isanchored_index) ||
-        isnothing(_isdimensionally_coherent) ||
-        getfield(_itemset_policies[_isanchored_index], :ignoreuntillength) == 0
+    if isnothing(_isanchored_index) || isnothing(_isdimensionally_coherent) || getfield(
+           _itemset_policies[_isanchored_index], :ignoreuntillength) == 0
+
         throw(
-            AssertionError(
-                "The miner must possess both isdimensionally_coherent_itemset " *
-                "and anchored_itemset policy, the latter with ignoreuntillength parameter " *
-                "set to 1 or higher.",
-            ),
-        )
+            AssertionError("The miner must possess both isdimensionally_coherent_itemset " *
+                           "and anchored_itemset policy, the latter with ignoreuntillength parameter " *
+                           "set to 1 or higher."
+            ))
     end
 end
 
@@ -63,9 +59,8 @@ function anchored_semantics(miner::M; kwargs...)::M where {M<:AbstractMiner}
     modal_literals = setdiff(_items, anchor_items)
 
     # lambda to return the refsize of a VariableDistance wrapped within the item
-    _item_refsize =
-        item ->
-            refsize(SoleData.feature(SoleData.metacond(SoleLogics.value(formula(item)))))
+    _item_refsize = item -> formula(item) |> SoleLogics.value |> SoleData.metacond |>
+                            SoleData.feature |> refsize
 
     anchor_groups = undef
     try
@@ -74,17 +69,16 @@ function anchored_semantics(miner::M; kwargs...)::M where {M<:AbstractMiner}
         anchor_groups = SoleBase._groupby(item -> _item_refsize(item), anchor_items)
     catch e
         if isa(e, MethodError)
-            throw(
-                ErrorException(
-                    "The items provided within the miner are not suitable for itemsets " *
-                    "extraction under the anchored semantics; please provide a list of " *
-                    "SoleData.VariableDistance.",
-                ),
-            )
+            throw(ErrorException(
+                "The items provided within the miner are not suitable for itemsets " *
+                "extraction under the anchored semantics; please provide a list of " *
+                "SoleData.VariableDistance."
+            ))
         else
             rethrow(e)
         end
     end
+
 
     # build one miner for each group of anchors, each of which contains the group itself
     # enriched with all the modal_literals set.
@@ -97,8 +91,7 @@ function anchored_semantics(miner::M; kwargs...)::M where {M<:AbstractMiner}
             # size(::GeometricalWorld) is implemented in SoleLogics; see the following issue
             # https://github.com/aclai-lab/SoleLogics.jl/issues/68
             new_worldfilter=SoleLogics.FunctionalWorldFilter(
-                interval -> (interval.y - interval.x,) == groupsize, Interval{Int}
-            ),
+                interval -> (interval.y - interval.x,) == groupsize, Interval{Int})
         )
 
         # groupsize here means "the size of every VariableDistance element in a group"
@@ -118,6 +111,7 @@ function anchored_semantics(miner::M; kwargs...)::M where {M<:AbstractMiner}
     # this is a bit of overhead.
     return miner_reduce!([miner, resulting_miner])
 end
+
 
 """
     anchored_grow_prune(
@@ -140,7 +134,7 @@ See also [`grow_prune`](@ref), [`Itemset`](@ref).
 function anchored_grow_prune(
     candidates::AbstractVector{Itemset{I}},
     frequents::AbstractVector{Itemset{I}},
-    k::Integer,
+    k::Integer
 ) where {I<:Item}
     return Iterators.filter(
         itemset -> all(
@@ -148,9 +142,9 @@ function anchored_grow_prune(
             # this utility is not the most convenient place to apply itemset policies
             # related to anchoredness (e.g., during anchored apriori).
             combo -> (Itemset{I}(combo) in frequents) || !(isanchored_itemset()(combo)),
-            combinations(itemset, k-1),
+            combinations(itemset, k - 1)
         ),
-        unique(combine_items(candidates, k)),
+        combine_items(candidates, k) |> unique
     )
 end
 
@@ -167,11 +161,8 @@ See also [`AbstractMiner`](@ref), [`anchored_semantics`](@ref), [`apriori`](@ref
 """
 function anchored_apriori(miner::M; kwargs...)::M where {M<:AbstractMiner}
     if algorithm(miner) != apriori
-        throw(
-            ArgumentError(
-                "Miner is wrapping $(algorithm(miner)) algorithm instead of " * "apriori."
-            ),
-        )
+        throw(ArgumentError("Miner is wrapping $(algorithm(miner)) algorithm instead of " *
+                            "apriori."))
     end
 
     return anchored_semantics(miner; prune_strategy=anchored_grow_prune, kwargs...)
@@ -190,11 +181,8 @@ See also [`AbstractMiner`](@ref), [`anchored_semantics`](@ref), ['fpgrowth`](@re
 """
 function anchored_fpgrowth(miner::M; kwargs...)::M where {M<:AbstractMiner}
     if algorithm(miner) != fpgrowth
-        throw(
-            ArgumentError(
-                "Miner is wrapping $(algorithm(miner)) algorithm instead of " * "fpgrowth."
-            ),
-        )
+        throw(ArgumentError("Miner is wrapping $(algorithm(miner)) algorithm instead of " *
+                            "fpgrowth."))
     end
 
     return anchored_semantics(miner; kwargs...)
@@ -209,11 +197,8 @@ See also [`AbstractMiner`](@ref), [`anchored_semantics`](@ref), [`eclat`](@ref).
 """
 function anchored_eclat(miner::M; kwargs...)::M where {M<:AbstractMiner}
     if algorithm(miner) != fpgrowth
-        throw(
-            ArgumentError(
-                "Miner is wrapping $(algorithm(miner)) algorithm instead of " * "fpgrowth."
-            ),
-        )
+        throw(ArgumentError("Miner is wrapping $(algorithm(miner)) algorithm instead of " *
+                            "fpgrowth."))
     end
 
     return anchored_semantics(miner; kwargs...)
