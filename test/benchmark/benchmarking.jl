@@ -18,6 +18,7 @@ CONFIG_FILENAME = "config.json"
 configuration = JSON.parsefile(joinpath(BENCHMARK_REPOSITORY, CONFIG_FILENAME))
 
 SEED = configuration["frame_seed"] |> Xoshiro
+Random.seed!(SEED)
 
 NINSTANCES = configuration["n_instances"]
 NWORLDS = configuration["n_worlds_per_frame"]
@@ -66,7 +67,7 @@ rulemeasures = [(gconfidence, 0.5, 0.5)]
 # copy the configuration in the final report
 results = configuration
 
-for miningalgo in [apriori] # [fpgrowth, eclat, apriori]
+for miningalgo in [eclat] # fpgrowth] #, eclat, apriori]
 
     # mean time for each measurement set
     meantimes = []
