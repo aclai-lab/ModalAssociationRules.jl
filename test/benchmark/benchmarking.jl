@@ -33,8 +33,8 @@ EVALS = configuration["num_evals"]
 SAMPLES = configuration["num_runs"]
 GCTRIAL = configuration["gctrial"]
 
-ModalAssociationRules.LOCAL_MEMOIZATION_POWER = (1 << 63) - 1
-ModalAssociationRules.GLOBAL_MEMOIZATION_POWER = (1 << 63) - 1
+ModalAssociationRules.LOCAL_MEMOIZATION_POWER = 0 # (1 << 63) - 1
+ModalAssociationRules.GLOBAL_MEMOIZATION_POWER = 0 # (1 << 63) - 1
 
 
 ##### modal dataset creation ###############################################################
@@ -67,7 +67,10 @@ rulemeasures = [(gconfidence, 0.5, 0.5)]
 # copy the configuration in the final report
 results = configuration
 
-for miningalgo in [eclat] # fpgrowth] #, eclat, apriori]
+# for debugging purposes
+_last_iteration_dump = nothing
+
+for miningalgo in [eclat ] 
 
     # mean time for each measurement set
     meantimes = []
@@ -103,6 +106,8 @@ for miningalgo in [eclat] # fpgrowth] #, eclat, apriori]
                 localmemo($miner) |> empty!
                 globalmemo($miner) |> empty!
             end evals = EVALS samples = SAMPLES gctrial = GCTRIAL
+
+            _last_iteration_dump = _current
 
             push!(alltimes, _current.times)
             push!(meantimes, mean(_current.times))

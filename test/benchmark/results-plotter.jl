@@ -11,11 +11,12 @@ apriori_data = JSON.parsefile(joinpath(RESULTS_REPOSITORY, "apriori.json"))
 fpgrowth_data = JSON.parsefile(joinpath(RESULTS_REPOSITORY, "fpgrowth.json"))
 eclat_data = JSON.parsefile(joinpath(RESULTS_REPOSITORY, "eclat.json"))
 
-xaxis = fpgrowth_data["min_local_supports"] # 0.0 : 0.05 : 1.00
+xaxis = reverse(fpgrowth_data["min_local_supports"]) # 0.0 : 0.05 : 1.00
 
 # apriori needs a NaN padding since certain times are not recorded,
-# as they are VERY big numbers)
-apriori_mls = apriori_data["min_local_supports"]
+# as they are VERY big numbers;
+# BEWARE: the padding changes depending on the experiments' configuration
+apriori_mls = apriori_data["min_local_supports"][5:end]
 apriori_times = apriori_data["meantimes"]
 
 reverse!(apriori_mls)
@@ -34,19 +35,39 @@ datasets = [
     (eclat_data, "ModalEclat", :red)
 ]
 
-p = plot(
+# times per cpu threshold
+p_times = plot(
     title="Time execution comparison of three MARM algorithms",
     xlabel="Minimum lsupp threshold",
     ylabel="CPU time [s]",
-    legend=:topright,
+    legend=:topleft,
     size=(600, 300)
 );
 
 for (_data, label, color) in datasets
     yaxis = _data["meantimes"] / 1e9
-    plot!(p, xaxis, yaxis, label=label, lw=1, color=color)
+    plot!(p_times, xaxis, yaxis, label=label, lw=1, color=color)
 end
 
-# display(p)
+savefig(p_times, joinpath(RESULTS_REPOSITORY, "comparison_times.tex"))
+savefig(p_times, joinpath(RESULTS_REPOSITORY, "comparison_times.png"))
 
-savefig(p, joinpath(RESULTS_REPOSITORY, "comparison.tex"))
+# memory usage
+
+p_memory = plot(
+    title="Allocations comparison of three MARM algorithms",
+    xlabel="Minimum lsupp threshold",
+    ylabel="Memory [MBs]",
+    legend=:topleft,
+    size=(600, 300)
+);
+
+apriori_data["memories"] = vcat([NaN, NaN, NaN, NaN], apriori_data["memories"])
+
+for (_data, label, color) in datasets
+    yaxis = _data["memories"] / 10e6
+    plot!(p_memory, xaxis, yaxis, label=label, lw=1, color=color)
+end
+
+savefig(p_memory, joinpath(RESULTS_REPOSITORY, "comparison_memory.tex"))
+savefig(p_memory, joinpath(RESULTS_REPOSITORY, "comparison_memory.png"))

@@ -1,16 +1,16 @@
 {
     "frame_seed": 98999,
-
-    "n_instances": 1,
+    "n_instances": 1000,
     "n_worlds_per_frame": 50,
     "n_edges_per_frame": 100,
-
     "n_propositional_items": 10,
-
-    "min_local_supports": [0.30, 0.35, 0.40, 0.45, 0.50, 0.55, 0.60, 0.65, 0.70, 0.75, 0.80, 0.85, 0.90, 0.95, 1.0],
-    "min_global_supports": [0.1],
-
-    "num_runs": 20,
+    "min_local_supports": [
+        0.5
+    ],
+    "min_global_supports": [
+        0.1
+    ],
+    "num_runs": 1,
     "num_evals": 1,
     "gctrial": true
 }

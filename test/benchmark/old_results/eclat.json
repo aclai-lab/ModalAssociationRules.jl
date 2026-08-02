@@ -1,0 +1,30 @@
+{
+    "n_worlds_per_frame": 50,
+    "frame_seed": 98999,
+    "num_evals": 1,
+    "num_runs": 1,
+    "min_local_supports": [
+        0.1
+    ],
+    "memories": [
+        3383779128
+    ],
+    "meantimes": [
+        2.8734562667e10
+    ],
+    "alltimes": [
+        [
+            2.8734562667e10
+        ]
+    ],
+    "n_propositional_items": 10,
+    "n_edges_per_frame": 100,
+    "min_global_supports": [
+        0.1
+    ],
+    "frequent_itemsets": [
+        656382
+    ],
+    "n_instances": 1,
+    "gctrial": true
+}
