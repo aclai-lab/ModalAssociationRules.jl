@@ -1,3 +1,6 @@
+# Usage examples
+# julia +1.11 -t16 --project=. benchmark/benchmarking.jl --ninstances 10 --nworlds 30 --nedges 30 --npropositions 10 --mingsupports 0.1 --gctrial true --savename base --algorithm apriori --rng 9989
+
 using ArgParse
 
 using BenchmarkTools
@@ -38,12 +41,6 @@ function parse_commandline()
 
         "--lsupports", "-s"
         help = "Cardinality of the alphabet (total number of items)"
-        arg_type = Float64
-        nargs = '+'
-        default = [0.0, 0.0]
-
-        "--simthresholds", "-t"
-        help = "Similarity thresholds"
         arg_type = Float64
         nargs = '+'
         default = [
@@ -91,6 +88,16 @@ function parse_commandline()
         arg_type = Bool
         default = true
 
+        "--savename",
+        help = "Filename of the final report"
+        arg_type = String
+        default = "results.json"
+
+        "--algorithm",
+        help = "Algorithm to test (apriori, fpgrowth, eclat)"
+        arg_type = String
+        default = "apriori"
+
         "--rng", "-r"
         help = "RNG Seed."
         arg_type = Int
@@ -103,24 +110,43 @@ end
 ##### configuration loading ################################################################
 
 BENCHMARK_REPOSITORY = joinpath(@__DIR__, "benchmark")
-CONFIG_FILENAME = "config.json"
-configuration = JSON.parsefile(joinpath(BENCHMARK_REPOSITORY, CONFIG_FILENAME))
 
-SEED = Xoshiro(configuration["frame_seed"])
+configuration = parse_commandline()
+
+# CONFIG_FILENAME = "config.json"
+# configuration = JSON.parsefile(joinpath(BENCHMARK_REPOSITORY, CONFIG_FILENAME))
+
+
+SEED = Xoshiro(configuration["rng"])
 Random.seed!(SEED)
 
-NINSTANCES = configuration["n_instances"]
-NWORLDS = configuration["n_worlds_per_frame"]
-NEDGES = configuration["n_edges_per_frame"]
+NINSTANCES = configuration["ninstances"]
+NWORLDS = configuration["nworlds"]
+NEDGES = configuration["nedges"]
 
-NITEMS = configuration["n_propositional_items"]
+NITEMS = configuration["npropositions"]
 
-MIN_LOCAL_SUPPORTS = configuration["min_local_supports"]
-MIN_GLOBAL_SUPPORTS = configuration["min_global_supports"]
+MIN_LOCAL_SUPPORTS = configuration["lsupports"]
+MIN_GLOBAL_SUPPORTS = configuration["mingsupports"]
 
-EVALS = configuration["num_evals"]
-SAMPLES = configuration["num_runs"]
+EVALS = configuration["nevals"]
+SAMPLES = configuration["nruns"]
 GCTRIAL = configuration["gctrial"]
+
+savename = configuration["savename"]
+
+algorithm = configuration["algorithm"]
+
+miningalgo = nothing
+if algorithm == "apriori"
+    miningalgo = apriori
+elseif algorithm == "fpgrowth"
+    mininalgo = fpgrowth
+elseif algorithm == "eclat"
+    miningalgo = eclat
+else
+    @error "The provided algorithm $(algorithm) is not implemented"
+end
 
 # these should be set higher than 0 to support eclat's execution
 ModalAssociationRules.LOCAL_MEMOIZATION_POWER = 3 # (1 << 63) - 1
@@ -157,59 +183,56 @@ results = configuration
 # for debugging purposes
 _last_iteration_dump = nothing
 
-for miningalgo in [eclat]
+# mean time for each measurement set
+meantimes = []
 
-    # mean time for each measurement set
-    meantimes = []
+# also keep track of the individual measurements for each set;
+# this is useful for plotting whisker plots
+alltimes = []
 
-    # also keep track of the individual measurements for each set;
-    # this is useful for plotting whisker plots
-    alltimes = []
+# frequent itemsets for each minimum support set
+nitemsets = []
 
-    # frequent itemsets for each minimum support set
-    nitemsets = []
+# memory consumption estimated by BenchmarkTools
+memories = []
 
-    # memory consumption estimated by BenchmarkTools
-    memories = []
+for mingsupport in MIN_GLOBAL_SUPPORTS
+    for minlsupport in MIN_LOCAL_SUPPORTS
+        miner = Miner(
+            Logiset(modaldataset),
+            miningalgo,
+            _items,
+            [(gsupport, minlsupport, mingsupport)],
+            rulemeasures;
+            itemset_policies=Function[],
+            arule_policies=Function[],
+        )
 
-    for mingsupport in MIN_GLOBAL_SUPPORTS
-        for minlsupport in MIN_LOCAL_SUPPORTS
-            miner = Miner(
-                Logiset(modaldataset),
-                miningalgo,
-                _items,
-                [(gsupport, minlsupport, mingsupport)],
-                rulemeasures;
-                itemset_policies=Function[],
-                arule_policies=Function[],
-            )
+        _current = @benchmark mine!($miner; forcemining=true, fpeonly=true) teardown =
+            begin
+                localmemo($miner) |> empty!
+                globalmemo($miner) |> empty!
+            end evals = EVALS samples = SAMPLES gctrial = GCTRIAL
 
-            _current = @benchmark mine!($miner; forcemining=true, fpeonly=true) teardown =
-                begin
-                    localmemo($miner) |> empty!
-                    globalmemo($miner) |> empty!
-                end evals = EVALS samples = SAMPLES gctrial = GCTRIAL
+        _last_iteration_dump = _current
 
-            _last_iteration_dump = _current
+        push!(alltimes, _current.times)
+        push!(meantimes, mean(_current.times))
+        push!(nitemsets, length(freqitems(miner)))
 
-            push!(alltimes, _current.times)
-            push!(meantimes, mean(_current.times))
-            push!(nitemsets, length(freqitems(miner)))
+        push!(memories, memory(_current))
 
-            push!(memories, memory(_current))
+        println("Current minimum $(minlsupport)")
+    end # end of local support loop
+end # end of global support loop
 
-            println("Current minimum $(minlsupport)")
-        end # end of local support loop
-    end # end of global support loop
+# aggregate the results and write them
+results["meantimes"] = meantimes
+results["alltimes"] = alltimes
+results["frequent_itemsets"] = nitemsets
 
-    # aggregate the results and write them
-    results["meantimes"] = meantimes
-    results["alltimes"] = alltimes
-    results["frequent_itemsets"] = nitemsets
+results["memories"] = memories
 
-    results["memories"] = memories
-
-    open(joinpath(BENCHMARK_REPOSITORY, "results", "$(miningalgo).json"), "w") do io
-        return JSON.print(io, results)
-    end
+open(joinpath(BENCHMARK_REPOSITORY, "results", "$(miningalgo)_$(savename)"), "w") do io
+    return JSON.print(io, results)
 end
