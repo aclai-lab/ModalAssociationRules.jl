@@ -12,5 +12,6 @@
 TODO
 
 **/deprecated/
+logs/
 
 .vscode/settings.json
