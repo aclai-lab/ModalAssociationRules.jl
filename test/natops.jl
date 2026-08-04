@@ -9,13 +9,15 @@ using StatsBase
 import ModalAssociationRules.children
 
 if Threads.nthreads() == 1
-    printstyled("Skipping check on parallel ModalFP-Growth." *
-                "\nDid you forget to set -t?\n", color=:light_yellow)
+    printstyled(
+        "Skipping check on parallel ModalFP-Growth." * "\nDid you forget to set -t?\n";
+        color=:light_yellow,
+    )
 end
 
 # algorithms to be tested
 ALGORITHMS = [apriori, fpgrowth, eclat]
-printstyled("Testing: $([a |> string for a in ALGORITHMS])", color=:green)
+printstyled("Testing: $([a |> string for a in ALGORITHMS])"; color=:green)
 
 ############################################################################################
 # Toy data to parametrize experiments
@@ -38,8 +40,7 @@ manual_lp = box(IA_L)(manual_p)
 manual_lq = diamond(IA_L)(manual_q)
 manual_lr = box(IA_L)(manual_r)
 
-manual_items = Vector{Item}([
-    manual_p, manual_q, manual_r, manual_lp, manual_lq, manual_lr])
+manual_items = Vector{Item}([manual_p, manual_q, manual_r, manual_lp, manual_lq, manual_lr])
 
 manual_v2 = [
     Atom(ScalarCondition(VariableMin(4), >=, 1))
@@ -47,22 +48,13 @@ manual_v2 = [
     Atom(ScalarCondition(VariableMin(5), >=, -0.5))
     Atom(ScalarCondition(VariableMax(6), >=, 0))
 ]
-manual_v2_modal = vcat(
-    manual_v2,
-    (manual_v2)[1] |> diamond(IA_L)
-) |> Vector{Item}
+manual_v2_modal = Vector{Item}(vcat(manual_v2, diamond(IA_L)((manual_v2)[1])))
 
 ############################################################################################
 
 # Driver
 
-EXPERIMENTKEYS = (
-    :data,
-    :items,
-    :itemsetmeasures,
-    :rulemeasures,
-    :expkwargs
-);
+EXPERIMENTKEYS = (:data, :items, :itemsetmeasures, :rulemeasures, :expkwargs);
 
 EXPERIMENTVALUES = (
     (
@@ -70,32 +62,37 @@ EXPERIMENTVALUES = (
         Vector{Item}([manual_p, manual_q, manual_lp, manual_lq]),
         [(gsupport, 0.1, 0.1)],
         [(gconfidence, 0.2, 0.2)],
-        ()
-    ), (
+        (),
+    ),
+    (
         X1,
         Vector{Item}([manual_p, manual_q, manual_r]),
         [(gsupport, 0.5, 0.7)],
         [(gconfidence, 0.7, 0.7)],
-        ()
-    ), (
+        (),
+    ),
+    (
         X1,
         Vector{Item}([manual_lp, manual_lq, manual_lr]),
         [(gsupport, 0.8, 0.8)],
         [(gconfidence, 0.7, 0.7)],
-        ()
-    ), (
+        (),
+    ),
+    (
         X1,
         Vector{Item}([manual_q, manual_r, manual_lp, manual_lr]),
         [(gsupport, 0.4, 0.4)],
         [(gconfidence, 0.7, 0.7)],
-        Dict(:itemset_policies => Function[])
-    ), (
+        Dict(:itemset_policies => Function[]),
+    ),
+    (
         X_1_have_command,
         manual_v2_modal,
         [(gsupport, 0.1, 0.1)],
         [(gconfidence, 0.1, 0.1)],
-        ()
-    ), (
+        (),
+    ),
+    (
         X_1_have_command,
         manual_v2_modal,
         [(gsupport, 0.5, 0.5)],
@@ -105,35 +102,33 @@ EXPERIMENTVALUES = (
             (gconviction, 1.0, 1.0),    # [0,+∞]
             (gleverage, -0.25, -0.25),  # [-0.25,0.25]
         ],
-        ()
-    ), (
+        (),
+    ),
+    (
         X1,
         Vector{Item}([manual_p, manual_q, manual_lp, manual_lq]),
         [(gsupport, 0.1, 0.1)],
         [(gconfidence, 0.0, 0.0)],
-        ()
-    )
+        (),
+    ),
 );
 
-EXPERIMENTS = [
-    NamedTuple{EXPERIMENTKEYS}(values)
-    for values in (EXPERIMENTVALUES)
-];
+EXPERIMENTS = [NamedTuple{EXPERIMENTKEYS}(values) for values in (EXPERIMENTVALUES)];
 
+# run time with naive model checker: ~12 seconds
 for (nth, exp) in enumerate(EXPERIMENTS)
     miners = Miner[
         Miner(
-            exp.data |> deepcopy,
+            deepcopy(exp.data),
             algo,
             exp.items,
             exp.itemsetmeasures,
             exp.rulemeasures;
-            exp.expkwargs...
-        )
-        for algo in ALGORITHMS
+            exp.expkwargs...,
+        ) for algo in ALGORITHMS
     ]
 
-    printstyled("Running experiment $(nth)\n", color=:green)
+    printstyled("Running experiment $(nth)\n"; color=:green)
     Commons.compare(miners; verbose=true)
 end
 
@@ -142,16 +137,16 @@ end
 
 _MANUALEXP = EXPERIMENTS[5]
 fpgrowth_miner = Miner(
-    _MANUALEXP.data |> deepcopy,
+    deepcopy(_MANUALEXP.data),
     fpgrowth,
     _MANUALEXP.items,
     _MANUALEXP.itemsetmeasures,
     _MANUALEXP.rulemeasures;
-    _MANUALEXP.expkwargs...
+    _MANUALEXP.expkwargs...,
 )
 mine!(fpgrowth_miner)
 
-arule = fpgrowth_miner |> arules |> first
+arule = first(arules(fpgrowth_miner))
 @test_nowarn arule_analysis(arule, fpgrowth_miner; io=devnull, verbose=true)
 @test_nowarn convert(Itemset, arule)
 
@@ -159,10 +154,18 @@ arule = fpgrowth_miner |> arules |> first
 @test allworlds(fpgrowth_miner) |> first isa SoleLogics.Interval
 @test SoleLogics.frame(fpgrowth_miner) |> SoleLogics.nworlds == 1326
 
-@test haskey(ModalAssociationRules._lconfidence_logic(
-        arule, data(fpgrowth_miner), 1, fpgrowth_miner), :measure)
-@test haskey(ModalAssociationRules._gconfidence_logic(
-        arule, data(fpgrowth_miner), 0.1, fpgrowth_miner), :measure)
+@test haskey(
+    ModalAssociationRules._lconfidence_logic(
+        arule, data(fpgrowth_miner), 1, fpgrowth_miner
+    ),
+    :measure,
+)
+@test haskey(
+    ModalAssociationRules._gconfidence_logic(
+        arule, data(fpgrowth_miner), 0.1, fpgrowth_miner
+    ),
+    :measure,
+)
 
 # to certainly trigger a specific generated by @gmeas macro
 @test_nowarn gconfidence(arule, data(fpgrowth_miner), 0.1, fpgrowth_miner)

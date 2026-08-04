@@ -9,10 +9,7 @@ See also [`Itemset`](@ref).
 function combine_items(itemsets::AbstractVector{<:Itemset}, newlength::Integer)
     return Iterators.filter(
         combo -> length(combo) == newlength,
-        Iterators.map(
-            combo -> union(combo[1], combo[2]),
-            combinations(itemsets, 2)
-        )
+        Iterators.map(combo -> union(combo[1], combo[2]), combinations(itemsets, 2)),
     )
 end
 
@@ -31,7 +28,9 @@ function combine_items(variable::AbstractVector{<:Item}, fixed::AbstractVector{<
     # TODO maybe the correct version is the one below, but considering only !isempty(combo)
     # return (Itemset(union(combo, fixed)) for combo in combinations(variable) if !isempty(combo) && !isempty(fixed))
     #
-    return (Itemset(union(combo, fixed)) for combo in combinations(variable) if !isempty(combo))
+    return (
+        Itemset(union(combo, fixed)) for combo in combinations(variable) if !isempty(combo)
+    )
 
     # return (Itemset(
     #     isempty(combo) ? fixed :
@@ -55,7 +54,7 @@ See also [`Itemset`](@ref).
 function grow_prune(
     candidates::AbstractVector{Itemset{I}},
     frequents::AbstractVector{Itemset{I}},
-    k::Integer
+    k::Integer,
 ) where {I<:Item}
     # if the frequents set does not contain the subset of a certain candidate,
     # that candidate is pruned out.
@@ -63,9 +62,9 @@ function grow_prune(
         # the iterator yields only itemsets for which every combo is in frequents;
         # note: why first(combo)? Because combinations(itemset, k-1) returns vectors,
         # each one wrapping one Itemset, but we just need that exact itemset.
-        itemset -> all(
-            combo -> Itemset{I}(combo) in frequents, combinations(itemset, k - 1)),
-        combine_items(candidates, k) |> unique
+        itemset ->
+            all(combo -> Itemset{I}(combo) in frequents, combinations(itemset, k - 1)),
+        unique(combine_items(candidates, k)),
     )
 end
 
@@ -85,9 +84,7 @@ and the successive;
 See also [`grow_prune`](@ref), [`Miner`](@ref), [`MineableData`](@ref).
 """
 function apriori(
-    miner::M;
-    prune_strategy::Function=grow_prune,
-    verbose::Bool=false
+    miner::M; prune_strategy::Function=grow_prune, verbose::Bool=false
 )::M where {M<:AbstractMiner}
     _itemtype = itemtype(miner)
     X = data(miner)
@@ -103,8 +100,8 @@ function apriori(
         # get the frequent itemsets from the first candidates set
         Threads.@threads for candidate in candidates
             all(
-                gmeas_algo(candidate, X, lthreshold, miner) >= gthreshold
-                for (gmeas_algo, lthreshold, gthreshold) in itemsetmeasures(miner)
+                gmeas_algo(candidate, X, lthreshold, miner) >= gthreshold for
+                (gmeas_algo, lthreshold, gthreshold) in itemsetmeasures(miner)
             ) && lock(frequents_lock) do
                 push!(frequents, candidate)
                 push!(freqitems(miner), candidate)
@@ -113,11 +110,14 @@ function apriori(
 
         # retrieve the new generation of candidates by doing some combinatorics trick;
         # we do not want duplicates ([p,q,r] and [q,r,p] are considered duplicates).
-        k = (candidates |> first |> length) + 1
-        candidates = sort.(prune_strategy(candidates, frequents, k) |> collect) |> unique
+        k = (length(first(candidates))) + 1
+        candidates = unique(sort.(collect(prune_strategy(candidates, frequents, k))))
 
-        verbose && printstyled("Starting new computational loop with " *
-                               "$(length(candidates)) candidates (of length $(k))...\n", color=:green)
+        verbose && printstyled(
+            "Starting new computational loop with " *
+            "$(length(candidates)) candidates (of length $(k))...\n";
+            color=:green,
+        )
 
         filter!(candidates, miner)  # apply filtering policies
     end

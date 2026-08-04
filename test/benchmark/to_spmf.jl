@@ -14,7 +14,6 @@ using SoleLogics: World, randframe
 using SoleLogics: KripkeStructure, ExplicitCrispUniModalFrame
 using SoleLogics: inittruthvalues, BooleanAlgebra, TOP
 
-
 ##### configuration loading ################################################################
 
 BENCHMARK_REPOSITORY = joinpath(@__DIR__, "test", "benchmark")
@@ -23,7 +22,7 @@ FLATTEN_REPOSITORY = joinpath(@__DIR__, "test", "benchmark", "flatten-dataset")
 CONFIG_FILENAME = "config.json"
 configuration = JSON.parsefile(joinpath(BENCHMARK_REPOSITORY, CONFIG_FILENAME))
 
-SEED = configuration["frame_seed"] |> Xoshiro
+SEED = Xoshiro(configuration["frame_seed"])
 
 NINSTANCES = configuration["n_instances"]
 NWORLDS = configuration["n_worlds_per_frame"]
@@ -39,7 +38,7 @@ SAMPLES = configuration["num_runs"]
 GCTRIAL = configuration["gctrial"]
 
 # alphabet of both propositional and modal literals (considering diamond operator)
-propfacts = [i |> Atom for i in 1:NITEMS] # exploited during the creation of modal instances
+propfacts = [Atom(i) for i in 1:NITEMS] # exploited during the creation of modal instances
 
 facts = vcat(propfacts, diamond().(propfacts))
 _items = Item.(facts)    # "handles" for the facts above
@@ -49,12 +48,11 @@ modaldataset = Vector{KripkeStructure}([
     generate(
         randframe(SEED, NWORLDS, NEDGES),
         propfacts,
-        vcat([SoleLogics.TOP for _ in 1:i], [SoleLogics.BOT for _ in i:NINSTANCES]),
-        incremental=true;
+        vcat([SoleLogics.TOP for _ in 1:i], [SoleLogics.BOT for _ in i:NINSTANCES]);
+        incremental=true,
         random=true,
-        rng=SEED
-    )
-    for i in 1:NINSTANCES
+        rng=SEED,
+    ) for i in 1:NINSTANCES
 ])
 
 for (i, kmodel) in enumerate(modaldataset)

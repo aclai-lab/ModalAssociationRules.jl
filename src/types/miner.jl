@@ -62,7 +62,6 @@ See also [`AbstractMiner`](@ref), [`apriori`](@ref), [`fpgrowth`](@ref).
 """
 algorithm(::AbstractMiner) = error("Not implemented")
 
-
 """
     freqitems(miner::AbstractMiner)
 
@@ -80,8 +79,6 @@ Getter for `miner`'s collection dedicated to store interesting [`ARule`](@ref)s.
 See also [`ARule`](@ref)
 """
 arules(::AbstractMiner) = error("Not implemented")
-
-
 
 """
     itemsetmeasures(miner::AbstractMiner)
@@ -102,8 +99,6 @@ that must be honored by all the extracted [`ARule`](@ref)s.
 See also [`AbstractMiner`](@ref), [`ARule`](@ref).
 """
 arulemeasures(::AbstractMiner) = error("Not implemented")
-
-
 
 """
     localmemo(miner::AbstractMiner)::LmeasMemo
@@ -126,8 +121,8 @@ Setter for a specific entry `key` inside the local memoization structure wrapped
 
 See also [`AbstractMiner`](@ref), [`LmeasMemo`](@ref), [`LmeasMemoKey`](@ref).
 """
-localmemo!(miner::AbstractMiner, key::LmeasMemoKey, val::Threshold) = begin
-    miner.localmemo[key] = val
+function localmemo!(miner::AbstractMiner, key::LmeasMemoKey, val::Threshold)
+    return miner.localmemo[key] = val
 end
 
 """
@@ -152,11 +147,9 @@ Setter for a specific entry `key` inside the global memoization structure wrappe
 
 See also [`AbstractMiner`](@ref), [`GmeasMemo`](@ref), [`GmeasMemoKey`](@ref).
 """
-globalmemo!(miner::AbstractMiner, key::GmeasMemoKey, val::Threshold) = begin
-    miner.globalmemo[key] = val
+function globalmemo!(miner::AbstractMiner, key::GmeasMemoKey, val::Threshold)
+    return miner.globalmemo[key] = val
 end
-
-
 
 """
     worldfilter(::AbstractMiner)
@@ -202,22 +195,23 @@ during the generation algorithm and which are discarded.
 See also [`AbstractMiner`](@ref), [`generaterules`](@ref),
 [`itemset_policies`](@ref).
 """
-arule_policies(::AbstractMiner) = error("Not implemented").
-"""
-    miningstate(miner::AbstractMiner)::MiningState
-    miningstate(miner::AbstractMiner, key::Symbol)
-    miningstate(miner::AbstractMiner, key::Symbol, inner_key)
+function arule_policies(::AbstractMiner)
+    return error("Not implemented")."""
+                                        miningstate(miner::AbstractMiner)::MiningState
+                                        miningstate(miner::AbstractMiner, key::Symbol)
+                                        miningstate(miner::AbstractMiner, key::Symbol, inner_key)
 
-Getter for the entire [`MiningState`](@ref) structure currently loaded in `miner`,
-a field within it or the value of a specific field.
+                                    Getter for the entire [`MiningState`](@ref) structure currently loaded in `miner`,
+                                    a field within it or the value of a specific field.
 
-See also [`AbstractMiner`](@ref), [`hasminingstate`](@ref), [`initminingstate`](@ref),
-[`MiningState`](@ref).
-"""
+                                    See also [`AbstractMiner`](@ref), [`hasminingstate`](@ref), [`initminingstate`](@ref),
+                                    [`MiningState`](@ref).
+                                    """
+end
 miningstate(::AbstractMiner)::MiningState = error("Not implemented.")
 miningstate(miner::AbstractMiner, key::Symbol) = miningstate(miner)[key]
-miningstate(miner::AbstractMiner, key::Symbol, inner_key) = begin
-    miningstate(miner)[key][inner_key]
+function miningstate(miner::AbstractMiner, key::Symbol, inner_key)
+    return miningstate(miner)[key][inner_key]
 end
 
 """
@@ -229,8 +223,8 @@ See also [`AbstractMiner`](@ref), [`hasminingstate`](@ref), [`initminingstate`](
 [`MiningState`](@ref).
 """
 miningstate!(miner::AbstractMiner, key::Symbol, val) = miner.miningstate[key] = val
-miningstate!(miner::AbstractMiner, key::Symbol, inner_key, val) = begin
-    miner.miningstate[key][inner_key] = val
+function miningstate!(miner::AbstractMiner, key::Symbol, inner_key, val)
+    return miner.miningstate[key][inner_key] = val
 end
 
 """
@@ -276,8 +270,6 @@ See also [`AbstractMiner`](@ref).
 """
 hasinfo(miner::AbstractMiner, key::Symbol) = haskey(info(miner), key)
 
-
-
 # General AbstractMiner dispatches
 
 """
@@ -316,19 +308,22 @@ See also [`isglobalof`](@ref), [`islocalof`](@ref), [`MeaningfulnessMeasure`](@r
 [`AbstractMiner`](@ref).
 """
 function findmeasure(
-    miner::AbstractMiner,
-    meas::Function;
-    recognizer::Function=islocalof
+    miner::AbstractMiner, meas::Function; recognizer::Function=islocalof
 )::MeaningfulnessMeasure
     try
-        return Iterators.filter(
-            m -> first(m) == meas || recognizer(meas, first(m)), measures(miner)) |> first
+        return first(
+            Iterators.filter(
+                m -> first(m) == meas || recognizer(meas, first(m)), measures(miner)
+            ),
+        )
     catch e
         if isa(e, ArgumentError)
-            error("The provided miner has no measure $meas. " *
-                  "Maybe the miner is not initialized properly, and $meas is omitted. " *
-                  "Please use itemsetmeasures/arulemeasures to check which measures are , " *
-                  "available and miner's setters to add a new measures and their thresholds.")
+            error(
+                "The provided miner has no measure $meas. " *
+                "Maybe the miner is not initialized properly, and $meas is omitted. " *
+                "Please use itemsetmeasures/arulemeasures to check which measures are , " *
+                "available and miner's setters to add a new measures and their thresholds.",
+            )
         end
     end
 end
@@ -356,9 +351,8 @@ of a specific local-measure across all dataset's instances) in `miner`.
 See [`AbstractMiner`](@ref), [`MeaningfulnessMeasure`](@ref), [`Threshold`](@ref).
 """
 function getglobalthreshold(miner::AbstractMiner, meas::Function)::Threshold
-    return findmeasure(miner, meas) |> last
+    return last(findmeasure(miner, meas))
 end
-
 
 # TODO: add another kwarg "freqonly::Bool=true" which specifies that frequent patterns are
 # considered interesting if and only if they are frequent;
@@ -396,10 +390,7 @@ See also [`ARule`](@ref), [`data`](@ref), [`freqitems`](@ref), [`generaterules`]
 [`Itemset`](@ref).
 """
 function apply!(
-    miner::AbstractMiner;
-    forcemining::Bool=false,
-    fpeonly::Bool=false,
-    kwargs...
+    miner::AbstractMiner; forcemining::Bool=false, fpeonly::Bool=false, kwargs...
 )
     _info = info(miner)
 
@@ -407,13 +398,13 @@ function apply!(
     if haskey(_info, :istrained) && !forcemining
         if _info[:istrained] == true
             @warn "The miner has already been trained; to force mining, please set " *
-                  "`forcemining=true`. If you are performing some benchmarks, you probably " *
-                  "want to clear the memoization structures (`lmemo` and `gmemo`) with " *
-                  "`empty!` before proceeding further. "
+                "`forcemining=true`. If you are performing some benchmarks, you probably " *
+                "want to clear the memoization structures (`lmemo` and `gmemo`) with " *
+                "`empty!` before proceeding further. "
 
             if !fpeonly
                 @warn "Association rules are going to be generated." *
-                      return generaterules(freqitems(miner), miner)
+                    return generaterules(freqitems(miner), miner)
             else
                 @warn "Since `fpeonly=true`, maybe you just wanted to call freqitems?"
                 return miner
@@ -442,7 +433,6 @@ function apply!(
         return generaterules(freqitems(miner), miner)
     end
 end
-
 
 """
     mine!(miner::AbstractMiner; kwargs...)
@@ -480,9 +470,8 @@ Return a generator of [`ARule`](@ref)s, given an already trained `miner`.
 See also [`AbstractMiner`](@ref), [`ARule`](@ref).
 """
 function generaterules!(::AbstractMiner, args...; kwargs...)
-    error("Not implemented.")
+    return error("Not implemented.")
 end
-
 
 """
     function arule_analysis(::ARule, ::AbstractMiner, args...; kwargs...)
@@ -492,7 +481,7 @@ Detailed print of an [`ARule`](@ref) to standard output.
 See also [`AbstractMiner`](@ref), [`ARule`](@ref).
 """
 function arule_analysis(::ARule, ::AbstractMiner, args...; kwargs...)
-    error("Not implemented.")
+    return error("Not implemented.")
 end
 
 """
@@ -505,22 +494,20 @@ See also [`AbstractMiner`](@ref), [`ARule`](@ref), [`arule_analysis`](@ref),
 [`gconfidence`](@ref).
 """
 function all_arule_analysis(
-    miner::AbstractMiner,
-    variablenames::Vector{S},
-    args...;
-    kwargs...
+    miner::AbstractMiner, variablenames::Vector{S}, args...; kwargs...
 ) where {S<:AbstractString}
     # for each rule, sorted by global confidence, print them
-    for r in sort(arules(miner), by=x -> miner.globalmemo[(:gconfidence, x)], rev=true)
+    for r in sort(arules(miner); by=x -> miner.globalmemo[(:gconfidence, x)], rev=true)
         ModalAssociationRules.arule_analysis(
-            r, miner, args...;
+            r,
+            miner,
+            args...;
             variablenames=variablenames,
             itemset_global_info=true,
-            kwargs...
+            kwargs...,
         )
     end
 end
-
 
 # utilities
 
@@ -533,7 +520,7 @@ from the original miner.
 See also [`AbstractMiner`](@ref).
 """
 function partial_deepcopy(original::AbstractMiner)
-    error("Not implemented.")
+    return error("Not implemented.")
 end
 
 # To solve https://github.com/aclai-lab/ModalAssociationRules.jl/issues/99
@@ -572,7 +559,7 @@ function miner_reduce!(
     includelmemo::Bool=false,
     includegmemo::Bool=true,
 ) where {M<:AbstractMiner}
-    main_miner = miners |> first
+    main_miner = first(miners)
 
     decant = (to, from) -> begin
         for k in keys(from)
@@ -586,31 +573,28 @@ function miner_reduce!(
         # these checks in the first place.
 
         if includeitems
-            union!(main_miner |> items, secondary_miner |> items)
+            union!(items(main_miner), items(secondary_miner))
         end
 
         # beware: heavy computation
         if includefreqitems
-            union!(main_miner |> freqitems, secondary_miner |> freqitems)
+            union!(freqitems(main_miner), freqitems(secondary_miner))
         end
 
         # beware: heavy computation
         if includelmemo
-            decant(main_miner |> localmemo, secondary_miner |> localmemo)
+            decant(localmemo(main_miner), localmemo(secondary_miner))
         end
 
         if includegmemo
-            decant(main_miner |> globalmemo, secondary_miner |> globalmemo)
+            decant(globalmemo(main_miner), globalmemo(secondary_miner))
         end
     end
 
     return main_miner
 end
 
-
-
 # interface extending dispatches coming from external packages
-
 
 """
     function SoleLogics.frame(::AbstractMiner)
@@ -620,7 +604,7 @@ Get the frame wrapped within an [`AbstractMiner`](@ref).
 See also [`AbstractMiner`](@ref), `SoleLogics.frame`.
 """
 function SoleLogics.frame(::AbstractMiner)
-    error("Not implemented.")
+    return error("Not implemented.")
 end
 
 """
@@ -641,21 +625,16 @@ Return a generator iterating over all the worlds wrapped within `miner`.
 See also [`AbstractMiner`](@ref), `SoleLogics.allworlds`, `SoleLogics.frame`,
 [`worldfilter`](@ref).
 """
-function SoleLogics.allworlds(
-    miner::AbstractMiner;
-    ith_instance::Integer=1
-)
+function SoleLogics.allworlds(miner::AbstractMiner; ith_instance::Integer=1)
     _worldfilter = worldfilter(miner)
     if isnothing(_worldfilter)
-        return frame(miner; ith_instance=ith_instance) |> SoleLogics.allworlds
+        return SoleLogics.allworlds(frame(miner; ith_instance=ith_instance))
     else
         SoleLogics.filterworlds(
-            _worldfilter,
-            frame(miner; ith_instance=ith_instance) |> SoleLogics.allworlds
+            _worldfilter, SoleLogics.allworlds(frame(miner; ith_instance=ith_instance))
         )
     end
 end
-
 
 """
     function SoleLogics.nworlds(miner::AbstractMiner)
@@ -669,5 +648,5 @@ Return the number of worlds returned by [`allworlds(::AbstractMiner)`](@ref).
     For now, this is inevitable for implementative reasons.
 """
 function SoleLogics.nworlds(miner::AbstractMiner)
-    SoleLogics.allworlds(miner) |> collect |> length
+    return length(collect(SoleLogics.allworlds(miner)))
 end

@@ -13,11 +13,11 @@ SERIALIZED_FILES_PATH = joinpath(@__DIR__, "test", "experiments", "NATOPS", "ser
 
 # logic for deserialization
 function load_motifs(filepath, save_filename_prefix)
-    ids = [id for id in deserialize(joinpath(filepath, "$(save_filename_prefix)-ids"))];
-    motifs = [m for m in deserialize(joinpath(filepath, "$(save_filename_prefix)-motifs"))];
+    ids = [id for id in deserialize(joinpath(filepath, "$(save_filename_prefix)-ids"))]
+    motifs = [m for m in deserialize(joinpath(filepath, "$(save_filename_prefix)-motifs"))]
     featurenames = [
         f for f in deserialize(joinpath(filepath, "$(save_filename_prefix)-featurenames"))
-    ];
+    ]
 
     return ids, motifs, featurenames
 end

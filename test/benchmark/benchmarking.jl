@@ -10,14 +10,13 @@ using SoleLogics: World, randframe
 using SoleLogics: KripkeStructure, ExplicitCrispUniModalFrame
 using SoleLogics: inittruthvalues, BooleanAlgebra, TOP
 
-
 ##### configuration loading ################################################################
 
 BENCHMARK_REPOSITORY = joinpath(@__DIR__, "test", "benchmark")
 CONFIG_FILENAME = "config.json"
 configuration = JSON.parsefile(joinpath(BENCHMARK_REPOSITORY, CONFIG_FILENAME))
 
-SEED = configuration["frame_seed"] |> Xoshiro
+SEED = Xoshiro(configuration["frame_seed"])
 Random.seed!(SEED)
 
 NINSTANCES = configuration["n_instances"]
@@ -36,11 +35,10 @@ GCTRIAL = configuration["gctrial"]
 ModalAssociationRules.LOCAL_MEMOIZATION_POWER = 0 # (1 << 63) - 1
 ModalAssociationRules.GLOBAL_MEMOIZATION_POWER = 0 # (1 << 63) - 1
 
-
 ##### modal dataset creation ###############################################################
 
 # alphabet of both propositional and modal literals (considering diamond operator)
-propfacts = [i |> Atom for i in 1:NITEMS] # exploited during the creation of modal instances
+propfacts = [Atom(i) for i in 1:NITEMS] # exploited during the creation of modal instances
 
 facts = vcat(propfacts, diamond().(propfacts))
 _items = Item.(facts)    # "handles" for the facts above
@@ -50,17 +48,15 @@ modaldataset = Vector{KripkeStructure}([
     generate(
         randframe(SEED, NWORLDS, NEDGES),
         propfacts,
-        vcat([SoleLogics.TOP for _ in 1:i], [SoleLogics.BOT for _ in i:NINSTANCES]),
-        incremental=true;
+        vcat([SoleLogics.TOP for _ in 1:i], [SoleLogics.BOT for _ in i:NINSTANCES]);
+        incremental=true,
         # random=true,
         # rng=SEED
-    )
-    for i in 1:NINSTANCES
+    ) for i in 1:NINSTANCES
 ])
 
 # can be ignored, as they are just a default value to be placed within Miner's constructor
 rulemeasures = [(gconfidence, 0.5, 0.5)]
-
 
 ##### Effective benchmarking ###############################################################
 
@@ -70,7 +66,7 @@ results = configuration
 # for debugging purposes
 _last_iteration_dump = nothing
 
-for miningalgo in [eclat ] 
+for miningalgo in [eclat]
 
     # mean time for each measurement set
     meantimes = []
@@ -87,25 +83,21 @@ for miningalgo in [eclat ]
 
     for mingsupport in MIN_GLOBAL_SUPPORTS
         for minlsupport in MIN_LOCAL_SUPPORTS
-
             miner = Miner(
-                modaldataset |> Logiset,
+                Logiset(modaldataset),
                 miningalgo,
                 _items,
                 [(gsupport, minlsupport, mingsupport)],
                 rulemeasures;
                 itemset_policies=Function[],
-                arule_policies=Function[]
+                arule_policies=Function[],
             )
 
-            _current = @benchmark mine!(
-                $miner;
-                forcemining=true,
-                fpeonly=true
-            ) teardown = begin
-                localmemo($miner) |> empty!
-                globalmemo($miner) |> empty!
-            end evals = EVALS samples = SAMPLES gctrial = GCTRIAL
+            _current = @benchmark mine!($miner; forcemining=true, fpeonly=true) teardown =
+                begin
+                    localmemo($miner) |> empty!
+                    globalmemo($miner) |> empty!
+                end evals = EVALS samples = SAMPLES gctrial = GCTRIAL
 
             _last_iteration_dump = _current
 
@@ -116,7 +108,6 @@ for miningalgo in [eclat ]
             push!(memories, memory(_current))
 
             println("Current minimum $(minlsupport)")
-
         end # end of local support loop
     end # end of global support loop
 
@@ -128,6 +119,6 @@ for miningalgo in [eclat ]
     results["memories"] = memories
 
     open(joinpath(BENCHMARK_REPOSITORY, "results", "$(miningalgo).json"), "w") do io
-        JSON.print(io, results)
+        return JSON.print(io, results)
     end
 end

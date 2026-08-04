@@ -25,11 +25,18 @@ using Reexport
 using SoleLogics: AbstractInterpretation, getinstance, LogicalInstance
 using SoleLogics: nworlds, frame, allworlds, nworlds
 using SoleLogics: filterworlds, WorldFilter
+# required to specialize the default SoleLogics' model checker
+using SoleLogics: AbstractKripkeStructure, AnyWorld, CheckAlgorithm
+using SoleLogics: isgrounded, nworlds
 
 using SoleData: SupportedLogiset
+using SoleData: AbstractLogiset
 using SoleData: VariableMin, VariableMax, VariableDistance
 
 using StatsBase
+
+# smart model checker
+# include("utils/check.jl")
 
 include("core.jl")
 

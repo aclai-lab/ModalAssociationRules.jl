@@ -118,7 +118,7 @@ function experiment!(miner::Miner, reportname::String)
     ]
 
     # sort by lift (the 6th position in rulecollection)
-    sort!(rulecollection; by=x->x[6], rev=true);
+    sort!(rulecollection; by=x->x[6], rev=true)
 
     println("Writing to: $(reportname)")
     open(reportname, "w") do io
@@ -275,11 +275,11 @@ function label_motifs(
 end
 
 function load_motifs(filepath, save_filename_prefix)
-    ids = [id for id in deserialize(joinpath(filepath, "$(save_filename_prefix)-ids"))];
-    motifs = [m for m in deserialize(joinpath(filepath, "$(save_filename_prefix)-motifs"))];
+    ids = [id for id in deserialize(joinpath(filepath, "$(save_filename_prefix)-ids"))]
+    motifs = [m for m in deserialize(joinpath(filepath, "$(save_filename_prefix)-motifs"))]
     featurenames = [
         f for f in deserialize(joinpath(filepath, "$(save_filename_prefix)-featurenames"))
-    ];
+    ]
 
     return ids, motifs, featurenames
 end
