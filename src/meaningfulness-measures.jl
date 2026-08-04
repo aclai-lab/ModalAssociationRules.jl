@@ -307,7 +307,8 @@ _lsupport_logic =
             if _worldsize(w) == _repr_size
                 (
                     _fairworlds[] += 1;
-                    check(LazyCheckAlgorithm(), formula(itemset), X, ith_instance, w)
+                    # check(LazyCheckAlgorithm(), formula(itemset), X, ith_instance, w)
+                    check(formula(itemset), X, ith_instance, w)
                 )
             else
                 0

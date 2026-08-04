@@ -1,9 +1,9 @@
 {
     "frame_seed": 98999,
     "n_instances": 1,
-    "n_worlds_per_frame": 50,
-    "n_edges_per_frame": 100,
-    "n_propositional_items": 10,
+    "n_worlds_per_frame": 10,
+    "n_edges_per_frame": 10,
+    "n_propositional_items": 5,
     "min_local_supports": [
         0.0,
         0.05,

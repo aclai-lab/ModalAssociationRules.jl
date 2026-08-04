@@ -12,7 +12,7 @@ using SoleLogics: inittruthvalues, BooleanAlgebra, TOP
 
 ##### configuration loading ################################################################
 
-BENCHMARK_REPOSITORY = joinpath(@__DIR__, "test", "benchmark")
+BENCHMARK_REPOSITORY = joinpath(@__DIR__, "benchmark")
 CONFIG_FILENAME = "config.json"
 configuration = JSON.parsefile(joinpath(BENCHMARK_REPOSITORY, CONFIG_FILENAME))
 
