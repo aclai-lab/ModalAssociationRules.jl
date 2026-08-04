@@ -1,3 +1,5 @@
+using ArgParse
+
 using BenchmarkTools
 using Graphs
 using JSON
@@ -9,6 +11,94 @@ using ModalAssociationRules
 using SoleLogics: World, randframe
 using SoleLogics: KripkeStructure, ExplicitCrispUniModalFrame
 using SoleLogics: inittruthvalues, BooleanAlgebra, TOP
+
+function parse_commandline()
+    settings = ArgParseSettings(; description="Generate a transformation base")
+
+    ArgParse.@add_arg_table settings begin
+        "--ninstances", "-N"
+        help = "Number of instances"
+        arg_type = Int
+        default = 1
+
+        "--nworlds", "-W"
+        help = "Number of worlds in each frame"
+        arg_type = Int
+        default = 1
+
+        "--nedges", "-E"
+        help = "Number of edges in each frame"
+        arg_type = Int
+        default = 0
+
+        "--npropositions", "-P"
+        help = "Cardinality of the alphabet (total number of items)"
+        arg_type = Int
+        default = 0
+
+        "--lsupports", "-s"
+        help = "Cardinality of the alphabet (total number of items)"
+        arg_type = Float64
+        nargs = '+'
+        default = [0.0, 0.0]
+
+        "--simthresholds", "-t"
+        help = "Similarity thresholds"
+        arg_type = Float64
+        nargs = '+'
+        default = [
+            0.0,
+            0.05,
+            0.1,
+            0.15,
+            0.2,
+            0.25,
+            0.3,
+            0.35,
+            0.4,
+            0.45,
+            0.5,
+            0.55,
+            0.6,
+            0.65,
+            0.7,
+            0.75,
+            0.8,
+            0.85,
+            0.9,
+            0.95,
+            1.0,
+        ]
+
+        "--mingsupports", "-m"
+        help = "Minimum global supports"
+        arg_type = Float64
+        nargs = '+'
+        default = [0.1]
+
+        "--nruns", "-r"
+        help = "Total number of runs (in Julia's @benchmark)"
+        arg_type = Int 
+        default = 1
+
+        "--nevals", "-e"
+        help = "Total number of evaluations (in Julia's @benchmark)"
+        arg_type = Int
+        default = 1
+
+        "--gctrial", "-g"
+        help = "Run gc() before running the benchmark"
+        arg_type = Bool
+        default = true
+
+        "--rng", "-r"
+        help = "RNG Seed."
+        arg_type = Int
+        default = 98999
+    end
+
+    return parse_args(settings)
+end
 
 ##### configuration loading ################################################################
 
@@ -32,8 +122,9 @@ EVALS = configuration["num_evals"]
 SAMPLES = configuration["num_runs"]
 GCTRIAL = configuration["gctrial"]
 
-ModalAssociationRules.LOCAL_MEMOIZATION_POWER = 0 # (1 << 63) - 1
-ModalAssociationRules.GLOBAL_MEMOIZATION_POWER = 0 # (1 << 63) - 1
+# these should be set higher than 0 to support eclat's execution
+ModalAssociationRules.LOCAL_MEMOIZATION_POWER = 3 # (1 << 63) - 1
+ModalAssociationRules.GLOBAL_MEMOIZATION_POWER = 3 # (1 << 63) - 1
 
 ##### modal dataset creation ###############################################################
 
