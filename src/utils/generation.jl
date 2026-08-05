@@ -2,6 +2,8 @@
 # these dispatches may already exist in SoleLogics or SoleData, but I need an experimental
 # version of them.
 
+using Distributions
+
 """
     function generate(
         fr::SoleLogics.AbstractFrame{W},
@@ -46,8 +48,11 @@ function generate(
     rng::AbstractRNG=Random.GLOBAL_RNG,
     fulltransfer::Bool=false,
     incremental::Bool=false,
+    density::Float64=0.15,        # target average per-fact truth probability
+    density_spread::Float64=2.0, # higher = more variation across facts around `density`
 )::KripkeStructure where {W<:AbstractWorld,S<:SyntaxTree,T<:Truth}
     defaulttruth = first(truthvalues)    # default truth value for later assignments
+    othertruth = last(truthvalues)
 
     if fulltransfer
         # everything is true on every world
@@ -64,10 +69,22 @@ function generate(
         ])
     elseif random
         try
+            alpha = density * density_spread
+            beta_ = (1 - density) * density_spread
+            fact_probs = Dict(
+                f => rand(rng, Distributions.Beta(alpha, beta_)) for f in facts
+            )
+
             valuation = Dict([
-                w => TruthDict([f => rand(rng, truthvalues) for f in facts]) for
-                w in fr.worlds
+                w => TruthDict([
+                    f => (rand(rng) < fact_probs[f] ? defaulttruth : othertruth) for
+                    f in facts
+                ]) for w in fr.worlds
             ])
+            # valuation = Dict([
+            #     w => TruthDict([f => rand(rng, truthvalues) for f in facts]) for
+            #     w in fr.worlds
+            # ])
         catch e
             if isa(e, UndefVarError)
                 throw(UndefVarError("Please provide a rng::AbstractRNG."))

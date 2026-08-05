@@ -1,13 +1,48 @@
 # Usage examples
-# julia +1.11 -t16 --project=. benchmark/benchmarking.jl --ninstances 10 --nworlds 30 --nedges 30 --npropositions 10 --mingsupports 0.1 --gctrial true --savename base --algorithm apriori --rng 9989
+#
+# Apriori (1 thread):
+# julia +1.11 -t1 --project=. benchmark/benchmarking.jl --ninstances 100 --nworlds 50 --nedges 100 --npropositions 10 --lsupports 0.75 0.80 0.85 0.90 0.95 1.0 --mingsupports 0.1 --gctrial true --savename threads_1 --algorithm apriori --rng 9989 --nruns 10
+# Apriori (2 threads):
+# julia +1.11 -t2 --project=. benchmark/benchmarking.jl --ninstances 100 --nworlds 50 --nedges 100 --npropositions 10 --lsupports 0.75 0.80 0.85 0.90 0.95 1.0 --mingsupports 0.1 --gctrial true --savename threads_2 --algorithm apriori --rng 9989 --nruns 10
+# Apriori (4 threads):
+# julia +1.11 -t4 --project=. benchmark/benchmarking.jl --ninstances 100 --nworlds 50 --nedges 100 --npropositions 10 --lsupports 0.75 0.80 0.85 0.90 0.95 1.0 --mingsupports 0.1 --gctrial true --savename threads_4 --algorithm apriori --rng 9989 --nruns 10
+# Apriori (8 threads):
+# julia +1.11 -t8 --project=. benchmark/benchmarking.jl --ninstances 100 --nworlds 50 --nedges 100 --npropositions 10 --lsupports 0.75 0.80 0.85 0.90 0.95 1.0 --mingsupports 0.1 --gctrial true --savename threads_8 --algorithm apriori --rng 9989 --nruns 10
+# Apriori (16 threads):
+# julia +1.11 -t16 --project=. benchmark/benchmarking.jl --ninstances 100 --nworlds 50 --nedges 100 --npropositions 10 --lsupports 0.75 0.80 0.85 0.90 0.95 1.0 --mingsupports 0.1 --gctrial true --savename threads_16 --algorithm apriori --rng 9989 --nruns 10
+#
+#
+# FPGrowth (1 thread):
+# julia +1.11 -t1 --project=. benchmark/benchmarking.jl --ninstances 100 --nworlds 50 --nedges 100 --npropositions 10 --lsupports 0.0 0.05 0.10 0.15 0.20 0.25 0.30 0.35 0.40 0.45 0.50 0.55 0.60 0.65 0.70 0.75 0.80 0.85 0.90 0.95 1.0 --mingsupports 0.1 --gctrial true --savename threads_1 --algorithm fpgrowth --rng 9989 --nruns 1
+# FPGrowth (2 threads):
+# julia +1.11 -t2 --project=. benchmark/benchmarking.jl --ninstances 100 --nworlds 50 --nedges 100 --npropositions 10 --lsupports 0.0 0.05 0.10 0.15 0.20 0.25 0.30 0.35 0.40 0.45 0.50 0.55 0.60 0.65 0.70 0.75 0.80 0.85 0.90 0.95 1.0 --mingsupports 0.1 --gctrial true --savename threads_2 --algorithm fpgrowth --rng 9989 --nruns 1
+# FPGrowth (4 threads):
+# julia +1.11 -t4 --project=. benchmark/benchmarking.jl --ninstances 100 --nworlds 50 --nedges 100 --npropositions 10 --lsupports 0.0 0.05 0.10 0.15 0.20 0.25 0.30 0.35 0.40 0.45 0.50 0.55 0.60 0.65 0.70 0.75 0.80 0.85 0.90 0.95 1.0 --mingsupports 0.1 --gctrial true --savename threads_4 --algorithm fpgrowth --rng 9989 --nruns 1
+# FPGrowth (8 threads):
+# julia +1.11 -t8 --project=. benchmark/benchmarking.jl --ninstances 100 --nworlds 50 --nedges 100 --npropositions 10 --lsupports 0.0 0.05 0.10 0.15 0.20 0.25 0.30 0.35 0.40 0.45 0.50 0.55 0.60 0.65 0.70 0.75 0.80 0.85 0.90 0.95 1.0 --mingsupports 0.1 --gctrial true --savename threads_8 --algorithm fpgrowth --rng 9989 --nruns 1
+# FPGrowth (16 threads):
+# julia +1.11 -t16 --project=. benchmark/benchmarking.jl --ninstances 100 --nworlds 50 --nedges 100 --npropositions 10 --lsupports 0.0 0.05 0.10 0.15 0.20 0.25 0.30 0.35 0.40 0.45 0.50 0.55 0.60 0.65 0.70 0.75 0.80 0.85 0.90 0.95 1.0 --mingsupports 0.1 --gctrial true --savename threads_16 --algorithm fpgrowth --rng 9989 --nruns 1
+#
+#
+# Eclat (1 thread):
+# julia +1.11 -t1 --project=. benchmark/benchmarking.jl --ninstances 100 --nworlds 50 --nedges 100 --npropositions 10 --lsupports 0.0 0.05 0.10 0.15 0.20 0.25 0.30 0.35 0.40 0.45 0.50 0.55 0.60 0.65 0.70 0.75 0.80 0.85 0.90 0.95 1.0 --mingsupports 0.1 --gctrial true --savename threads_1 --algorithm eclat --rng 9989 --nruns 1
+# Eclat (2 threads):
+# julia +1.11 -t2 --project=. benchmark/benchmarking.jl --ninstances 100 --nworlds 50 --nedges 100 --npropositions 10 --lsupports 0.0 0.05 0.10 0.15 0.20 0.25 0.30 0.35 0.40 0.45 0.50 0.55 0.60 0.65 0.70 0.75 0.80 0.85 0.90 0.95 1.0 --mingsupports 0.1 --gctrial true --savename threads_2 --algorithm eclat --rng 9989 --nruns 1
+# Eclat (4 threads):
+# julia +1.11 -t4 --project=. benchmark/benchmarking.jl --ninstances 100 --nworlds 50 --nedges 100 --npropositions 10 --lsupports 0.0 0.05 0.10 0.15 0.20 0.25 0.30 0.35 0.40 0.45 0.50 0.55 0.60 0.65 0.70 0.75 0.80 0.85 0.90 0.95 1.0 --mingsupports 0.1 --gctrial true --savename threads_4 --algorithm eclat --rng 9989 --nruns 1
+# Eclat (8 threads):
+# julia +1.11 -t8 --project=. benchmark/benchmarking.jl --ninstances 100 --nworlds 50 --nedges 100 --npropositions 10 --lsupports 0.0 0.05 0.10 0.15 0.20 0.25 0.30 0.35 0.40 0.45 0.50 0.55 0.60 0.65 0.70 0.75 0.80 0.85 0.90 0.95 1.0 --mingsupports 0.1 --gctrial true --savename threads_8 --algorithm eclat --rng 9989 --nruns 1
+# Eclat (16 threads):
+# julia +1.11 -t16 --project=. benchmark/benchmarking.jl --ninstances 100 --nworlds 50 --nedges 100 --npropositions 10 --lsupports 0.0 0.05 0.10 0.15 0.20 0.25 0.30 0.35 0.40 0.45 0.50 0.55 0.60 0.65 0.70 0.75 0.80 0.85 0.90 0.95 1.0 --mingsupports 0.1 --gctrial true --savename threads_16 --algorithm eclat --rng 9989 --nruns 1
+#
 
 using ArgParse
+using ProgressBars
 
 using BenchmarkTools
 using Graphs
 using JSON
 using Random
-using ProgressBars
 
 using ModalAssociationRules
 
@@ -88,17 +123,17 @@ function parse_commandline()
         arg_type = Bool
         default = true
 
-        "--savename",
+        "--savename"
         help = "Filename of the final report"
         arg_type = String
         default = "results.json"
 
-        "--algorithm",
+        "--algorithm"
         help = "Algorithm to test (apriori, fpgrowth, eclat)"
         arg_type = String
         default = "apriori"
 
-        "--rng", "-r"
+        "--rng"
         help = "RNG Seed."
         arg_type = Int
         default = 98999
@@ -109,7 +144,7 @@ end
 
 ##### configuration loading ################################################################
 
-BENCHMARK_REPOSITORY = joinpath(@__DIR__, "benchmark")
+BENCHMARK_REPOSITORY = joinpath(@__DIR__)
 
 configuration = parse_commandline()
 
@@ -141,7 +176,7 @@ miningalgo = nothing
 if algorithm == "apriori"
     miningalgo = apriori
 elseif algorithm == "fpgrowth"
-    mininalgo = fpgrowth
+    miningalgo = fpgrowth
 elseif algorithm == "eclat"
     miningalgo = eclat
 else
@@ -166,7 +201,8 @@ modaldataset = Vector{KripkeStructure}([
         randframe(SEED, NWORLDS, NEDGES),
         propfacts,
         vcat([SoleLogics.TOP for _ in 1:i], [SoleLogics.BOT for _ in i:NINSTANCES]);
-        incremental=true,
+        # incremental=true,
+        random=true,
         # random=true,
         # rng=SEED
     ) for i in 1:NINSTANCES
@@ -181,7 +217,7 @@ rulemeasures = [(gconfidence, 0.5, 0.5)]
 results = configuration
 
 # for debugging purposes
-_last_iteration_dump = nothing
+# _last_iteration_dump = nothing
 
 # mean time for each measurement set
 meantimes = []
@@ -197,7 +233,9 @@ nitemsets = []
 memories = []
 
 for mingsupport in MIN_GLOBAL_SUPPORTS
-    for minlsupport in MIN_LOCAL_SUPPORTS
+    println("Current global support: $mingsupport")
+
+    for minlsupport in ProgressBar(MIN_LOCAL_SUPPORTS)
         miner = Miner(
             Logiset(modaldataset),
             miningalgo,
@@ -208,13 +246,19 @@ for mingsupport in MIN_GLOBAL_SUPPORTS
             arule_policies=Function[],
         )
 
+        # we only measure the frequent pattern mining time
         _current = @benchmark mine!($miner; forcemining=true, fpeonly=true) teardown =
             begin
-                localmemo($miner) |> empty!
-                globalmemo($miner) |> empty!
+                empty!(localmemo($miner))
+                empty!(globalmemo($miner))
+                
+                # if you uncomment this, the printed number of frequent itemsets
+                # will be zero; instead, if you keep this uncommented, 
+                # the correct value will be saved multiplied by the runs number
+                # empty!(freqitems($miner))
             end evals = EVALS samples = SAMPLES gctrial = GCTRIAL
 
-        _last_iteration_dump = _current
+        # _last_iteration_dump = _current
 
         push!(alltimes, _current.times)
         push!(meantimes, mean(_current.times))
@@ -222,17 +266,19 @@ for mingsupport in MIN_GLOBAL_SUPPORTS
 
         push!(memories, memory(_current))
 
-        println("Current minimum $(minlsupport)")
+        println("Current minimum: $(minlsupport)")
     end # end of local support loop
 end # end of global support loop
 
 # aggregate the results and write them
 results["meantimes"] = meantimes
 results["alltimes"] = alltimes
-results["frequent_itemsets"] = nitemsets
+results["frequent_itemsets"] = nitemsets 
 
 results["memories"] = memories
 
-open(joinpath(BENCHMARK_REPOSITORY, "results", "$(miningalgo)_$(savename)"), "w") do io
+SAVEPATH = joinpath(BENCHMARK_REPOSITORY, "results", "$(miningalgo)_$(savename).json")
+
+open(SAVEPATH, "w") do io
     return JSON.print(io, results)
 end
