@@ -201,8 +201,7 @@ modaldataset = Vector{KripkeStructure}([
         randframe(SEED, NWORLDS, NEDGES),
         propfacts,
         vcat([SoleLogics.TOP for _ in 1:i], [SoleLogics.BOT for _ in i:NINSTANCES]);
-        # incremental=true,
-        random=true,
+        incremental=true,
         # random=true,
         # rng=SEED
     ) for i in 1:NINSTANCES
