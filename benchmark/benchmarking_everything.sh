@@ -16,9 +16,9 @@ set -uo pipefail
 # (under ./logs/); this driver just tracks overall pass/fail per script.
 
 SCRIPTS=(
-    "benchmarking_ninstances_runner.sh"
-    "benchmarking_npropositions_runner.sh"
-    "benchmarking_threads_runner.sh"
+    "benchmark/benchmarking_threads_runner.sh"
+    "benchmark/benchmarking_ninstances_runner.sh"
+    "benchmark/benchmarking_npropositions_runner.sh"
 )
 
 for script in "${SCRIPTS[@]}"; do
