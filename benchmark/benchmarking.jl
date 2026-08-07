@@ -110,7 +110,7 @@ function parse_commandline()
 
         "--nruns", "-r"
         help = "Total number of runs (in Julia's @benchmark)"
-        arg_type = Int 
+        arg_type = Int
         default = 1
 
         "--nevals", "-e"
@@ -150,7 +150,6 @@ configuration = parse_commandline()
 
 # CONFIG_FILENAME = "config.json"
 # configuration = JSON.parsefile(joinpath(BENCHMARK_REPOSITORY, CONFIG_FILENAME))
-
 
 SEED = Xoshiro(configuration["rng"])
 Random.seed!(SEED)
@@ -246,16 +245,15 @@ for mingsupport in MIN_GLOBAL_SUPPORTS
         )
 
         # we only measure the frequent pattern mining time
-        _current = @benchmark mine!($miner; forcemining=true, fpeonly=true) teardown =
-            begin
-                empty!(localmemo($miner))
-                empty!(globalmemo($miner))
-                
-                # if you uncomment this, the printed number of frequent itemsets
-                # will be zero; instead, if you keep this uncommented, 
-                # the correct value will be saved multiplied by the runs number
-                # empty!(freqitems($miner))
-            end evals = EVALS samples = SAMPLES gctrial = GCTRIAL
+        _current = @benchmark mine!($miner; forcemining=true, fpeonly=true) teardown = begin
+            empty!(localmemo($miner))
+            empty!(globalmemo($miner))
+
+            # if you uncomment this, the printed number of frequent itemsets
+            # will be zero; instead, if you keep this uncommented, 
+            # the correct value will be saved multiplied by the runs number
+            # empty!(freqitems($miner))
+        end evals = EVALS samples = SAMPLES gctrial = GCTRIAL
 
         # _last_iteration_dump = _current
 
@@ -272,7 +270,7 @@ end # end of global support loop
 # aggregate the results and write them
 results["meantimes"] = meantimes
 results["alltimes"] = alltimes
-results["frequent_itemsets"] = nitemsets 
+results["frequent_itemsets"] = nitemsets
 
 results["memories"] = memories
 

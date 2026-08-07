@@ -1,0 +1,1 @@
+{"npropositions":12,"memories":[68928623632],"meantimes":[2.62078993708e11],"lsupports":[0.5],"nworlds":100,"alltimes":[[2.62078993708e11]],"nruns":1,"frequent_itemsets":[8446],"rng":9989,"algorithm":"fpgrowth","savename":"threads_16_npropositions_12","nedges":200,"gctrial":true,"mingsupports":[0.1],"nevals":1,"ninstances":1000}

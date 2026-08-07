@@ -48,13 +48,13 @@ THREADS_LIST=(1 2 4 8 16)
 # ---------------------------------------------------------------------------
 # Apriori
 # ---------------------------------------------------------------------------
-# APRIORI_ARGS=(--ninstances 1000 --nworlds 100 --nedges 200 --npropositions 10
-#     --lsupports 0.2 0.25 0.3 0.35 0.40 0.45 0.50 0.55 0.60 0.65 0.7 0.75 0.80 0.85 0.90 0.95 1.0
-#     --mingsupports 0.10 --nruns 1)
-#
-# for t in "${THREADS_LIST[@]}"; do
-#     run "apriori" "$t" "${APRIORI_ARGS[@]}"
-# done
+APRIORI_ARGS=(--ninstances 1000 --nworlds 100 --nedges 200 --npropositions 5
+    --lsupports 0.2 0.25 0.3 0.35 0.40 0.45 0.50 0.55 0.60 0.65 0.7 0.75 0.80 0.85 0.90 0.95 1.0
+    --mingsupports 0.10 --nruns 1)
+
+for t in "${THREADS_LIST[@]}"; do
+    run "apriori" "$t" "${APRIORI_ARGS[@]}"
+done
 
 # ---------------------------------------------------------------------------
 # FPGrowth
@@ -70,7 +70,7 @@ done
 # ---------------------------------------------------------------------------
 # Eclat
 # ---------------------------------------------------------------------------
-ECLAT_ARGS=(--ninstances 1000 --nworlds 100 --nedges 200 --npropositions 10
+ECLAT_ARGS=(--ninstances 1000 --nworlds 100 --nedges 200 --npropositions 5
     --lsupports 0.05 0.10 0.15 0.20 0.25 0.3 0.35 0.40 0.45 0.50 0.55 0.60 0.65 0.70 0.75 0.80 0.85 0.90 0.95 1.0
     --mingsupports 0.10 --nruns 1)
 
