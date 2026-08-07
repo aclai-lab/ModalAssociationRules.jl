@@ -16,4 +16,10 @@ logs/
 
 .vscode/settings.json
 
-plots/
+plots/*.aux
+plots/*.pdf
+plots/*.fdb_latexmk
+plots/*.log
+plots/*.synctex.gz
+plots/*.tex
+plots/*.fls
