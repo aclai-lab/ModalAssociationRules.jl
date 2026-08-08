@@ -1,1 +1,32 @@
-{"npropositions":5,"memories":[23219938832],"meantimes":[1.529892452e10],"lsupports":[0.5],"nworlds":100,"alltimes":[[1.529892452e10]],"nruns":1,"frequent_itemsets":[126],"rng":9989,"algorithm":"fpgrowth","savename":"threads_16_ninstances_2000","nedges":200,"gctrial":true,"mingsupports":[0.1],"nevals":1,"ninstances":2000}
+{
+    "npropositions": 5,
+    "memories": [
+        23219938832
+    ],
+    "meantimes": [
+        1.529892452e10
+    ],
+    "lsupports": [
+        0.5
+    ],
+    "nworlds": 100,
+    "alltimes": [
+        [
+            1.529892452e10
+        ]
+    ],
+    "nruns": 1,
+    "frequent_itemsets": [
+        126
+    ],
+    "rng": 9989,
+    "algorithm": "fpgrowth",
+    "savename": "threads_16_ninstances_2000",
+    "nedges": 200,
+    "gctrial": true,
+    "mingsupports": [
+        0.1
+    ],
+    "nevals": 1,
+    "ninstances": 2000
+}
